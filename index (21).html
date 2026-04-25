@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen — Start</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Source+Sans+3:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gron:#2d5016;--gron-lys:#4a7c2a;--gron-pale:#e8f0dc;
+  --guld:#c8952a;--guld-pale:#fdf8ee;
+  --hvid:#fefcf8;--tekst:#1a1a0e;--tekst-lys:#4a4a35;--border:#d4c9a0;
+}
+body{font-family:'Source Sans 3',sans-serif;background:var(--gron);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 30% 30%,rgba(200,149,42,0.15) 0%,transparent 60%),linear-gradient(135deg,#1a3009 0%,#2d5016 60%,#1a3009 100%);z-index:0;}
+
+.container{position:relative;z-index:1;width:100%;max-width:520px;}
+
+.logo{text-align:center;margin-bottom:2.5rem;}
+.logo-navn{font-family:'Playfair Display',serif;font-size:48px;font-weight:700;color:var(--hvid);letter-spacing:-1px;line-height:1;}
+.logo-sub{font-size:11px;color:rgba(254,252,248,0.5);letter-spacing:4px;text-transform:uppercase;margin-top:8px;}
+.logo-streg{width:50px;height:2px;background:var(--guld);margin:14px auto 0;border-radius:2px;}
+
+.kort{background:var(--hvid);border-radius:14px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.4);}
+
+.kort-top{background:var(--guld-pale);border-bottom:1px solid var(--border);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
+.kort-titel{font-size:13px;font-weight:500;color:var(--tekst);letter-spacing:0.3px;}
+.dato{font-size:12px;color:var(--tekst-lys);}
+
+.sektion{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);}
+.sektion:last-child{border-bottom:none;}
+.sektion-label{font-size:10px;font-weight:500;color:var(--tekst-lys);letter-spacing:2px;text-transform:uppercase;margin-bottom:0.75rem;}
+
+.fil-liste{display:flex;flex-direction:column;gap:6px;}
+.fil{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--guld-pale);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.15s;text-decoration:none;}
+.fil:hover{background:var(--gron-pale);border-color:var(--gron);transform:translateX(3px);}
+.fil-ikon{font-size:20px;width:28px;text-align:center;flex-shrink:0;}
+.fil-info{flex:1;}
+.fil-navn{font-size:13px;font-weight:500;color:var(--tekst);}
+.fil-sub{font-size:11px;color:var(--tekst-lys);margin-top:1px;}
+.fil-pil{font-size:16px;color:var(--border);}
+.fil:hover .fil-pil{color:var(--gron);}
+
+.note{background:var(--gron-pale);border-left:3px solid var(--gron);padding:10px 14px;border-radius:0 6px 6px 0;font-size:12px;color:var(--tekst-lys);line-height:1.6;margin-top:0.75rem;}
+
+.footer{text-align:center;margin-top:1.5rem;font-size:11px;color:rgba(254,252,248,0.35);line-height:1.8;}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="logo">
+    <div class="logo-navn">OlsenKlanen</div>
+    <div class="logo-sub">Projektmappe · April 2026</div>
+    <div class="logo-streg"></div>
+  </div>
+
+  <div class="kort">
+
+    <div class="kort-top">
+      <span class="kort-titel">Alle projektfiler samlet ét sted</span>
+      <span class="dato" id="dato"></span>
+    </div>
+
+    <!-- HJEMMESIDEN -->
+    <div class="sektion">
+      <div class="sektion-label">Hjemmesiden — demo</div>
+      <div class="fil-liste">
+        <a class="fil" href="olsenklanen_designudkast.html">
+          <span class="fil-ikon">🏠</span>
+          <div class="fil-info">
+            <div class="fil-navn">Forside</div>
+            <div class="fil-sub">Designudkast til den nye olsenklanen.dk</div>
+          </div>
+          <span class="fil-pil">→</span>
+        </a>
+        <a class="fil" href="olsenklanen_login_firebase.html">
+          <span class="fil-ikon">🔑</span>
+          <div class="fil-info">
+            <div class="fil-navn">Login</div>
+            <div class="fil-sub">Login-side koblet til Firebase</div>
+          </div>
+          <span class="fil-pil">→</span>
+        </a>
+        <a class="fil" href="olsenklanen_admin.html">
+          <span class="fil-ikon">⚙️</span>
+          <div class="fil-info">
+            <div class="fil-navn">Admin-panel</div>
+            <div class="fil-sub">Til Kurt, Tommy, Sanne og Karin</div>
+          </div>
+          <span class="fil-pil">→</span>
+        </a>
+        <a class="fil" href="olsenklanen_ai_assistent.html">
+          <span class="fil-ikon">🤖</span>
+          <div class="fil-info">
+            <div class="fil-navn">AI-assistent</div>
+            <div class="fil-sub">Spørgsmål og svar om Olsenklanen</div>
+          </div>
+          <span class="fil-pil">→</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- DOKUMENTER -->
+    <div class="sektion">
+      <div class="sektion-label">Projektdokumenter</div>
+      <div class="fil-liste">
+        <a class="fil" href="olsenklanen_projektdokument_v2.docx">
+          <span class="fil-ikon">📋</span>
+          <div class="fil-info">
+            <div class="fil-navn">Projektdokument v2.0</div>
+            <div class="fil-sub">Send til Claude ved start af ny chat</div>
+          </div>
+          <span class="fil-pil">↓</span>
+        </a>
+        <a class="fil" href="olsenklanen_kravspecifikation_v04.docx">
+          <span class="fil-ikon">📄</span>
+          <div class="fil-info">
+            <div class="fil-navn">Kravspecifikation v0.4</div>
+            <div class="fil-sub">Alle krav og beslutninger samlet</div>
+          </div>
+          <span class="fil-pil">↓</span>
+        </a>
+        <a class="fil" href="olsenklanen_firebase_vejledning.docx">
+          <span class="fil-ikon">🔧</span>
+          <div class="fil-info">
+            <div class="fil-navn">Firebase vejledning</div>
+            <div class="fil-sub">Teknisk opsætningsvejledning</div>
+          </div>
+          <span class="fil-pil">↓</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- NÆSTE SKRIDT -->
+    <div class="sektion">
+      <div class="sektion-label">Næste skridt</div>
+      <div class="fil-liste">
+        <div class="fil" onclick="alert('Åbn en ny chat på claude.ai og send projektdokumentet')">
+          <span class="fil-ikon">💬</span>
+          <div class="fil-info">
+            <div class="fil-navn">Fortsæt med Claude</div>
+            <div class="fil-sub">claude.ai → ny chat → send projektdokumentet</div>
+          </div>
+          <span class="fil-pil">→</span>
+        </div>
+        <div class="fil" onclick="window.open('https://console.firebase.google.com','_blank')">
+          <span class="fil-ikon">🔥</span>
+          <div class="fil-info">
+            <div class="fil-navn">Firebase konsol</div>
+            <div class="fil-sub">Olsenklanen familieside · cg@gallerieg.dk</div>
+          </div>
+          <span class="fil-pil">→</span>
+        </div>
+      </div>
+      <div class="note">
+        ✓ Fase 1 klar — Designudkast godkendt<br>
+        ✓ Fase 2 klar — Firebase oprettet og login virker<br>
+        ⏳ Fase 3 næste — Admin-panel færdiggøres
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    OlsenKlanen.dk · Carsten & Claude · April 2026<br>
+    Alle filer skal ligge i samme mappe for at links virker
+  </div>
+
+</div>
+
+<script>
+const dage = ['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
+const maaneder = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december'];
+const nu = new Date();
+document.getElementById('dato').textContent = dage[nu.getDay()] + ' den ' + nu.getDate() + '. ' + maaneder[nu.getMonth()] + ' ' + nu.getFullYear();
+</script>
+
+</body>
+</html>
