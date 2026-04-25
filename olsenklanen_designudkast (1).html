@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen — Designudkast 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Source+Sans+3:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gron:#2d5016;
+  --gron-lys:#4a7c2a;
+  --gron-pale:#e8f0dc;
+  --guld:#c8952a;
+  --guld-lys:#f5e6c8;
+  --guld-pale:#fdf8ee;
+  --hvid:#fefcf8;
+  --tekst:#1a1a0e;
+  --tekst-lys:#4a4a35;
+  --border:#d4c9a0;
+}
+
+body{font-family:'Source Sans 3',sans-serif;background:#f0ece0;color:var(--tekst);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:2rem 1rem}
+
+/* UDKAST BANNER */
+.udkast-banner{background:var(--guld);color:#1a1a0e;font-size:12px;font-weight:500;letter-spacing:2px;text-transform:uppercase;padding:8px 20px;text-align:center;width:100%;max-width:900px;border-radius:4px 4px 0 0}
+
+.site{max-width:900px;width:100%;background:var(--hvid);box-shadow:0 4px 40px rgba(0,0,0,0.15)}
+
+/* HEADER */
+.header{position:relative;background:var(--gron);overflow:hidden}
+.header-bg{position:absolute;inset:0;background:linear-gradient(135deg,#1a3009 0%,#2d5016 40%,#3d6b20 70%,#2a4a12 100%)}
+.header-texture{position:absolute;inset:0;background-image:radial-gradient(circle at 20% 50%,rgba(200,149,42,0.15) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(200,149,42,0.1) 0%,transparent 40%)}
+.header-content{position:relative;padding:2rem 2.5rem 1.5rem;display:flex;align-items:flex-end;justify-content:space-between}
+.logo-klan{font-family:'Playfair Display',serif;font-size:52px;font-weight:700;color:#fefcf8;letter-spacing:-1px;line-height:1}
+.logo-sub{font-size:12px;font-weight:300;color:rgba(254,252,248,0.6);letter-spacing:4px;text-transform:uppercase;margin-top:6px}
+.header-year{font-family:'Playfair Display',serif;font-size:80px;font-weight:400;color:rgba(200,149,42,0.25);line-height:1}
+.header-tagline{font-size:12px;color:rgba(254,252,248,0.45);letter-spacing:2px;text-transform:uppercase;text-align:right}
+
+/* HERO */
+.hero-foto{background:linear-gradient(180deg,#3d6b20 0%,#2d5016 100%);height:240px;display:flex;align-items:center;justify-content:center;border-top:1px solid rgba(200,149,42,0.3);border-bottom:3px solid var(--guld);position:relative;overflow:hidden}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(45,80,22,0.6) 100%)}
+.hero-tekst{position:relative;text-align:center}
+.hero-foto-label{font-size:11px;color:rgba(254,252,248,0.5);letter-spacing:3px;text-transform:uppercase;margin-bottom:8px}
+.hero-foto-tip{font-family:'Playfair Display',serif;font-size:22px;color:rgba(254,252,248,0.85);font-style:italic}
+.hero-foto-sub{font-size:12px;color:rgba(200,149,42,0.8);margin-top:6px;letter-spacing:1px}
+
+/* NAV */
+.nav{background:var(--gron);border-bottom:2px solid var(--guld);padding:0 2.5rem;display:flex;gap:0;overflow-x:auto}
+.nav a{font-size:12px;font-weight:500;color:rgba(254,252,248,0.7);text-decoration:none;padding:0.75rem 1rem;letter-spacing:0.5px;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color 0.2s,border-color 0.2s}
+.nav a:hover{color:#fefcf8;border-bottom-color:var(--guld)}
+.nav a.aktiv{color:var(--guld);border-bottom-color:var(--guld)}
+
+/* LOGIN STRIP */
+.login-strip{background:var(--guld-pale);border-bottom:1px solid var(--border);padding:0.65rem 2.5rem;display:flex;justify-content:space-between;align-items:center}
+.login-strip span{font-size:12px;color:var(--tekst-lys)}
+.login-btn{font-size:12px;font-weight:500;color:var(--gron);background:var(--gron-pale);border:1px solid var(--gron-lys);border-radius:4px;padding:5px 16px;cursor:pointer;text-decoration:none;transition:background 0.2s}
+.login-btn:hover{background:#d4e8b8}
+
+/* GRID */
+.main-grid{display:grid;grid-template-columns:1fr 300px;min-height:600px}
+
+/* NYHEDER */
+.nyheder-col{padding:2rem 2rem 2rem 2.5rem;border-right:1px solid var(--border)}
+.sektion-label{font-size:11px;font-weight:500;color:var(--guld);letter-spacing:3px;text-transform:uppercase;margin-bottom:1.25rem;display:flex;align-items:center;gap:8px}
+.sektion-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.skovtur-banner{background:var(--gron);border-radius:8px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;position:relative;overflow:hidden}
+.skovtur-banner::before{content:'';position:absolute;right:-20px;top:-20px;width:100px;height:100px;background:rgba(200,149,42,0.15);border-radius:50%}
+.banner-label{font-size:10px;color:rgba(254,252,248,0.55);letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
+.banner-titel{font-family:'Playfair Display',serif;font-size:24px;color:#fefcf8;font-weight:500;margin-bottom:2px}
+.banner-dato{font-size:13px;color:rgba(200,149,42,0.9);margin-bottom:14px}
+.banner-btn{display:inline-block;font-size:12px;font-weight:500;background:var(--guld);color:#1a1a0e;padding:8px 20px;border-radius:4px;text-decoration:none;letter-spacing:0.5px}
+
+.nyhed{padding:1.25rem 0;border-bottom:1px solid var(--border)}
+.nyhed:last-child{border-bottom:none}
+.nyhed-dato{font-size:11px;color:var(--guld);font-weight:500;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.nyhed-titel{font-family:'Playfair Display',serif;font-size:20px;font-weight:500;color:var(--tekst);line-height:1.3;margin-bottom:8px}
+.nyhed-tekst{font-size:14px;color:var(--tekst-lys);line-height:1.65}
+.nyhed-laes{font-size:12px;font-weight:500;color:var(--gron);text-decoration:none;margin-top:8px;display:inline-block}
+
+/* SIDE KOLONNE */
+.side-col{background:var(--guld-pale);padding:2rem 1.75rem}
+
+.maerkedage-liste{margin-bottom:1.5rem}
+.maerkedag-item{display:flex;gap:10px;padding:0.65rem 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.maerkedag-item:last-child{border-bottom:none}
+.maerke-dato-box{background:var(--gron);color:#fefcf8;border-radius:4px;padding:5px 8px;text-align:center;min-width:44px;flex-shrink:0}
+.maerke-dato-box.guld{background:var(--guld)}
+.maerke-dato-box.guld .maerke-dag-nr,.maerke-dato-box.guld .maerke-mdr{color:#1a1a0e}
+.maerke-dag-nr{font-size:17px;font-weight:500;line-height:1;font-family:'Playfair Display',serif}
+.maerke-mdr{font-size:9px;text-transform:uppercase;letter-spacing:1px;opacity:0.8}
+.maerke-navn{font-size:13px;font-weight:500;color:var(--tekst)}
+.maerke-alder{font-size:11px;color:var(--guld);font-weight:500}
+.maerke-type{font-size:11px;color:var(--tekst-lys)}
+
+/* MINI KALENDER */
+.kalender-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.dag-navn{font-size:10px;font-weight:500;color:var(--tekst-lys);letter-spacing:1px;padding:4px 0}
+.dag{font-size:12px;color:var(--tekst-lys);padding:5px 2px;border-radius:3px}
+.dag.tom{color:transparent}
+.dag.idag{background:var(--gron);color:#fefcf8;font-weight:500;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;margin:0 auto}
+.dag.maerke{background:var(--guld-lys);color:var(--guld);font-weight:500;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;margin:0 auto}
+.dag.begivenhed{color:var(--gron);font-weight:500}
+
+.kalender-legend{display:flex;gap:12px;margin-top:10px;font-size:11px;color:var(--tekst-lys);flex-wrap:wrap}
+.leg-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+
+/* FOOTER */
+.footer{background:var(--gron);padding:1.5rem 2.5rem;display:flex;justify-content:space-between;align-items:center;border-top:3px solid var(--guld)}
+.footer-logo{font-family:'Playfair Display',serif;font-size:20px;color:rgba(254,252,248,0.85)}
+.footer-tekst{font-size:11px;color:rgba(254,252,248,0.4);letter-spacing:1px}
+
+/* NOTE */
+.udkast-note{max-width:900px;width:100%;background:var(--guld-pale);border:1px solid var(--border);border-top:none;padding:1rem 1.5rem;font-size:13px;color:var(--tekst-lys);line-height:1.6;border-radius:0 0 4px 4px}
+.udkast-note strong{color:var(--tekst);font-weight:500}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .main-grid{grid-template-columns:1fr}
+  .side-col{border-top:1px solid var(--border)}
+  .header-content{flex-direction:column;gap:0.5rem}
+  .header-year{font-size:48px}
+  .logo-klan{font-size:36px}
+}
+</style>
+</head>
+<body>
+
+<div class="udkast-banner">Designudkast — Olsenklanen.dk · April 2026</div>
+
+<div class="site">
+
+  <div class="header">
+    <div class="header-bg"></div>
+    <div class="header-texture"></div>
+    <div class="header-content">
+      <div>
+        <div class="logo-klan">OlsenKlanen</div>
+        <div class="logo-sub">Siden 1962 · Familien samlet</div>
+      </div>
+      <div style="text-align:right">
+        <div class="header-year">2026</div>
+        <div class="header-tagline">Eriksminde · 29–31 maj</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-foto">
+    <div class="hero-overlay"></div>
+    <div class="hero-tekst">
+      <div class="hero-foto-label">Fællesfoto</div>
+      <div class="hero-foto-tip">Her indsættes årets store fællesfoto</div>
+      <div class="hero-foto-sub">Op til 70 klanmedlemmer samlet</div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <a href="#" class="aktiv">Skovtur 2026</a>
+    <a href="#">Velkommen</a>
+    <a href="#">Info 2025, 2024</a>
+    <a href="#">Mærkedage</a>
+    <a href="#">Fotos</a>
+    <a href="#">Nyheder</a>
+    <a href="#">Kalender</a>
+    <a href="#">Familiekrønike</a>
+    <a href="#">Medlemmer</a>
+    <a href="#">Vedtægter</a>
+    <a href="#">Kontakt</a>
+  </nav>
+
+  <div class="login-strip">
+    <span>Velkommen til Olsenklanens hjemmeside</span>
+    <a href="#" class="login-btn">Log ind som medlem</a>
+  </div>
+
+  <div class="main-grid">
+    <div class="nyheder-col">
+      <div class="sektion-label">Seneste nyheder</div>
+
+      <div class="skovtur-banner">
+        <div class="banner-label">Årets skovtur</div>
+        <div class="banner-titel">Eriksminde, Rørvig</div>
+        <div class="banner-dato">29. – 31. maj 2026</div>
+        <a href="#" class="banner-btn">Tilmeld dig her</a>
+      </div>
+
+      <div class="nyhed">
+        <div class="nyhed-dato">18. april 2026</div>
+        <div class="nyhed-titel">Tilmelding til skovtur 2026 er åben</div>
+        <div class="nyhed-tekst">Så er det tid til at tilmelde sig årets familieskovtur til Eriksminde ved Rørvig. Husk at tilmelde senest den 3. maj af hensyn til planlægningen.</div>
+        <a href="#" class="nyhed-laes">Læs mere →</a>
+      </div>
+
+      <div class="nyhed">
+        <div class="nyhed-dato">2. marts 2026</div>
+        <div class="nyhed-titel">Referat fra skovturen 2025 er klar</div>
+        <div class="nyhed-tekst">Referatet fra den dejlige skovtur til Tonneshøj ved Haderslev er nu tilgængeligt. En stor tak til arrangementskomiteen for et fantastisk arrangement.</div>
+        <a href="#" class="nyhed-laes">Læs mere →</a>
+      </div>
+
+      <div class="nyhed">
+        <div class="nyhed-dato">15. januar 2026</div>
+        <div class="nyhed-titel">Generalforsamling lørdag den 30. maj</div>
+        <div class="nyhed-tekst">Næste ordinære generalforsamling afholdes lørdag den 30. maj 2026 kl. 9.45. Forslag fremsendes til bestyrelsen senest den 10. maj.</div>
+        <a href="#" class="nyhed-laes">Læs mere →</a>
+      </div>
+    </div>
+
+    <div class="side-col">
+      <div class="sektion-label">Kommende mærkedage</div>
+
+      <div class="maerkedage-liste">
+        <div class="maerkedag-item">
+          <div class="maerke-dato-box">
+            <div class="maerke-dag-nr">3</div>
+            <div class="maerke-mdr">maj</div>
+          </div>
+          <div>
+            <div class="maerke-navn">Lise Olsen</div>
+            <div class="maerke-alder">Fylder 80 år</div>
+            <div class="maerke-type">Stor mærkedag</div>
+          </div>
+        </div>
+        <div class="maerkedag-item">
+          <div class="maerke-dato-box">
+            <div class="maerke-dag-nr">17</div>
+            <div class="maerke-mdr">maj</div>
+          </div>
+          <div>
+            <div class="maerke-navn">Jakob Nielsen</div>
+            <div class="maerke-alder">Fylder 18 år</div>
+            <div class="maerke-type">Myndig</div>
+          </div>
+        </div>
+        <div class="maerkedag-item">
+          <div class="maerke-dato-box guld">
+            <div class="maerke-dag-nr">29</div>
+            <div class="maerke-mdr">maj</div>
+          </div>
+          <div>
+            <div class="maerke-navn">Skovtur 2026</div>
+            <div class="maerke-alder" style="color:var(--gron)">Eriksminde, Rørvig</div>
+            <div class="maerke-type">3 dages arrangement</div>
+          </div>
+        </div>
+        <div class="maerkedag-item">
+          <div class="maerke-dato-box">
+            <div class="maerke-dag-nr">12</div>
+            <div class="maerke-mdr">jun</div>
+          </div>
+          <div>
+            <div class="maerke-navn">Anne Mette Skov</div>
+            <div class="maerke-alder">Fylder 55 år</div>
+            <div class="maerke-type">Mærkedag</div>
+          </div>
+        </div>
+        <div class="maerkedag-item">
+          <div class="maerke-dato-box">
+            <div class="maerke-dag-nr">8</div>
+            <div class="maerke-mdr">aug</div>
+          </div>
+          <div>
+            <div class="maerke-navn">Martin Olsen</div>
+            <div class="maerke-alder">Konfirmation</div>
+            <div class="maerke-type">Stor dag</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sektion-label">Maj 2026</div>
+      <div class="kalender-grid">
+        <div class="dag-navn">Ma</div><div class="dag-navn">Ti</div><div class="dag-navn">On</div>
+        <div class="dag-navn">To</div><div class="dag-navn">Fr</div><div class="dag-navn">Lø</div><div class="dag-navn">Sø</div>
+        <div class="dag tom">·</div><div class="dag tom">·</div><div class="dag tom">·</div>
+        <div class="dag tom">·</div><div class="dag">1</div><div class="dag">2</div><div class="dag maerke">3</div>
+        <div class="dag">4</div><div class="dag">5</div><div class="dag">6</div>
+        <div class="dag">7</div><div class="dag">8</div><div class="dag">9</div><div class="dag">10</div>
+        <div class="dag">11</div><div class="dag">12</div><div class="dag">13</div>
+        <div class="dag">14</div><div class="dag">15</div><div class="dag">16</div><div class="dag maerke">17</div>
+        <div class="dag">18</div><div class="dag">19</div><div class="dag">20</div>
+        <div class="dag">21</div><div class="dag">22</div><div class="dag">23</div><div class="dag idag">24</div>
+        <div class="dag">25</div><div class="dag">26</div><div class="dag">27</div>
+        <div class="dag">28</div><div class="dag begivenhed">29</div><div class="dag begivenhed">30</div><div class="dag begivenhed">31</div>
+      </div>
+      <div class="kalender-legend">
+        <span style="display:flex;align-items:center;gap:4px"><span class="leg-dot" style="background:var(--gron)"></span>I dag</span>
+        <span style="display:flex;align-items:center;gap:4px"><span class="leg-dot" style="background:var(--guld-lys);border:1px solid var(--guld)"></span>Mærkedag</span>
+        <span style="display:flex;align-items:center;gap:4px"><span class="leg-dot" style="border-radius:3px;background:var(--gron-pale)"></span>Arrangement</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-logo">OlsenKlanen</div>
+    <div class="footer-tekst">Siden 1962 · olsenklanen.dk · Kun for medlemmer</div>
+  </div>
+
+</div>
+
+<div class="udkast-note">
+  <strong>Dette er et designudkast</strong> — udarbejdet af Carsten i samarbejde med Claude (AI) · April 2026.<br>
+  Indhold, navne og datoer er eksempler. Det endelige design tilpasses efter aftale med Kurt (Oldermand).
+</div>
+
+</body>
+</html>

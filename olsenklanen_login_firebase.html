@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen — Log ind</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gron:#2d5016;--gron-lys:#4a7c2a;--gron-pale:#e8f0dc;--gron-dark:#1a3009;
+  --guld:#c8952a;--guld-lys:#f5e6c8;--guld-pale:#fdf8ee;
+  --hvid:#fefcf8;--tekst:#1a1a0e;--tekst-lys:#4a4a35;--border:#d4c9a0;
+  --fejl:#a32d2d;--fejl-lys:#fcebeb;--ok:#2d6b30;--ok-lys:#e8f5e9;
+}
+body{font-family:'Source Sans 3',sans-serif;background:var(--gron-dark);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem;position:relative;overflow:hidden;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 20%,rgba(200,149,42,0.12) 0%,transparent 50%),linear-gradient(135deg,#1a3009 0%,#2d5016 50%,#1a3009 100%);z-index:0;}
+.container{position:relative;z-index:1;width:100%;max-width:420px;}
+.logo{text-align:center;margin-bottom:2rem;}
+.logo-navn{font-family:'Playfair Display',serif;font-size:42px;font-weight:700;color:var(--hvid);letter-spacing:-1px;line-height:1;}
+.logo-sub{font-size:11px;font-weight:300;color:rgba(254,252,248,0.5);letter-spacing:4px;text-transform:uppercase;margin-top:6px;}
+.logo-streg{width:40px;height:2px;background:var(--guld);margin:12px auto 0;border-radius:2px;}
+.kort{background:var(--hvid);border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
+.faner{display:flex;background:var(--gron);border-bottom:3px solid var(--guld);}
+.fane{flex:1;padding:1rem;font-size:13px;font-weight:500;color:rgba(254,252,248,0.55);text-align:center;cursor:pointer;border:none;background:none;font-family:'Source Sans 3',sans-serif;transition:all 0.2s;}
+.fane:hover{color:var(--hvid)}
+.fane.aktiv{color:var(--guld);background:rgba(0,0,0,0.15);border-bottom:3px solid var(--guld);margin-bottom:-3px;}
+.indhold{padding:2rem;}
+.panel{display:none}
+.panel.aktiv{display:block;animation:fadeIn 0.25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.velkomst{margin-bottom:1.5rem;}
+.velkomst-titel{font-family:'Playfair Display',serif;font-size:22px;color:var(--tekst);margin-bottom:4px;font-weight:500;}
+.velkomst-sub{font-size:13px;color:var(--tekst-lys);line-height:1.5;}
+.felt-gruppe{margin-bottom:1.25rem;}
+.felt-label{display:block;font-size:12px;font-weight:500;color:var(--tekst-lys);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;}
+.felt-input{width:100%;padding:10px 14px;font-size:14px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:var(--guld-pale);border:1.5px solid var(--border);border-radius:6px;outline:none;transition:border-color 0.2s;}
+.felt-input:focus{border-color:var(--gron);background:var(--hvid);}
+.kodeord-wrap{position:relative}
+.kodeord-wrap .felt-input{padding-right:44px}
+.vis-kode{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--tekst-lys);font-size:16px;padding:4px;}
+.hoved-knap{width:100%;padding:12px;font-size:15px;font-weight:500;font-family:'Source Sans 3',sans-serif;color:var(--hvid);background:var(--gron);border:none;border-radius:6px;cursor:pointer;transition:background 0.2s;position:relative;overflow:hidden;}
+.hoved-knap:hover{background:var(--gron-lys)}
+.hoved-knap:disabled{background:var(--border);cursor:not-allowed}
+.hoved-knap.loading::after{content:'';position:absolute;top:50%;left:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.besked{padding:10px 14px;border-radius:6px;font-size:13px;line-height:1.5;margin-bottom:1rem;display:none;}
+.besked.fejl{background:var(--fejl-lys);color:var(--fejl);border-left:3px solid var(--fejl)}
+.besked.ok{background:var(--ok-lys);color:var(--ok);border-left:3px solid var(--ok)}
+.besked.vis{display:block}
+.hjaelp-links{display:flex;justify-content:space-between;margin-top:1.25rem;}
+.link{font-size:12px;color:var(--gron);cursor:pointer;background:none;border:none;font-family:'Source Sans 3',sans-serif;padding:0;}
+.link:hover{color:var(--guld);text-decoration:underline}
+.succes-visning{text-align:center;padding:1rem 0;display:none;}
+.succes-visning.vis{display:block}
+.succes-ikon{width:56px;height:56px;background:var(--ok-lys);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:24px;}
+.succes-titel{font-family:'Playfair Display',serif;font-size:20px;color:var(--tekst);margin-bottom:8px;}
+.succes-tekst{font-size:13px;color:var(--tekst-lys);line-height:1.6;}
+.kort-footer{background:var(--gron-pale);border-top:1px solid var(--border);padding:0.75rem 2rem;text-align:center;font-size:11px;color:var(--tekst-lys);}
+.site-link{text-align:center;margin-top:1.5rem;font-size:12px;color:rgba(254,252,248,0.4);}
+.site-link a{color:rgba(200,149,42,0.7);text-decoration:none;}
+.krav-liste{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.krav{font-size:11px;padding:3px 8px;border-radius:3px;background:var(--guld-pale);color:var(--tekst-lys);border:1px solid var(--border);transition:all 0.2s;}
+.krav.opfyldt{background:var(--ok-lys);color:var(--ok);border-color:var(--ok);}
+</style>
+</head>
+<body>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+    authDomain: "olsenklanen-familieside.firebaseapp.com",
+    projectId: "olsenklanen-familieside",
+    storageBucket: "olsenklanen-familieside.firebasestorage.app",
+    messagingSenderId: "640843662410",
+    appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  window.fbLogInd = (e,k) => signInWithEmailAndPassword(auth,e,k);
+  window.fbOpret = (e,k) => createUserWithEmailAndPassword(auth,e,k);
+  window.fbGlemtKode = (e) => sendPasswordResetEmail(auth,e);
+  window.fbSendVerifikation = (u) => sendEmailVerification(u);
+  window.fbGemMedlem = (uid,data) => setDoc(doc(db,"medlemmer",uid),data);
+</script>
+
+<div class="container">
+  <div class="logo">
+    <div class="logo-navn">OlsenKlanen</div>
+    <div class="logo-sub">Siden 1962 · Familien samlet</div>
+    <div class="logo-streg"></div>
+  </div>
+
+  <div class="kort">
+    <div class="faner">
+      <button class="fane aktiv" onclick="skiftPanel('login')">Log ind</button>
+      <button class="fane" onclick="skiftPanel('opret')">Ny bruger</button>
+      <button class="fane" onclick="skiftPanel('glemt')">Glemt kodeord</button>
+    </div>
+
+    <div class="indhold">
+
+      <div class="panel aktiv" id="panel-login">
+        <div class="velkomst">
+          <div class="velkomst-titel">Velkommen tilbage</div>
+          <div class="velkomst-sub">Log ind med dit medlems-login</div>
+        </div>
+        <div class="besked fejl" id="login-fejl"></div>
+        <div class="besked ok" id="login-ok"></div>
+        <div class="felt-gruppe">
+          <label class="felt-label">Email</label>
+          <input class="felt-input" type="email" id="login-email" placeholder="din@email.dk">
+        </div>
+        <div class="felt-gruppe">
+          <label class="felt-label">Kodeord</label>
+          <div class="kodeord-wrap">
+            <input class="felt-input" type="password" id="login-kode" placeholder="••••••••">
+            <button class="vis-kode" onclick="visKode('login-kode',this)">👁</button>
+          </div>
+        </div>
+        <button class="hoved-knap" id="login-knap" onclick="logInd()">Log ind</button>
+        <div class="hjaelp-links">
+          <button class="link" onclick="skiftPanel('glemt')">Glemt kodeord?</button>
+          <button class="link" onclick="skiftPanel('opret')">Opret ny bruger →</button>
+        </div>
+        <div class="succes-visning" id="login-succes">
+          <div class="succes-ikon">✓</div>
+          <div class="succes-titel">Du er logget ind!</div>
+          <div class="succes-tekst">Velkommen til Olsenklanen!<br>Du omstilles til forsiden...</div>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-opret">
+        <div class="velkomst">
+          <div class="velkomst-titel">Opret dit login</div>
+          <div class="velkomst-sub">Registrér dig som medlem af Olsenklanen</div>
+        </div>
+        <div class="besked fejl" id="opret-fejl"></div>
+        <div class="besked ok" id="opret-ok"></div>
+        <div class="felt-gruppe">
+          <label class="felt-label">Dit navn</label>
+          <input class="felt-input" type="text" id="opret-navn" placeholder="Fornavn Efternavn">
+        </div>
+        <div class="felt-gruppe">
+          <label class="felt-label">Medlemsnummer</label>
+          <input class="felt-input" type="text" id="opret-nr" placeholder="f.eks. 0001-02">
+        </div>
+        <div class="felt-gruppe">
+          <label class="felt-label">Email</label>
+          <input class="felt-input" type="email" id="opret-email" placeholder="din@email.dk">
+        </div>
+        <div class="felt-gruppe">
+          <label class="felt-label">Vælg kodeord</label>
+          <div class="kodeord-wrap">
+            <input class="felt-input" type="password" id="opret-kode" placeholder="Mindst 8 tegn" oninput="tjekKodeord()">
+            <button class="vis-kode" onclick="visKode('opret-kode',this)">👁</button>
+          </div>
+          <div class="krav-liste">
+            <span class="krav" id="krav-laengde">8+ tegn</span>
+            <span class="krav" id="krav-stor">Stort bogstav</span>
+            <span class="krav" id="krav-tal">Tal</span>
+          </div>
+        </div>
+        <button class="hoved-knap" id="opret-knap" onclick="opretBruger()">Opret konto</button>
+        <div class="hjaelp-links">
+          <button class="link" onclick="skiftPanel('login')">← Tilbage til login</button>
+          <span></span>
+        </div>
+        <div class="succes-visning" id="opret-succes">
+          <div class="succes-ikon">✉</div>
+          <div class="succes-titel">Konto oprettet!</div>
+          <div class="succes-tekst">En bekræftelses-email er sendt til dig.<br>Klik på linket i emailen for at aktivere din konto.</div>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-glemt">
+        <div class="velkomst">
+          <div class="velkomst-titel">Glemt kodeord?</div>
+          <div class="velkomst-sub">Vi sender dig et link til at vælge et nyt kodeord</div>
+        </div>
+        <div class="besked fejl" id="glemt-fejl"></div>
+        <div class="besked ok" id="glemt-ok"></div>
+        <div class="felt-gruppe">
+          <label class="felt-label">Din email</label>
+          <input class="felt-input" type="email" id="glemt-email" placeholder="din@email.dk">
+        </div>
+        <button class="hoved-knap" id="glemt-knap" onclick="glemtKodeord()">Send nulstillingslink</button>
+        <div class="hjaelp-links">
+          <button class="link" onclick="skiftPanel('login')">← Tilbage til login</button>
+          <span></span>
+        </div>
+        <div class="succes-visning" id="glemt-succes">
+          <div class="succes-ikon">✉</div>
+          <div class="succes-titel">Email sendt!</div>
+          <div class="succes-tekst">Tjek din indbakke — linket er gyldigt i 24 timer.</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="kort-footer">OlsenKlanen.dk · Familiens digitale hjem · Kun for medlemmer</div>
+  </div>
+  <div class="site-link"><a href="olsenklanen_designudkast.html">← Tilbage til forsiden</a></div>
+</div>
+
+<script>
+function skiftPanel(n){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('aktiv'));document.querySelectorAll('.fane').forEach(f=>f.classList.remove('aktiv'));document.getElementById('panel-'+n).classList.add('aktiv');['login','opret','glemt'].forEach((x,i)=>{if(x===n)document.querySelectorAll('.fane')[i].classList.add('aktiv');});document.querySelectorAll('.besked').forEach(b=>b.classList.remove('vis'));}
+function visKode(id,k){const f=document.getElementById(id);f.type=f.type==='password'?'text':'password';k.textContent=f.type==='password'?'👁':'🙈';}
+function tjekKodeord(){const k=document.getElementById('opret-kode').value;document.getElementById('krav-laengde').className='krav'+(k.length>=8?' opfyldt':'');document.getElementById('krav-stor').className='krav'+(/[A-ZÆØÅ]/.test(k)?' opfyldt':'');document.getElementById('krav-tal').className='krav'+(/[0-9]/.test(k)?' opfyldt':'');}
+function visFejl(p,t){const e=document.getElementById(p+'-fejl');e.textContent=t;e.className='besked fejl vis';document.getElementById(p+'-ok').className='besked ok';}
+function setLoading(id,l,t){const e=document.getElementById(id);e.disabled=l;l?e.classList.add('loading'):e.classList.remove('loading');if(!l)e.textContent=t;else e.textContent='';}
+function fejlTekst(k){return({'auth/user-not-found':'Vi kender ikke denne email. Er du registreret som medlem?','auth/wrong-password':'Forkert kodeord. Prøv igen eller klik "Glemt kodeord"','auth/email-already-in-use':'Denne email er allerede registreret. Prøv at logge ind.','auth/weak-password':'Kodeordet er for svagt.','auth/invalid-email':'Email-adressen ser ikke rigtig ud.','auth/too-many-requests':'For mange forsøg. Prøv igen om lidt.','auth/invalid-credential':'Forkert email eller kodeord.'}[k]||'Der opstod en fejl. Kontakt Kurt.');}
+
+async function logInd(){
+  const e=document.getElementById('login-email').value.trim();
+  const k=document.getElementById('login-kode').value;
+  if(!e||!k){visFejl('login','Udfyld venligst email og kodeord');return;}
+  setLoading('login-knap',true,'');
+  try{
+    await window.fbLogInd(e,k);
+    document.getElementById('login-succes').classList.add('vis');
+    document.querySelectorAll('#panel-login .felt-gruppe,#panel-login .hoved-knap,#panel-login .hjaelp-links,#panel-login .velkomst').forEach(el=>el.style.display='none');
+    setTimeout(()=>{window.location.href='olsenklanen_designudkast.html';},2000);
+  }catch(err){visFejl('login',fejlTekst(err.code));setLoading('login-knap',false,'Log ind');}
+}
+
+async function opretBruger(){
+  const navn=document.getElementById('opret-navn').value.trim();
+  const nr=document.getElementById('opret-nr').value.trim();
+  const e=document.getElementById('opret-email').value.trim();
+  const k=document.getElementById('opret-kode').value;
+  if(!navn||!nr||!e||!k){visFejl('opret','Udfyld venligst alle felter');return;}
+  if(k.length<8){visFejl('opret','Kodeordet skal være mindst 8 tegn');return;}
+  setLoading('opret-knap',true,'');
+  try{
+    const r=await window.fbOpret(e,k);
+    await window.fbSendVerifikation(r.user);
+    await window.fbGemMedlem(r.user.uid,{navn,medlemsnummer:nr,email:e,oprettet:new Date().toISOString()});
+    document.getElementById('opret-succes').classList.add('vis');
+    document.querySelectorAll('#panel-opret .felt-gruppe,#panel-opret .hoved-knap,#panel-opret .hjaelp-links,#panel-opret .velkomst').forEach(el=>el.style.display='none');
+  }catch(err){visFejl('opret',fejlTekst(err.code));setLoading('opret-knap',false,'Opret konto');}
+}
+
+async function glemtKodeord(){
+  const e=document.getElementById('glemt-email').value.trim();
+  if(!e){visFejl('glemt','Skriv din email-adresse');return;}
+  setLoading('glemt-knap',true,'');
+  try{
+    await window.fbGlemtKode(e);
+    document.getElementById('glemt-succes').classList.add('vis');
+    document.querySelectorAll('#panel-glemt .felt-gruppe,#panel-glemt .hoved-knap,#panel-glemt .hjaelp-links,#panel-glemt .velkomst').forEach(el=>el.style.display='none');
+  }catch(err){visFejl('glemt',fejlTekst(err.code));setLoading('glemt-knap',false,'Send nulstillingslink');}
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Enter'){const a=document.querySelector('.panel.aktiv').id;if(a==='panel-login')logInd();else if(a==='panel-opret')opretBruger();else if(a==='panel-glemt')glemtKodeord();}});
+</script>
+</body>
+</html>
