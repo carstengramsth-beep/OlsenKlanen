@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen — Administration</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gron:#2d5016;--gron-lys:#4a7c2a;--gron-pale:#e8f0dc;
+  --guld:#c8952a;--guld-pale:#fdf8ee;
+  --hvid:#ffffff;--baggrund:#f4f5f0;
+  --tekst:#1a1a0e;--tekst-lys:#5a5a4a;--border:#ddd8c0;
+  --fejl:#a32d2d;--fejl-lys:#fcebeb;
+  --ok:#2d6b30;--ok-lys:#e8f5e9;
+  --bla:#185FA5;--bla-lys:#E6F1FB;
+  --lilla:#6B3580;--lilla-lys:#F0E6F5;
+  --orange:#c8952a;--orange-lys:#fdf8ee;
+}
+
+body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var(--tekst);min-height:100vh;}
+
+/* TOPBAR */
+.topbar{background:var(--gron);border-bottom:2px solid var(--guld);padding:0 1.5rem;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-venstre{display:flex;align-items:center;gap:16px;}
+.topbar-logo{font-family:'Playfair Display',serif;font-size:18px;color:var(--hvid);font-weight:500;letter-spacing:-0.3px;}
+.topbar-sep{width:1px;height:20px;background:rgba(255,255,255,0.2);}
+.topbar-titel{font-size:12px;color:rgba(255,255,255,0.55);letter-spacing:1px;text-transform:uppercase;}
+.topbar-hoejre{display:flex;align-items:center;gap:12px;}
+.bruger-chip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px 4px 6px;}
+.bruger-avatar{width:24px;height:24px;border-radius:50%;background:var(--guld);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#1a1a0e;}
+.bruger-navn{font-size:12px;color:rgba(255,255,255,0.85);}
+.rolle-prik{width:6px;height:6px;border-radius:50%;background:var(--guld);}
+.log-ud-knap{font-size:12px;color:rgba(255,255,255,0.45);background:none;border:none;cursor:pointer;font-family:'Source Sans 3',sans-serif;padding:4px 8px;}
+.log-ud-knap:hover{color:var(--hvid)}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 52px);}
+
+/* SIDEMENU */
+.sidemenu{background:var(--hvid);border-right:1px solid var(--border);padding:1rem 0;position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;}
+.menu-sektion{margin-bottom:0.25rem;}
+.menu-overskrift{font-size:10px;font-weight:600;color:var(--tekst-lys);letter-spacing:1.5px;text-transform:uppercase;padding:0.75rem 1rem 0.25rem;margin-top:0.25rem;}
+.menu-linje{height:1px;background:var(--border);margin:0.5rem 1rem;}
+.menu-punkt{display:flex;align-items:center;gap:8px;padding:0.5rem 1rem;font-size:13px;color:var(--tekst-lys);cursor:pointer;transition:all 0.15s;border-left:2px solid transparent;margin:1px 0;}
+.menu-punkt:hover{background:var(--gron-pale);color:var(--tekst);border-left-color:var(--gron-pale);}
+.menu-punkt.aktiv{background:var(--gron-pale);color:var(--gron);border-left-color:var(--gron);font-weight:500;}
+.menu-punkt.laaset{opacity:0.35;cursor:not-allowed;}
+.menu-ikon{font-size:14px;width:18px;text-align:center;flex-shrink:0;}
+.menu-punkt .badge{margin-left:auto;font-size:10px;background:var(--gron);color:var(--hvid);border-radius:10px;padding:1px 6px;font-weight:500;}
+
+/* INDHOLD */
+.indhold{padding:1.5rem 2rem;max-width:1000px;}
+.side{display:none;}
+.side.aktiv{display:block;}
+
+/* SIDE HEADER */
+.side-header{margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--border);}
+.side-titel{font-size:20px;font-weight:500;color:var(--tekst);}
+.side-sub{font-size:13px;color:var(--tekst-lys);margin-top:3px;}
+
+/* STATISTIK */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;}
+.stat{background:var(--hvid);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;border-top:3px solid var(--gron);}
+.stat.guld{border-top-color:var(--guld);}
+.stat.bla{border-top-color:var(--bla);}
+.stat.lilla{border-top-color:var(--lilla);}
+.stat-nr{font-size:32px;font-weight:500;color:var(--tekst);line-height:1;font-family:'Playfair Display',serif;}
+.stat-label{font-size:11px;color:var(--tekst-lys);margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;}
+
+/* KORT */
+.kort{background:var(--hvid);border:1px solid var(--border);border-radius:8px;margin-bottom:1.25rem;overflow:hidden;}
+.kort-header{padding:0.875rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--baggrund);}
+.kort-titel{font-size:13px;font-weight:500;color:var(--tekst);}
+.kort-body{padding:1.25rem;}
+
+/* KNAPPER */
+.knap{font-size:13px;font-weight:500;font-family:'Source Sans 3',sans-serif;border-radius:5px;padding:7px 16px;cursor:pointer;border:1px solid;transition:all 0.15s;}
+.knap-gron{background:var(--gron);color:var(--hvid);border-color:var(--gron);}
+.knap-gron:hover{background:var(--gron-lys);}
+.knap-lys{background:var(--hvid);color:var(--tekst);border-color:var(--border);}
+.knap-lys:hover{background:var(--baggrund);}
+.knap-roed{background:var(--fejl-lys);color:var(--fejl);border-color:var(--fejl);}
+.knap-lille{font-size:11px;padding:4px 10px;}
+
+/* FORMULAR */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.form-grid.tre{grid-template-columns:1fr 1fr 1fr;}
+.felt{margin-bottom:0;}
+.felt-label{display:block;font-size:11px;font-weight:500;color:var(--tekst-lys);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;}
+.felt-input,.felt-select{width:100%;padding:8px 11px;font-size:13px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:var(--hvid);border:1px solid var(--border);border-radius:5px;outline:none;transition:border-color 0.15s;}
+.felt-input:focus,.felt-select:focus{border-color:var(--gron);}
+.form-knapper{display:flex;gap:8px;margin-top:1.25rem;}
+
+/* TABEL */
+.data-tabel{width:100%;border-collapse:collapse;}
+.data-tabel th{font-size:11px;font-weight:500;color:var(--tekst-lys);text-transform:uppercase;letter-spacing:0.5px;padding:0.6rem 1rem;text-align:left;background:var(--baggrund);border-bottom:1px solid var(--border);}
+.data-tabel td{font-size:13px;color:var(--tekst);padding:0.6rem 1rem;border-bottom:1px solid var(--border);}
+.data-tabel tr:last-child td{border-bottom:none;}
+.data-tabel tr:hover td{background:var(--guld-pale);}
+
+/* CHIPS */
+.chip{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:3px;}
+.chip-ejer{background:#FAEEDA;color:#633806;}
+.chip-webmaster{background:var(--gron-pale);color:var(--gron);}
+.chip-kasserer{background:var(--bla-lys);color:var(--bla);}
+.chip-historie{background:var(--lilla-lys);color:var(--lilla);}
+.chip-koordinator{background:#FFF3CD;color:#856404;}
+.chip-medlem{background:#F1EFE8;color:#5F5E5A;}
+.chip-betalt{background:var(--ok-lys);color:var(--ok);}
+.chip-mangler{background:var(--fejl-lys);color:var(--fejl);}
+
+/* HANDLINGER */
+.handlinger{display:flex;gap:6px;}
+
+/* BESKED */
+.besked{padding:10px 14px;border-radius:5px;font-size:13px;margin-top:1rem;border-left:3px solid;}
+.besked.ok{background:var(--ok-lys);color:var(--ok);border-color:var(--ok);}
+.besked.fejl{background:var(--fejl-lys);color:var(--fejl);border-color:var(--fejl);}
+
+/* LOG */
+.log-item{display:flex;gap:10px;padding:0.65rem 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+.log-item:last-child{border-bottom:none;}
+.log-ikon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.log-tekst{font-size:13px;color:var(--tekst);line-height:1.4;}
+.log-tid{font-size:11px;color:var(--tekst-lys);margin-top:1px;}
+
+/* ROLLE SEKTION */
+.rolle-sektion{background:var(--hvid);border:1px solid var(--border);border-radius:8px;padding:1.25rem;margin-bottom:1rem;}
+.rolle-header{display:flex;align-items:center;gap:10px;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border);}
+.rolle-ikon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.rolle-navn{font-size:15px;font-weight:500;color:var(--tekst);}
+.rolle-sub{font-size:12px;color:var(--tekst-lys);}
+.adgang-liste{display:flex;flex-wrap:wrap;gap:6px;}
+.adgang-chip{font-size:12px;padding:4px 10px;border-radius:4px;background:var(--gron-pale);color:var(--gron);border:1px solid rgba(45,80,22,0.2);}
+.adgang-chip.nej{background:#F1EFE8;color:#888780;border-color:var(--border);text-decoration:line-through;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;display:none;align-items:center;justify-content:center;}
+.modal-overlay.vis{display:flex;}
+.modal{background:var(--hvid);border-radius:10px;padding:1.5rem;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);}
+.modal-titel{font-size:18px;font-weight:500;color:var(--tekst);margin-bottom:1.25rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border);}
+.modal-knapper{display:flex;gap:8px;margin-top:1.25rem;justify-content:flex-end;}
+
+@media(max-width:768px){
+  .layout{grid-template-columns:1fr;}
+  .sidemenu{display:none;}
+  .stat-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-venstre">
+    <div class="topbar-logo">OlsenKlanen</div>
+    <div class="topbar-sep"></div>
+    <div class="topbar-titel">Administration</div>
+  </div>
+  <div class="topbar-hoejre">
+    <div class="bruger-chip">
+      <div class="bruger-avatar" id="bruger-avatar">C</div>
+      <span class="bruger-navn" id="bruger-navn">Carsten</span>
+      <div class="rolle-prik"></div>
+    </div>
+    <button class="log-ud-knap" onclick="alert('Log ud — kobles til Firebase')">Log ud</button>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- SIDEMENU -->
+  <div class="sidemenu">
+    <div class="menu-overskrift">Overblik</div>
+    <div class="menu-punkt aktiv" onclick="visSide('overblik',this)">
+      <span class="menu-ikon">🏠</span> Overblik
+    </div>
+
+    <div class="menu-linje"></div>
+    <div class="menu-overskrift">Medlemmer</div>
+    <div class="menu-punkt" onclick="visSide('opret',this)">
+      <span class="menu-ikon">➕</span> Opret husstand
+    </div>
+    <div class="menu-punkt" onclick="visSide('medlemmer',this)">
+      <span class="menu-ikon">👥</span> Alle medlemmer
+      <span class="badge">34</span>
+    </div>
+    <div class="menu-punkt" onclick="visSide('admin-roller',this)">
+      <span class="menu-ikon">🔑</span> Roller & adgang
+    </div>
+
+    <div class="menu-linje"></div>
+    <div class="menu-overskrift">Økonomi</div>
+    <div class="menu-punkt" onclick="visSide('betaling',this)">
+      <span class="menu-ikon">💰</span> Kontingent
+    </div>
+
+    <div class="menu-linje"></div>
+    <div class="menu-overskrift">Indhold</div>
+    <div class="menu-punkt" onclick="visSide('kalender',this)">
+      <span class="menu-ikon">📅</span> Kalender
+    </div>
+    <div class="menu-punkt" onclick="visSide('kronik',this)">
+      <span class="menu-ikon">📖</span> Familiekrønike
+    </div>
+    <div class="menu-punkt" onclick="visSide('nyheder',this)">
+      <span class="menu-ikon">📰</span> Nyheder
+    </div>
+
+    <div class="menu-linje"></div>
+    <div class="menu-overskrift">System</div>
+    <div class="menu-punkt" onclick="visSide('log',this)">
+      <span class="menu-ikon">📋</span> Aktivitetslog
+    </div>
+    <div class="menu-punkt" onclick="visSide('backup',this)">
+      <span class="menu-ikon">💾</span> Backup
+    </div>
+  </div>
+
+  <!-- INDHOLD -->
+  <div class="indhold">
+
+    <!-- OVERBLIK -->
+    <div class="side aktiv" id="side-overblik">
+      <div class="side-header">
+        <div class="side-titel">Overblik</div>
+        <div class="side-sub">Olsenklanen · April 2026</div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-nr">34</div>
+          <div class="stat-label">Husstande</div>
+        </div>
+        <div class="stat guld">
+          <div class="stat-nr">87</div>
+          <div class="stat-label">Familiemedlemmer</div>
+        </div>
+        <div class="stat bla">
+          <div class="stat-nr">29</div>
+          <div class="stat-label">Dage til skovtur</div>
+        </div>
+        <div class="stat lilla">
+          <div class="stat-nr">3</div>
+          <div class="stat-label">Mærkedage i år</div>
+        </div>
+      </div>
+
+      <!-- MÆRKEDAGE -->
+      <div class="kort">
+        <div class="kort-header">
+          <span class="kort-titel">Kommende mærkedage 2026</span>
+        </div>
+        <div class="kort-body" style="padding:0">
+          <table class="data-tabel">
+            <thead><tr>
+              <th>Dato</th><th>Navn</th><th>Husstand</th><th>Mærkedag</th>
+            </tr></thead>
+            <tbody>
+              <tr><td>3. maj</td><td>Lise Olsen</td><td>0008</td><td><span class="chip chip-ejer">80 år</span></td></tr>
+              <tr><td>17. maj</td><td>Jakob Nielsen</td><td>0015</td><td><span class="chip chip-kasserer">18 år</span></td></tr>
+              <tr><td>12. jun</td><td>Anne Mette Skov</td><td>0021</td><td><span class="chip chip-webmaster">55 år</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- AKTIVITET -->
+      <div class="kort">
+        <div class="kort-header"><span class="kort-titel">Seneste aktivitet</span></div>
+        <div class="kort-body">
+          <div class="log-item">
+            <div class="log-ikon" style="background:var(--ok-lys)">✓</div>
+            <div><div class="log-tekst">Karin opdaterede husstand 0012 — ny email registreret</div><div class="log-tid">I dag 10:32</div></div>
+          </div>
+          <div class="log-item">
+            <div class="log-ikon" style="background:var(--bla-lys)">💰</div>
+            <div><div class="log-tekst">Tommy registrerede kontingent fra husstand 0008</div><div class="log-tid">I går 14:15</div></div>
+          </div>
+          <div class="log-item">
+            <div class="log-ikon" style="background:var(--lilla-lys)">➕</div>
+            <div><div class="log-tekst">Kurt oprettede ny husstand 0034 — Andersen</div><div class="log-tid">23. apr 09:41</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPRET HUSSTAND -->
+    <div class="side" id="side-opret">
+      <div class="side-header">
+        <div class="side-titel">Opret ny husstand</div>
+        <div class="side-sub">Udfyld oplysningerne — systemet sender automatisk velkomst-email</div>
+      </div>
+      <div class="kort">
+        <div class="kort-header"><span class="kort-titel">Husstandsoplysninger</span></div>
+        <div class="kort-body">
+          <div class="form-grid">
+            <div class="felt">
+              <label class="felt-label">Medlemsnummer</label>
+              <input class="felt-input" type="text" placeholder="f.eks. 0035" id="ny-nr">
+            </div>
+            <div class="felt">
+              <label class="felt-label">Familiens efternavn</label>
+              <input class="felt-input" type="text" placeholder="f.eks. Jensen" id="ny-efternavn">
+            </div>
+            <div class="felt">
+              <label class="felt-label">Familieansvarlig — fornavn</label>
+              <input class="felt-input" type="text" placeholder="Fornavn" id="ny-fornavn">
+            </div>
+            <div class="felt">
+              <label class="felt-label">Email til familieansvarlig</label>
+              <input class="felt-input" type="email" placeholder="email@eksempel.dk" id="ny-email">
+            </div>
+            <div class="felt">
+              <label class="felt-label">Telefon</label>
+              <input class="felt-input" type="tel" placeholder="12 34 56 78" id="ny-telefon">
+            </div>
+            <div class="felt">
+              <label class="felt-label">By</label>
+              <input class="felt-input" type="text" placeholder="f.eks. København" id="ny-by">
+            </div>
+          </div>
+          <div class="form-knapper">
+            <button class="knap knap-gron" onclick="opretHusstand()">Opret husstand og send velkomst-email</button>
+            <button class="knap knap-lys" onclick="nulstilFormular()">Nulstil</button>
+          </div>
+          <div id="opret-besked"></div>
+        </div>
+      </div>
+
+      <div class="kort">
+        <div class="kort-header"><span class="kort-titel">ℹ️ Hvad sker der efter oprettelse?</span></div>
+        <div class="kort-body">
+          <div style="font-size:13px;color:var(--tekst-lys);line-height:1.8;">
+            1. Systemet opretter husstanden i databasen<br>
+            2. Den familieansvarlige modtager en velkomst-email med aktiveringslink<br>
+            3. Den familieansvarlige logger ind og registrerer hele familien<br>
+            4. Karin verificerer at data er korrekte og komplette<br>
+            5. Tommy registrerer kontingentbetaling når den modtages
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALLE MEDLEMMER -->
+    <div class="side" id="side-medlemmer">
+      <div class="side-header">
+        <div class="side-titel">Alle medlemmer</div>
+        <div class="side-sub">34 husstande · 87 familiemedlemmer</div>
+      </div>
+      <div class="kort">
+        <div class="kort-header">
+          <span class="kort-titel">Husstande</span>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input class="felt-input" style="width:200px;padding:5px 10px;font-size:12px;" placeholder="Søg på navn eller nummer..." oninput="soegMedlemmer(this.value)">
+            <button class="knap knap-gron knap-lille" onclick="visSide('opret',document.querySelector('[onclick*=opret]'))">+ Opret ny</button>
+          </div>
+        </div>
+        <div class="kort-body" style="padding:0">
+          <table class="data-tabel" id="medlems-tabel">
+            <thead><tr>
+              <th>Nr.</th><th>Familie</th><th>Familieansvarlig</th><th>Email</th><th>Kontingent</th><th>Handlinger</th>
+            </tr></thead>
+            <tbody id="medlems-tbody">
+              <tr><td>0001</td><td>Gram</td><td>Carsten Gram</td><td>cg@gallerieg.dk</td><td><span class="chip chip-betalt">Betalt</span></td><td><div class="handlinger"><button class="knap knap-lys knap-lille" onclick="redigerHusstand('0001')">Rediger</button></div></td></tr>
+              <tr><td>0002</td><td>Hansen</td><td>Kurt Hansen</td><td>kurt@mail.dk</td><td><span class="chip chip-betalt">Betalt</span></td><td><div class="handlinger"><button class="knap knap-lys knap-lille" onclick="redigerHusstand('0002')">Rediger</button></div></td></tr>
+              <tr><td>0003</td><td>Nielsen</td><td>Tommy Nielsen</td><td>tommy@mail.dk</td><td><span class="chip chip-betalt">Betalt</span></td><td><div class="handlinger"><button class="knap knap-lys knap-lille" onclick="redigerHusstand('0003')">Rediger</button></div></td></tr>
+              <tr><td>0004</td><td>Olsen</td><td>Sanne Olsen</td><td>sanne@mail.dk</td><td><span class="chip chip-mangler">Mangler</span></td><td><div class="handlinger"><button class="knap knap-lys knap-lille" onclick="redigerHusstand('0004')">Rediger</button></div></td></tr>
+              <tr><td>0005</td><td>Skov</td><td>Karin Skov</td><td>karin@mail.dk</td><td><span class="chip chip-betalt">Betalt</span></td><td><div class="handlinger"><button class="knap knap-lys knap-lille" onclick="redigerHusstand('0005')">Rediger</button></div></td></tr>
+              <tr><td>0006</td><td>Andersen</td><td>Jens Andersen</td><td>jens@mail.dk</td><td><span class="chip chip-mangler">Mangler</span></td><td><div class="handlinger"><button class="knap knap-lys knap-lille" onclick="redigerHusstand('0006')">Rediger</button></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROLLER & ADGANG -->
+    <div class="side" id="side-admin-roller">
+      <div class="side-header">
+        <div class="side-titel">Roller og adgang</div>
+        <div class="side-sub">Hvem kan gøre hvad i systemet</div>
+      </div>
+
+      <div class="rolle-sektion">
+        <div class="rolle-header">
+          <div class="rolle-ikon" style="background:#FAEEDA">👑</div>
+          <div><div class="rolle-navn">Ejer — Carsten (0001-01)</div><div class="rolle-sub">Fuld adgang · Firebase-ejer · back-up: Kurt</div></div>
+        </div>
+        <div class="adgang-liste">
+          <span class="adgang-chip">Alle funktioner</span><span class="adgang-chip">Firebase-adgang</span><span class="adgang-chip">Tildele roller</span><span class="adgang-chip">Slette data</span>
+        </div>
+      </div>
+
+      <div class="rolle-sektion">
+        <div class="rolle-header">
+          <div class="rolle-ikon" style="background:var(--gron-pale)">🔑</div>
+          <div><div class="rolle-navn">Webmaster — Kurt (0002-01)</div><div class="rolle-sub">Admin-adgang · back-up: Carsten</div></div>
+        </div>
+        <div class="adgang-liste">
+          <span class="adgang-chip">Oprette husstande</span><span class="adgang-chip">Slette husstande</span><span class="adgang-chip">Se alle data</span><span class="adgang-chip">Systemindstillinger</span><span class="adgang-chip">Nyheder</span><span class="adgang-chip">Kalender</span>
+        </div>
+      </div>
+
+      <div class="rolle-sektion">
+        <div class="rolle-header">
+          <div class="rolle-ikon" style="background:var(--bla-lys)">💰</div>
+          <div><div class="rolle-navn">Kasserer — Tommy (0003-01)</div><div class="rolle-sub">Økonomi-adgang · back-up: Karin</div></div>
+        </div>
+        <div class="adgang-liste">
+          <span class="adgang-chip">Oprette husstande</span><span class="adgang-chip">Registrere betaling</span><span class="adgang-chip">Se medlemsliste</span><span class="adgang-chip nej">Slette husstande</span><span class="adgang-chip nej">Systemindstillinger</span>
+        </div>
+      </div>
+
+      <div class="rolle-sektion">
+        <div class="rolle-header">
+          <div class="rolle-ikon" style="background:var(--lilla-lys)">📖</div>
+          <div><div class="rolle-navn">Historieforvalter — Sanne (0004-01)</div><div class="rolle-sub">Indhold-adgang · back-up: Karin</div></div>
+        </div>
+        <div class="adgang-liste">
+          <span class="adgang-chip">Redigere familiekrønike</span><span class="adgang-chip">Uploade historiske billeder</span><span class="adgang-chip nej">Medlemsdata</span><span class="adgang-chip nej">Økonomi</span>
+        </div>
+      </div>
+
+      <div class="rolle-sektion">
+        <div class="rolle-header">
+          <div class="rolle-ikon" style="background:#FFF3CD">🌸</div>
+          <div><div class="rolle-navn">Familie-koordinator — Karin (0005-01)</div><div class="rolle-sub">Data-adgang · back-up: Tommy</div></div>
+        </div>
+        <div class="adgang-liste">
+          <span class="adgang-chip">Opdatere medlemsdata</span><span class="adgang-chip">Tilføje begivenheder</span><span class="adgang-chip">Registrere betaling</span><span class="adgang-chip nej">Slette husstande</span><span class="adgang-chip nej">Systemindstillinger</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- BETALING -->
+    <div class="side" id="side-betaling">
+      <div class="side-header">
+        <div class="side-titel">Kontingent og betaling</div>
+        <div class="side-sub">200 kr. pr. husstand · reg. 1551 · konto 1231790</div>
+      </div>
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat"><div class="stat-nr">28</div><div class="stat-label">Betalt</div></div>
+        <div class="stat" style="border-top-color:var(--fejl)"><div class="stat-nr">6</div><div class="stat-label">Mangler betaling</div></div>
+        <div class="stat guld"><div class="stat-nr">5.600</div><div class="stat-label">kr. modtaget</div></div>
+      </div>
+      <div class="kort">
+        <div class="kort-header">
+          <span class="kort-titel">Registrér betaling</span>
+        </div>
+        <div class="kort-body">
+          <div class="form-grid">
+            <div class="felt">
+              <label class="felt-label">Husstandsnummer</label>
+              <input class="felt-input" placeholder="f.eks. 0006" id="bet-nr">
+            </div>
+            <div class="felt">
+              <label class="felt-label">Betalingsdato</label>
+              <input class="felt-input" type="date" id="bet-dato">
+            </div>
+          </div>
+          <div class="form-knapper">
+            <button class="knap knap-gron" onclick="registrerBetaling()">Registrér betaling</button>
+          </div>
+          <div id="bet-besked"></div>
+        </div>
+      </div>
+      <div class="kort">
+        <div class="kort-header"><span class="kort-titel">Mangler betaling</span></div>
+        <div class="kort-body" style="padding:0">
+          <table class="data-tabel">
+            <thead><tr><th>Nr.</th><th>Familie</th><th>Email</th><th>Handling</th></tr></thead>
+            <tbody>
+              <tr><td>0004</td><td>Olsen</td><td>sanne@mail.dk</td><td><button class="knap knap-lys knap-lille" onclick="sendRykker('0004')">Send rykker</button></td></tr>
+              <tr><td>0006</td><td>Andersen</td><td>jens@mail.dk</td><td><button class="knap knap-lys knap-lille" onclick="sendRykker('0006')">Send rykker</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- KALENDER -->
+    <div class="side" id="side-kalender">
+      <div class="side-header">
+        <div class="side-titel">Kalender og mærkedage</div>
+        <div class="side-sub">Begivenheder opdateres automatisk på forsiden og sendes som email</div>
+      </div>
+      <div class="kort">
+        <div class="kort-header"><span class="kort-titel">Tilføj begivenhed</span></div>
+        <div class="kort-body">
+          <div class="form-grid tre">
+            <div class="felt">
+              <label class="felt-label">Dato</label>
+              <input class="felt-input" type="date" id="beg-dato">
+            </div>
+            <div class="felt">
+              <label class="felt-label">Type</label>
+              <select class="felt-select" id="beg-type">
+                <option>Skovtur / arrangement</option>
+                <option>Konfirmation</option>
+                <option>Bryllup</option>
+                <option>Fødselsdag</option>
+                <option>Jubilæum</option>
+                <option>Andet</option>
+              </select>
+            </div>
+            <div class="felt">
+              <label class="felt-label">Vedrører</label>
+              <input class="felt-input" placeholder="Navn / husstand" id="beg-navn">
+            </div>
+          </div>
+          <div class="felt" style="margin-top:1rem">
+            <label class="felt-label">Beskrivelse</label>
+            <input class="felt-input" placeholder="Kort beskrivelse til kalenderen" id="beg-beskrivelse">
+          </div>
+          <div class="form-knapper">
+            <button class="knap knap-gron" onclick="tilfoejBegivenhed()">Tilføj til kalender</button>
+          </div>
+          <div id="beg-besked"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAMILIEKRØNIKE -->
+    <div class="side" id="side-kronik">
+      <div class="side-header">
+        <div class="side-titel">Familiekrønike</div>
+        <div class="side-sub">Ansvarlig: Sanne · back-up: Karin</div>
+      </div>
+      <div class="kort">
+        <div class="kort-header"><span class="kort-titel">Tilføj til krøniken</span></div>
+        <div class="kort-body">
+          <div class="form-grid">
+            <div class="felt">
+              <label class="felt-label">Årstal</label>
+              <input class="felt-input" placeholder="f.eks. 1985" id="kron-aar">
+            </div>
+            <div class="felt">
+              <label class="felt-label">Overskrift</label>
+              <input class="felt-input" placeholder="Kort overskrift" id="kron-titel">
+            </div>
+          </div>
+          <div class="felt" style="margin-top:1rem">
+            <label class="felt-label">Tekst</label>
+            <textarea class="felt-input" rows="4" placeholder="Beskriv begivenheden..." id="kron-tekst" style="resize:vertical"></textarea>
+          </div>
+          <div class="form-knapper">
+            <button class="knap knap-gron" onclick="tilfoejKronik()">Gem til krøniken</button>
+          </div>
+          <div id="kron-besked"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NYHEDER -->
+    <div class="side" id="side-nyheder">
+      <div class="side-header">
+        <div class="side-titel">Nyheder</div>
+        <div class="side-sub">Ansvarlig: Kurt · back-up: Carsten</div>
+      </div>
+      <div class="kort">
+        <div class="kort-header"><span class="kort-titel">Skriv ny nyhed</span></div>
+        <div class="kort-body">
+          <div class="felt" style="margin-bottom:1rem">
+            <label class="felt-label">Overskrift</label>
+            <input class="felt-input" placeholder="Nyhedens overskrift" id="nyhed-titel">
+          </div>
+          <div class="felt">
+            <label class="felt-label">Tekst</label>
+            <textarea class="felt-input" rows="5" placeholder="Skriv nyheden her..." id="nyhed-tekst" style="resize:vertical"></textarea>
+          </div>
+          <div class="form-knapper">
+            <button class="knap knap-gron" onclick="publicerNyhed()">Publicér nyhed</button>
+            <button class="knap knap-lys">Gem kladde</button>
+          </div>
+          <div id="nyhed-besked"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AKTIVITETSLOG -->
+    <div class="side" id="side-log">
+      <div class="side-header">
+        <div class="side-titel">Aktivitetslog</div>
+        <div class="side-sub">Alle handlinger i systemet registreres automatisk</div>
+      </div>
+      <div class="kort">
+        <div class="kort-header"><span class="kort-titel">Seneste aktivitet</span></div>
+        <div class="kort-body">
+          <div class="log-item"><div class="log-ikon" style="background:var(--ok-lys)">✓</div><div><div class="log-tekst">Karin opdaterede husstand 0012 — ny email registreret</div><div class="log-tid">25. apr 2026 · 10:32 · Karin</div></div></div>
+          <div class="log-item"><div class="log-ikon" style="background:var(--bla-lys)">💰</div><div><div class="log-tekst">Tommy registrerede kontingentbetaling fra husstand 0008</div><div class="log-tid">24. apr 2026 · 14:15 · Tommy</div></div></div>
+          <div class="log-item"><div class="log-ikon" style="background:var(--lilla-lys)">➕</div><div><div class="log-tekst">Kurt oprettede ny husstand 0034 — familien Andersen</div><div class="log-tid">23. apr 2026 · 09:41 · Kurt</div></div></div>
+          <div class="log-item"><div class="log-ikon" style="background:var(--ok-lys)">📖</div><div><div class="log-tekst">Sanne tilføjede til familiekrøniken — 1987</div><div class="log-tid">22. apr 2026 · 16:20 · Sanne</div></div></div>
+          <div class="log-item"><div class="log-ikon" style="background:var(--guld-pale)">📅</div><div><div class="log-tekst">Karin tilføjede begivenhed: Konfirmation — Jakob Nielsen 17. maj</div><div class="log-tid">20. apr 2026 · 11:05 · Karin</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BACKUP -->
+    <div class="side" id="side-backup">
+      <div class="side-header">
+        <div class="side-titel">Backup og datasikkerhed</div>
+        <div class="side-sub">Ansvarlig: Carsten · back-up: Kurt</div>
+      </div>
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat"><div class="stat-nr">✓</div><div class="stat-label">Seneste backup: I dag</div></div>
+        <div class="stat guld"><div class="stat-nr">52</div><div class="stat-label">Uger med backup</div></div>
+        <div class="stat bla"><div class="stat-nr">0</div><div class="stat-label">Fejl siden start</div></div>
+      </div>
+      <div class="kort">
+        <div class="kort-header"><span class="kort-titel">Back-up princip</span></div>
+        <div class="kort-body">
+          <div style="font-size:13px;color:var(--tekst-lys);line-height:1.8;">
+            ✅ Alle data gemmes i Firebase — ikke på enkeltpersoners computere<br>
+            ✅ Automatisk ugentlig backup af hele databasen<br>
+            ✅ For hver opgave er der altid en primær og en back-up person<br>
+            ✅ Hvis en person forlader sin rolle overtager back-up personen øjeblikkeligt<br><br>
+            <strong style="color:var(--tekst)">Back-up ansvar:</strong><br>
+            Kurt → back-up for Carsten (teknisk drift)<br>
+            Karin → back-up for Tommy (økonomi)<br>
+            Tommy → back-up for Karin (medlemsdata)<br>
+            Karin → back-up for Sanne (familiehistorie)<br>
+            Carsten → back-up for Kurt (nyheder og kalender)
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Navigation
+function visSide(id, el) {
+  document.querySelectorAll('.side').forEach(s => s.classList.remove('aktiv'));
+  document.querySelectorAll('.menu-punkt').forEach(m => m.classList.remove('aktiv'));
+  const side = document.getElementById('side-' + id);
+  if(side) side.classList.add('aktiv');
+  if(el) el.classList.add('aktiv');
+}
+
+// Opret husstand
+function opretHusstand() {
+  const nr = document.getElementById('ny-nr').value.trim();
+  const fornavn = document.getElementById('ny-fornavn').value.trim();
+  const email = document.getElementById('ny-email').value.trim();
+  const el = document.getElementById('opret-besked');
+  if(!nr || !fornavn || !email) {
+    el.className = 'besked fejl'; el.textContent = 'Udfyld venligst nummer, navn og email.'; return;
+  }
+  el.className = 'besked ok';
+  el.textContent = '✓ Husstand ' + nr + ' oprettet — velkomst-email sendt til ' + email;
+  nulstilFormular();
+}
+
+function nulstilFormular() {
+  ['ny-nr','ny-fornavn','ny-efternavn','ny-email','ny-telefon','ny-by'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+}
+
+// Søg i medlemmer
+function soegMedlemmer(soeg) {
+  const raekker = document.querySelectorAll('#medlems-tbody tr');
+  raekker.forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(soeg.toLowerCase()) ? '' : 'none';
+  });
+}
+
+function redigerHusstand(nr) { alert('Rediger husstand ' + nr + ' — kobles til Firebase'); }
+
+// Betaling
+function registrerBetaling() {
+  const nr = document.getElementById('bet-nr').value.trim();
+  const dato = document.getElementById('bet-dato').value;
+  const el = document.getElementById('bet-besked');
+  if(!nr || !dato) { el.className='besked fejl'; el.textContent='Udfyld husstandsnummer og dato.'; return; }
+  el.className='besked ok'; el.textContent='✓ Betaling registreret for husstand ' + nr;
+}
+
+function sendRykker(nr) { alert('Rykker sendes til husstand ' + nr + ' — kobles til Firebase'); }
+
+// Begivenhed
+function tilfoejBegivenhed() {
+  const dato = document.getElementById('beg-dato').value;
+  const type = document.getElementById('beg-type').value;
+  const navn = document.getElementById('beg-navn').value.trim();
+  const el = document.getElementById('beg-besked');
+  if(!dato || !navn) { el.className='besked fejl'; el.textContent='Udfyld dato og navn.'; return; }
+  el.className='besked ok'; el.textContent='✓ ' + type + ' for ' + navn + ' tilføjet til kalenderen';
+}
+
+// Krønike
+function tilfoejKronik() {
+  const aar = document.getElementById('kron-aar').value.trim();
+  const titel = document.getElementById('kron-titel').value.trim();
+  const el = document.getElementById('kron-besked');
+  if(!aar || !titel) { el.className='besked fejl'; el.textContent='Udfyld årstal og overskrift.'; return; }
+  el.className='besked ok'; el.textContent='✓ Gemt til familiekrøniken — ' + aar + ': ' + titel;
+}
+
+// Nyhed
+function publicerNyhed() {
+  const titel = document.getElementById('nyhed-titel').value.trim();
+  const el = document.getElementById('nyhed-besked');
+  if(!titel) { el.className='besked fejl'; el.textContent='Skriv en overskrift.'; return; }
+  el.className='besked ok'; el.textContent='✓ Nyhed publiceret: ' + titel;
+}
+</script>
+</body>
+</html>
