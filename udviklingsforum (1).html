@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen — Udviklingsforum</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gron:#2d5016;--gron-lys:#4a7c2a;--gron-pale:#e8f0dc;
+  --guld:#c8952a;--guld-pale:#fdf8ee;--guld-lys:#f5e6c8;
+  --hvid:#fefcf8;--tekst:#1a1a0e;--tekst-lys:#4a4a35;--border:#d4c9a0;
+  --baggrund:#f4f5f0;
+}
+body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var(--tekst);min-height:100vh;}
+
+/* TOPBAR */
+.topbar{background:var(--gron);border-bottom:2px solid var(--guld);padding:0 2rem;height:52px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-logo{font-family:'Playfair Display',serif;font-size:18px;color:var(--hvid);font-weight:500;}
+.topbar-titel{font-size:11px;color:rgba(254,252,248,0.5);letter-spacing:2px;text-transform:uppercase;margin-left:12px;}
+.topbar-hoejre{display:flex;align-items:center;gap:12px;}
+.tilbage-link{font-size:12px;color:rgba(254,252,248,0.6);text-decoration:none;}
+.tilbage-link:hover{color:var(--hvid)}
+
+/* HERO */
+.hero{background:var(--gron);padding:2rem 2rem 1.5rem;border-bottom:3px solid var(--guld);}
+.hero-inner{max-width:860px;margin:0 auto;}
+.hero-label{font-size:10px;color:rgba(200,149,42,0.8);letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;}
+.hero-titel{font-family:'Playfair Display',serif;font-size:28px;color:var(--hvid);font-weight:500;margin-bottom:6px;}
+.hero-sub{font-size:13px;color:rgba(254,252,248,0.55);line-height:1.6;}
+.hero-status{display:flex;gap:16px;margin-top:1rem;flex-wrap:wrap;}
+.status-chip{font-size:11px;font-weight:500;padding:4px 12px;border-radius:20px;}
+.chip-ok{background:rgba(45,80,22,0.4);color:#a8d88a;}
+.chip-gang{background:rgba(200,149,42,0.3);color:var(--guld);}
+.chip-venter{background:rgba(255,255,255,0.1);color:rgba(254,252,248,0.5);}
+
+/* INDHOLD */
+.indhold{max-width:860px;margin:0 auto;padding:2rem;}
+
+/* SEKTION */
+.sektion{margin-bottom:2rem;}
+.sektion-titel{font-size:11px;font-weight:500;color:var(--tekst-lys);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:0.75rem;display:flex;align-items:center;gap:8px;}
+.sektion-titel::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* DOKUMENT KORT */
+.dok-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.dok{background:var(--hvid);border:1px solid var(--border);border-radius:10px;padding:1.25rem;display:flex;gap:12px;align-items:flex-start;cursor:pointer;transition:all 0.15s;text-decoration:none;}
+.dok:hover{border-color:var(--gron);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+.dok-ikon{font-size:24px;width:36px;text-align:center;flex-shrink:0;}
+.dok-info{flex:1;}
+.dok-navn{font-size:14px;font-weight:500;color:var(--tekst);margin-bottom:3px;}
+.dok-sub{font-size:12px;color:var(--tekst-lys);line-height:1.4;}
+.dok-dato{font-size:11px;color:var(--guld);margin-top:4px;font-weight:500;}
+.dok-pil{font-size:14px;color:var(--border);flex-shrink:0;margin-top:2px;}
+.dok:hover .dok-pil{color:var(--gron);}
+
+/* STATUS TABEL */
+.status-tabel{background:var(--hvid);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.status-header{background:var(--gron);padding:0.75rem 1.25rem;font-size:12px;font-weight:500;color:var(--hvid);display:grid;grid-template-columns:2fr 1fr 1fr;gap:1rem;}
+.status-raekke{padding:0.75rem 1.25rem;display:grid;grid-template-columns:2fr 1fr 1fr;gap:1rem;border-bottom:1px solid var(--border);align-items:center;}
+.status-raekke:last-child{border-bottom:none;}
+.status-raekke:nth-child(even){background:var(--guld-pale);}
+.fase-navn{font-size:13px;color:var(--tekst);}
+.fase-status{font-size:11px;font-weight:500;padding:3px 8px;border-radius:3px;text-align:center;}
+.ok{background:#e8f5e9;color:#2d6b30;}
+.gang{background:var(--guld-lys);color:#854F0B;}
+.venter{background:#f1efe8;color:#888780;}
+.fase-ansvar{font-size:12px;color:var(--tekst-lys);}
+
+/* BESLUTNINGER */
+.beslutning-liste{background:var(--hvid);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.beslutning{display:flex;gap:12px;padding:0.875rem 1.25rem;border-bottom:1px solid var(--border);align-items:flex-start;}
+.beslutning:last-child{border-bottom:none;}
+.b-dato{font-size:11px;color:var(--guld);font-weight:500;min-width:70px;flex-shrink:0;padding-top:1px;}
+.b-tekst{font-size:13px;color:var(--tekst);line-height:1.5;}
+.b-hvem{font-size:11px;color:var(--tekst-lys);margin-top:2px;}
+
+/* NOTER */
+.note-boks{background:var(--gron-pale);border:1px solid rgba(45,80,22,0.2);border-radius:8px;padding:1rem 1.25rem;font-size:13px;color:var(--tekst-lys);line-height:1.7;}
+.note-boks strong{color:var(--tekst);font-weight:500;}
+
+/* CLAUDE SEKTION */
+.claude-boks{background:var(--gron);border-radius:10px;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:16px;}
+.claude-ikon{font-size:28px;flex-shrink:0;}
+.claude-tekst{flex:1;}
+.claude-titel{font-size:14px;font-weight:500;color:var(--hvid);margin-bottom:3px;}
+.claude-sub{font-size:12px;color:rgba(254,252,248,0.6);line-height:1.5;}
+.claude-knap{font-size:12px;font-weight:500;font-family:'Source Sans 3',sans-serif;background:var(--guld);color:#1a1a0e;border:none;border-radius:5px;padding:8px 16px;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-block;}
+
+/* FOOTER */
+.side-footer{background:var(--hvid);border-top:1px solid var(--border);padding:1rem 2rem;text-align:center;font-size:11px;color:var(--tekst-lys);margin-top:2rem;}
+
+@media(max-width:600px){
+  .dok-grid{grid-template-columns:1fr;}
+  .status-header,.status-raekke{grid-template-columns:1fr 1fr;}
+  .fase-ansvar{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div style="display:flex;align-items:center;">
+    <span class="topbar-logo">OlsenKlanen</span>
+    <span class="topbar-titel">Udviklingsforum</span>
+  </div>
+  <div class="topbar-hoejre">
+    <a class="tilbage-link" href="olsenklanen_designudkast.html">← Tilbage til forsiden</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-label">Kun for projektdeltagere</div>
+    <div class="hero-titel">Udviklingsforum — OlsenKlanen.dk</div>
+    <div class="hero-sub">Her samles alle dokumenter, beslutninger og status for udviklingen af den nye hjemmeside. Siden er kun synlig for indloggede medlemmer med projektadgang.</div>
+    <div class="hero-status">
+      <span class="status-chip chip-ok">✓ Fase 1 — Design godkendt</span>
+      <span class="status-chip chip-ok">✓ Fase 2 — Firebase klar</span>
+      <span class="status-chip chip-gang">⏳ Fase 3 — Admin-panel</span>
+      <span class="status-chip chip-venter">⏸ Fase 4–12 — Venter</span>
+    </div>
+  </div>
+</div>
+
+<div class="indhold">
+
+  <!-- DOKUMENTER -->
+  <div class="sektion">
+    <div class="sektion-titel">Projektdokumenter</div>
+    <div class="dok-grid">
+      <a class="dok" href="olsenklanen_projektdokument_v2.docx">
+        <span class="dok-ikon">📋</span>
+        <div class="dok-info">
+          <div class="dok-navn">Projektdokument v2.0</div>
+          <div class="dok-sub">Roller, byggefaser, back-up princip og næste skridt. Send til Claude ved start af ny chat.</div>
+          <div class="dok-dato">Opdateret: April 2026</div>
+        </div>
+        <span class="dok-pil">↓</span>
+      </a>
+      <a class="dok" href="olsenklanen_kravspecifikation_v04.docx">
+        <span class="dok-ikon">📄</span>
+        <div class="dok-info">
+          <div class="dok-navn">Kravspecifikation v0.4</div>
+          <div class="dok-sub">Alle krav, funktioner og beslutninger samlet. Grundlaget for hele projektet.</div>
+          <div class="dok-dato">Opdateret: April 2026</div>
+        </div>
+        <span class="dok-pil">↓</span>
+      </a>
+      <a class="dok" href="olsenklanen_firebase_vejledning.docx">
+        <span class="dok-ikon">🔧</span>
+        <div class="dok-info">
+          <div class="dok-navn">Firebase vejledning</div>
+          <div class="dok-sub">Teknisk opsætningsvejledning til Firebase. Login, database og email.</div>
+          <div class="dok-dato">Opdateret: April 2026</div>
+        </div>
+        <span class="dok-pil">↓</span>
+      </a>
+      <a class="dok" href="Familiesiden_Idekatolog_v2.docx">
+        <span class="dok-ikon">💡</span>
+        <div class="dok-info">
+          <div class="dok-navn">Idékatalog v2.0</div>
+          <div class="dok-sub">FamiliesSide-konceptet — 33 nummererede idéer til den større vision.</div>
+          <div class="dok-dato">Opdateret: April 2026</div>
+        </div>
+        <span class="dok-pil">↓</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- BYGGEFASER -->
+  <div class="sektion">
+    <div class="sektion-titel">Byggefaser og status</div>
+    <div class="status-tabel">
+      <div class="status-header">
+        <span>Fase</span>
+        <span>Status</span>
+        <span>Ansvarlig</span>
+      </div>
+      <div class="status-raekke">
+        <span class="fase-navn">Fase 1 — Forside og grundlayout</span>
+        <span class="fase-status ok">✓ Klar</span>
+        <span class="fase-ansvar">Carsten + Claude</span>
+      </div>
+      <div class="status-raekke">
+        <span class="fase-navn">Fase 2 — Firebase login og database</span>
+        <span class="fase-status ok">✓ Klar</span>
+        <span class="fase-ansvar">Carsten + Claude</span>
+      </div>
+      <div class="status-raekke">
+        <span class="fase-navn">Fase 3 — Admin-panel (Kurt, Tommy, Sanne, Karin)</span>
+        <span class="fase-status gang">⏳ Næste</span>
+        <span class="fase-ansvar">Kurt + Claude</span>
+      </div>
+      <div class="status-raekke">
+        <span class="fase-navn">Fase 4 — Familieansvarlig-panel</span>
+        <span class="fase-status venter">⏸ Venter</span>
+        <span class="fase-ansvar">Claude</span>
+      </div>
+      <div class="status-raekke">
+        <span class="fase-navn">Fase 5 — Nyheder med billedupload</span>
+        <span class="fase-status venter">⏸ Venter</span>
+        <span class="fase-ansvar">Kurt + Claude</span>
+      </div>
+      <div class="status-raekke">
+        <span class="fase-navn">Fase 6 — Kalender og automatiske mærkedage</span>
+        <span class="fase-status venter">⏸ Venter</span>
+        <span class="fase-ansvar">Claude</span>
+      </div>
+      <div class="status-raekke">
+        <span class="fase-navn">Fase 7 — Fotoarkiv (migration fra GoMiniSide)</span>
+        <span class="fase-status venter">⏸ Venter</span>
+        <span class="fase-ansvar">Carsten + Kurt</span>
+      </div>
+      <div class="status-raekke">
+        <span class="fase-navn">Fase 8 — Tilmelding og betaling til skovtur</span>
+        <span class="fase-status venter">⏸ Venter</span>
+        <span class="fase-ansvar">Tommy + Claude</span>
+      </div>
+      <div class="status-raekke">
+        <span class="fase-navn">Fase 9 — AI-assistent indbygget på siden</span>
+        <span class="fase-status ok">✓ Klar (demo)</span>
+        <span class="fase-ansvar">Claude</span>
+      </div>
+      <div class="status-raekke">
+        <span class="fase-navn">Fase 10 — Intern handel og opslagstavle</span>
+        <span class="fase-status venter">⏸ Venter</span>
+        <span class="fase-ansvar">Claude</span>
+      </div>
+      <div class="status-raekke">
+        <span class="fase-navn">Fase 11 — Test af alle funktioner</span>
+        <span class="fase-status venter">⏸ Venter</span>
+        <span class="fase-ansvar">Carsten + Kurt</span>
+      </div>
+      <div class="status-raekke">
+        <span class="fase-navn">Fase 12 — Lancering på olsenklanen.dk</span>
+        <span class="fase-status venter">⏸ Venter</span>
+        <span class="fase-ansvar">Carsten + Kurt</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BESLUTNINGER -->
+  <div class="sektion">
+    <div class="sektion-titel">Vigtige beslutninger</div>
+    <div class="beslutning-liste">
+      <div class="beslutning">
+        <div class="b-dato">Apr 2026</div>
+        <div>
+          <div class="b-tekst">Back-up princip vedtaget — for hver opgave er der altid en primær og en back-up person. Fast og ufravigelig regel.</div>
+          <div class="b-hvem">Besluttet af: Carsten</div>
+        </div>
+      </div>
+      <div class="beslutning">
+        <div class="b-dato">Apr 2026</div>
+        <div>
+          <div class="b-tekst">Siden er 100% reklamefri — nu og altid. Kun intern handel mellem medlemmer er tilladt.</div>
+          <div class="b-hvem">Besluttet af: Carsten</div>
+        </div>
+      </div>
+      <div class="beslutning">
+        <div class="b-dato">Apr 2026</div>
+        <div>
+          <div class="b-tekst">Medlemsnummerering: husstand (0001) + familiemedlem (0001-01). Tommy laver komplet liste før oprettelse.</div>
+          <div class="b-hvem">Besluttet af: Carsten</div>
+        </div>
+      </div>
+      <div class="beslutning">
+        <div class="b-dato">Apr 2026</div>
+        <div>
+          <div class="b-tekst">Kun Kurt involveres i første omgang. Tommy, Sanne og Karin præsenteres når projektet er klar.</div>
+          <div class="b-hvem">Besluttet af: Carsten</div>
+        </div>
+      </div>
+      <div class="beslutning">
+        <div class="b-dato">Apr 2026</div>
+        <div>
+          <div class="b-tekst">Mærkedage: børn 10/13/18/20 år · voksne 50/55/60/65 · seniorer 70/75/80/85/90+ år.</div>
+          <div class="b-hvem">Besluttet af: Carsten</div>
+        </div>
+      </div>
+      <div class="beslutning">
+        <div class="b-dato">Apr 2026</div>
+        <div>
+          <div class="b-tekst">Hosting: GitHub Pages (gratis) · Login: Firebase (gratis) · Billeder: Cloudinary (gratis) · Email: Mailchimp (gratis). Samlet pris: 0 kr/md.</div>
+          <div class="b-hvem">Besluttet af: Carsten + Claude</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÅBNE PUNKTER -->
+  <div class="sektion">
+    <div class="sektion-titel">Åbne punkter — skal afklares med Kurt</div>
+    <div class="note-boks">
+      <strong>Betaling</strong> — MobilePay, netbank eller kortbetaling? Hvad foretrækker foreningen?<br>
+      <strong>Domæne</strong> — Hvornår flyttes olsenklanen.dk til ny hosting? Hvem håndterer det?<br>
+      <strong>GoMiniSide</strong> — Aftale om eksport af billeder 2005–2024. Carsten kontakter dem.<br>
+      <strong>Medlemsliste</strong> — Tommy laver komplet liste over alle husstande med email.<br>
+      <strong>Firebase emails</strong> — Skal oversættes til dansk. Claude gør det klar i næste session.<br>
+      <strong>Udviklingsforum</strong> — Dette forum fjernes fra menuen ved lancering.
+    </div>
+  </div>
+
+  <!-- KONTAKT CLAUDE -->
+  <div class="sektion">
+    <div class="sektion-titel">Fortsæt udviklingen</div>
+    <div class="claude-boks">
+      <span class="claude-ikon">🤖</span>
+      <div class="claude-tekst">
+        <div class="claude-titel">Fortsæt med Claude</div>
+        <div class="claude-sub">Start en ny chat på claude.ai og send projektdokumentet — så er Claude ajour og klar til næste fase. Husk: Claude husker ikke tidligere samtaler uden dokumentet.</div>
+      </div>
+      <a class="claude-knap" href="https://claude.ai" target="_blank">Åbn Claude →</a>
+    </div>
+  </div>
+
+</div>
+
+<div class="side-footer">
+  OlsenKlanen Udviklingsforum · Kun for projektdeltagere · Opdateret April 2026 · Carsten & Claude
+</div>
+
+</body>
+</html>
