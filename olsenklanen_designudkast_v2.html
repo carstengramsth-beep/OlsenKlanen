@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen.dk — Familiens hjemmeside</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --mos:        #3a5a2e;
+  --mos-mork:   #243b1c;
+  --mos-lys:    #5a7f4a;
+  --guld:       #b8892a;
+  --guld-lys:   #d4a84b;
+  --guld-pale:  #f5e9cc;
+  --creme:      #faf6ee;
+  --creme-mork: #f0e8d8;
+  --brun:       #4a3520;
+  --tekst:      #2a2015;
+  --tekst-mid:  #5a4f3a;
+  --tekst-lys:  #8a7d65;
+  --hvid:       #fffdf8;
+  --skygge:     rgba(36,27,12,0.12);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Jost', sans-serif;
+  background: var(--creme-mork);
+  color: var(--tekst);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ─── UDKAST BANNER ─────────────────────────────── */
+.udkast {
+  background: var(--guld);
+  color: var(--mos-mork);
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 8px;
+  font-family: 'Jost', sans-serif;
+}
+
+/* ─── NAVIGATION ─────────────────────────────────── */
+nav {
+  background: var(--mos-mork);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+}
+.nav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  height: 58px;
+}
+.nav-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--guld-lys);
+  letter-spacing: 1px;
+  text-decoration: none;
+}
+.nav-logo span { color: var(--hvid); font-weight: 300; }
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+}
+.nav-links a {
+  color: rgba(255,255,255,0.75);
+  text-decoration: none;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 400;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--guld-lys); }
+
+/* ─── HERO ───────────────────────────────────────── */
+.hero {
+  position: relative;
+  min-height: 520px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  background: var(--mos-mork);
+}
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 60%, rgba(90,127,74,0.35) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 20%, rgba(184,137,42,0.2) 0%, transparent 45%),
+    linear-gradient(160deg, #1a2e12 0%, #243b1c 35%, #2d4a1e 60%, #1e3015 100%);
+}
+.hero-pattern {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 30px,
+      rgba(255,255,255,0.012) 30px,
+      rgba(255,255,255,0.012) 31px
+    );
+}
+.hero-ornament {
+  position: absolute;
+  top: 2rem;
+  right: 3rem;
+  width: 180px;
+  height: 180px;
+  border: 1px solid rgba(184,137,42,0.25);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hero-ornament::before {
+  content: '';
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  border: 1px solid rgba(184,137,42,0.15);
+  border-radius: 50%;
+}
+.hero-ornament-text {
+  font-family: 'Cormorant Garamond', serif;
+  color: rgba(184,137,42,0.5);
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.8;
+}
+.hero-content {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 4rem 2rem 3.5rem;
+}
+.hero-eyebrow {
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--guld);
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+.hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(52px, 8vw, 88px);
+  font-weight: 300;
+  line-height: 0.95;
+  color: var(--hvid);
+  margin-bottom: 0.3rem;
+}
+.hero-title em {
+  font-style: italic;
+  color: var(--guld-lys);
+}
+.hero-subtitle {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 300;
+  font-style: italic;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 2rem;
+}
+.hero-divider {
+  width: 60px;
+  height: 1px;
+  background: var(--guld);
+  margin-bottom: 1.5rem;
+}
+.hero-intro {
+  max-width: 520px;
+  color: rgba(255,255,255,0.65);
+  font-size: 15px;
+  line-height: 1.8;
+  font-weight: 300;
+}
+.hero-scroll {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255,255,255,0.3);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.hero-scroll::after {
+  content: '';
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, rgba(184,137,42,0.5), transparent);
+}
+
+/* ─── SEKTION FÆLLES ─────────────────────────────── */
+section { padding: 5rem 2rem; }
+.container { max-width: 1100px; margin: 0 auto; }
+.sektion-label {
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--guld);
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+.sektion-titel {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--mos-mork);
+  margin-bottom: 1rem;
+}
+.sektion-titel em { font-style: italic; color: var(--mos-lys); }
+.sektion-tekst {
+  color: var(--tekst-mid);
+  font-size: 15px;
+  line-height: 1.9;
+  max-width: 620px;
+  font-weight: 300;
+}
+.streg {
+  width: 50px;
+  height: 2px;
+  background: var(--guld);
+  margin: 1.5rem 0;
+}
+
+/* ─── VELKOMMEN ──────────────────────────────────── */
+.velkommen {
+  background: var(--hvid);
+}
+.velkommen-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  align-items: center;
+}
+.velkommen-foto {
+  position: relative;
+}
+.foto-ramme {
+  aspect-ratio: 4/5;
+  background: linear-gradient(135deg, var(--mos) 0%, var(--mos-mork) 100%);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.foto-ramme::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 40% 30%, rgba(90,127,74,0.4) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 80%, rgba(184,137,42,0.2) 0%, transparent 50%);
+}
+.foto-placeholder {
+  position: relative;
+  text-align: center;
+  color: rgba(255,255,255,0.4);
+}
+.foto-ikon {
+  font-size: 48px;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+.foto-tekst {
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 300;
+}
+.foto-dekoration {
+  position: absolute;
+  top: -16px;
+  right: -16px;
+  width: 80px;
+  height: 80px;
+  border: 1px solid var(--guld-pale);
+  border-radius: 50%;
+  background: var(--creme);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  color: var(--guld);
+}
+.foto-label {
+  position: absolute;
+  bottom: -16px;
+  left: 2rem;
+  background: var(--hvid);
+  border: 1px solid var(--creme-mork);
+  padding: 10px 20px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--tekst-lys);
+  box-shadow: 0 4px 20px var(--skygge);
+}
+
+/* ─── NYHEDER ────────────────────────────────────── */
+.nyheder { background: var(--creme); }
+.nyheder-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+.nyhed-kort {
+  background: var(--hvid);
+  border: 1px solid rgba(184,137,42,0.15);
+  padding: 1.8rem;
+  position: relative;
+  transition: transform 0.25s, box-shadow 0.25s;
+  cursor: pointer;
+}
+.nyhed-kort:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px var(--skygge);
+}
+.nyhed-kort::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--guld);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.nyhed-kort:hover::before { opacity: 1; }
+.nyhed-dato {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--guld);
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+.nyhed-titel {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--mos-mork);
+  line-height: 1.3;
+  margin-bottom: 0.75rem;
+}
+.nyhed-tekst {
+  font-size: 13px;
+  color: var(--tekst-mid);
+  line-height: 1.8;
+  font-weight: 300;
+}
+.nyhed-laes {
+  display: inline-block;
+  margin-top: 1rem;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--guld);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ─── ALBUM ──────────────────────────────────────── */
+.album { background: var(--mos-mork); }
+.album .sektion-titel { color: var(--hvid); }
+.album .sektion-tekst { color: rgba(255,255,255,0.55); }
+.album .streg { background: var(--guld); }
+.album .sektion-label { color: var(--guld); }
+.album-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-top: 3rem;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.album-celle {
+  aspect-ratio: 1;
+  background: linear-gradient(135deg, var(--mos) 0%, #1e3015 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+}
+.album-celle:first-child {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.album-celle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0);
+  transition: background 0.3s;
+}
+.album-celle:hover::after {
+  background: rgba(184,137,42,0.15);
+}
+.album-celle-icon {
+  font-size: 28px;
+  opacity: 0.2;
+  color: var(--guld-lys);
+}
+.album-celle:first-child .album-celle-icon { font-size: 48px; }
+.album-tekst {
+  margin-top: 2rem;
+  text-align: center;
+  color: rgba(255,255,255,0.4);
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ─── FAMILIE OVERSIGT ───────────────────────────── */
+.familie { background: var(--hvid); }
+.familie-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+.familie-kort {
+  text-align: center;
+  padding: 2rem 1rem;
+  border: 1px solid var(--creme-mork);
+  transition: border-color 0.25s, transform 0.25s;
+  cursor: pointer;
+}
+.familie-kort:hover {
+  border-color: var(--guld);
+  transform: translateY(-3px);
+}
+.familie-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--mos) 0%, var(--mos-mork) 100%);
+  margin: 0 auto 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  color: var(--guld-lys);
+  border: 2px solid var(--guld-pale);
+}
+.familie-navn {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--mos-mork);
+  margin-bottom: 0.25rem;
+}
+.familie-rolle {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--tekst-lys);
+  font-weight: 400;
+}
+
+/* ─── KALENDER ───────────────────────────────────── */
+.kalender { background: var(--guld-pale); }
+.kalender-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 4rem;
+  margin-top: 3rem;
+  align-items: start;
+}
+.kalender-mini {
+  background: var(--hvid);
+  border: 1px solid rgba(184,137,42,0.2);
+  padding: 1.5rem;
+}
+.kal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.kal-maaned {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--mos-mork);
+}
+.kal-nav {
+  display: flex;
+  gap: 8px;
+}
+.kal-nav button {
+  background: none;
+  border: 1px solid var(--creme-mork);
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--tekst-mid);
+}
+.kal-dage-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+.kal-dag-navn {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--tekst-lys);
+  padding: 4px 0;
+}
+.kal-dage {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  gap: 2px;
+}
+.kal-dag {
+  padding: 6px 4px;
+  font-size: 13px;
+  color: var(--tekst-mid);
+  cursor: pointer;
+  border-radius: 2px;
+}
+.kal-dag:hover { background: var(--creme-mork); }
+.kal-dag.idag {
+  background: var(--mos);
+  color: var(--hvid);
+  font-weight: 600;
+}
+.kal-dag.begivenhed {
+  color: var(--guld);
+  font-weight: 600;
+}
+.kal-dag.tom { color: var(--creme-mork); }
+.begivenheder {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.beg-titel {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--mos-mork);
+  margin-bottom: 1rem;
+}
+.beg-item {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.2rem;
+  background: var(--hvid);
+  border-left: 3px solid var(--guld);
+}
+.beg-dato-blok {
+  text-align: center;
+  min-width: 50px;
+}
+.beg-dag-nr {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  font-weight: 300;
+  line-height: 1;
+  color: var(--mos);
+}
+.beg-maaned-kort {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--guld);
+  font-weight: 600;
+}
+.beg-info-titel {
+  font-weight: 500;
+  color: var(--mos-mork);
+  margin-bottom: 0.25rem;
+}
+.beg-info-tekst {
+  font-size: 13px;
+  color: var(--tekst-lys);
+  font-weight: 300;
+}
+
+/* ─── MARKEDSPLADS ───────────────────────────────── */
+.marked { background: var(--creme); }
+.marked-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+.marked-kort {
+  background: var(--hvid);
+  border: 1px solid var(--creme-mork);
+  padding: 1.5rem;
+  transition: box-shadow 0.25s;
+}
+.marked-kort:hover {
+  box-shadow: 0 8px 30px var(--skygge);
+}
+.marked-billede {
+  aspect-ratio: 4/3;
+  background: linear-gradient(135deg, var(--creme-mork) 0%, var(--guld-pale) 100%);
+  margin: -1.5rem -1.5rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  opacity: 0.5;
+}
+.marked-kategori {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--guld);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.marked-titel {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--mos-mork);
+  margin-bottom: 0.5rem;
+}
+.marked-pris {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--mos);
+  margin-bottom: 0.5rem;
+}
+.marked-saelger {
+  font-size: 12px;
+  color: var(--tekst-lys);
+  font-weight: 300;
+}
+.marked-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  background: var(--mos-mork);
+  color: var(--guld-lys);
+  padding: 3px 8px;
+  margin-top: 0.75rem;
+}
+
+/* ─── FOOTER ─────────────────────────────────────── */
+footer {
+  background: var(--tekst);
+  color: rgba(255,255,255,0.45);
+  padding: 3rem 2rem;
+}
+.footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 3rem;
+}
+.footer-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 300;
+  color: var(--hvid);
+  margin-bottom: 1rem;
+}
+.footer-logo span { color: var(--guld); }
+.footer-tekst {
+  font-size: 13px;
+  line-height: 1.8;
+  font-weight: 300;
+}
+.footer-overskrift {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--guld);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+.footer-links { list-style: none; }
+.footer-links li {
+  margin-bottom: 0.5rem;
+}
+.footer-links a {
+  color: rgba(255,255,255,0.4);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 300;
+  transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--guld-lys); }
+.footer-bund {
+  max-width: 1100px;
+  margin: 2rem auto 0;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(58,90,46,0.4);
+  border: 1px solid rgba(90,127,74,0.4);
+  padding: 4px 10px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #7db86a;
+}
+
+/* ─── ANIMATIONS ─────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hero-eyebrow { animation: fadeUp 0.7s 0.1s both; }
+.hero-title   { animation: fadeUp 0.8s 0.25s both; }
+.hero-subtitle{ animation: fadeUp 0.8s 0.4s both; }
+.hero-divider { animation: fadeUp 0.6s 0.5s both; }
+.hero-intro   { animation: fadeUp 0.8s 0.6s both; }
+
+@media (max-width: 768px) {
+  .velkommen-grid, .kalender-grid { grid-template-columns: 1fr; }
+  .nyheder-grid, .marked-grid { grid-template-columns: 1fr; }
+  .familie-grid { grid-template-columns: 1fr 1fr; }
+  .album-grid { grid-template-columns: repeat(3, 1fr); }
+  .footer-inner { grid-template-columns: 1fr; }
+  .hero-ornament { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- UDKAST BANNER -->
+<div class="udkast">⬩ Designudkast — olsenklanen.dk — April 2026 ⬩</div>
+
+<!-- NAVIGATION -->
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="#">Olsen<span>Klanen</span></a>
+    <ul class="nav-links">
+      <li><a href="#nyheder">Nyheder</a></li>
+      <li><a href="#album">Album</a></li>
+      <li><a href="#familie">Familien</a></li>
+      <li><a href="#kalender">Kalender</a></li>
+      <li><a href="#marked">Byttetorvet</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-pattern"></div>
+  <div class="hero-ornament">
+    <div class="hero-ornament-text">Siden<br>1947</div>
+  </div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Velkommen til</p>
+    <h1 class="hero-title">Olsen<em>Klanen</em></h1>
+    <p class="hero-subtitle">— familien samlet ét sted</p>
+    <div class="hero-divider"></div>
+    <p class="hero-intro">Her deler vi historier, billeder og minder. En privat hjemmeside kun for os — verificeret og tryg, med plads til alt det der betyder noget.</p>
+  </div>
+  <div class="hero-scroll">Scroll</div>
+</header>
+
+<!-- VELKOMMEN -->
+<section class="velkommen" id="om">
+  <div class="container">
+    <div class="velkommen-grid">
+      <div class="velkommen-foto">
+        <div class="foto-ramme">
+          <div class="foto-placeholder">
+            <div class="foto-ikon">📷</div>
+            <div class="foto-tekst">Familiefoto<br>indsættes her</div>
+          </div>
+        </div>
+        <div class="foto-dekoration">🌿</div>
+        <div class="foto-label">Familiebillede 2024</div>
+      </div>
+      <div>
+        <p class="sektion-label">Om os</p>
+        <h2 class="sektion-titel">Én stor <em>familie</em></h2>
+        <div class="streg"></div>
+        <p class="sektion-tekst">OlsenKlanen er vores fælles hjemmeside — et privat sted hvor vi samler historier, billeder, begivenheder og minder. Alle familiemedlemmer er verificerede, så vi ved hvem vi deler med.</p>
+        <br>
+        <p class="sektion-tekst">Her er plads til det store og det lille — fra store familiebegivenheder til hverdagens små glimt.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NYHEDER -->
+<section class="nyheder" id="nyheder">
+  <div class="container">
+    <p class="sektion-label">Seneste nyt</p>
+    <h2 class="sektion-titel">Fra <em>familien</em></h2>
+    <div class="streg"></div>
+    <div class="nyheder-grid">
+      <div class="nyhed-kort">
+        <div class="nyhed-dato">25. april 2026</div>
+        <div class="nyhed-titel">Sommerfest i haven — dato er sat!</div>
+        <div class="nyhed-tekst">I år holder vi den store sommerfest hjemme hos Morten og Hanne. Datoerne er 12.–13. juli. Sæt kryds i kalenderen allerede nu!</div>
+        <a class="nyhed-laes" href="#">Læs mere →</a>
+      </div>
+      <div class="nyhed-kort">
+        <div class="nyhed-dato">18. april 2026</div>
+        <div class="nyhed-titel">Tillykke til Emilie — ny uddannelse!</div>
+        <div class="nyhed-tekst">Emilie er netop blevet optaget på arkitektstudiet i Aarhus. Vi er stolte af hende — en varm tillykke fra hele familien!</div>
+        <a class="nyhed-laes" href="#">Læs mere →</a>
+      </div>
+      <div class="nyhed-kort">
+        <div class="nyhed-dato">3. april 2026</div>
+        <div class="nyhed-titel">Nye billeder fra påsketuren</div>
+        <div class="nyhed-tekst">Billeder fra familiens påsketur til Bornholm er nu lagt op i albummet. Sikke et vejr vi havde — solen skinnede hele ugen!</div>
+        <a class="nyhed-laes" href="#">Læs mere →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ALBUM -->
+<section class="album" id="album">
+  <div class="container">
+    <p class="sektion-label">Fotoalbum</p>
+    <h2 class="sektion-titel">Vores <em>minder</em></h2>
+    <div class="streg"></div>
+    <p class="sektion-tekst">Billeder fra familiefester, hverdagen og alt derimellem. Klik på et billede for at se albummet.</p>
+    <div class="album-grid">
+      <div class="album-celle"><span class="album-celle-icon">🌅</span></div>
+      <div class="album-celle"><span class="album-celle-icon">📸</span></div>
+      <div class="album-celle"><span class="album-celle-icon">🎉</span></div>
+      <div class="album-celle"><span class="album-celle-icon">🏖</span></div>
+      <div class="album-celle"><span class="album-celle-icon">🌿</span></div>
+      <div class="album-celle"><span class="album-celle-icon">🎂</span></div>
+    </div>
+    <p class="album-tekst">Klik for at åbne fuldt album · 247 billeder</p>
+  </div>
+</section>
+
+<!-- FAMILIE -->
+<section class="familie" id="familie">
+  <div class="container">
+    <p class="sektion-label">Vores folk</p>
+    <h2 class="sektion-titel">Mød <em>klanen</em></h2>
+    <div class="streg"></div>
+    <div class="familie-grid">
+      <div class="familie-kort">
+        <div class="familie-avatar">C</div>
+        <div class="familie-navn">Carsten</div>
+        <div class="familie-rolle">Familiefar · Stifter</div>
+      </div>
+      <div class="familie-kort">
+        <div class="familie-avatar">E</div>
+        <div class="familie-navn">Elisabeth</div>
+        <div class="familie-rolle">Familiemor</div>
+      </div>
+      <div class="familie-kort">
+        <div class="familie-avatar">R</div>
+        <div class="familie-navn">René</div>
+        <div class="familie-rolle">Søn</div>
+      </div>
+      <div class="familie-kort">
+        <div class="familie-avatar">S</div>
+        <div class="familie-navn">Sanne</div>
+        <div class="familie-rolle">Datter</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- KALENDER -->
+<section class="kalender" id="kalender">
+  <div class="container">
+    <p class="sektion-label">Familieplaner</p>
+    <h2 class="sektion-titel">Familiens <em>kalender</em></h2>
+    <div class="streg"></div>
+    <div class="kalender-grid">
+      <div class="kalender-mini">
+        <div class="kal-header">
+          <span class="kal-maaned">April 2026</span>
+          <div class="kal-nav">
+            <button>‹</button>
+            <button>›</button>
+          </div>
+        </div>
+        <div class="kal-dage-header">
+          <span class="kal-dag-navn">M</span><span class="kal-dag-navn">T</span>
+          <span class="kal-dag-navn">O</span><span class="kal-dag-navn">T</span>
+          <span class="kal-dag-navn">F</span><span class="kal-dag-navn">L</span>
+          <span class="kal-dag-navn">S</span>
+        </div>
+        <div class="kal-dage">
+          <span class="kal-dag tom">30</span><span class="kal-dag tom">31</span>
+          <span class="kal-dag">1</span><span class="kal-dag">2</span>
+          <span class="kal-dag">3</span><span class="kal-dag">4</span>
+          <span class="kal-dag">5</span><span class="kal-dag">6</span>
+          <span class="kal-dag">7</span><span class="kal-dag">8</span>
+          <span class="kal-dag">9</span><span class="kal-dag begivenhed">10</span>
+          <span class="kal-dag">11</span><span class="kal-dag">12</span>
+          <span class="kal-dag">13</span><span class="kal-dag">14</span>
+          <span class="kal-dag">15</span><span class="kal-dag">16</span>
+          <span class="kal-dag">17</span><span class="kal-dag">18</span>
+          <span class="kal-dag">19</span><span class="kal-dag">20</span>
+          <span class="kal-dag">21</span><span class="kal-dag">22</span>
+          <span class="kal-dag">23</span><span class="kal-dag">24</span>
+          <span class="kal-dag idag">25</span><span class="kal-dag">26</span>
+          <span class="kal-dag">27</span><span class="kal-dag begivenhed">28</span>
+          <span class="kal-dag">29</span><span class="kal-dag">30</span>
+        </div>
+      </div>
+      <div class="begivenheder">
+        <div class="beg-titel">Kommende begivenheder</div>
+        <div class="beg-item">
+          <div class="beg-dato-blok">
+            <div class="beg-dag-nr">28</div>
+            <div class="beg-maaned-kort">Apr</div>
+          </div>
+          <div>
+            <div class="beg-info-titel">Farmors fødselsdag 🎂</div>
+            <div class="beg-info-tekst">Kl. 14:00 hos Kirsten og Ole — alle møder op!</div>
+          </div>
+        </div>
+        <div class="beg-item">
+          <div class="beg-dato-blok">
+            <div class="beg-dag-nr">10</div>
+            <div class="beg-maaned-kort">Maj</div>
+          </div>
+          <div>
+            <div class="beg-info-titel">Konfirmation — Laura</div>
+            <div class="beg-info-tekst">Vor Frue Kirke kl. 10:00 · Fest hjemme bagefter</div>
+          </div>
+        </div>
+        <div class="beg-item">
+          <div class="beg-dato-blok">
+            <div class="beg-dag-nr">12</div>
+            <div class="beg-maaned-kort">Jul</div>
+          </div>
+          <div>
+            <div class="beg-info-titel">Stor sommerfest 🌞</div>
+            <div class="beg-info-tekst">Hos Morten og Hanne · Hele weekenden · Telt i haven</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BYTTETORVET / MARKEDSPLADS -->
+<section class="marked" id="marked">
+  <div class="container">
+    <p class="sektion-label">Kun for familien</p>
+    <h2 class="sektion-titel">Familiens <em>byttetorv</em></h2>
+    <div class="streg"></div>
+    <p class="sektion-tekst">Sælg, byt og giv videre inden for familien. Alle er verificerede — tryg handel uden mellemled.</p>
+    <div class="marked-grid">
+      <div class="marked-kort">
+        <div class="marked-billede">🚲</div>
+        <div class="marked-kategori">Transport</div>
+        <div class="marked-titel">Pigecykel 24" — næsten ny</div>
+        <div class="marked-pris">350 kr.</div>
+        <div class="marked-saelger">Sælges af Hanne Olsen</div>
+        <div class="marked-badge">✓ Verificeret familie</div>
+      </div>
+      <div class="marked-kort">
+        <div class="marked-billede">📚</div>
+        <div class="marked-kategori">Bøger</div>
+        <div class="marked-titel">Samling kogebøger — 8 stk.</div>
+        <div class="marked-pris">Gives væk</div>
+        <div class="marked-saelger">Gives af Kirsten Olsen</div>
+        <div class="marked-badge">✓ Verificeret familie</div>
+      </div>
+      <div class="marked-kort">
+        <div class="marked-billede">🛋</div>
+        <div class="marked-kategori">Møbler</div>
+        <div class="marked-titel">Lænestol — mørk egetræ</div>
+        <div class="marked-pris">800 kr.</div>
+        <div class="marked-saelger">Sælges af René Olsen</div>
+        <div class="marked-badge">✓ Verificeret familie</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-logo">Olsen<span>Klanen</span></div>
+      <p class="footer-tekst">En privat og verificeret familiehjemmeside. Alle medlemmer er identificeret via MitID — tryg, enkel og kun for os.</p>
+      <br>
+      <div class="verified-badge">✓ Verificeret via MitID</div>
+    </div>
+    <div>
+      <div class="footer-overskrift">Sider</div>
+      <ul class="footer-links">
+        <li><a href="#">Forside</a></li>
+        <li><a href="#">Nyheder</a></li>
+        <li><a href="#">Fotoalbum</a></li>
+        <li><a href="#">Familien</a></li>
+        <li><a href="#">Kalender</a></li>
+        <li><a href="#">Byttetorvet</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-overskrift">Info</div>
+      <ul class="footer-links">
+        <li><a href="#">Om siden</a></li>
+        <li><a href="#">Privatlivspolitik</a></li>
+        <li><a href="#">Brugervejledning</a></li>
+        <li><a href="#">Kontakt admin</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bund container">
+    <span>© 2026 OlsenKlanen.dk — Privat familiehjemmeside</span>
+    <span>Drevet via Familiesiden.dk platformen</span>
+  </div>
+</footer>
+
+</body>
+</html>
