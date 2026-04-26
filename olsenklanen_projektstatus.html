@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen — Projektstatus</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gron:#2d5016;
+  --gron-lys:#4a7c2a;
+  --gron-pale:#e8f0dc;
+  --guld:#c8952a;
+  --guld-lys:#f5e6c8;
+  --guld-pale:#fdf8ee;
+  --hvid:#fefcf8;
+  --tekst:#1a1a0e;
+  --tekst-lys:#4a4a35;
+  --border:#d4c9a0;
+}
+body{font-family:'Source Sans 3',sans-serif;background:#f0ece0;color:var(--tekst);min-height:100vh}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#1a3009 0%,#2d5016 60%,#3d6b20 100%);border-bottom:3px solid var(--guld);padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between}
+.header-logo{font-family:'Playfair Display',serif;font-size:28px;color:var(--hvid);font-weight:700}
+.header-sub{font-size:11px;color:rgba(254,252,248,0.5);letter-spacing:3px;text-transform:uppercase;margin-top:3px}
+.header-badge{background:rgba(200,149,42,0.2);border:1px solid rgba(200,149,42,0.4);border-radius:20px;padding:5px 14px;font-size:11px;color:var(--guld);letter-spacing:1px}
+
+/* TABS */
+.tabs{background:var(--gron);padding:0 2rem;display:flex;gap:0;border-bottom:2px solid var(--guld)}
+.tab{font-size:12px;font-weight:500;color:rgba(254,252,248,0.6);padding:0.75rem 1.25rem;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;letter-spacing:0.5px;transition:all 0.15s;white-space:nowrap}
+.tab:hover{color:var(--hvid)}
+.tab.aktiv{color:var(--guld);border-bottom-color:var(--guld)}
+
+/* INDHOLD */
+.indhold{max-width:1000px;margin:0 auto;padding:2rem}
+.panel{display:none}
+.panel.aktiv{display:block}
+
+/* KORT */
+.kort{background:var(--hvid);border-radius:4px;box-shadow:0 2px 12px rgba(0,0,0,0.07);margin-bottom:1.5rem}
+.kort-header{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.kort-titel{font-family:'Playfair Display',serif;font-size:17px;color:var(--tekst)}
+.kort-body{padding:1.5rem}
+
+/* FASE LISTE */
+.fase-liste{display:flex;flex-direction:column;gap:0.5rem}
+.fase{display:flex;align-items:center;gap:1rem;padding:0.85rem 1rem;border-radius:4px;border:1px solid var(--border);background:var(--hvid)}
+.fase.klar{border-left:4px solid #4a9e4a;background:#f4fbf4}
+.fase.gang{border-left:4px solid var(--guld);background:var(--guld-pale)}
+.fase.venter{border-left:4px solid var(--border);opacity:0.7}
+.fase-ikon{font-size:18px;width:28px;text-align:center;flex-shrink:0}
+.fase-nr{font-size:11px;font-weight:600;color:var(--tekst-lys);width:20px;flex-shrink:0}
+.fase-navn{font-size:14px;font-weight:500;color:var(--tekst);flex:1}
+.fase-beskr{font-size:12px;color:var(--tekst-lys);margin-top:2px}
+.fase-status{font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;flex-shrink:0}
+.status-klar{background:#d4f0d4;color:#2d6e2d}
+.status-gang{background:var(--guld-lys);color:#7a5a10}
+.status-naeste{background:#e8e0f0;color:#5a3a8a}
+.status-venter{background:#ebebeb;color:#888}
+
+/* TABEL */
+.tabel{width:100%;border-collapse:collapse}
+.tabel th{font-size:11px;font-weight:600;color:var(--tekst-lys);letter-spacing:1px;text-transform:uppercase;padding:0.75rem 1rem;text-align:left;border-bottom:2px solid var(--border)}
+.tabel td{font-size:13px;color:var(--tekst);padding:0.75rem 1rem;border-bottom:1px solid var(--border);vertical-align:top}
+.tabel tr:last-child td{border-bottom:none}
+.tabel tr:hover td{background:var(--guld-pale)}
+
+/* ÅBNE PUNKTER */
+.punkt{display:flex;gap:1rem;padding:1rem;border-radius:4px;border:1px solid #f5c6c2;background:#fdf4f3;margin-bottom:0.75rem}
+.punkt-ikon{font-size:20px;flex-shrink:0}
+.punkt-tekst{font-size:13px;color:var(--tekst);line-height:1.5}
+.punkt-label{font-size:11px;font-weight:600;color:#c0392b;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+
+/* INFO BOKS */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.info-kort{background:var(--hvid);border-radius:4px;padding:1.25rem 1.5rem;border-left:4px solid var(--guld);box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.info-label{font-size:11px;color:var(--tekst-lys);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.info-value{font-size:14px;font-weight:500;color:var(--tekst)}
+.info-sub{font-size:12px;color:var(--tekst-lys);margin-top:2px}
+.info-kort.gron{border-left-color:var(--gron)}
+
+/* ROLLE KORT */
+.rolle-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.rolle-kort{background:var(--hvid);border-radius:4px;padding:1.25rem;border:1px solid var(--border);text-align:center}
+.rolle-avatar{width:48px;height:48px;border-radius:50%;background:var(--gron);color:var(--hvid);font-family:'Playfair Display',serif;font-size:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem}
+.rolle-avatar.guld{background:var(--guld);color:#1a1a0e}
+.rolle-navn{font-size:14px;font-weight:600;color:var(--tekst)}
+.rolle-titel{font-size:11px;color:var(--guld);letter-spacing:1px;text-transform:uppercase;margin:3px 0 0.75rem}
+.rolle-opgaver{font-size:12px;color:var(--tekst-lys);line-height:1.6;text-align:left}
+.rolle-opgaver li{margin-left:1rem;margin-bottom:2px}
+
+/* LINK */
+.live-link{display:inline-flex;align-items:center;gap:6px;background:var(--gron);color:var(--hvid);padding:8px 18px;border-radius:4px;font-size:13px;font-weight:600;text-decoration:none;letter-spacing:0.5px}
+.live-link:hover{background:var(--gron-lys)}
+.dot-live{width:8px;height:8px;border-radius:50%;background:#4aeb4a;display:inline-block;animation:puls 1.5s infinite}
+@keyframes puls{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* SEKTION LABEL */
+.sektion-label{font-size:11px;font-weight:600;color:var(--guld);letter-spacing:2px;text-transform:uppercase;margin-bottom:1rem;margin-top:1.5rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)}
+.sektion-label:first-child{margin-top:0}
+
+/* DATO */
+.opdateret{font-size:11px;color:var(--tekst-lys);text-align:right;margin-top:1rem}
+
+@media(max-width:680px){
+  .info-grid{grid-template-columns:1fr}
+  .rolle-grid{grid-template-columns:1fr}
+  .tabs{overflow-x:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-logo">OlsenKlanen.dk</div>
+    <div class="header-sub">Projektstatus · Internt arbejdsdokument</div>
+  </div>
+  <div class="header-badge">April 2026 · Version 2.0</div>
+</div>
+
+<div class="tabs">
+  <div class="tab aktiv" onclick="visTab('status',this)">📊 Status</div>
+  <div class="tab" onclick="visTab('faser',this)">🔧 Byggefaser</div>
+  <div class="tab" onclick="visTab('roller',this)">👥 Roller</div>
+  <div class="tab" onclick="visTab('kravspec',this)">📋 Kravspecifikation</div>
+  <div class="tab" onclick="visTab('aabne',this)">⚠️ Åbne punkter</div>
+  <div class="tab" onclick="visTab('teknisk',this)">⚙️ Teknisk</div>
+</div>
+
+<div class="indhold">
+
+  <!-- STATUS -->
+  <div class="panel aktiv" id="tab-status">
+    <div class="info-grid">
+      <div class="info-kort gron">
+        <div class="info-label">Projekt</div>
+        <div class="info-value">OlsenKlanen.dk</div>
+        <div class="info-sub">Ny hjemmeside for familieforeningen</div>
+      </div>
+      <div class="info-kort">
+        <div class="info-label">Nuværende fase</div>
+        <div class="info-value">Fase 3 — Admin-panel</div>
+        <div class="info-sub">Login + admin virker · under udbygning</div>
+      </div>
+      <div class="info-kort">
+        <div class="info-label">Live demo</div>
+        <div class="info-value"><a class="live-link" href="https://zesty-sable-029311.netlify.app" target="_blank"><span class="dot-live"></span> Se siden live</a></div>
+      </div>
+      <div class="info-kort">
+        <div class="info-label">Samlet fremskridt</div>
+        <div class="info-value">Fase 1–3 af 12</div>
+        <div class="info-sub">Ca. 25% af total plan</div>
+      </div>
+    </div>
+
+    <div class="kort">
+      <div class="kort-header"><div class="kort-titel">Hvad er gjort</div></div>
+      <div class="kort-body">
+        <table class="tabel">
+          <thead><tr><th>Hvad</th><th>Hvem</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Firebase projekt oprettet (olsenklanen-familieside)</td><td>Carsten</td><td><span style="color:#2d6e2d;font-weight:600">✅ Klar</span></td></tr>
+            <tr><td>Email/password login aktiveret i Firebase</td><td>Carsten</td><td><span style="color:#2d6e2d;font-weight:600">✅ Klar</span></td></tr>
+            <tr><td>Firestore database oprettet i Europa</td><td>Carsten</td><td><span style="color:#2d6e2d;font-weight:600">✅ Klar</span></td></tr>
+            <tr><td>Designudkast til forsiden godkendt</td><td>Carsten + Kurt</td><td><span style="color:#2d6e2d;font-weight:600">✅ Godkendt</span></td></tr>
+            <tr><td>Forside lagt online på Netlify</td><td>Carsten</td><td><span style="color:#2d6e2d;font-weight:600">✅ Live</span></td></tr>
+            <tr><td>Kravspecifikation v0.4</td><td>Carsten + Claude</td><td><span style="color:#2d6e2d;font-weight:600">✅ Godkendt</span></td></tr>
+            <tr><td>Admin-panel (designudkast)</td><td>Claude</td><td><span style="color:#7a5a10;font-weight:600">⏳ Under test</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="opdateret">Sidst opdateret: 26. april 2026 · Carsten i samarbejde med Claude (AI)</div>
+  </div>
+
+  <!-- BYGGEFASER -->
+  <div class="panel" id="tab-faser">
+    <div class="kort">
+      <div class="kort-header"><div class="kort-titel">Alle 12 byggefaser</div></div>
+      <div class="kort-body">
+        <div class="fase-liste">
+          <div class="fase klar">
+            <div class="fase-ikon">✅</div><div class="fase-nr">1</div>
+            <div><div class="fase-navn">Forside og grundlayout</div><div class="fase-beskr">Designudkast godkendt · live på Netlify</div></div>
+            <div class="fase-status status-klar">Klar</div>
+          </div>
+          <div class="fase klar">
+            <div class="fase-ikon">✅</div><div class="fase-nr">2</div>
+            <div><div class="fase-navn">Firebase login og database</div><div class="fase-beskr">Email/kodeord login virker · Firestore oprettet i Europa</div></div>
+            <div class="fase-status status-klar">Klar</div>
+          </div>
+          <div class="fase gang">
+            <div class="fase-ikon">⏳</div><div class="fase-nr">3</div>
+            <div><div class="fase-navn">Admin-panel</div><div class="fase-beskr">Til Kurt, Tommy, Sanne og Karin · under opbygning</div></div>
+            <div class="fase-status status-naeste">Næste</div>
+          </div>
+          <div class="fase venter">
+            <div class="fase-ikon">⏸</div><div class="fase-nr">4</div>
+            <div><div class="fase-navn">Familieansvarlig-panel</div><div class="fase-beskr">Registrér hele husstanden · fødselsdatoer · kontakt</div></div>
+            <div class="fase-status status-venter">Venter</div>
+          </div>
+          <div class="fase venter">
+            <div class="fase-ikon">⏸</div><div class="fase-nr">5</div>
+            <div><div class="fase-navn">Nyheder</div><div class="fase-beskr">Kurt opretter indlæg med billeder · vises på forsiden</div></div>
+            <div class="fase-status status-venter">Venter</div>
+          </div>
+          <div class="fase venter">
+            <div class="fase-ikon">⏸</div><div class="fase-nr">6</div>
+            <div><div class="fase-navn">Kalender og automatiske mærkedage</div><div class="fase-beskr">Fødselsdage · runde dage · konfirmationer · automatisk email</div></div>
+            <div class="fase-status status-venter">Venter</div>
+          </div>
+          <div class="fase venter">
+            <div class="fase-ikon">⏸</div><div class="fase-nr">7</div>
+            <div><div class="fase-navn">Fotoarkiv</div><div class="fase-beskr">Migration fra GoMiniSide · billeder 2005–2026 · Cloudinary</div></div>
+            <div class="fase-status status-venter">Venter</div>
+          </div>
+          <div class="fase venter">
+            <div class="fase-ikon">⏸</div><div class="fase-nr">8</div>
+            <div><div class="fase-navn">Tilmelding og betaling til skovtur</div><div class="fase-beskr">Formular pr. person · måltidsvalg · betalingsmetode afklares</div></div>
+            <div class="fase-status status-venter">Venter</div>
+          </div>
+          <div class="fase venter">
+            <div class="fase-ikon">⏸</div><div class="fase-nr">9</div>
+            <div><div class="fase-navn">AI-assistent indbygget på siden</div><div class="fase-beskr">Claude som hjælper direkte på olsenklanen.dk</div></div>
+            <div class="fase-status status-venter">Venter</div>
+          </div>
+          <div class="fase venter">
+            <div class="fase-ikon">⏸</div><div class="fase-nr">10</div>
+            <div><div class="fase-navn">Intern handel og opslagstavle</div><div class="fase-beskr">Medlemmer sætter ting til salg internt</div></div>
+            <div class="fase-status status-venter">Venter</div>
+          </div>
+          <div class="fase venter">
+            <div class="fase-ikon">⏸</div><div class="fase-nr">11</div>
+            <div><div class="fase-navn">Test — alle funktioner gennemtestes</div><div class="fase-beskr">Carsten og Kurt tester hver funktion inden lancering</div></div>
+            <div class="fase-status status-venter">Venter</div>
+          </div>
+          <div class="fase venter">
+            <div class="fase-ikon">⏸</div><div class="fase-nr">12</div>
+            <div><div class="fase-navn">Lancering</div><div class="fase-beskr">olsenklanen.dk flyttes til ny hosting · GO LIVE!</div></div>
+            <div class="fase-status status-venter">Venter</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROLLER -->
+  <div class="panel" id="tab-roller">
+    <div class="kort">
+      <div class="kort-header"><div class="kort-titel">Teamet bag OlsenKlanen.dk</div></div>
+      <div class="kort-body">
+        <div class="rolle-grid">
+          <div class="rolle-kort">
+            <div class="rolle-avatar guld">C</div>
+            <div class="rolle-navn">Carsten</div>
+            <div class="rolle-titel">Ejer · Initiativtager</div>
+            <ul class="rolle-opgaver">
+              <li>Firebase-adgang og drift</li>
+              <li>Koordinering af projekt</li>
+              <li>Godkender design</li>
+              <li>Samarbejde med Claude</li>
+            </ul>
+          </div>
+          <div class="rolle-kort">
+            <div class="rolle-avatar">K</div>
+            <div class="rolle-navn">Kurt</div>
+            <div class="rolle-titel">Oldermand · Webmaster</div>
+            <ul class="rolle-opgaver">
+              <li>Godkender kravspec</li>
+              <li>Opretter/sletter medlemmer</li>
+              <li>Skriver nyheder</li>
+              <li>Driver siden fremover</li>
+            </ul>
+          </div>
+          <div class="rolle-kort">
+            <div class="rolle-avatar">T</div>
+            <div class="rolle-navn">Tommy</div>
+            <div class="rolle-titel">Kasserer · Admin</div>
+            <ul class="rolle-opgaver">
+              <li>Kontingent og betaling</li>
+              <li>Oprette nye husstande</li>
+              <li>Back-up for Kurt</li>
+            </ul>
+          </div>
+          <div class="rolle-kort">
+            <div class="rolle-avatar">S</div>
+            <div class="rolle-navn">Sanne</div>
+            <div class="rolle-titel">Historieforvalter</div>
+            <ul class="rolle-opgaver">
+              <li>Familiekrønike</li>
+              <li>Historiske billeder</li>
+              <li>Back-up for Karin</li>
+            </ul>
+          </div>
+          <div class="rolle-kort">
+            <div class="rolle-avatar">Ka</div>
+            <div class="rolle-navn">Karin</div>
+            <div class="rolle-titel">Familie-koordinator</div>
+            <ul class="rolle-opgaver">
+              <li>Opdatere medlemsdata</li>
+              <li>Begivenheder i kalender</li>
+              <li>Back-up for Tommy</li>
+            </ul>
+          </div>
+          <div class="rolle-kort">
+            <div class="rolle-avatar" style="background:#555;font-size:14px">AI</div>
+            <div class="rolle-navn">Claude (AI)</div>
+            <div class="rolle-titel">Teknisk rådgiver</div>
+            <ul class="rolle-opgaver">
+              <li>Design og udvikling</li>
+              <li>Dokumentation</li>
+              <li>Bistår ved ændringer</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="sektion-label" style="margin-top:2rem">Back-up princip — FAST REGEL</div>
+        <p style="font-size:13px;color:var(--tekst-lys);margin-bottom:1rem">Ingen funktion må være afhængig af én enkelt person. For hver opgave er der altid mindst to personer der kan løse den.</p>
+        <table class="tabel">
+          <thead><tr><th>Opgave</th><th>Primær</th><th>Back-up</th></tr></thead>
+          <tbody>
+            <tr><td>Firebase og teknisk drift</td><td>Carsten</td><td>Kurt</td></tr>
+            <tr><td>Kontingent og økonomi</td><td>Tommy</td><td>Karin</td></tr>
+            <tr><td>Medlemsdata og opdatering</td><td>Karin</td><td>Tommy</td></tr>
+            <tr><td>Familiehistorie og krønike</td><td>Sanne</td><td>Karin</td></tr>
+            <tr><td>Nyheder og kalender</td><td>Kurt</td><td>Carsten</td></tr>
+            <tr><td>Admin-panel og brugerstyring</td><td>Kurt</td><td>Tommy</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- KRAVSPECIFIKATION -->
+  <div class="panel" id="tab-kravspec">
+    <div class="kort">
+      <div class="kort-header"><div class="kort-titel">Formål og strategiske mål</div></div>
+      <div class="kort-body">
+        <p style="font-size:14px;color:var(--tekst-lys);line-height:1.7;margin-bottom:1rem">Olsenklanen har siden 1962 holdt den danske familie samlet gennem en årlig fælles skovtur. Hjemmesiden olsenklanen.dk er foreningens digitale samlingspunkt.</p>
+        <table class="tabel">
+          <thead><tr><th>Mål</th><th>Beskrivelse</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Primært formål</strong></td><td>Bevare familiens historie og billeder · informere om arrangementer</td></tr>
+            <tr><td><strong>Omdrejningspunkt</strong></td><td>Foreningens primære informationskanal — uafhængigt af Facebook</td></tr>
+            <tr><td><strong>Selvejende</strong></td><td>Foreningen ejer egne data · ikke afhængig af sociale platforme</td></tr>
+            <tr><td><strong>Reklamefri</strong></td><td>Ingen eksterne reklamer — nogensinde</td></tr>
+            <tr><td><strong>Gratis drift</strong></td><td>0 kr. pr. måned — alle komponenter er gratis</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="kort">
+      <div class="kort-header"><div class="kort-titel">Sider og funktioner</div></div>
+      <div class="kort-body">
+        <div class="sektion-label">Åbne sider — synlige for alle</div>
+        <table class="tabel" style="margin-bottom:1.5rem">
+          <thead><tr><th>Side</th><th>Indhold</th></tr></thead>
+          <tbody>
+            <tr><td>Forside</td><td>Fællesfoto · seneste nyheder · kommende mærkedage</td></tr>
+            <tr><td>Om Olsenklanen</td><td>Kort præsentation af foreningen og dens historie</td></tr>
+            <tr><td>Kontakt</td><td>Kontaktformular til bestyrelsen</td></tr>
+          </tbody>
+        </table>
+        <div class="sektion-label">Lukkede sider — kræver login</div>
+        <table class="tabel">
+          <thead><tr><th>Side</th><th>Indhold</th></tr></thead>
+          <tbody>
+            <tr><td>Nyheder</td><td>Kurt opretter indlæg med tekst og billeder</td></tr>
+            <tr><td>Begivenhedskalender</td><td>Konfirmationer · fødselsdage · bryllupper · skovtur · automatiske mærkedage</td></tr>
+            <tr><td>Fotoarkiv</td><td>Billeder 2005–2026 · årsvis inddeling · klik-for-stor galleri</td></tr>
+            <tr><td>Tilmelding</td><td>Formular til skovtur og arrangementer · pr. person med måltidsvalg</td></tr>
+            <tr><td>Betaling</td><td>Kontingent og deltagergebyr · betalingsmetode afklares</td></tr>
+            <tr><td>Medlemsoversigt</td><td>Navn · adresse · telefon · email pr. husstand</td></tr>
+            <tr><td>Selvbetjening</td><td>Hvert medlem opdaterer selv egne kontaktoplysninger</td></tr>
+            <tr><td>Intern handel</td><td>Opslagstavle — medlemmer sætter ting til salg internt</td></tr>
+            <tr><td>Familiekrønike</td><td>Klanens samlede historie</td></tr>
+            <tr><td>Gæstebog</td><td>Bevares fra nuværende side</td></tr>
+            <tr><td>Vedtægter</td><td>Foreningens vedtægter</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="kort">
+      <div class="kort-header"><div class="kort-titel">Mærkedagsregler</div></div>
+      <div class="kort-body">
+        <table class="tabel">
+          <thead><tr><th>Gruppe</th><th>Aldre der markeres</th></tr></thead>
+          <tbody>
+            <tr><td>Børn og unge</td><td>10 · 13 · 18 · 20 år</td></tr>
+            <tr><td>Voksne</td><td>50 · 55 · 60 · 65 år</td></tr>
+            <tr><td>Seniorer</td><td>70 · 75 · 80 · 85 · 90 år og alle efterfølgende</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÅBNE PUNKTER -->
+  <div class="panel" id="tab-aabne">
+    <div class="kort">
+      <div class="kort-header"><div class="kort-titel">Åbne punkter — afventer beslutning</div></div>
+      <div class="kort-body">
+        <div class="punkt">
+          <div class="punkt-ikon">💳</div>
+          <div>
+            <div class="punkt-label">Betaling</div>
+            <div class="punkt-tekst">Hvilken betalingsmetode ønskes? MobilePay, netbank eller kortbetaling? Skal afklares af Carsten og Kurt inden Fase 8.</div>
+          </div>
+        </div>
+        <div class="punkt">
+          <div class="punkt-ikon">🌐</div>
+          <div>
+            <div class="punkt-label">Domæne</div>
+            <div class="punkt-tekst">Hvornår flyttes olsenklanen.dk til ny hosting på Netlify? Hvem håndterer den tekniske flytning?</div>
+          </div>
+        </div>
+        <div class="punkt">
+          <div class="punkt-ikon">📸</div>
+          <div>
+            <div class="punkt-label">Billedeksport fra GoMiniSide</div>
+            <div class="punkt-tekst">Aftale med GoMiniSide om eksport af eksisterende billeder 2005–2024. Carsten undersøger muligheder.</div>
+          </div>
+        </div>
+        <div class="punkt">
+          <div class="punkt-ikon">📝</div>
+          <div>
+            <div class="punkt-label">Indholdsliste</div>
+            <div class="punkt-tekst">Gennemgang af alle sider på nuværende site — hvad bevares, hvad udgår? Kurt laver liste.</div>
+          </div>
+        </div>
+        <div class="punkt">
+          <div class="punkt-ikon">📧</div>
+          <div>
+            <div class="punkt-label">Emails til alle husstande</div>
+            <div class="punkt-tekst">Har alle 30–40 husstande en registreret email-adresse? Karin undersøger og supplerer.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEKNISK -->
+  <div class="panel" id="tab-teknisk">
+    <div class="kort">
+      <div class="kort-header"><div class="kort-titel">Teknisk arkitektur</div></div>
+      <div class="kort-body">
+        <table class="tabel">
+          <thead><tr><th>Komponent</th><th>Løsning</th><th>Pris</th><th>Ansvarlig</th></tr></thead>
+          <tbody>
+            <tr><td>Frontend</td><td>HTML5 · CSS3 · JavaScript</td><td>Gratis</td><td>Carsten + Claude</td></tr>
+            <tr><td>Hosting</td><td>Netlify (nu) → GitHub Pages (fremover)</td><td>Gratis</td><td>Kurt (back-up: Carsten)</td></tr>
+            <tr><td>Login + database</td><td>Firebase (Google) · Firestore Europa</td><td>Gratis</td><td>Carsten (back-up: Kurt)</td></tr>
+            <tr><td>Billedlager</td><td>Cloudinary — op til 25 GB</td><td>Gratis</td><td>Kurt (back-up: Carsten)</td></tr>
+            <tr><td>Email / nyhedsbrev</td><td>Mailchimp — op til 500 modtagere</td><td>Gratis</td><td>Tommy (back-up: Karin)</td></tr>
+            <tr><td>Backup</td><td>Automatisk ugentlig via Firebase</td><td>Gratis</td><td>Systemet · Carsten overvåger</td></tr>
+            <tr><td><strong>Samlet månedspris</strong></td><td colspan="2"><strong>0 kr.</strong></td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="kort">
+      <div class="kort-header"><div class="kort-titel">Firebase oplysninger</div></div>
+      <div class="kort-body">
+        <table class="tabel">
+          <thead><tr><th>Oplysning</th><th>Værdi</th></tr></thead>
+          <tbody>
+            <tr><td>Projektnavn</td><td>Olsenklanen familieside</td></tr>
+            <tr><td>Project ID</td><td>olsenklanen-familieside</td></tr>
+            <tr><td>Auth Domain</td><td>olsenklanen-familieside.firebaseapp.com</td></tr>
+            <tr><td>Database</td><td>Firestore — Europa (eur3)</td></tr>
+            <tr><td>Login-metode</td><td>Email + kodeord</td></tr>
+            <tr><td>Firebase-adgang</td><td>Carsten (cg@gallerieg.dk) — back-up: Kurt</td></tr>
+            <tr><td>Oprettet</td><td>April 2026</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:12px;color:var(--tekst-lys);margin-top:1rem">⚠️ Firebase login-oplysninger opbevares sikkert af Carsten. Deles kun med Kurt som back-up.</p>
+      </div>
+    </div>
+  </div>
+
+</div><!-- indhold -->
+
+<script>
+function visTab(id, el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('aktiv'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('aktiv'));
+  document.getElementById('tab-'+id).classList.add('aktiv');
+  el.classList.add('aktiv');
+}
+</script>
+</body>
+</html>
