@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen — Administration</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gron:#2d5016;
+  --gron-lys:#4a7c2a;
+  --gron-pale:#e8f0dc;
+  --guld:#c8952a;
+  --guld-lys:#f5e6c8;
+  --guld-pale:#fdf8ee;
+  --hvid:#fefcf8;
+  --tekst:#1a1a0e;
+  --tekst-lys:#4a4a35;
+  --border:#d4c9a0;
+  --fare:#c0392b;
+}
+body{font-family:'Source Sans 3',sans-serif;background:#f0ece0;color:var(--tekst);min-height:100vh}
+
+/* ===== LOGIN ===== */
+#login-side{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;background:linear-gradient(135deg,#1a3009 0%,#2d5016 60%,#3d6b20 100%)}
+.login-boks{background:var(--hvid);max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);border-radius:6px;overflow:hidden}
+.login-header{background:var(--gron);padding:2rem;text-align:center;border-bottom:3px solid var(--guld)}
+.login-logo{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:var(--hvid)}
+.login-sub{font-size:11px;color:rgba(254,252,248,0.5);letter-spacing:3px;text-transform:uppercase;margin-top:4px}
+.login-body{padding:2rem}
+.login-titel{font-size:14px;color:var(--tekst-lys);text-align:center;margin-bottom:1.5rem}
+.felt-label{font-size:11px;font-weight:600;color:var(--tekst-lys);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;display:block}
+.felt-input{width:100%;border:1px solid var(--border);border-radius:4px;padding:10px 14px;font-size:14px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:var(--hvid);margin-bottom:1rem}
+.felt-input:focus{outline:none;border-color:var(--gron)}
+.login-btn{width:100%;background:var(--gron);color:var(--hvid);border:none;border-radius:4px;padding:12px;font-size:14px;font-weight:600;font-family:'Source Sans 3',sans-serif;cursor:pointer;letter-spacing:0.5px;transition:background 0.2s}
+.login-btn:hover{background:var(--gron-lys)}
+.login-fejl{background:#fdf0ef;border:1px solid #f5c6c2;border-radius:4px;padding:10px;font-size:13px;color:var(--fare);margin-top:1rem;display:none;text-align:center}
+.login-hint{font-size:11px;color:var(--tekst-lys);text-align:center;margin-top:1rem;line-height:1.6}
+
+/* ===== ADMIN ===== */
+#admin-side{display:none;min-height:100vh}
+.admin-layout{display:flex;min-height:100vh}
+
+/* Topbar */
+.topbar{background:var(--gron);border-bottom:3px solid var(--guld);padding:0 1.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;z-index:100}
+.topbar-logo{font-family:'Playfair Display',serif;font-size:22px;color:var(--hvid);font-weight:700}
+.topbar-sub{font-size:10px;color:rgba(254,252,248,0.4);letter-spacing:2px;text-transform:uppercase;margin-left:10px}
+.topbar-bruger{display:flex;align-items:center;gap:10px}
+.bruger-info{text-align:right}
+.bruger-navn{font-size:13px;font-weight:600;color:var(--hvid)}
+.bruger-rolle{font-size:10px;color:var(--guld);letter-spacing:1px}
+.bruger-avatar{width:34px;height:34px;border-radius:50%;background:var(--guld);color:#1a1a0e;font-family:'Playfair Display',serif;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.logout-link{font-size:11px;color:rgba(254,252,248,0.4);cursor:pointer;margin-left:8px}
+.logout-link:hover{color:rgba(254,252,248,0.8)}
+
+/* Sidebar */
+.sidebar{width:220px;background:#1e3a0e;padding-top:56px;position:fixed;top:0;left:0;bottom:0;overflow-y:auto}
+.nav-gruppe{padding:1rem 0 0.25rem}
+.nav-gruppe-label{font-size:10px;color:rgba(254,252,248,0.3);letter-spacing:2px;text-transform:uppercase;padding:0 1.25rem;margin-bottom:0.25rem}
+.nav-item{display:flex;align-items:center;gap:10px;padding:0.6rem 1.25rem;font-size:13px;color:rgba(254,252,248,0.65);cursor:pointer;border-left:3px solid transparent;transition:all 0.15s}
+.nav-item:hover{color:var(--hvid);background:rgba(255,255,255,0.05)}
+.nav-item.aktiv{color:var(--guld);border-left-color:var(--guld);background:rgba(200,149,42,0.1)}
+.nav-ikon{font-size:15px;width:18px;text-align:center}
+
+/* Hoved */
+.main{margin-left:220px;padding-top:56px;flex:1;background:#f0ece0;min-height:100vh}
+.main-indhold{padding:1.75rem 2rem;max-width:1000px}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.75rem}
+.stat{background:var(--hvid);border-radius:4px;padding:1.25rem 1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-top:3px solid var(--guld)}
+.stat.gron{border-top-color:var(--gron)}
+.stat-tal{font-family:'Playfair Display',serif;font-size:34px;color:var(--tekst);line-height:1}
+.stat-label{font-size:11px;color:var(--tekst-lys);margin-top:4px;text-transform:uppercase;letter-spacing:0.5px}
+
+/* Kort */
+.kort{background:var(--hvid);border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:1.5rem}
+.kort-header{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.kort-titel{font-family:'Playfair Display',serif;font-size:16px}
+.kort-body{padding:1.5rem}
+.side-titel{font-family:'Playfair Display',serif;font-size:22px;color:var(--tekst);margin-bottom:0.25rem}
+.side-sub{font-size:12px;color:var(--tekst-lys);margin-bottom:1.5rem}
+
+/* Panel */
+.panel{display:none}
+.panel.aktiv{display:block}
+
+/* Tabel */
+.tabel{width:100%;border-collapse:collapse}
+.tabel th{font-size:11px;font-weight:600;color:var(--tekst-lys);letter-spacing:1px;text-transform:uppercase;padding:0.65rem 1rem;text-align:left;border-bottom:2px solid var(--border)}
+.tabel td{font-size:13px;padding:0.75rem 1rem;border-bottom:1px solid var(--border);color:var(--tekst)}
+.tabel tr:last-child td{border-bottom:none}
+.tabel tr:hover td{background:var(--guld-pale)}
+
+/* Badge */
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:0.5px;text-transform:uppercase}
+.badge-ejer{background:#e8d4f0;color:#6a2d9a}
+.badge-admin{background:rgba(45,80,22,0.12);color:var(--gron)}
+.badge-deladmin{background:var(--guld-lys);color:#7a5a10}
+.badge-medlem{background:#ebebeb;color:#666}
+.badge-maerke{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600}
+.badge-80{background:#fde8d8;color:#c05010}
+.badge-18{background:#e8f0dc;color:#2d5016}
+.badge-55{background:#e8e8f8;color:#3a3a8a}
+
+/* Knapper */
+.btn{display:inline-block;font-size:12px;font-weight:600;font-family:'Source Sans 3',sans-serif;padding:7px 16px;border-radius:4px;cursor:pointer;border:none;letter-spacing:0.5px;transition:all 0.15s;text-decoration:none}
+.btn-gron{background:var(--gron);color:var(--hvid)}
+.btn-gron:hover{background:var(--gron-lys)}
+.btn-lys{background:var(--gron-pale);color:var(--gron);border:1px solid var(--gron-lys)}
+.btn-lys:hover{background:#d4e8b8}
+.btn-fare{background:#fdf0ef;color:var(--fare);border:1px solid #f5c6c2}
+.btn-sm{padding:4px 10px;font-size:11px}
+
+/* Form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-fuld{grid-column:1/-1}
+.form-felt label{font-size:11px;font-weight:600;color:var(--tekst-lys);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;display:block}
+.form-felt input,.form-felt select,.form-felt textarea{width:100%;border:1px solid var(--border);border-radius:4px;padding:9px 12px;font-size:13px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:var(--hvid)}
+.form-felt input:focus,.form-felt select:focus{outline:none;border-color:var(--gron)}
+.form-felt textarea{resize:vertical;min-height:120px}
+.form-handlinger{margin-top:1.25rem;display:flex;gap:0.75rem}
+
+/* Aktivitet */
+.aktivitet-item{display:flex;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.aktivitet-item:last-child{border-bottom:none}
+.aktivitet-ikon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px}
+.akt-gron{background:var(--gron-pale)}
+.akt-guld{background:var(--guld-lys)}
+.aktivitet-tekst{font-size:13px;color:var(--tekst);line-height:1.4}
+.aktivitet-tid{font-size:11px;color:var(--tekst-lys);margin-top:2px}
+
+/* Mærkedage */
+.maerke-liste .maerke-item{display:flex;align-items:center;gap:1rem;padding:0.75rem 0;border-bottom:1px solid var(--border)}
+.maerke-item:last-child{border-bottom:none}
+.maerke-dato-boks{background:var(--gron);color:var(--hvid);border-radius:4px;padding:6px 10px;text-align:center;min-width:50px;flex-shrink:0}
+.maerke-dag{font-family:'Playfair Display',serif;font-size:20px;line-height:1}
+.maerke-mdr{font-size:9px;text-transform:uppercase;letter-spacing:1px;opacity:0.7}
+.maerke-navn-info{flex:1}
+.maerke-navn-stor{font-size:14px;font-weight:600;color:var(--tekst)}
+.maerke-husstand{font-size:11px;color:var(--tekst-lys)}
+
+/* Bekræft */
+.bekraeft{background:#edf7ed;border:1px solid #a8d5a8;border-radius:4px;padding:10px 14px;font-size:13px;color:#2d6e2d;margin-bottom:1rem;display:none}
+
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main{margin-left:0}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .form-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-side">
+  <div class="login-boks">
+    <div class="login-header">
+      <div class="login-logo">OlsenKlanen</div>
+      <div class="login-sub">Administration</div>
+    </div>
+    <div class="login-body">
+      <div class="login-titel">Log ind med dit admin-login</div>
+      <label class="felt-label">Email</label>
+      <input class="felt-input" type="email" id="email-felt" placeholder="din@email.dk" />
+      <label class="felt-label">Kodeord</label>
+      <input class="felt-input" type="password" id="kodeord-felt" placeholder="••••••••" />
+      <button class="login-btn" onclick="forsogLogin()">Log ind</button>
+      <div class="login-fejl" id="login-fejl">Forkert email eller kodeord. Prøv igen.</div>
+      <div class="login-hint">
+        <strong>Test-login:</strong><br>
+        kurt@olsen.dk / kurt2026<br>
+        carsten@olsenklanen.dk / carsten2026
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="admin-side">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div style="display:flex;align-items:center">
+      <div class="topbar-logo">OlsenKlanen</div>
+      <div class="topbar-sub">Administration</div>
+    </div>
+    <div class="topbar-bruger">
+      <div class="bruger-info">
+        <div class="bruger-navn" id="bruger-navn">Kurt Olsen</div>
+        <div class="bruger-rolle" id="bruger-rolle">Webmaster · Admin</div>
+      </div>
+      <div class="bruger-avatar" id="bruger-avatar">K</div>
+      <span class="logout-link" onclick="logUd()">Log ud</span>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="nav-gruppe">
+      <div class="nav-gruppe-label">Overblik</div>
+      <div class="nav-item aktiv" onclick="visPanel('overblik',this)"><span class="nav-ikon">📊</span>Overblik</div>
+    </div>
+    <div class="nav-gruppe">
+      <div class="nav-gruppe-label">Medlemmer</div>
+      <div class="nav-item" onclick="visPanel('medlemmer',this)"><span class="nav-ikon">👨‍👩‍👧‍👦</span>Alle medlemmer</div>
+      <div class="nav-item" onclick="visPanel('opret',this)"><span class="nav-ikon">➕</span>Opret husstand</div>
+      <div class="nav-item" onclick="visPanel('roller',this)"><span class="nav-ikon">🔑</span>Roller &amp; adgang</div>
+    </div>
+    <div class="nav-gruppe">
+      <div class="nav-gruppe-label">Økonomi</div>
+      <div class="nav-item" onclick="visPanel('kontingent',this)"><span class="nav-ikon">💰</span>Kontingent</div>
+    </div>
+    <div class="nav-gruppe">
+      <div class="nav-gruppe-label">Indhold</div>
+      <div class="nav-item" onclick="visPanel('nyheder',this)"><span class="nav-ikon">📰</span>Nyheder</div>
+      <div class="nav-item" onclick="visPanel('kalender',this)"><span class="nav-ikon">📅</span>Kalender</div>
+      <div class="nav-item" onclick="visPanel('familiekronike',this)"><span class="nav-ikon">📖</span>Familiekrønike</div>
+    </div>
+    <div class="nav-gruppe">
+      <div class="nav-gruppe-label">System</div>
+      <div class="nav-item" onclick="visPanel('aktivitetslog',this)"><span class="nav-ikon">📋</span>Aktivitetslog</div>
+      <div class="nav-item" onclick="visPanel('backup',this)"><span class="nav-ikon">💾</span>Backup</div>
+    </div>
+  </div>
+
+  <!-- Hoved indhold -->
+  <div class="main">
+    <div class="main-indhold">
+
+      <!-- OVERBLIK -->
+      <div class="panel aktiv" id="panel-overblik">
+        <div class="side-titel">Overblik</div>
+        <div class="side-sub">OlsenKlanen · April 2026</div>
+        <div class="stats-grid">
+          <div class="stat gron"><div class="stat-tal">34</div><div class="stat-label">Husstande</div></div>
+          <div class="stat"><div class="stat-tal">87</div><div class="stat-label">Familiemedlemmer</div></div>
+          <div class="stat"><div class="stat-tal">29</div><div class="stat-label">Dage til skovtur</div></div>
+          <div class="stat"><div class="stat-tal">3</div><div class="stat-label">Mærkedage i år</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+          <div class="kort">
+            <div class="kort-header"><div class="kort-titel">Kommende mærkedage 2026</div></div>
+            <div class="kort-body">
+              <div class="maerke-liste">
+                <div class="maerke-item">
+                  <div class="maerke-dato-boks"><div class="maerke-dag">3</div><div class="maerke-mdr">MAJ</div></div>
+                  <div class="maerke-navn-info"><div class="maerke-navn-stor">Lise Olsen</div><div class="maerke-husstand">Husstand 0008</div></div>
+                  <span class="badge badge-maerke badge-80">80 år 🎉</span>
+                </div>
+                <div class="maerke-item">
+                  <div class="maerke-dato-boks"><div class="maerke-dag">17</div><div class="maerke-mdr">MAJ</div></div>
+                  <div class="maerke-navn-info"><div class="maerke-navn-stor">Jakob Nielsen</div><div class="maerke-husstand">Husstand 0015</div></div>
+                  <span class="badge badge-maerke badge-18">18 år</span>
+                </div>
+                <div class="maerke-item">
+                  <div class="maerke-dato-boks"><div class="maerke-dag">12</div><div class="maerke-mdr">JUN</div></div>
+                  <div class="maerke-navn-info"><div class="maerke-navn-stor">Anne Mette Skov</div><div class="maerke-husstand">Husstand 0021</div></div>
+                  <span class="badge badge-maerke badge-55">55 år</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="kort">
+            <div class="kort-header"><div class="kort-titel">Seneste aktivitet</div></div>
+            <div class="kort-body">
+              <div class="aktivitet-item">
+                <div class="aktivitet-ikon akt-gron">✏️</div>
+                <div><div class="aktivitet-tekst">Karin opdaterede husstand 0012 — ny email registreret</div><div class="aktivitet-tid">I dag 10:32</div></div>
+              </div>
+              <div class="aktivitet-item">
+                <div class="aktivitet-ikon akt-guld">💰</div>
+                <div><div class="aktivitet-tekst">Tommy registrerede kontingent fra husstand 0008</div><div class="aktivitet-tid">I går 14:15</div></div>
+              </div>
+              <div class="aktivitet-item">
+                <div class="aktivitet-ikon akt-gron">➕</div>
+                <div><div class="aktivitet-tekst">Kurt oprettede ny husstand 0034 — Andersen</div><div class="aktivitet-tid">23. apr 09:41</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MEDLEMMER -->
+      <div class="panel" id="panel-medlemmer">
+        <div class="side-titel">Alle medlemmer</div>
+        <div class="side-sub">34 husstande · 87 familiemedlemmer</div>
+        <div class="kort">
+          <div class="kort-header">
+            <div class="kort-titel">Husstande</div>
+            <button class="btn btn-gron btn-sm" onclick="visPanel('opret',null)">+ Opret ny husstand</button>
+          </div>
+          <div class="kort-body">
+            <table class="tabel">
+              <thead><tr><th>Nr.</th><th>Husstand</th><th>Email</th><th>Mdl.</th><th>Rolle</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>0001</td><td>Carsten &amp; Elisabeth</td><td>cg@gallerieg.dk</td><td>2</td><td><span class="badge badge-ejer">Ejer</span></td><td><button class="btn btn-lys btn-sm">Se</button></td></tr>
+                <tr><td>0002</td><td>Kurt Olsen</td><td>kurt@olsen.dk</td><td>3</td><td><span class="badge badge-admin">Admin</span></td><td><button class="btn btn-lys btn-sm">Se</button></td></tr>
+                <tr><td>0003</td><td>Tommy &amp; Birgit</td><td>tommy@familie.dk</td><td>4</td><td><span class="badge badge-admin">Admin</span></td><td><button class="btn btn-lys btn-sm">Se</button></td></tr>
+                <tr><td>0004</td><td>Sanne Larsen</td><td>sanne@mail.dk</td><td>2</td><td><span class="badge badge-deladmin">Del-admin</span></td><td><button class="btn btn-lys btn-sm">Se</button></td></tr>
+                <tr><td>0005</td><td>Karin &amp; Per</td><td>karin@familie.dk</td><td>3</td><td><span class="badge badge-deladmin">Del-admin</span></td><td><button class="btn btn-lys btn-sm">Se</button></td></tr>
+                <tr><td>0006–0034</td><td colspan="3" style="color:var(--tekst-lys);font-style:italic">29 øvrige husstande importeres fra GoMiniSide</td><td>—</td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- OPRET HUSSTAND -->
+      <div class="panel" id="panel-opret">
+        <div class="side-titel">Opret ny husstand</div>
+        <div class="side-sub">Systemet sender automatisk velkomst-email til den familieansvarlige</div>
+        <div class="kort">
+          <div class="kort-body">
+            <div class="bekraeft" id="opret-bekraeft">✓ Husstand oprettet! Velkomst-email sendt automatisk til den familieansvarlige.</div>
+            <div class="form-grid">
+              <div class="form-felt"><label>Fornavn</label><input type="text" placeholder="Fx: Peter" /></div>
+              <div class="form-felt"><label>Efternavn</label><input type="text" placeholder="Fx: Nielsen" /></div>
+              <div class="form-felt form-fuld"><label>Email (bruges til login)</label><input type="email" placeholder="peter@nielsen.dk" /></div>
+              <div class="form-felt"><label>Adresse</label><input type="text" placeholder="Fx: Skovvej 12" /></div>
+              <div class="form-felt"><label>By og postnr.</label><input type="text" placeholder="Fx: 4100 Ringsted" /></div>
+              <div class="form-felt"><label>Telefon</label><input type="tel" placeholder="Fx: 12 34 56 78" /></div>
+              <div class="form-felt"><label>Rolle</label>
+                <select><option>Medlem</option><option>Del-admin</option><option>Admin</option></select>
+              </div>
+            </div>
+            <div class="form-handlinger">
+              <button class="btn btn-gron" onclick="opretHusstand()">Opret og send velkomst-email</button>
+              <button class="btn btn-lys">Ryd</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROLLER -->
+      <div class="panel" id="panel-roller">
+        <div class="side-titel">Roller &amp; adgang</div>
+        <div class="side-sub">Adgangsniveauer i OlsenKlanen</div>
+        <div class="kort">
+          <div class="kort-body">
+            <table class="tabel">
+              <thead><tr><th>Niveau</th><th>Rolle</th><th>Hvem</th><th>Kan gøre</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td><span class="badge badge-ejer">Ejer</span></td><td>Carsten</td><td>Alt inkl. Firebase · tildeler alle roller</td></tr>
+                <tr><td>2</td><td><span class="badge badge-admin">Admin</span></td><td>Kurt · Tommy</td><td>Oprette/slette brugere · se alle data · systemindstillinger</td></tr>
+                <tr><td>3</td><td><span class="badge badge-deladmin">Del-admin</span></td><td>Sanne · Karin</td><td>Begrænset admin efter rolle</td></tr>
+                <tr><td>4</td><td><span class="badge badge-medlem">Familieansvarlig</span></td><td>Valgt pr. husstand</td><td>Redigere alle i egen husstand</td></tr>
+                <tr><td>5</td><td><span class="badge badge-medlem">Medlem</span></td><td>Alle med login</td><td>Se lukkede sider · opdatere egne data</td></tr>
+                <tr><td>6</td><td><span class="badge badge-medlem">Gæst</span></td><td>Alle andre</td><td>Se åbne sider: forside · om klanen · kontakt</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- KONTINGENT -->
+      <div class="panel" id="panel-kontingent">
+        <div class="side-titel">Kontingent</div>
+        <div class="side-sub">Oversigt og registrering — håndteres af Tommy</div>
+        <div class="kort">
+          <div class="kort-body">
+            <table class="tabel">
+              <thead><tr><th>Husstand</th><th>Navn</th><th>Beløb</th><th>Status 2026</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>0001</td><td>Carsten &amp; Elisabeth</td><td>200 kr.</td><td><span class="badge badge-admin">Betalt</span></td><td><button class="btn btn-lys btn-sm">Rediger</button></td></tr>
+                <tr><td>0002</td><td>Kurt Olsen</td><td>200 kr.</td><td><span class="badge badge-admin">Betalt</span></td><td><button class="btn btn-lys btn-sm">Rediger</button></td></tr>
+                <tr><td>0003</td><td>Tommy &amp; Birgit</td><td>200 kr.</td><td><span class="badge badge-admin">Betalt</span></td><td><button class="btn btn-lys btn-sm">Rediger</button></td></tr>
+                <tr><td>0008</td><td>Lise Olsen</td><td>200 kr.</td><td><span class="badge badge-deladmin">Afventer</span></td><td><button class="btn btn-lys btn-sm">Rediger</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- NYHEDER -->
+      <div class="panel" id="panel-nyheder">
+        <div class="side-titel">Nyheder</div>
+        <div class="side-sub">Opret og rediger nyheder der vises på forsiden</div>
+        <div class="kort">
+          <div class="kort-header"><div class="kort-titel">Skriv ny nyhed</div></div>
+          <div class="kort-body">
+            <div class="bekraeft" id="nyhed-bekraeft">✓ Nyheden er gemt og vises nu på forsiden!</div>
+            <div class="form-grid">
+              <div class="form-felt form-fuld"><label>Overskrift</label><input type="text" placeholder="Fx: Referat fra generalforsamling 2026" /></div>
+              <div class="form-felt form-fuld"><label>Tekst</label><textarea placeholder="Skriv nyheden her..."></textarea></div>
+              <div class="form-felt"><label>Dato</label><input type="date" id="nyhed-dato" /></div>
+              <div class="form-felt"><label>Synlighed</label><select><option>Alle medlemmer</option><option>Kun admins</option></select></div>
+            </div>
+            <div class="form-handlinger">
+              <button class="btn btn-gron" onclick="gemNyhed()">Gem og publicer</button>
+              <button class="btn btn-lys">Ryd</button>
+            </div>
+          </div>
+        </div>
+        <div class="kort">
+          <div class="kort-header"><div class="kort-titel">Alle nyheder</div></div>
+          <div class="kort-body">
+            <table class="tabel">
+              <thead><tr><th>Dato</th><th>Overskrift</th><th>Synlig for</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>18. apr 2026</td><td>Tilmelding til skovtur 2026 er åben</td><td>Alle</td><td><button class="btn btn-lys btn-sm">Rediger</button> <button class="btn btn-fare btn-sm">Slet</button></td></tr>
+                <tr><td>2. mar 2026</td><td>Referat fra skovturen 2025 er klar</td><td>Alle</td><td><button class="btn btn-lys btn-sm">Rediger</button> <button class="btn btn-fare btn-sm">Slet</button></td></tr>
+                <tr><td>15. jan 2026</td><td>Generalforsamling lørdag den 30. maj</td><td>Alle</td><td><button class="btn btn-lys btn-sm">Rediger</button> <button class="btn btn-fare btn-sm">Slet</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- KALENDER -->
+      <div class="panel" id="panel-kalender">
+        <div class="side-titel">Kalender</div>
+        <div class="side-sub">Begivenheder og automatiske mærkedage</div>
+        <div class="kort">
+          <div class="kort-body">
+            <table class="tabel">
+              <thead><tr><th>Dato</th><th>Begivenhed</th><th>Type</th></tr></thead>
+              <tbody>
+                <tr><td>3. maj 2026</td><td>Lise Olsen fylder 80 år</td><td><span class="badge badge-maerke badge-80">Mærkedag</span></td></tr>
+                <tr><td>17. maj 2026</td><td>Jakob Nielsen fylder 18 år</td><td><span class="badge badge-maerke badge-18">Mærkedag</span></td></tr>
+                <tr><td>29–31. maj 2026</td><td>Skovtur 2026 — Eriksminde, Rørvig</td><td><span class="badge badge-admin">Arrangement</span></td></tr>
+                <tr><td>30. maj 2026</td><td>Generalforsamling kl. 9:45</td><td><span class="badge badge-admin">Arrangement</span></td></tr>
+                <tr><td>12. jun 2026</td><td>Anne Mette Skov fylder 55 år</td><td><span class="badge badge-maerke badge-55">Mærkedag</span></td></tr>
+                <tr><td>8. aug 2026</td><td>Martin Olsen — Konfirmation</td><td><span class="badge badge-deladmin">Fejring</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAMILIEKRØNIKE -->
+      <div class="panel" id="panel-familiekronike">
+        <div class="side-titel">Familiekrønike</div>
+        <div class="side-sub">Klanens samlede historie — forvaltes af Sanne</div>
+        <div class="kort">
+          <div class="kort-body" style="text-align:center;padding:3rem;color:var(--tekst-lys)">
+            <div style="font-size:40px;margin-bottom:1rem">📖</div>
+            <div style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:0.5rem">Familiekrøniken er under opbygning</div>
+            <div style="font-size:13px">Indhold afklares med Sanne og Kurt · Fase 5 i planen</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AKTIVITETSLOG -->
+      <div class="panel" id="panel-aktivitetslog">
+        <div class="side-titel">Aktivitetslog</div>
+        <div class="side-sub">Alle handlinger i systemet logges automatisk</div>
+        <div class="kort">
+          <div class="kort-body">
+            <div class="aktivitet-item"><div class="aktivitet-ikon akt-gron">✏️</div><div><div class="aktivitet-tekst">Karin opdaterede husstand 0012 — ny email registreret</div><div class="aktivitet-tid">26. apr 2026 · 10:32</div></div></div>
+            <div class="aktivitet-item"><div class="aktivitet-ikon akt-guld">💰</div><div><div class="aktivitet-tekst">Tommy registrerede kontingentbetaling fra husstand 0008</div><div class="aktivitet-tid">25. apr 2026 · 14:15</div></div></div>
+            <div class="aktivitet-item"><div class="aktivitet-ikon akt-gron">➕</div><div><div class="aktivitet-tekst">Kurt oprettede ny husstand 0034 — Andersen familien</div><div class="aktivitet-tid">23. apr 2026 · 09:41</div></div></div>
+            <div class="aktivitet-item"><div class="aktivitet-ikon akt-gron">📰</div><div><div class="aktivitet-tekst">Kurt publicerede nyhed: "Tilmelding til skovtur 2026 er åben"</div><div class="aktivitet-tid">18. apr 2026 · 11:20</div></div></div>
+            <div class="aktivitet-item"><div class="aktivitet-ikon akt-guld">🔑</div><div><div class="aktivitet-tekst">Carsten opdaterede systemindstillinger — mærkedagsregler</div><div class="aktivitet-tid">15. apr 2026 · 16:05</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BACKUP -->
+      <div class="panel" id="panel-backup">
+        <div class="side-titel">Backup</div>
+        <div class="side-sub">Automatisk ugentlig backup via Firebase</div>
+        <div class="kort">
+          <div class="kort-body">
+            <table class="tabel">
+              <thead><tr><th>Dato</th><th>Type</th><th>Størrelse</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>26. apr 2026</td><td>Automatisk ugentlig</td><td>2,3 MB</td><td><span class="badge badge-admin">OK</span></td></tr>
+                <tr><td>19. apr 2026</td><td>Automatisk ugentlig</td><td>2,1 MB</td><td><span class="badge badge-admin">OK</span></td></tr>
+                <tr><td>12. apr 2026</td><td>Automatisk ugentlig</td><td>2,0 MB</td><td><span class="badge badge-admin">OK</span></td></tr>
+              </tbody>
+            </table>
+            <div style="margin-top:1rem">
+              <button class="btn btn-lys">Download seneste backup</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// Login brugere
+const brugere = [
+  {email:'kurt@olsen.dk', kodeord:'kurt2026', navn:'Kurt Olsen', rolle:'Webmaster · Admin', initial:'K'},
+  {email:'carsten@olsenklanen.dk', kodeord:'carsten2026', navn:'Carsten Gram', rolle:'Ejer · Initiativtager', initial:'C'},
+  {email:'tommy@familie.dk', kodeord:'tommy2026', navn:'Tommy', rolle:'Kasserer · Admin', initial:'T'},
+  {email:'demo@test.dk', kodeord:'demo', navn:'Demo Bruger', rolle:'Admin', initial:'D'},
+];
+
+document.getElementById('nyhed-dato').valueAsDate = new Date();
+
+document.getElementById('kodeord-felt').addEventListener('keyup', e=>{if(e.key==='Enter')forsogLogin()});
+document.getElementById('email-felt').addEventListener('keyup', e=>{if(e.key==='Enter')forsogLogin()});
+
+function forsogLogin(){
+  const email = document.getElementById('email-felt').value.trim().toLowerCase();
+  const kode = document.getElementById('kodeord-felt').value;
+  const b = brugere.find(x=>x.email===email && x.kodeord===kode);
+  if(b){
+    document.getElementById('bruger-navn').textContent = b.navn;
+    document.getElementById('bruger-rolle').textContent = b.rolle;
+    document.getElementById('bruger-avatar').textContent = b.initial;
+    document.getElementById('login-side').style.display = 'none';
+    document.getElementById('admin-side').style.display = 'block';
+  } else {
+    document.getElementById('login-fejl').style.display = 'block';
+  }
+}
+
+function logUd(){
+  document.getElementById('admin-side').style.display = 'none';
+  document.getElementById('login-side').style.display = 'flex';
+  document.getElementById('email-felt').value = '';
+  document.getElementById('kodeord-felt').value = '';
+  document.getElementById('login-fejl').style.display = 'none';
+}
+
+function visPanel(id, navItem){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('aktiv'));
+  document.getElementById('panel-'+id).classList.add('aktiv');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('aktiv'));
+  if(navItem) navItem.classList.add('aktiv');
+}
+
+function opretHusstand(){
+  document.getElementById('opret-bekraeft').style.display='block';
+  setTimeout(()=>document.getElementById('opret-bekraeft').style.display='none',4000);
+}
+
+function gemNyhed(){
+  document.getElementById('nyhed-bekraeft').style.display='block';
+  setTimeout(()=>document.getElementById('nyhed-bekraeft').style.display='none',4000);
+}
+</script>
+</body>
+</html>
