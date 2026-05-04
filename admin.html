@@ -1,0 +1,1845 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen — Administration</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --mos:#3a5a2e;--mos-mork:#243b1c;--mos-lys:#5a7f4a;
+  --guld:#b8892a;--guld-lys:#d4a84b;--guld-pale:#f5e9cc;
+  --creme:#faf6ee;--creme-mork:#f0e8d8;
+  --tekst:#2a2015;--tekst-mid:#5a4f3a;--tekst-lys:#8a7d65;
+  --hvid:#fffdf8;--skygge:rgba(36,27,12,0.12);
+  --fare:#c0392b;--fare-lys:#fdf0ef;--ok:#2d6e2d;--ok-lys:#e8f5e9;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--tekst);line-height:1.6;min-height:100vh}
+
+/* ── LOGIN ──────────────────────────────────────── */
+#login-side{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:2rem;position:relative;
+  background:linear-gradient(160deg,#1a2e12 0%,#243b1c 40%,#2d4a1e 65%,#1e3015 100%);
+}
+#login-side::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 30% 60%,rgba(90,127,74,.35) 0%,transparent 55%),
+             radial-gradient(ellipse at 80% 20%,rgba(184,137,42,.2) 0%,transparent 45%);
+}
+.login-kort{background:var(--hvid);max-width:420px;width:100%;
+  box-shadow:0 24px 64px rgba(0,0,0,.4);position:relative;z-index:1}
+.login-header{background:var(--mos-mork);padding:2.5rem 2rem 1.75rem;
+  text-align:center;border-bottom:3px solid var(--guld)}
+.login-logo{font-family:'Cormorant Garamond',serif;font-size:36px;
+  font-weight:300;color:var(--hvid);letter-spacing:1px}
+.login-logo em{font-style:italic;color:var(--guld-lys)}
+.login-sub{font-size:10px;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(255,255,255,.4);margin-top:6px}
+.login-streg{width:40px;height:1px;background:var(--guld);margin:12px auto 0}
+.login-body{padding:2rem}
+.login-titel{font-family:'Cormorant Garamond',serif;font-size:20px;
+  color:var(--mos-mork);margin-bottom:1.5rem;font-weight:400}
+.felt-gruppe{margin-bottom:1.25rem}
+.felt-label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--tekst-lys);font-weight:600;margin-bottom:6px}
+.felt-input{width:100%;border:1px solid rgba(184,137,42,.3);padding:10px 14px;
+  font-size:14px;font-family:'Jost',sans-serif;color:var(--tekst);
+  background:var(--creme);outline:none;transition:border-color .2s}
+.felt-input:focus{border-color:var(--mos);background:var(--hvid)}
+.kodeord-wrap{position:relative}
+.kodeord-wrap .felt-input{padding-right:44px}
+.vis-kode{position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:var(--tekst-lys);font-size:14px;padding:4px}
+.login-knap{width:100%;background:var(--mos-mork);color:var(--hvid);border:none;
+  padding:13px;font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  font-family:'Jost',sans-serif;font-weight:600;cursor:pointer;transition:background .2s;
+  position:relative;overflow:hidden}
+.login-knap:hover{background:var(--mos-lys)}
+.login-knap:disabled{background:var(--tekst-lys);cursor:not-allowed}
+.login-knap.loading::after{content:'';position:absolute;top:50%;left:50%;
+  width:16px;height:16px;margin:-8px 0 0 -8px;border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.login-besked{padding:10px 14px;font-size:13px;margin-bottom:1rem;display:none;
+  border-left:3px solid}
+.login-besked.fejl{background:var(--fare-lys);color:var(--fare);border-color:var(--fare)}
+.login-besked.ok{background:var(--ok-lys);color:var(--ok);border-color:var(--ok)}
+.login-besked.vis{display:block}
+.glemt-link{font-size:11px;color:var(--tekst-lys);text-align:right;
+  margin-top:.75rem;cursor:pointer;text-decoration:underline;display:block}
+.glemt-link:hover{color:var(--guld)}
+.login-kortfod{background:var(--creme-mork);border-top:1px solid var(--guld-pale);
+  padding:.75rem 2rem;text-align:center;font-size:11px;color:var(--tekst-lys)}
+
+/* ── TOPBAR ─────────────────────────────────────── */
+#admin-side{display:none}
+.topbar{background:var(--mos-mork);border-bottom:3px solid var(--guld);
+  height:60px;position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem}
+.topbar-venstre{display:flex;align-items:center;gap:12px}
+.topbar-logo{font-family:'Cormorant Garamond',serif;font-size:24px;
+  font-weight:300;color:var(--hvid);letter-spacing:1px}
+.topbar-logo em{font-style:italic;color:var(--guld-lys)}
+.topbar-badge{font-size:9px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--guld);border:1px solid rgba(184,137,42,.4);padding:2px 8px}
+.topbar-hoejre{display:flex;align-items:center;gap:12px}
+.bruger-info{text-align:right}
+.bruger-navn{font-size:14px;font-weight:500;color:var(--hvid);line-height:1.2}
+.bruger-rolle{font-size:10px;letter-spacing:1px;color:var(--guld);text-transform:uppercase}
+.bruger-avatar{width:36px;height:36px;border-radius:50%;background:var(--guld);
+  color:var(--mos-mork);font-family:'Cormorant Garamond',serif;font-size:17px;
+  font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logout-knap{font-size:11px;color:rgba(255,255,255,.35);background:none;
+  border:none;cursor:pointer;font-family:'Jost',sans-serif;padding:0;margin-left:4px}
+.logout-knap:hover{color:rgba(255,255,255,.7)}
+
+/* ── SIDEBAR ────────────────────────────────────── */
+.sidebar{width:230px;background:#1b2f10;position:fixed;
+  top:60px;left:0;bottom:0;overflow-y:auto;padding:.75rem 0}
+.nav-gruppe{margin-bottom:.25rem}
+.nav-gruppe-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(255,255,255,.25);padding:.75rem 1.25rem .25rem;font-weight:600;display:block}
+.nav-item{display:flex;align-items:center;gap:10px;padding:.6rem 1.25rem;
+  font-size:13px;font-weight:400;color:rgba(255,255,255,.6);cursor:pointer;
+  border-left:3px solid transparent;transition:all .15s;user-select:none}
+.nav-item:hover{color:var(--hvid);background:rgba(255,255,255,.05)}
+.nav-item.aktiv{color:var(--guld-lys);border-left-color:var(--guld);
+  background:rgba(184,137,42,.1)}
+.nav-ikon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.nav-separator{height:1px;background:rgba(255,255,255,.07);margin:.5rem 1.25rem}
+.nav-admin-tag{font-size:8px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--guld);background:rgba(184,137,42,.15);padding:1px 5px;margin-left:auto}
+
+/* ── MAIN LAYOUT ────────────────────────────────── */
+.main{margin-left:230px;padding-top:60px;min-height:100vh;background:var(--creme-mork)}
+.main-indhold{padding:2rem;max-width:1000px}
+.panel{display:none}
+.panel.aktiv{display:block}
+
+/* ── SIDE HEADER ────────────────────────────────── */
+.side-overskrift{margin-bottom:1.75rem}
+.side-titel{font-family:'Cormorant Garamond',serif;font-size:30px;
+  font-weight:400;color:var(--mos-mork);line-height:1.1}
+.side-sub{font-size:13px;color:var(--tekst-lys);margin-top:.2rem;font-weight:300}
+.streg{width:40px;height:2px;background:var(--guld);margin:.75rem 0 1rem}
+
+/* ── STATS ──────────────────────────────────────── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+.stat{background:var(--hvid);padding:1.25rem 1.5rem;border-top:3px solid var(--guld);
+  box-shadow:0 2px 8px var(--skygge)}
+.stat.mos{border-top-color:var(--mos)}
+.stat-tal{font-family:'Cormorant Garamond',serif;font-size:38px;
+  font-weight:300;color:var(--mos-mork);line-height:1}
+.stat-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--tekst-lys);margin-top:6px;font-weight:500}
+
+/* ── KORT ───────────────────────────────────────── */
+.kort{background:var(--hvid);box-shadow:0 2px 12px var(--skygge);margin-bottom:1.5rem}
+.kort-header{padding:1rem 1.5rem;border-bottom:1px solid var(--guld-pale);
+  display:flex;align-items:center;justify-content:space-between}
+.kort-titel{font-family:'Cormorant Garamond',serif;font-size:18px;
+  font-weight:600;color:var(--mos-mork)}
+.kort-body{padding:1.5rem}
+
+/* ── TABEL ──────────────────────────────────────── */
+.tabel{width:100%;border-collapse:collapse}
+.tabel th{font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--tekst-lys);font-weight:600;padding:.65rem 1rem;
+  text-align:left;border-bottom:2px solid var(--guld-pale)}
+.tabel td{font-size:13px;padding:.8rem 1rem;
+  border-bottom:1px solid var(--guld-pale);color:var(--tekst);vertical-align:middle}
+.tabel tr:last-child td{border-bottom:none}
+.tabel tr:hover td{background:var(--creme)}
+
+/* ── BADGES ─────────────────────────────────────── */
+.badge{display:inline-block;font-size:10px;font-weight:600;
+  padding:3px 9px;letter-spacing:.5px;text-transform:uppercase}
+.badge-admin{background:rgba(36,59,28,.12);color:var(--mos-mork)}
+.badge-redaktor{background:var(--guld-pale);color:#7a5510}
+.badge-ventende{background:#fef3e2;color:#b8680a}
+.badge-godkendt{background:var(--ok-lys);color:var(--ok)}
+.badge-afvist{background:var(--fare-lys);color:var(--fare)}
+.badge-arrangement{background:rgba(36,59,28,.12);color:var(--mos-mork)}
+.badge-maerkedag{background:var(--guld-pale);color:#7a5510}
+.badge-fejring{background:#e8eef8;color:#3a4a8a}
+.badge-alle{background:rgba(58,90,46,.1);color:var(--mos)}
+.badge-admins{background:var(--guld-pale);color:#7a5510}
+
+/* ── KNAPPER ────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;
+  letter-spacing:1.5px;text-transform:uppercase;font-weight:600;
+  font-family:'Jost',sans-serif;padding:8px 18px;cursor:pointer;
+  border:none;transition:all .15s;text-decoration:none;white-space:nowrap}
+.btn-mos{background:var(--mos-mork);color:var(--hvid)}
+.btn-mos:hover{background:var(--mos-lys)}
+.btn-lys{background:var(--creme);color:var(--mos-mork);border:1px solid rgba(184,137,42,.3)}
+.btn-lys:hover{background:var(--guld-pale)}
+.btn-guld{background:var(--guld);color:var(--hvid)}
+.btn-guld:hover{background:var(--guld-lys);color:var(--mos-mork)}
+.btn-fare{background:var(--fare-lys);color:var(--fare);border:1px solid rgba(192,57,43,.3)}
+.btn-fare:hover{background:#fad7d5}
+.btn-ok{background:var(--ok-lys);color:var(--ok);border:1px solid rgba(45,110,45,.3)}
+.btn-ok:hover{background:#d4edda}
+.btn-sm{padding:5px 12px;font-size:10px}
+
+/* ── FORM ───────────────────────────────────────── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-fuld{grid-column:1 / -1}
+.form-felt{display:flex;flex-direction:column}
+.form-felt label{font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--tekst-lys);font-weight:600;margin-bottom:6px}
+.form-felt input,.form-felt select,.form-felt textarea{
+  border:1px solid rgba(184,137,42,.25);padding:9px 12px;font-size:13px;
+  font-family:'Jost',sans-serif;color:var(--tekst);background:var(--creme);
+  outline:none;transition:border-color .2s}
+.form-felt input:focus,.form-felt select:focus,.form-felt textarea:focus{
+  border-color:var(--mos);background:var(--hvid)}
+.form-felt textarea{resize:vertical;min-height:130px}
+.form-handlinger{margin-top:1.25rem;display:flex;gap:.75rem}
+
+/* ── AKTIVITET ──────────────────────────────────── */
+.akt-liste .akt-item{display:flex;gap:.75rem;padding:.75rem 0;
+  border-bottom:1px solid var(--guld-pale);align-items:flex-start}
+.akt-item:last-child{border-bottom:none}
+.akt-ikon{width:30px;height:30px;border-radius:50%;display:flex;
+  align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.akt-ikon.mos{background:rgba(58,90,46,.12)}
+.akt-ikon.guld{background:var(--guld-pale)}
+.akt-tekst{font-size:13px;color:var(--tekst);line-height:1.4}
+.akt-tid{font-size:11px;color:var(--tekst-lys);margin-top:2px}
+
+/* ── TOAST ──────────────────────────────────────── */
+#toast{position:fixed;bottom:2rem;right:2rem;background:var(--mos-mork);
+  color:var(--hvid);padding:1rem 1.5rem;border-left:4px solid var(--guld);
+  box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:500;font-size:13px;
+  transform:translateY(100px);opacity:0;transition:all .3s;max-width:320px;
+  pointer-events:none}
+#toast.vis{transform:translateY(0);opacity:1}
+#toast.fejl{border-left-color:var(--fare)}
+
+/* ── UPLOAD ─────────────────────────────────────── */
+.upload-zone{border:2px dashed rgba(184,137,42,.4);background:var(--creme);
+  padding:3rem;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.upload-zone:hover,.upload-zone.over{border-color:var(--guld);background:var(--guld-pale)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-ikon{font-size:36px;margin-bottom:1rem;opacity:.5}
+.upload-tekst{font-size:14px;color:var(--tekst-mid);margin-bottom:.5rem}
+.upload-sub{font-size:12px;color:var(--tekst-lys);font-weight:300}
+.progress-bar{height:4px;background:var(--creme-mork);margin-top:1rem;display:none}
+.progress-fill{height:100%;background:var(--mos);width:0%;transition:width .3s}
+.foto-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:1.5rem}
+.foto-celle{aspect-ratio:1;background:var(--creme-mork);display:flex;
+  align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:pointer}
+.foto-celle img{width:100%;height:100%;object-fit:cover}
+.foto-placeholder-icon{font-size:24px;opacity:.3}
+.foto-celle:hover .foto-overlay{opacity:1}
+.foto-overlay{position:absolute;inset:0;background:rgba(36,59,28,.6);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .2s;color:var(--hvid);font-size:20px;gap:10px}
+
+/* ── GODKENDELSE KORT ───────────────────────────── */
+.godkend-kort{background:var(--hvid);border:1px solid var(--guld-pale);
+  padding:1.25rem 1.5rem;margin-bottom:.75rem;display:flex;align-items:center;gap:1rem}
+.godkend-avatar{width:44px;height:44px;border-radius:50%;
+  background:linear-gradient(135deg,var(--mos) 0%,var(--mos-mork) 100%);
+  color:var(--guld-lys);font-family:'Cormorant Garamond',serif;font-size:20px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.godkend-info{flex:1}
+.godkend-navn{font-size:15px;font-weight:500;color:var(--mos-mork)}
+.godkend-meta{font-size:12px;color:var(--tekst-lys);margin-top:2px}
+.godkend-handlinger{display:flex;gap:.5rem}
+
+/* ── MODAL ──────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);
+  z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.vis{display:flex}
+.modal{background:var(--hvid);max-width:560px;width:100%;
+  max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.4)}
+.modal-header{background:var(--mos-mork);padding:1.25rem 1.5rem;
+  border-bottom:2px solid var(--guld);display:flex;align-items:center;justify-content:space-between}
+.modal-titel{font-family:'Cormorant Garamond',serif;font-size:20px;
+  color:var(--hvid);font-weight:400}
+.modal-luk{background:none;border:none;color:rgba(255,255,255,.5);
+  font-size:22px;cursor:pointer;padding:0;line-height:1}
+.modal-luk:hover{color:var(--hvid)}
+.modal-body{padding:1.5rem}
+
+/* ── OVERBLIK GRID ──────────────────────────────── */
+.overblik-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+
+/* ── TOMME TILSTANDE ────────────────────────────── */
+.tom-tilstand{text-align:center;padding:3rem;color:var(--tekst-lys)}
+.tom-tilstand .tom-ikon{font-size:40px;margin-bottom:1rem}
+.tom-tilstand .tom-titel{font-family:'Cormorant Garamond',serif;font-size:18px;
+  color:var(--mos-mork);margin-bottom:.5rem}
+.tom-tilstand .tom-tekst{font-size:13px;font-weight:300}
+
+/* ── BRUGER-OVERSIGT ────────────────────────────── */
+.bruger-kort{background:var(--hvid);border:1px solid var(--guld-pale);
+  padding:1rem 1.5rem;margin-bottom:.5rem;display:flex;align-items:center;gap:1rem}
+.bruger-avatar-lille{width:40px;height:40px;border-radius:50%;
+  background:linear-gradient(135deg,var(--mos) 0%,var(--mos-mork) 100%);
+  color:var(--guld-lys);font-family:'Cormorant Garamond',serif;font-size:18px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bruger-info-li{flex:1}
+.bruger-navn-li{font-size:14px;font-weight:500;color:var(--mos-mork)}
+.bruger-email-li{font-size:12px;color:var(--tekst-lys);margin-top:1px}
+.bruger-handlinger{display:flex;gap:.5rem;align-items:center}
+
+/* ── RESPONSIVE ─────────────────────────────────── */
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main{margin-left:0}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .form-grid{grid-template-columns:1fr}
+  .foto-grid{grid-template-columns:repeat(3,1fr)}
+  .overblik-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN SIDE ════════════════════════════════ -->
+<div id="login-side">
+  <div class="login-kort">
+    <div class="login-header">
+      <div class="login-logo">Olsen<em>Klanen</em></div>
+      <div class="login-sub">Administration</div>
+      <div class="login-streg"></div>
+    </div>
+    <div class="login-body">
+      <div class="login-titel">Log ind med din email</div>
+      <div class="login-besked" id="login-besked"></div>
+      <div class="felt-gruppe">
+        <label class="felt-label">Email</label>
+        <input class="felt-input" type="email" id="login-email" placeholder="din@email.dk" autocomplete="email">
+      </div>
+      <div class="felt-gruppe">
+        <label class="felt-label">Adgangskode</label>
+        <div class="kodeord-wrap">
+          <input class="felt-input" type="password" id="login-kode" placeholder="••••••••" autocomplete="current-password">
+          <button class="vis-kode" type="button" onclick="skiftSyn('login-kode',this)">👁</button>
+        </div>
+      </div>
+      <button class="login-knap" id="login-knap" onclick="logInd()">Log ind</button>
+      <a class="glemt-link" onclick="aabneGlemtModal()">Glemt adgangskode?</a>
+    </div>
+    <div class="login-kortfod">OlsenKlanen.dk · Kun for administratorer og redaktører</div>
+  </div>
+</div>
+
+<!-- ══ ADMIN SIDE ═════════════════════════════════ -->
+<div id="admin-side">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-venstre">
+      <div class="topbar-logo">Olsen<em>Klanen</em></div>
+      <div class="topbar-badge" id="topbar-rolle-badge">Administration</div>
+    </div>
+    <div class="topbar-hoejre">
+      <div class="bruger-info">
+        <div class="bruger-navn" id="bruger-navn">—</div>
+        <div class="bruger-rolle" id="bruger-rolle-tekst">—</div>
+      </div>
+      <div class="bruger-avatar" id="bruger-avatar">?</div>
+      <button class="logout-knap" onclick="logUd()">Log ud</button>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="nav-gruppe">
+      <span class="nav-gruppe-label">Overblik</span>
+      <div class="nav-item aktiv" onclick="visPanel('overblik',this)">
+        <span class="nav-ikon">📊</span>Overblik
+      </div>
+    </div>
+    <div class="nav-gruppe">
+      <span class="nav-gruppe-label">Indhold</span>
+      <div class="nav-item" onclick="visPanel('nyheder',this)">
+        <span class="nav-ikon">📰</span>Nyheder
+      </div>
+      <div class="nav-item" onclick="visPanel('kalender',this)">
+        <span class="nav-ikon">📅</span>Kalender
+      </div>
+      <div class="nav-item" onclick="visPanel('billeder',this)">
+        <span class="nav-ikon">🖼</span>Billeder
+      </div>
+    </div>
+    <div class="nav-gruppe">
+      <span class="nav-gruppe-label">Familiemedlemmer</span>
+      <div class="nav-item" onclick="visPanel('godkend',this)">
+        <span class="nav-ikon">✅</span>Godkend ansøgninger
+        <span class="nav-admin-tag" id="godkend-tæller" style="display:none">0</span>
+      </div>
+    </div>
+    <div class="nav-separator"></div>
+    <!-- Admin-only sektion -->
+    <div class="nav-gruppe" id="admin-nav" style="display:none">
+      <span class="nav-gruppe-label">Admin</span>
+      <div class="nav-item" onclick="visPanel('brugere',this)">
+        <span class="nav-ikon">👥</span>Brugerstyring
+        <span class="nav-admin-tag">Admin</span>
+      </div>
+      <div class="nav-item" onclick="visPanel('log',this)">
+        <span class="nav-ikon">📋</span>Aktivitetslog
+        <span class="nav-admin-tag">Admin</span>
+      </div>
+      <div class="nav-item" onclick="visPanel('indstillinger',this)">
+        <span class="nav-ikon">⚙️</span>Indstillinger
+        <span class="nav-admin-tag">Admin</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <div class="main-indhold">
+
+      <!-- ── OVERBLIK ─────────────────────────── -->
+      <div class="panel aktiv" id="panel-overblik">
+        <div class="side-overskrift">
+          <div class="side-titel">Overblik</div>
+          <div class="side-sub" id="overblik-dato">OlsenKlanen · Administration</div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat mos">
+            <div class="stat-tal" id="stat-nyheder">—</div>
+            <div class="stat-label">Nyheder i alt</div>
+          </div>
+          <div class="stat">
+            <div class="stat-tal" id="stat-begivenheder">—</div>
+            <div class="stat-label">Kalenderbegivenheder</div>
+          </div>
+          <div class="stat">
+            <div class="stat-tal" id="stat-ventende">—</div>
+            <div class="stat-label">Ventende godkendelser</div>
+          </div>
+          <div class="stat">
+            <div class="stat-tal" id="stat-billeder">—</div>
+            <div class="stat-label">Billeder i alt</div>
+          </div>
+        </div>
+        <div class="overblik-grid">
+          <div class="kort">
+            <div class="kort-header">
+              <div class="kort-titel">Kommende begivenheder</div>
+            </div>
+            <div class="kort-body">
+              <div class="akt-liste" id="overblik-begivenheder">
+                <div class="tom-tilstand">
+                  <div class="tom-ikon">📅</div>
+                  <div class="tom-tekst">Henter begivenheder…</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="kort">
+            <div class="kort-header">
+              <div class="kort-titel">Seneste aktivitet</div>
+            </div>
+            <div class="kort-body">
+              <div class="akt-liste" id="overblik-log">
+                <div class="tom-tilstand">
+                  <div class="tom-ikon">📋</div>
+                  <div class="tom-tekst">Henter aktivitetslog…</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── NYHEDER ──────────────────────────── -->
+      <div class="panel" id="panel-nyheder">
+        <div class="side-overskrift">
+          <div class="side-titel">Nyheder</div>
+          <div class="side-sub">Opret og rediger nyheder der vises på forsiden</div>
+        </div>
+        <div class="kort">
+          <div class="kort-header">
+            <div class="kort-titel">Skriv ny nyhed</div>
+          </div>
+          <div class="kort-body">
+            <div class="form-grid">
+              <div class="form-felt form-fuld">
+                <label>Overskrift</label>
+                <input type="text" id="nyhed-overskrift" placeholder="Fx: Referat fra sommerfest 2026">
+              </div>
+              <div class="form-felt form-fuld">
+                <label>Tekst</label>
+                <textarea id="nyhed-tekst" placeholder="Skriv nyheden her…"></textarea>
+              </div>
+              <div class="form-felt">
+                <label>Dato</label>
+                <input type="date" id="nyhed-dato">
+              </div>
+              <div class="form-felt">
+                <label>Synlighed</label>
+                <select id="nyhed-synlighed">
+                  <option value="alle">Alle familiemedlemmer</option>
+                  <option value="admins">Kun admins og redaktører</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-handlinger">
+              <button class="btn btn-mos" onclick="gemNyhed()">Gem og publicer</button>
+              <button class="btn btn-lys" onclick="rydNyhedForm()">Ryd</button>
+            </div>
+          </div>
+        </div>
+        <div class="kort">
+          <div class="kort-header">
+            <div class="kort-titel">Alle nyheder</div>
+            <div id="nyheder-tæller" style="font-size:12px;color:var(--tekst-lys)">Henter…</div>
+          </div>
+          <div class="kort-body" style="padding:0">
+            <table class="tabel">
+              <thead>
+                <tr>
+                  <th>Dato</th>
+                  <th>Overskrift</th>
+                  <th>Synlig for</th>
+                  <th>Oprettet af</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="nyheder-tbody">
+                <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--tekst-lys)">Henter nyheder…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── KALENDER ─────────────────────────── -->
+      <div class="panel" id="panel-kalender">
+        <div class="side-overskrift">
+          <div class="side-titel">Kalender</div>
+          <div class="side-sub">Tilføj og rediger familiens begivenheder</div>
+        </div>
+        <div class="kort">
+          <div class="kort-header">
+            <div class="kort-titel">Tilføj begivenhed</div>
+          </div>
+          <div class="kort-body">
+            <div class="form-grid">
+              <div class="form-felt form-fuld">
+                <label>Titel</label>
+                <input type="text" id="kal-titel" placeholder="Fx: Farmors 80 års fødselsdag">
+              </div>
+              <div class="form-felt">
+                <label>Dato (fra)</label>
+                <input type="date" id="kal-dato">
+              </div>
+              <div class="form-felt">
+                <label>Dato (til) — valgfri</label>
+                <input type="date" id="kal-dato-til">
+              </div>
+              <div class="form-felt form-fuld">
+                <label>Beskrivelse</label>
+                <textarea id="kal-beskrivelse" placeholder="Skriv detaljer om begivenheden…" style="min-height:80px"></textarea>
+              </div>
+              <div class="form-felt">
+                <label>Type</label>
+                <select id="kal-type">
+                  <option value="arrangement">Arrangement</option>
+                  <option value="maerkedag">Mærkedag</option>
+                  <option value="fejring">Fejring</option>
+                </select>
+              </div>
+              <div class="form-felt">
+                <label>Sted — valgfri</label>
+                <input type="text" id="kal-sted" placeholder="Fx: Hos Morten og Hanne">
+              </div>
+            </div>
+            <div class="form-handlinger">
+              <button class="btn btn-mos" onclick="gemBegivenhed()">Gem begivenhed</button>
+              <button class="btn btn-lys" onclick="rydKalenderForm()">Ryd</button>
+            </div>
+          </div>
+        </div>
+        <div class="kort">
+          <div class="kort-header">
+            <div class="kort-titel">Kommende begivenheder</div>
+            <div id="kalender-tæller" style="font-size:12px;color:var(--tekst-lys)">Henter…</div>
+          </div>
+          <div class="kort-body" style="padding:0">
+            <table class="tabel">
+              <thead>
+                <tr><th>Dato</th><th>Titel</th><th>Sted</th><th>Type</th><th></th></tr>
+              </thead>
+              <tbody id="kalender-tbody">
+                <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--tekst-lys)">Henter begivenheder…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BILLEDER ─────────────────────────── -->
+      <div class="panel" id="panel-billeder">
+        <div class="side-overskrift">
+          <div class="side-titel">Billeder</div>
+          <div class="side-sub">Upload og administrer familiebilleder</div>
+        </div>
+        <div class="kort">
+          <div class="kort-header">
+            <div class="kort-titel">Upload billeder</div>
+          </div>
+          <div class="kort-body">
+            <div class="form-felt" style="margin-bottom:1rem">
+              <label>Album / kategori</label>
+              <select id="billede-album">
+                <option value="familiefester">Familiefester</option>
+                <option value="hverdag">Hverdagen</option>
+                <option value="ferier">Ferier</option>
+                <option value="fodseldsdage">Fødselsdage</option>
+                <option value="skovtur">Skovtur</option>
+                <option value="diverse">Diverse</option>
+              </select>
+            </div>
+            <div class="upload-zone" id="upload-zone"
+              ondragover="event.preventDefault();this.classList.add('over')"
+              ondragleave="this.classList.remove('over')"
+              ondrop="haandterDrop(event)">
+              <input type="file" id="billede-input" accept="image/*" multiple onchange="uploadBilleder(this.files)">
+              <div class="upload-ikon">🖼</div>
+              <div class="upload-tekst">Træk billeder hertil, eller klik for at vælge</div>
+              <div class="upload-sub">JPG, PNG, WebP · Maks. 10 MB pr. billede</div>
+            </div>
+            <div class="progress-bar" id="progress-bar">
+              <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div id="upload-status" style="font-size:12px;color:var(--tekst-lys);margin-top:.5rem;text-align:center"></div>
+          </div>
+        </div>
+        <div class="kort">
+          <div class="kort-header">
+            <div class="kort-titel">Uploadede billeder</div>
+            <div style="font-size:12px;color:var(--tekst-lys)" id="billeder-antal">Henter…</div>
+          </div>
+          <div class="kort-body">
+            <div class="foto-grid" id="foto-grid">
+              <!-- Udfyldes dynamisk -->
+              <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--tekst-lys)">
+                Henter billeder…
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── GODKEND ──────────────────────────── -->
+      <div class="panel" id="panel-godkend">
+        <div class="side-overskrift">
+          <div class="side-titel">Godkend familiemedlemmer</div>
+          <div class="side-sub">Nye anmodninger om adgang til OlsenKlanen</div>
+        </div>
+        <div class="kort">
+          <div class="kort-header">
+            <div class="kort-titel">Ventende ansøgninger</div>
+            <div id="ventende-antal" style="font-size:12px;color:var(--tekst-lys)">Henter…</div>
+          </div>
+          <div class="kort-body" id="godkend-liste">
+            <div class="tom-tilstand">
+              <div class="tom-ikon">✅</div>
+              <div class="tom-tekst">Henter ansøgninger…</div>
+            </div>
+          </div>
+        </div>
+        <div class="kort">
+          <div class="kort-header">
+            <div class="kort-titel">Behandlede ansøgninger</div>
+          </div>
+          <div class="kort-body" style="padding:0">
+            <table class="tabel">
+              <thead><tr><th>Navn</th><th>Email</th><th>Dato</th><th>Status</th></tr></thead>
+              <tbody id="behandlet-tbody">
+                <tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--tekst-lys)">Henter…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BRUGERSTYRING (admin) ────────────── -->
+      <div class="panel" id="panel-brugere">
+        <div class="side-overskrift">
+          <div class="side-titel">Brugerstyring</div>
+          <div class="side-sub">Administrer adgang til OlsenKlanen — kun for Carsten</div>
+        </div>
+        <div class="kort">
+          <div class="kort-header">
+            <div class="kort-titel">Aktive brugere</div>
+            <button class="btn btn-mos btn-sm" onclick="aabneOpretBrugerModal()">+ Tilføj bruger</button>
+          </div>
+          <div class="kort-body" id="bruger-liste">
+            <!-- Kendte brugere (statisk) -->
+            <div class="bruger-kort">
+              <div class="bruger-avatar-lille">C</div>
+              <div class="bruger-info-li">
+                <div class="bruger-navn-li">Carsten Gram</div>
+                <div class="bruger-email-li">cg@gallerieg.dk</div>
+              </div>
+              <div class="bruger-handlinger"><span class="badge badge-admin">Admin</span></div>
+            </div>
+            <div class="bruger-kort">
+              <div class="bruger-avatar-lille">K</div>
+              <div class="bruger-info-li">
+                <div class="bruger-navn-li">Kurt</div>
+                <div class="bruger-email-li">kurt@olsen.dk</div>
+              </div>
+              <div class="bruger-handlinger">
+                <span class="badge badge-redaktor">Redaktør</span>
+                <button class="btn btn-fare btn-sm" onclick="bekræftSletBruger('kurt@olsen.dk')">Fjern</button>
+              </div>
+            </div>
+            <div class="bruger-kort">
+              <div class="bruger-avatar-lille">S</div>
+              <div class="bruger-info-li">
+                <div class="bruger-navn-li">Sanne</div>
+                <div class="bruger-email-li">sanne@mail.dk</div>
+              </div>
+              <div class="bruger-handlinger">
+                <span class="badge badge-redaktor">Redaktør</span>
+                <button class="btn btn-fare btn-sm" onclick="bekræftSletBruger('sanne@mail.dk')">Fjern</button>
+              </div>
+            </div>
+            <div class="bruger-kort">
+              <div class="bruger-avatar-lille">T</div>
+              <div class="bruger-info-li">
+                <div class="bruger-navn-li">Tommy</div>
+                <div class="bruger-email-li">tommy@familie.dk</div>
+              </div>
+              <div class="bruger-handlinger">
+                <span class="badge badge-redaktor">Redaktør</span>
+                <button class="btn btn-fare btn-sm" onclick="bekræftSletBruger('tommy@familie.dk')">Fjern</button>
+              </div>
+            </div>
+            <div class="bruger-kort">
+              <div class="bruger-avatar-lille">K</div>
+              <div class="bruger-info-li">
+                <div class="bruger-navn-li">Karin</div>
+                <div class="bruger-email-li">karin@familie.dk</div>
+              </div>
+              <div class="bruger-handlinger">
+                <span class="badge badge-redaktor">Redaktør</span>
+                <button class="btn btn-fare btn-sm" onclick="bekræftSletBruger('karin@familie.dk')">Fjern</button>
+              </div>
+            </div>
+            <div id="ekstra-brugere"></div>
+          </div>
+        </div>
+        <div class="kort">
+          <div class="kort-header">
+            <div class="kort-titel">Adgangsniveauer</div>
+          </div>
+          <div class="kort-body" style="padding:0">
+            <table class="tabel">
+              <thead><tr><th>Rolle</th><th>Hvem</th><th>Kan gøre</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><span class="badge badge-admin">Admin</span></td>
+                  <td>Carsten</td>
+                  <td>Fuld adgang · brugerstyring · indstillinger · alle paneler</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-redaktor">Redaktør</span></td>
+                  <td>Kurt, Sanne, Tommy, Karin</td>
+                  <td>Nyheder · kalender · billeder · godkend familiemedlemmer</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── AKTIVITETSLOG (admin) ────────────── -->
+      <div class="panel" id="panel-log">
+        <div class="side-overskrift">
+          <div class="side-titel">Aktivitetslog</div>
+          <div class="side-sub">Alle handlinger i systemet logges automatisk</div>
+        </div>
+        <div class="kort">
+          <div class="kort-header">
+            <div class="kort-titel">Seneste 50 hændelser</div>
+            <button class="btn btn-lys btn-sm" onclick="hentLog()">Opdater</button>
+          </div>
+          <div class="kort-body">
+            <div class="akt-liste" id="log-liste">
+              <div class="tom-tilstand">
+                <div class="tom-ikon">📋</div>
+                <div class="tom-tekst">Henter aktivitetslog…</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── INDSTILLINGER (admin) ────────────── -->
+      <div class="panel" id="panel-indstillinger">
+        <div class="side-overskrift">
+          <div class="side-titel">Systemindstillinger</div>
+          <div class="side-sub">Grundlæggende indstillinger for OlsenKlanen</div>
+        </div>
+        <div class="kort">
+          <div class="kort-header"><div class="kort-titel">Siteindstillinger</div></div>
+          <div class="kort-body">
+            <div class="form-grid">
+              <div class="form-felt form-fuld">
+                <label>Velkomsttekst på forsiden</label>
+                <textarea id="ind-velkomst" style="min-height:80px">Her deler vi historier, billeder og minder. En privat hjemmeside kun for os — verificeret og tryg, med plads til alt det der betyder noget.</textarea>
+              </div>
+              <div class="form-felt">
+                <label>Sidens titel</label>
+                <input type="text" id="ind-titel" value="OlsenKlanen.dk">
+              </div>
+              <div class="form-felt">
+                <label>Kontakt-email</label>
+                <input type="email" id="ind-kontakt" value="cg@gallerieg.dk">
+              </div>
+              <div class="form-felt form-fuld">
+                <label>Registrering lukket for nye brugere?</label>
+                <select id="ind-registrering">
+                  <option value="nej">Nej — alle kan anmode om adgang</option>
+                  <option value="ja">Ja — kun invitation</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-handlinger">
+              <button class="btn btn-mos" onclick="gemIndstillinger()">Gem indstillinger</button>
+            </div>
+          </div>
+        </div>
+        <div class="kort">
+          <div class="kort-header"><div class="kort-titel">Firebase-status</div></div>
+          <div class="kort-body">
+            <table class="tabel">
+              <thead><tr><th>Tjeneste</th><th>Status</th><th>Info</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td>Firebase Authentication</td>
+                  <td><span class="badge badge-godkendt">Aktiv</span></td>
+                  <td style="color:var(--tekst-lys)">olsenklanen-familieside</td>
+                </tr>
+                <tr>
+                  <td>Cloud Firestore</td>
+                  <td><span class="badge badge-godkendt" id="fs-status">Tjekker…</span></td>
+                  <td style="color:var(--tekst-lys)">Nyheder, kalender, log, godkendelser</td>
+                </tr>
+                <tr>
+                  <td>Firebase Storage</td>
+                  <td><span class="badge badge-godkendt" id="storage-status">Tjekker…</span></td>
+                  <td style="color:var(--tekst-lys)">Familiebilleder</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main-indhold -->
+  </div><!-- /main -->
+</div><!-- /admin-side -->
+
+<!-- ══ GLEMT KODEORD MODAL ════════════════════════ -->
+<div class="modal-overlay" id="glemt-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-titel">Glemt adgangskode</div>
+      <button class="modal-luk" onclick="lukModal('glemt-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--tekst-mid);margin-bottom:1.25rem">
+        Skriv din email-adresse, så sender vi et link til at vælge en ny adgangskode.
+      </p>
+      <div class="login-besked" id="glemt-besked"></div>
+      <div class="form-felt" style="margin-bottom:1rem">
+        <label>Email</label>
+        <input type="email" id="glemt-email" placeholder="din@email.dk">
+      </div>
+      <div class="form-handlinger">
+        <button class="btn btn-mos" onclick="sendGlemtKode()">Send nulstillingslink</button>
+        <button class="btn btn-lys" onclick="lukModal('glemt-modal')">Annuller</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ REDIGER NYHED MODAL ════════════════════════ -->
+<div class="modal-overlay" id="rediger-nyhed-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-titel">Rediger nyhed</div>
+      <button class="modal-luk" onclick="lukModal('rediger-nyhed-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="rediger-nyhed-id">
+      <div class="form-grid">
+        <div class="form-felt form-fuld">
+          <label>Overskrift</label>
+          <input type="text" id="rediger-nyhed-overskrift">
+        </div>
+        <div class="form-felt form-fuld">
+          <label>Tekst</label>
+          <textarea id="rediger-nyhed-tekst"></textarea>
+        </div>
+        <div class="form-felt">
+          <label>Dato</label>
+          <input type="date" id="rediger-nyhed-dato">
+        </div>
+        <div class="form-felt">
+          <label>Synlighed</label>
+          <select id="rediger-nyhed-synlighed">
+            <option value="alle">Alle familiemedlemmer</option>
+            <option value="admins">Kun admins og redaktører</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-handlinger">
+        <button class="btn btn-mos" onclick="gemRedigertNyhed()">Gem ændringer</button>
+        <button class="btn btn-lys" onclick="lukModal('rediger-nyhed-modal')">Annuller</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ REDIGER BEGIVENHED MODAL ═══════════════════ -->
+<div class="modal-overlay" id="rediger-kal-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-titel">Rediger begivenhed</div>
+      <button class="modal-luk" onclick="lukModal('rediger-kal-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="rediger-kal-id">
+      <div class="form-grid">
+        <div class="form-felt form-fuld">
+          <label>Titel</label>
+          <input type="text" id="rediger-kal-titel">
+        </div>
+        <div class="form-felt">
+          <label>Dato (fra)</label>
+          <input type="date" id="rediger-kal-dato">
+        </div>
+        <div class="form-felt">
+          <label>Dato (til)</label>
+          <input type="date" id="rediger-kal-dato-til">
+        </div>
+        <div class="form-felt form-fuld">
+          <label>Beskrivelse</label>
+          <textarea id="rediger-kal-beskrivelse" style="min-height:80px"></textarea>
+        </div>
+        <div class="form-felt">
+          <label>Type</label>
+          <select id="rediger-kal-type">
+            <option value="arrangement">Arrangement</option>
+            <option value="maerkedag">Mærkedag</option>
+            <option value="fejring">Fejring</option>
+          </select>
+        </div>
+        <div class="form-felt">
+          <label>Sted</label>
+          <input type="text" id="rediger-kal-sted">
+        </div>
+      </div>
+      <div class="form-handlinger">
+        <button class="btn btn-mos" onclick="gemRedigertBegivenhed()">Gem ændringer</button>
+        <button class="btn btn-lys" onclick="lukModal('rediger-kal-modal')">Annuller</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ OPRET BRUGER MODAL ════════════════════════ -->
+<div class="modal-overlay" id="opret-bruger-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-titel">Tilføj ny bruger</div>
+      <button class="modal-luk" onclick="lukModal('opret-bruger-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--tekst-mid);margin-bottom:1.25rem">
+        Ny bruger oprettes i Firebase Authentication. Personen modtager en email om at sætte en adgangskode.
+      </p>
+      <div class="form-grid">
+        <div class="form-felt">
+          <label>Navn</label>
+          <input type="text" id="ny-bruger-navn" placeholder="Fornavn Efternavn">
+        </div>
+        <div class="form-felt">
+          <label>Rolle</label>
+          <select id="ny-bruger-rolle">
+            <option value="redaktor">Redaktør</option>
+          </select>
+        </div>
+        <div class="form-felt form-fuld">
+          <label>Email</label>
+          <input type="email" id="ny-bruger-email" placeholder="ny@email.dk">
+        </div>
+        <div class="form-felt form-fuld">
+          <label>Midlertidig adgangskode</label>
+          <input type="text" id="ny-bruger-kode" placeholder="Mindst 8 tegn">
+        </div>
+      </div>
+      <div class="form-handlinger">
+        <button class="btn btn-mos" onclick="opretNyBruger()">Opret bruger</button>
+        <button class="btn btn-lys" onclick="lukModal('opret-bruger-modal')">Annuller</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BEKRÆFT SLET MODAL ════════════════════════ -->
+<div class="modal-overlay" id="bekraeft-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <div class="modal-titel">Bekræft sletning</div>
+      <button class="modal-luk" onclick="lukModal('bekraeft-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:var(--tekst-mid);margin-bottom:1.5rem" id="bekraeft-tekst"></p>
+      <div class="form-handlinger">
+        <button class="btn btn-fare" id="bekraeft-ja-knap">Slet</button>
+        <button class="btn btn-lys" onclick="lukModal('bekraeft-modal')">Annuller</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ══════════════════════════════════════ -->
+<div id="toast"></div>
+
+<!-- ══ FIREBASE MODULE ═══════════════════════════ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+         sendPasswordResetEmail, createUserWithEmailAndPassword }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc,
+         doc, query, orderBy, limit, serverTimestamp, where }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, listAll, deleteObject }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+const stor = getStorage(app);
+
+// Auth state → UI
+onAuthStateChanged(auth, user => {
+  if (typeof window.haandterAuth === 'function') window.haandterAuth(user);
+});
+
+// Eksporter til globalt scope
+window.fb = {
+  // Auth
+  logInd:   (e,k) => signInWithEmailAndPassword(auth, e, k),
+  logUd:    ()    => signOut(auth),
+  glemtKode:(e)   => sendPasswordResetEmail(auth, e),
+  opretBruger:(e,k) => createUserWithEmailAndPassword(auth, e, k),
+
+  // Nyheder
+  hentNyheder: async () => {
+    const q = query(collection(db,'nyheder'), orderBy('dato','desc'), limit(50));
+    const s = await getDocs(q);
+    return s.docs.map(d => ({id:d.id,...d.data()}));
+  },
+  gemNyhed: d => addDoc(collection(db,'nyheder'), {...d, oprettet:serverTimestamp()}),
+  opdaterNyhed: (id,d) => updateDoc(doc(db,'nyheder',id), d),
+  sletNyhed: id => deleteDoc(doc(db,'nyheder',id)),
+
+  // Kalender
+  hentBegivenheder: async () => {
+    const q = query(collection(db,'kalender'), orderBy('dato','asc'));
+    const s = await getDocs(q);
+    return s.docs.map(d => ({id:d.id,...d.data()}));
+  },
+  gemBegivenhed: d => addDoc(collection(db,'kalender'), {...d, oprettet:serverTimestamp()}),
+  opdaterBegivenhed: (id,d) => updateDoc(doc(db,'kalender',id), d),
+  sletBegivenhed: id => deleteDoc(doc(db,'kalender',id)),
+
+  // Billeder
+  uploadBillede: (fil, album, onProgress) => {
+    const stRef = ref(stor, `billeder/${album}/${Date.now()}_${fil.name}`);
+    const task = uploadBytesResumable(stRef, fil);
+    return new Promise((ok,nej) => {
+      task.on('state_changed',
+        snap => onProgress && onProgress(snap.bytesTransferred/snap.totalBytes*100),
+        nej,
+        async () => {
+          const url = await getDownloadURL(task.snapshot.ref);
+          await addDoc(collection(db,'billeder'), {
+            url, album, filnavn:fil.name, oprettet:serverTimestamp()
+          });
+          ok(url);
+        }
+      );
+    });
+  },
+  hentBilleder: async () => {
+    const q = query(collection(db,'billeder'), orderBy('oprettet','desc'), limit(24));
+    const s = await getDocs(q);
+    return s.docs.map(d => ({id:d.id,...d.data()}));
+  },
+  sletBillede: id => deleteDoc(doc(db,'billeder',id)),
+
+  // Godkendelser
+  hentGodkendelser: async (status='ventende') => {
+    const q = query(collection(db,'godkendelser'),
+      where('status','==',status), orderBy('anmodet','desc'));
+    const s = await getDocs(q);
+    return s.docs.map(d => ({id:d.id,...d.data()}));
+  },
+  hentAlleGodkendelser: async () => {
+    const q = query(collection(db,'godkendelser'), orderBy('anmodet','desc'), limit(30));
+    const s = await getDocs(q);
+    return s.docs.map(d => ({id:d.id,...d.data()}));
+  },
+  godkendMedlem: id => updateDoc(doc(db,'godkendelser',id),
+    {status:'godkendt', behandlet:serverTimestamp()}),
+  afvisMedlem:   id => updateDoc(doc(db,'godkendelser',id),
+    {status:'afvist',   behandlet:serverTimestamp()}),
+
+  // Log
+  logHandling: (tekst, bruger) => addDoc(collection(db,'log'),
+    {tekst, bruger, tidspunkt:serverTimestamp()}),
+  hentLog: async () => {
+    const q = query(collection(db,'log'), orderBy('tidspunkt','desc'), limit(50));
+    const s = await getDocs(q);
+    return s.docs.map(d => ({id:d.id,...d.data()}));
+  },
+
+  // Indstillinger
+  gemIndstillinger: d => updateDoc(doc(db,'system','indstillinger'), d).catch(() =>
+    addDoc(collection(db,'system'), {...d, id:'indstillinger'})),
+};
+</script>
+
+<!-- ══ UI JAVASCRIPT ══════════════════════════════ -->
+<script>
+// ── Roller ───────────────────────────────────────
+const ADMIN_EMAIL    = 'cg@gallerieg.dk';
+const REDAKTOR_EMAILS = ['kurt@olsen.dk','sanne@mail.dk','tommy@familie.dk','karin@familie.dk'];
+
+let aktivBruger = null;
+let aktivRolle  = null; // 'admin' | 'redaktor'
+
+// ── Auth-håndtering ──────────────────────────────
+window.haandterAuth = async function(user) {
+  if (!user) {
+    visLoginSide();
+    return;
+  }
+  const email = user.email.toLowerCase();
+  if (email === ADMIN_EMAIL) {
+    aktivRolle = 'admin';
+  } else if (REDAKTOR_EMAILS.includes(email)) {
+    aktivRolle = 'redaktor';
+  } else {
+    // Ikke autoriseret
+    await window.fb.logUd();
+    visLoginBesked('fejl', 'Du har ikke adgang til admin-panelet. Kontakt Carsten.');
+    return;
+  }
+  aktivBruger = user;
+  opsætAdminPanel(user);
+};
+
+function opsætAdminPanel(user) {
+  const email  = user.email.toLowerCase();
+  const initia = user.displayName ? user.displayName[0].toUpperCase() : email[0].toUpperCase();
+  const navn   = user.displayName || email;
+  const rolleT = aktivRolle === 'admin' ? 'Administrator' : 'Redaktør';
+
+  document.getElementById('bruger-navn').textContent     = navn;
+  document.getElementById('bruger-rolle-tekst').textContent = rolleT;
+  document.getElementById('bruger-avatar').textContent   = initia;
+  document.getElementById('topbar-rolle-badge').textContent = rolleT;
+
+  // Vis admin-nav kun for admin
+  document.getElementById('admin-nav').style.display = aktivRolle === 'admin' ? 'block' : 'none';
+
+  // Vis admin-side, skjul login
+  document.getElementById('login-side').style.display  = 'none';
+  document.getElementById('admin-side').style.display  = 'block';
+
+  // Sæt dato i overblik
+  document.getElementById('overblik-dato').textContent =
+    'OlsenKlanen · ' + new Date().toLocaleDateString('da-DK',
+      {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  // Sæt dagens dato i nyheds-form
+  document.getElementById('nyhed-dato').valueAsDate = new Date();
+
+  // Indlæs data
+  indlaesAltData();
+}
+
+async function indlaesAltData() {
+  await Promise.allSettled([
+    indlaesNyheder(),
+    indlaesBegivenheder(),
+    indlaesGodkendelser(),
+    indlaesBilleder(),
+    aktivRolle === 'admin' ? hentLog() : Promise.resolve()
+  ]);
+}
+
+function visLoginSide() {
+  document.getElementById('admin-side').style.display = 'none';
+  document.getElementById('login-side').style.display = 'flex';
+  aktivBruger = null;
+  aktivRolle  = null;
+}
+
+// ── Login / Logout ───────────────────────────────
+async function logInd() {
+  const email = document.getElementById('login-email').value.trim();
+  const kode  = document.getElementById('login-kode').value;
+  if (!email || !kode) { visLoginBesked('fejl','Udfyld email og adgangskode'); return; }
+  const knap = document.getElementById('login-knap');
+  knap.disabled = true; knap.classList.add('loading'); knap.textContent = '';
+  try {
+    await window.fb.logInd(email, kode);
+  } catch(e) {
+    visLoginBesked('fejl', fejlTekst(e.code));
+    knap.disabled = false; knap.classList.remove('loading'); knap.textContent = 'Log ind';
+  }
+}
+
+function logUd() {
+  window.fb.logUd();
+}
+
+function fejlTekst(kode) {
+  return ({
+    'auth/user-not-found':      'Denne email er ikke registreret.',
+    'auth/wrong-password':      'Forkert adgangskode. Prøv igen.',
+    'auth/invalid-credential':  'Forkert email eller adgangskode.',
+    'auth/invalid-email':       'Email-adressen ser ikke rigtig ud.',
+    'auth/too-many-requests':   'For mange forsøg — prøv igen om lidt.',
+    'auth/user-disabled':       'Denne bruger er deaktiveret.',
+  }[kode] || 'Der opstod en fejl. Prøv igen.');
+}
+
+function visLoginBesked(type, tekst) {
+  const el = document.getElementById('login-besked');
+  el.textContent = tekst;
+  el.className = 'login-besked ' + type + ' vis';
+}
+
+// ── Panel-navigation ─────────────────────────────
+function visPanel(id, navEl) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('aktiv'));
+  document.getElementById('panel-' + id).classList.add('aktiv');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('aktiv'));
+  if (navEl) navEl.classList.add('aktiv');
+}
+
+// ── Nyheder ──────────────────────────────────────
+let nyhederCache = [];
+
+async function indlaesNyheder() {
+  try {
+    nyhederCache = await window.fb.hentNyheder();
+    renderNyheder(nyhederCache);
+    document.getElementById('stat-nyheder').textContent = nyhederCache.length;
+    renderOverblikLog();
+  } catch(e) {
+    console.warn('Nyheder fejl:', e);
+    document.getElementById('stat-nyheder').textContent = '—';
+  }
+}
+
+function renderNyheder(liste) {
+  const tbody = document.getElementById('nyheder-tbody');
+  document.getElementById('nyheder-tæller').textContent = liste.length + ' nyheder';
+  if (!liste.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--tekst-lys)">Ingen nyheder endnu</td></tr>';
+    return;
+  }
+  tbody.innerHTML = liste.map(n => `
+    <tr>
+      <td>${formaterDato(n.dato)}</td>
+      <td>${escHtml(n.overskrift||'')}</td>
+      <td><span class="badge ${n.synlighed==='admins'?'badge-admins':'badge-alle'}">${n.synlighed==='admins'?'Kun admins':'Alle'}</span></td>
+      <td style="color:var(--tekst-lys)">${escHtml(n.oprettetAf||'—')}</td>
+      <td>
+        <button class="btn btn-lys btn-sm" onclick="aabneRedigerNyhed('${n.id}')">Rediger</button>
+        <button class="btn btn-fare btn-sm" onclick="bekræftSlet('Vil du slette nyheden \\u201c${escHtml(n.overskrift||'')}\\u201d?', ()=>sletNyhed('${n.id}'))">Slet</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function gemNyhed() {
+  const overskrift = document.getElementById('nyhed-overskrift').value.trim();
+  const tekst      = document.getElementById('nyhed-tekst').value.trim();
+  const dato       = document.getElementById('nyhed-dato').value;
+  const synlighed  = document.getElementById('nyhed-synlighed').value;
+  if (!overskrift || !tekst || !dato) { visToast('Udfyld overskrift, tekst og dato', true); return; }
+  try {
+    await window.fb.gemNyhed({
+      overskrift, tekst, dato, synlighed,
+      oprettetAf: aktivBruger?.displayName || aktivBruger?.email || '—'
+    });
+    await window.fb.logHandling(`Ny nyhed oprettet: "${overskrift}"`,
+      aktivBruger?.email || '—');
+    rydNyhedForm();
+    await indlaesNyheder();
+    visToast('Nyheden er gemt og publiceret');
+  } catch(e) {
+    visToast('Kunne ikke gemme nyheden: ' + e.message, true);
+  }
+}
+
+function rydNyhedForm() {
+  document.getElementById('nyhed-overskrift').value = '';
+  document.getElementById('nyhed-tekst').value      = '';
+  document.getElementById('nyhed-dato').valueAsDate = new Date();
+  document.getElementById('nyhed-synlighed').value  = 'alle';
+}
+
+function aabneRedigerNyhed(id) {
+  const n = nyhederCache.find(x => x.id === id);
+  if (!n) return;
+  document.getElementById('rediger-nyhed-id').value          = id;
+  document.getElementById('rediger-nyhed-overskrift').value  = n.overskrift || '';
+  document.getElementById('rediger-nyhed-tekst').value       = n.tekst || '';
+  document.getElementById('rediger-nyhed-dato').value        = n.dato || '';
+  document.getElementById('rediger-nyhed-synlighed').value   = n.synlighed || 'alle';
+  aabneModal('rediger-nyhed-modal');
+}
+
+async function gemRedigertNyhed() {
+  const id         = document.getElementById('rediger-nyhed-id').value;
+  const overskrift = document.getElementById('rediger-nyhed-overskrift').value.trim();
+  const tekst      = document.getElementById('rediger-nyhed-tekst').value.trim();
+  const dato       = document.getElementById('rediger-nyhed-dato').value;
+  const synlighed  = document.getElementById('rediger-nyhed-synlighed').value;
+  if (!overskrift || !tekst) { visToast('Udfyld overskrift og tekst', true); return; }
+  try {
+    await window.fb.opdaterNyhed(id, {overskrift, tekst, dato, synlighed});
+    await window.fb.logHandling(`Nyhed redigeret: "${overskrift}"`, aktivBruger?.email);
+    lukModal('rediger-nyhed-modal');
+    await indlaesNyheder();
+    visToast('Ændringer gemt');
+  } catch(e) {
+    visToast('Fejl ved gem: ' + e.message, true);
+  }
+}
+
+async function sletNyhed(id) {
+  const n = nyhederCache.find(x => x.id === id);
+  try {
+    await window.fb.sletNyhed(id);
+    await window.fb.logHandling(`Nyhed slettet: "${n?.overskrift}"`, aktivBruger?.email);
+    await indlaesNyheder();
+    visToast('Nyheden er slettet');
+  } catch(e) {
+    visToast('Fejl ved sletning: ' + e.message, true);
+  }
+}
+
+// ── Kalender ─────────────────────────────────────
+let kalenderCache = [];
+
+async function indlaesBegivenheder() {
+  try {
+    kalenderCache = await window.fb.hentBegivenheder();
+    renderKalender(kalenderCache);
+    document.getElementById('stat-begivenheder').textContent = kalenderCache.length;
+    renderOverblikBegivenheder(kalenderCache.slice(0, 3));
+  } catch(e) {
+    console.warn('Kalender fejl:', e);
+    document.getElementById('stat-begivenheder').textContent = '—';
+  }
+}
+
+function renderKalender(liste) {
+  const tbody = document.getElementById('kalender-tbody');
+  document.getElementById('kalender-tæller').textContent = liste.length + ' begivenheder';
+  if (!liste.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--tekst-lys)">Ingen begivenheder endnu</td></tr>';
+    return;
+  }
+  tbody.innerHTML = liste.map(b => `
+    <tr>
+      <td>${formaterDato(b.dato)}${b.datoTil ? ' – ' + formaterDato(b.datoTil) : ''}</td>
+      <td>${escHtml(b.titel||'')}</td>
+      <td style="color:var(--tekst-lys)">${escHtml(b.sted||'—')}</td>
+      <td><span class="badge badge-${b.type||'arrangement'}">${typeTekst(b.type)}</span></td>
+      <td>
+        <button class="btn btn-lys btn-sm" onclick="aabneRedigerBegivenhed('${b.id}')">Rediger</button>
+        <button class="btn btn-fare btn-sm" onclick="bekræftSlet('Vil du slette \\u201c${escHtml(b.titel||'')}\\u201d?', ()=>sletBegivenhed('${b.id}'))">Slet</button>
+      </td>
+    </tr>`).join('');
+}
+
+function typeTekst(t) {
+  return {arrangement:'Arrangement', maerkedag:'Mærkedag', fejring:'Fejring'}[t] || 'Arrangement';
+}
+
+async function gemBegivenhed() {
+  const titel       = document.getElementById('kal-titel').value.trim();
+  const dato        = document.getElementById('kal-dato').value;
+  const datoTil     = document.getElementById('kal-dato-til').value;
+  const beskrivelse = document.getElementById('kal-beskrivelse').value.trim();
+  const type        = document.getElementById('kal-type').value;
+  const sted        = document.getElementById('kal-sted').value.trim();
+  if (!titel || !dato) { visToast('Udfyld titel og dato', true); return; }
+  try {
+    await window.fb.gemBegivenhed({
+      titel, dato, datoTil: datoTil || null, beskrivelse, type, sted,
+      oprettetAf: aktivBruger?.email || '—'
+    });
+    await window.fb.logHandling(`Kalenderbegivenhed oprettet: "${titel}"`, aktivBruger?.email);
+    rydKalenderForm();
+    await indlaesBegivenheder();
+    visToast('Begivenheden er gemt');
+  } catch(e) {
+    visToast('Fejl: ' + e.message, true);
+  }
+}
+
+function rydKalenderForm() {
+  ['kal-titel','kal-dato','kal-dato-til','kal-beskrivelse','kal-sted'].forEach(id =>
+    document.getElementById(id).value = '');
+  document.getElementById('kal-type').value = 'arrangement';
+}
+
+function aabneRedigerBegivenhed(id) {
+  const b = kalenderCache.find(x => x.id === id);
+  if (!b) return;
+  document.getElementById('rediger-kal-id').value          = id;
+  document.getElementById('rediger-kal-titel').value       = b.titel || '';
+  document.getElementById('rediger-kal-dato').value        = b.dato || '';
+  document.getElementById('rediger-kal-dato-til').value    = b.datoTil || '';
+  document.getElementById('rediger-kal-beskrivelse').value = b.beskrivelse || '';
+  document.getElementById('rediger-kal-type').value        = b.type || 'arrangement';
+  document.getElementById('rediger-kal-sted').value        = b.sted || '';
+  aabneModal('rediger-kal-modal');
+}
+
+async function gemRedigertBegivenhed() {
+  const id = document.getElementById('rediger-kal-id').value;
+  const data = {
+    titel:       document.getElementById('rediger-kal-titel').value.trim(),
+    dato:        document.getElementById('rediger-kal-dato').value,
+    datoTil:     document.getElementById('rediger-kal-dato-til').value || null,
+    beskrivelse: document.getElementById('rediger-kal-beskrivelse').value.trim(),
+    type:        document.getElementById('rediger-kal-type').value,
+    sted:        document.getElementById('rediger-kal-sted').value.trim(),
+  };
+  try {
+    await window.fb.opdaterBegivenhed(id, data);
+    await window.fb.logHandling(`Begivenhed redigeret: "${data.titel}"`, aktivBruger?.email);
+    lukModal('rediger-kal-modal');
+    await indlaesBegivenheder();
+    visToast('Begivenheden er opdateret');
+  } catch(e) {
+    visToast('Fejl: ' + e.message, true);
+  }
+}
+
+async function sletBegivenhed(id) {
+  const b = kalenderCache.find(x => x.id === id);
+  try {
+    await window.fb.sletBegivenhed(id);
+    await window.fb.logHandling(`Begivenhed slettet: "${b?.titel}"`, aktivBruger?.email);
+    await indlaesBegivenheder();
+    visToast('Begivenheden er slettet');
+  } catch(e) {
+    visToast('Fejl: ' + e.message, true);
+  }
+}
+
+// ── Billeder ─────────────────────────────────────
+let billederCache = [];
+
+async function indlaesBilleder() {
+  try {
+    billederCache = await window.fb.hentBilleder();
+    renderBilleder(billederCache);
+    document.getElementById('stat-billeder').textContent = billederCache.length;
+  } catch(e) {
+    console.warn('Billeder fejl:', e);
+    document.getElementById('stat-billeder').textContent = '—';
+  }
+}
+
+function renderBilleder(liste) {
+  const grid = document.getElementById('foto-grid');
+  document.getElementById('billeder-antal').textContent = liste.length + ' billeder';
+  if (!liste.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--tekst-lys)">Ingen billeder uploadet endnu</div>';
+    return;
+  }
+  grid.innerHTML = liste.map(b => `
+    <div class="foto-celle">
+      <img src="${escHtml(b.url)}" alt="${escHtml(b.filnavn||'')}">
+      <div class="foto-overlay">
+        <button style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer"
+          onclick="bekræftSlet('Slet dette billede?', ()=>sletBillede('${b.id}'))">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+function haandterDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('over');
+  uploadBilleder(e.dataTransfer.files);
+}
+
+async function uploadBilleder(filer) {
+  if (!filer || !filer.length) return;
+  const album  = document.getElementById('billede-album').value;
+  const bar    = document.getElementById('progress-bar');
+  const fill   = document.getElementById('progress-fill');
+  const status = document.getElementById('upload-status');
+  bar.style.display = 'block';
+
+  for (let i = 0; i < filer.length; i++) {
+    const fil = filer[i];
+    if (!fil.type.startsWith('image/')) { visToast(`${fil.name} er ikke et billede`, true); continue; }
+    if (fil.size > 10 * 1024 * 1024)   { visToast(`${fil.name} er for stor (maks. 10 MB)`, true); continue; }
+    status.textContent = `Uploader ${i+1}/${filer.length}: ${fil.name}`;
+    try {
+      await window.fb.uploadBillede(fil, album, pct => {
+        fill.style.width = pct + '%';
+      });
+      await window.fb.logHandling(`Billede uploadet: ${fil.name} (${album})`, aktivBruger?.email);
+    } catch(e) {
+      visToast(`Fejl ved upload af ${fil.name}`, true);
+    }
+  }
+
+  bar.style.display = 'none';
+  fill.style.width  = '0%';
+  status.textContent = '';
+  await indlaesBilleder();
+  visToast(filer.length + ' billede(r) uploadet');
+}
+
+async function sletBillede(id) {
+  const b = billederCache.find(x => x.id === id);
+  try {
+    await window.fb.sletBillede(id);
+    await window.fb.logHandling(`Billede slettet: ${b?.filnavn}`, aktivBruger?.email);
+    await indlaesBilleder();
+    visToast('Billedet er slettet');
+  } catch(e) {
+    visToast('Fejl: ' + e.message, true);
+  }
+}
+
+// ── Godkendelser ─────────────────────────────────
+async function indlaesGodkendelser() {
+  try {
+    const ventende   = await window.fb.hentGodkendelser('ventende');
+    const behandlede = await window.fb.hentAlleGodkendelser();
+
+    // Tæller
+    document.getElementById('stat-ventende').textContent = ventende.length;
+    const taeller = document.getElementById('godkend-tæller');
+    if (ventende.length > 0) {
+      taeller.textContent = ventende.length;
+      taeller.style.display = 'inline';
+    } else {
+      taeller.style.display = 'none';
+    }
+
+    // Ventende
+    const liste = document.getElementById('godkend-liste');
+    if (!ventende.length) {
+      liste.innerHTML = `
+        <div class="tom-tilstand">
+          <div class="tom-ikon">✅</div>
+          <div class="tom-titel">Ingen ventende ansøgninger</div>
+          <div class="tom-tekst">Alle ansøgninger er behandlet</div>
+        </div>`;
+    } else {
+      liste.innerHTML = ventende.map(g => `
+        <div class="godkend-kort" id="godkend-${g.id}">
+          <div class="godkend-avatar">${(g.navn||'?')[0].toUpperCase()}</div>
+          <div class="godkend-info">
+            <div class="godkend-navn">${escHtml(g.navn||'Ukendt')}</div>
+            <div class="godkend-meta">${escHtml(g.email||'—')} · Anmodet ${formaterDato(g.anmodet?.toDate?.()?.toISOString?.()?.substring(0,10) || '')}</div>
+          </div>
+          <div class="godkend-handlinger">
+            <button class="btn btn-ok btn-sm" onclick="godkendMedlem('${g.id}')">Godkend</button>
+            <button class="btn btn-fare btn-sm" onclick="afvisMedlem('${g.id}')">Afvis</button>
+          </div>
+        </div>`).join('');
+    }
+
+    // Behandlede
+    const behandledeFiltreret = behandlede.filter(x => x.status !== 'ventende');
+    document.getElementById('behandlet-tbody').innerHTML = behandledeFiltreret.length
+      ? behandledeFiltreret.map(g => `
+          <tr>
+            <td>${escHtml(g.navn||'—')}</td>
+            <td>${escHtml(g.email||'—')}</td>
+            <td>${formaterDato(g.anmodet?.toDate?.()?.toISOString?.()?.substring(0,10) || '')}</td>
+            <td><span class="badge badge-${g.status==='godkendt'?'godkendt':'afvist'}">${g.status==='godkendt'?'Godkendt':'Afvist'}</span></td>
+          </tr>`).join('')
+      : '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--tekst-lys)">Ingen behandlede ansøgninger endnu</td></tr>';
+
+  } catch(e) {
+    console.warn('Godkendelser fejl:', e);
+    document.getElementById('stat-ventende').textContent = '—';
+  }
+}
+
+async function godkendMedlem(id) {
+  const el = document.getElementById('godkend-' + id);
+  const navn = el?.querySelector('.godkend-navn')?.textContent || '?';
+  try {
+    await window.fb.godkendMedlem(id);
+    await window.fb.logHandling(`Familiemedlem godkendt: ${navn}`, aktivBruger?.email);
+    await indlaesGodkendelser();
+    visToast(`${navn} er godkendt som familiemedlem`);
+  } catch(e) {
+    visToast('Fejl: ' + e.message, true);
+  }
+}
+
+async function afvisMedlem(id) {
+  const el = document.getElementById('godkend-' + id);
+  const navn = el?.querySelector('.godkend-navn')?.textContent || '?';
+  try {
+    await window.fb.afvisMedlem(id);
+    await window.fb.logHandling(`Familiemedlem afvist: ${navn}`, aktivBruger?.email);
+    await indlaesGodkendelser();
+    visToast(`${navn}s ansøgning er afvist`);
+  } catch(e) {
+    visToast('Fejl: ' + e.message, true);
+  }
+}
+
+// ── Aktivitetslog ────────────────────────────────
+async function hentLog() {
+  const liste = document.getElementById('log-liste');
+  try {
+    const log = await window.fb.hentLog();
+    if (!log.length) {
+      liste.innerHTML = '<div class="tom-tilstand"><div class="tom-ikon">📋</div><div class="tom-tekst">Ingen aktivitet logget endnu</div></div>';
+      return;
+    }
+    liste.innerHTML = '<div class="akt-liste">' + log.map(l => {
+      const tids = l.tidspunkt?.toDate?.()
+        ? l.tidspunkt.toDate().toLocaleString('da-DK', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})
+        : '—';
+      return `<div class="akt-item">
+        <div class="akt-ikon mos">📝</div>
+        <div>
+          <div class="akt-tekst">${escHtml(l.tekst||'')}</div>
+          <div class="akt-tid">${tids} · ${escHtml(l.bruger||'—')}</div>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+  } catch(e) {
+    liste.innerHTML = '<div style="color:var(--tekst-lys);font-size:13px">Kunne ikke hente log</div>';
+  }
+}
+
+// ── Overblik-widgets ─────────────────────────────
+function renderOverblikBegivenheder(liste) {
+  const el = document.getElementById('overblik-begivenheder');
+  if (!liste.length) {
+    el.innerHTML = '<div class="tom-tilstand"><div class="tom-ikon">📅</div><div class="tom-tekst">Ingen kommende begivenheder</div></div>';
+    return;
+  }
+  el.innerHTML = '<div class="akt-liste">' + liste.map(b => `
+    <div class="akt-item">
+      <div class="akt-ikon guld">📅</div>
+      <div>
+        <div class="akt-tekst">${escHtml(b.titel||'')}</div>
+        <div class="akt-tid">${formaterDato(b.dato)}${b.sted ? ' · ' + escHtml(b.sted) : ''}</div>
+      </div>
+    </div>`).join('') + '</div>';
+}
+
+function renderOverblikLog() {
+  const el = document.getElementById('overblik-log');
+  const nylige = nyhederCache.slice(0, 4).map(n => ({
+    ikon: '📰', mos: true,
+    tekst: `Nyhed: "${n.overskrift||''}"`,
+    tid: formaterDato(n.dato)
+  }));
+  if (!nylige.length) {
+    el.innerHTML = '<div class="tom-tilstand"><div class="tom-ikon">📋</div><div class="tom-tekst">Ingen aktivitet endnu</div></div>';
+    return;
+  }
+  el.innerHTML = '<div class="akt-liste">' + nylige.map(x => `
+    <div class="akt-item">
+      <div class="akt-ikon ${x.mos?'mos':'guld'}">${x.ikon}</div>
+      <div>
+        <div class="akt-tekst">${escHtml(x.tekst)}</div>
+        <div class="akt-tid">${x.tid}</div>
+      </div>
+    </div>`).join('') + '</div>';
+}
+
+// ── Brugerstyring ────────────────────────────────
+function aabneOpretBrugerModal() {
+  aabneModal('opret-bruger-modal');
+}
+
+async function opretNyBruger() {
+  if (aktivRolle !== 'admin') { visToast('Kun Carsten kan oprette brugere', true); return; }
+  const navn  = document.getElementById('ny-bruger-navn').value.trim();
+  const email = document.getElementById('ny-bruger-email').value.trim();
+  const kode  = document.getElementById('ny-bruger-kode').value;
+  const rolle = document.getElementById('ny-bruger-rolle').value;
+  if (!navn || !email || !kode) { visToast('Udfyld alle felter', true); return; }
+  if (kode.length < 8) { visToast('Adgangskode skal være mindst 8 tegn', true); return; }
+  try {
+    await window.fb.opretBruger(email, kode);
+    await window.fb.logHandling(`Ny ${rolle} oprettet: ${navn} (${email})`, aktivBruger?.email);
+    lukModal('opret-bruger-modal');
+    visToast(`${navn} er oprettet som ${rolle}`);
+    // Tilføj til UI-listen
+    const ekstra = document.getElementById('ekstra-brugere');
+    ekstra.insertAdjacentHTML('beforeend', `
+      <div class="bruger-kort">
+        <div class="bruger-avatar-lille">${navn[0].toUpperCase()}</div>
+        <div class="bruger-info-li">
+          <div class="bruger-navn-li">${escHtml(navn)}</div>
+          <div class="bruger-email-li">${escHtml(email)}</div>
+        </div>
+        <div class="bruger-handlinger">
+          <span class="badge badge-redaktor">Redaktør</span>
+          <button class="btn btn-fare btn-sm" onclick="bekræftSletBruger('${escHtml(email)}')">Fjern</button>
+        </div>
+      </div>`);
+  } catch(e) {
+    visToast('Fejl: ' + fejlTekst(e.code), true);
+  }
+}
+
+function bekræftSletBruger(email) {
+  if (aktivRolle !== 'admin') { visToast('Kun Carsten kan fjerne brugere', true); return; }
+  bekræftSlet(
+    `Vil du fjerne ${email} som bruger? Personen mister adgang til admin-panelet.`,
+    () => {
+      visToast(`${email} er fjernet (husk også at slette i Firebase Console)`, false);
+      window.fb.logHandling(`Bruger fjernet: ${email}`, aktivBruger?.email);
+    }
+  );
+}
+
+// ── Indstillinger ────────────────────────────────
+function gemIndstillinger() {
+  if (aktivRolle !== 'admin') return;
+  const data = {
+    velkomst:      document.getElementById('ind-velkomst').value,
+    titel:         document.getElementById('ind-titel').value,
+    kontakt:       document.getElementById('ind-kontakt').value,
+    registrering:  document.getElementById('ind-registrering').value,
+  };
+  window.fb.gemIndstillinger(data)
+    .then(() => visToast('Indstillinger gemt'))
+    .catch(e => visToast('Fejl: ' + e.message, true));
+}
+
+// ── Glemt kodeord modal ──────────────────────────
+function aabneGlemtModal() {
+  document.getElementById('glemt-besked').className = 'login-besked';
+  document.getElementById('glemt-email').value = '';
+  aabneModal('glemt-modal');
+}
+
+async function sendGlemtKode() {
+  const email = document.getElementById('glemt-email').value.trim();
+  if (!email) { visBeskediModal('glemt-besked','fejl','Skriv din email-adresse'); return; }
+  try {
+    await window.fb.glemtKode(email);
+    visBeskediModal('glemt-besked','ok','Nulstillingslink er sendt! Tjek din indbakke.');
+  } catch(e) {
+    visBeskediModal('glemt-besked','fejl', fejlTekst(e.code));
+  }
+}
+
+function visBeskediModal(id, type, tekst) {
+  const el = document.getElementById(id);
+  el.textContent = tekst;
+  el.className = 'login-besked ' + type + ' vis';
+}
+
+// ── Modal hjælpefunktioner ───────────────────────
+function aabneModal(id) {
+  document.getElementById(id).classList.add('vis');
+}
+function lukModal(id) {
+  document.getElementById(id).classList.remove('vis');
+}
+
+// ── Bekræft slet modal ───────────────────────────
+function bekræftSlet(tekst, callback) {
+  document.getElementById('bekraeft-tekst').textContent = tekst;
+  const jaKnap = document.getElementById('bekraeft-ja-knap');
+  jaKnap.onclick = () => { lukModal('bekraeft-modal'); callback(); };
+  aabneModal('bekraeft-modal');
+}
+
+// ── Toast ────────────────────────────────────────
+let toastTimer;
+function visToast(tekst, fejl = false) {
+  const t = document.getElementById('toast');
+  t.textContent = tekst;
+  t.className = 'vis' + (fejl ? ' fejl' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 3500);
+}
+
+// ── Hjælpefunktioner ─────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formaterDato(str) {
+  if (!str) return '—';
+  try {
+    const d = new Date(str + (str.length === 10 ? 'T00:00:00' : ''));
+    return d.toLocaleDateString('da-DK', {day:'numeric', month:'long', year:'numeric'});
+  } catch { return str; }
+}
+
+function skiftSyn(inputId, knap) {
+  const felt = document.getElementById(inputId);
+  felt.type  = felt.type === 'password' ? 'text' : 'password';
+  knap.textContent = felt.type === 'password' ? '👁' : '🙈';
+}
+
+// ── Enter-tast på login ──────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-side').style.display !== 'none') {
+    logInd();
+  }
+});
+
+// ── Luk modal ved klik udenfor ───────────────────
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('vis');
+  });
+});
+</script>
+</body>
+</html>
