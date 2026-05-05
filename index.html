@@ -43,7 +43,7 @@ body::before{
 
 /* ─── GALLERI ────────────────────────────────── */
 .galleri-sektion{background:var(--hvid);border-radius:14px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.4);}
-.galleri-hero{width:100%;height:260px;object-fit:cover;display:block;cursor:pointer;transition:opacity 0.2s;}
+.galleri-hero{width:100%;height:600px;object-fit:cover;object-position:center center;display:block;cursor:pointer;transition:opacity 0.2s;}
 .galleri-hero:hover{opacity:0.93;}
 .galleri-meta{
   padding:0.65rem 1.5rem 0.75rem;
@@ -91,7 +91,7 @@ body::before{
 /* ─── TABLET: bredere enkeltkolonne (≥600px) ─── */
 @media(min-width:600px){
   body{padding:2.5rem 2rem 4rem;}
-  .galleri-hero{height:320px;}
+  .galleri-hero{height:600px;}
   .galleri-mini img{height:150px;}
   .fil-sub{white-space:normal;}
 }
@@ -106,7 +106,7 @@ body::before{
     align-items:start;
   }
   .galleri-sektion{border-radius:14px;}
-  .galleri-hero{height:420px;}
+  .galleri-hero{height:600px;}
   .galleri-mini img{height:190px;}
   /* Fil-liste i to kolonner inde i kortene */
   .fil-liste-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
@@ -114,7 +114,7 @@ body::before{
 
 /* ─── STOR SKÆRM: ekstra luft (≥1280px) ─────── */
 @media(min-width:1280px){
-  .galleri-hero{height:480px;}
+  .galleri-hero{height:600px;}
   .galleri-mini img{height:210px;}
 }
 </style>
