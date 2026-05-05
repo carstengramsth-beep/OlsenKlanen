@@ -425,21 +425,6 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
                 <label>Dato</label>
                 <input type="date" id="udvlog-dato">
               </div>
-              <div class="form-felt">
-                <label>Status</label>
-                <select id="udvlog-status">
-                  <option value="i gang">I gang</option>
-                  <option value="afsluttet">Afsluttet</option>
-                </select>
-              </div>
-              <div class="form-felt">
-                <label>Starttidspunkt</label>
-                <input type="time" id="udvlog-start-tid">
-              </div>
-              <div class="form-felt">
-                <label>Sluttidspunkt — valgfri</label>
-                <input type="time" id="udvlog-slut-tid">
-              </div>
               <div class="form-felt form-fuld">
                 <label>Beskrivelse</label>
                 <textarea id="udvlog-beskrivelse" style="min-height:80px"
@@ -1190,6 +1175,8 @@ window.fb = {
     return s.docs.map(d => ({id:d.id,...d.data()}));
   },
   gemUdviklingslogEntry: d => addDoc(collection(db,'udviklingslog'), {...d, oprettet:serverTimestamp()}),
+  opdaterUdviklingslogEntry: (id, d) => updateDoc(doc(db,'udviklingslog',id), d),
+  sletUdviklingslogEntry: id => deleteDoc(doc(db,'udviklingslog',id)),
 };
 </script>
 
@@ -1724,7 +1711,13 @@ async function hentLog() {
 // ── Udviklingslog ─────────────────────────────────
 async function indlaesUdviklingslog() {
   try {
-    const log = await window.fb.hentUdviklingslog();
+    let log = await window.fb.hentUdviklingslog();
+    // Ryd entries uden startTid (gamle manuelt oprettede)
+    const udenTid = log.filter(e => !e.startTid);
+    if (aktivRolle === 'admin' && udenTid.length) {
+      await Promise.all(udenTid.map(e => window.fb.sletUdviklingslogEntry(e.id)));
+      log = log.filter(e => e.startTid);
+    }
     renderUdviklingslog(log);
   } catch(e) {
     const el = document.getElementById('udvlog-liste');
@@ -1746,49 +1739,70 @@ function renderUdviklingslog(liste) {
       </div>`;
     return;
   }
-  el.innerHTML = '<table class="tabel"><thead><tr><th>Start</th><th>Slut</th><th>Status</th><th>Beskrivelse</th></tr></thead><tbody>' +
-    liste.map(e => `
-      <tr>
-        <td style="white-space:nowrap;color:var(--tekst-mid)">${formaterDato(e.dato)}${e.startTid ? '<br><span style="font-size:12px">' + escHtml(e.startTid) + '</span>' : ''}</td>
-        <td style="white-space:nowrap;color:var(--tekst-mid)">${e.slutTid ? '<span style="font-size:12px">' + escHtml(e.slutTid) + '</span>' : '<span style="color:var(--tekst-lys)">—</span>'}</td>
-        <td><span class="badge ${e.status === 'afsluttet' ? 'badge-afsluttet' : 'badge-i-gang'}">${escHtml(e.status || 'i gang')}</span></td>
-        <td style="color:${e.status === 'afsluttet' ? 'var(--tekst)' : '#2a5db0'}">${escHtml(e.beskrivelse || '')}</td>
-      </tr>`).join('') +
+  const erAdmin = aktivRolle === 'admin';
+  el.innerHTML = '<table class="tabel"><thead><tr><th>Start</th><th>Slut</th><th>Status</th><th>Beskrivelse</th>' + (erAdmin ? '<th></th>' : '') + '</tr></thead><tbody>' +
+    liste.map(e => {
+      const iGang = e.status !== 'afsluttet';
+      const afslutKnap = erAdmin && iGang
+        ? `<button class="btn btn-ok btn-sm" onclick="afslutUdvlogEntry('${e.id}')">Afslut</button>`
+        : '';
+      return `
+        <tr>
+          <td style="white-space:nowrap;color:var(--tekst-mid)">${formaterDato(e.dato)}<br><span style="font-size:12px">${escHtml(e.startTid || '')}</span></td>
+          <td style="white-space:nowrap;color:var(--tekst-mid)">${e.slutTid ? '<span style="font-size:12px">' + escHtml(e.slutTid) + '</span>' : '<span style="color:var(--tekst-lys)">—</span>'}</td>
+          <td><span class="badge ${iGang ? 'badge-i-gang' : 'badge-afsluttet'}">${escHtml(e.status || 'i gang')}</span></td>
+          <td style="color:${iGang ? '#2a5db0' : 'var(--tekst)'}">${escHtml(e.beskrivelse || '')}</td>
+          ${erAdmin ? '<td>' + afslutKnap + '</td>' : ''}
+        </tr>`;
+    }).join('') +
     '</tbody></table>';
 }
 
 function aabneUdvlogForm() {
   document.getElementById('udvlog-form').style.display = 'block';
   document.getElementById('udvlog-dato').valueAsDate = new Date();
-  document.getElementById('udvlog-start-tid').value = '';
-  document.getElementById('udvlog-slut-tid').value = '';
   document.getElementById('udvlog-beskrivelse').value = '';
-  document.getElementById('udvlog-status').value = 'i gang';
 }
 
 function lukUdvlogForm() {
   document.getElementById('udvlog-form').style.display = 'none';
 }
 
+function nuTid() {
+  const n = new Date();
+  return n.getHours().toString().padStart(2,'0') + ':' + n.getMinutes().toString().padStart(2,'0');
+}
+
 async function gemUdvlogEntry() {
   if (aktivRolle !== 'admin') { visToast('Kun Carsten kan tilføje til udviklingsloggen', true); return; }
   const dato        = document.getElementById('udvlog-dato').value;
-  const status      = document.getElementById('udvlog-status').value;
-  const startTid    = document.getElementById('udvlog-start-tid').value;
-  const slutTid     = document.getElementById('udvlog-slut-tid').value;
   const beskrivelse = document.getElementById('udvlog-beskrivelse').value.trim();
   if (!dato || !beskrivelse) { visToast('Udfyld dato og beskrivelse', true); return; }
   try {
     await window.fb.gemUdviklingslogEntry({
-      dato, status,
-      startTid: startTid || null,
-      slutTid:  slutTid  || null,
+      dato,
+      status:   'i gang',
+      startTid: nuTid(),
+      slutTid:  null,
       beskrivelse,
       oprettetAf: aktivBruger?.email || '—'
     });
     lukUdvlogForm();
     await indlaesUdviklingslog();
     visToast('Entry tilføjet til udviklingsloggen');
+  } catch(e) {
+    visToast('Fejl: ' + e.message, true);
+  }
+}
+
+async function afslutUdvlogEntry(id) {
+  try {
+    await window.fb.opdaterUdviklingslogEntry(id, {
+      status:  'afsluttet',
+      slutTid: nuTid()
+    });
+    await indlaesUdviklingslog();
+    visToast('Entry markeret som afsluttet');
   } catch(e) {
     visToast('Fejl: ' + e.message, true);
   }
