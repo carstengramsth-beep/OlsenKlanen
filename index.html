@@ -12,6 +12,22 @@
   --guld:#c8952a;--guld-pale:#fdf8ee;
   --hvid:#fefcf8;--tekst:#1a1a0e;--tekst-lys:#4a4a35;--border:#d4c9a0;
 }
+
+/* Galleri */
+.galleri-sektion{padding:0;overflow:hidden;}
+.galleri-hero{width:100%;height:240px;object-fit:cover;display:block;}
+.galleri-meta{padding:0.6rem 1.5rem 0.75rem;display:flex;align-items:baseline;justify-content:space-between;background:var(--guld-pale);border-bottom:1px solid var(--border);}
+.galleri-titel{font-family:'Playfair Display',serif;font-size:17px;font-weight:500;color:var(--tekst);}
+.galleri-dato{font-size:11px;color:var(--tekst-lys);}
+.galleri-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:3px 0 0;}
+.galleri-mini img{width:100%;height:110px;object-fit:cover;display:block;cursor:pointer;transition:opacity 0.15s;}
+.galleri-mini img:hover{opacity:0.85;}
+/* Lightbox */
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:1000;align-items:center;justify-content:center;}
+#lightbox.vis{display:flex;}
+#lightbox img{max-width:94vw;max-height:90vh;object-fit:contain;border-radius:4px;}
+#lightbox-luk{position:fixed;top:16px;right:20px;font-size:28px;color:#fff;cursor:pointer;background:none;border:none;line-height:1;opacity:0.7;}
+#lightbox-luk:hover{opacity:1}
 body{font-family:'Source Sans 3',sans-serif;background:var(--gron);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem;}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 30% 30%,rgba(200,149,42,0.15) 0%,transparent 60%),linear-gradient(135deg,#1a3009 0%,#2d5016 60%,#1a3009 100%);z-index:0;}
 
@@ -57,7 +73,23 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="logo-streg"></div>
   </div>
 
+  <!-- Lightbox -->
+  <div id="lightbox" onclick="lukLightbox()">
+    <button id="lightbox-luk" onclick="lukLightbox()">✕</button>
+    <img id="lightbox-img" src="" alt="">
+  </div>
+
   <div class="kort">
+
+    <!-- SKOVTUR 2025 GALLERI -->
+    <div class="galleri-sektion" id="galleri-sektion">
+      <img class="galleri-hero" id="galleri-hero" src="" alt="Skovtur 2025 — Haderslev" onclick="åbnLightbox(this.src)">
+      <div class="galleri-meta">
+        <span class="galleri-titel">Skovtur 2025 — Haderslev</span>
+        <span class="galleri-dato">Maj 2025</span>
+      </div>
+      <div class="galleri-mini" id="galleri-mini"></div>
+    </div>
 
     <div class="kort-top">
       <span class="kort-titel">Alle projektfiler samlet ét sted</span>
@@ -177,6 +209,37 @@ const dage = ['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'
 const maaneder = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december'];
 const nu = new Date();
 document.getElementById('dato').textContent = dage[nu.getDay()] + ' den ' + nu.getDate() + '. ' + maaneder[nu.getMonth()] + ' ' + nu.getFullYear();
+</script>
+
+<script>
+const skovtur = [
+  "billeder/IMG_4390.JPEG",
+  "billeder/IMG_4405.JPEG",
+  "billeder/IMG_4336.JPEG",
+  "billeder/IMG_4395.JPEG"
+];
+document.getElementById("galleri-hero").src = skovtur[0];
+const mini = document.getElementById("galleri-mini");
+skovtur.slice(1).forEach(src => {
+  const img = document.createElement("img");
+  img.src = src;
+  img.alt = "Skovtur 2025";
+  img.onclick = () => åbnLightbox(src);
+  mini.appendChild(img);
+});
+document.getElementById("galleri-sektion").style.display = "block";
+</script>
+
+<script>
+function åbnLightbox(src) {
+  document.getElementById("lightbox-img").src = src;
+  document.getElementById("lightbox").classList.add("vis");
+}
+function lukLightbox() {
+  document.getElementById("lightbox").classList.remove("vis");
+  document.getElementById("lightbox-img").src = "";
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape") lukLightbox(); });
 </script>
 
 </body>
