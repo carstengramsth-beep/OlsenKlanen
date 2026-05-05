@@ -270,6 +270,11 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
 /* ── OVERBLIK GRID ──────────────────────────────── */
 .overblik-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
 
+/* ── UDVIKLINGSLOG ──────────────────────────────── */
+.badge-i-gang{background:#fef3e2;color:#b8680a}
+.badge-afsluttet{background:var(--ok-lys);color:var(--ok)}
+.udvlog-form-wrap{padding:1.25rem 1.5rem;border-bottom:1px solid var(--guld-pale);background:var(--creme)}
+
 /* ── TOMME TILSTANDE ────────────────────────────── */
 .tom-tilstand{text-align:center;padding:3rem;color:var(--tekst-lys)}
 .tom-tilstand .tom-ikon{font-size:40px;margin-bottom:1rem}
@@ -406,6 +411,47 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
           <div class="side-titel">Overblik</div>
           <div class="side-sub" id="overblik-dato">OlsenKlanen · Administration</div>
         </div>
+
+        <!-- ── UDVIKLINGSLOG ── -->
+        <div class="kort" style="margin-bottom:2rem">
+          <div class="kort-header">
+            <div class="kort-titel">Udviklingslog — OlsenKlanen.dk</div>
+            <button class="btn btn-mos btn-sm" id="udvlog-tilfoej-knap"
+              onclick="aabneUdvlogForm()" style="display:none">+ Tilføj entry</button>
+          </div>
+          <div class="udvlog-form-wrap" id="udvlog-form" style="display:none">
+            <div class="form-grid">
+              <div class="form-felt">
+                <label>Dato</label>
+                <input type="date" id="udvlog-dato">
+              </div>
+              <div class="form-felt">
+                <label>Status</label>
+                <select id="udvlog-status">
+                  <option value="i gang">I gang</option>
+                  <option value="afsluttet">Afsluttet</option>
+                </select>
+              </div>
+              <div class="form-felt form-fuld">
+                <label>Beskrivelse</label>
+                <textarea id="udvlog-beskrivelse" style="min-height:80px"
+                  placeholder="Hvad er der arbejdet på…"></textarea>
+              </div>
+            </div>
+            <div class="form-handlinger">
+              <button class="btn btn-mos" onclick="gemUdvlogEntry()">Gem entry</button>
+              <button class="btn btn-lys" onclick="lukUdvlogForm()">Annuller</button>
+            </div>
+          </div>
+          <div class="kort-body" style="padding:0">
+            <div id="udvlog-liste">
+              <div style="text-align:center;padding:2rem;color:var(--tekst-lys);font-size:13px">
+                Henter udviklingslog…
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="stats-grid">
           <div class="stat mos">
             <div class="stat-tal" id="stat-nyheder">—</div>
@@ -1128,6 +1174,14 @@ window.fb = {
   // Indstillinger
   gemIndstillinger: d => updateDoc(doc(db,'system','indstillinger'), d).catch(() =>
     addDoc(collection(db,'system'), {...d, id:'indstillinger'})),
+
+  // Udviklingslog
+  hentUdviklingslog: async () => {
+    const q = query(collection(db,'udviklingslog'), orderBy('dato','desc'), limit(50));
+    const s = await getDocs(q);
+    return s.docs.map(d => ({id:d.id,...d.data()}));
+  },
+  gemUdviklingslogEntry: d => addDoc(collection(db,'udviklingslog'), {...d, oprettet:serverTimestamp()}),
 };
 </script>
 
@@ -1197,6 +1251,7 @@ async function indlaesAltData() {
     indlaesBegivenheder(),
     indlaesGodkendelser(),
     indlaesBilleder(),
+    indlaesUdviklingslog(),
     aktivRolle === 'admin' ? hentLog() : Promise.resolve()
   ]);
 }
@@ -1655,6 +1710,71 @@ async function hentLog() {
     }).join('') + '</div>';
   } catch(e) {
     liste.innerHTML = '<div style="color:var(--tekst-lys);font-size:13px">Kunne ikke hente log</div>';
+  }
+}
+
+// ── Udviklingslog ─────────────────────────────────
+async function indlaesUdviklingslog() {
+  try {
+    const log = await window.fb.hentUdviklingslog();
+    renderUdviklingslog(log);
+  } catch(e) {
+    const el = document.getElementById('udvlog-liste');
+    if (el) el.innerHTML = '<div style="padding:1.5rem;color:var(--tekst-lys);font-size:13px;text-align:center">Kunne ikke hente udviklingslog</div>';
+  }
+}
+
+function renderUdviklingslog(liste) {
+  const tilfoejKnap = document.getElementById('udvlog-tilfoej-knap');
+  if (tilfoejKnap) tilfoejKnap.style.display = aktivRolle === 'admin' ? 'inline-flex' : 'none';
+
+  const el = document.getElementById('udvlog-liste');
+  if (!liste.length) {
+    el.innerHTML = `
+      <div class="tom-tilstand">
+        <div class="tom-ikon">🛠</div>
+        <div class="tom-titel">Ingen entries endnu</div>
+        <div class="tom-tekst">Udviklingsloggen er tom</div>
+      </div>`;
+    return;
+  }
+  el.innerHTML = '<table class="tabel"><thead><tr><th>Dato</th><th>Status</th><th>Beskrivelse</th></tr></thead><tbody>' +
+    liste.map(e => `
+      <tr>
+        <td style="white-space:nowrap">${formaterDato(e.dato)}</td>
+        <td><span class="badge ${e.status === 'afsluttet' ? 'badge-afsluttet' : 'badge-i-gang'}">${escHtml(e.status || 'i gang')}</span></td>
+        <td>${escHtml(e.beskrivelse || '')}</td>
+      </tr>`).join('') +
+    '</tbody></table>';
+}
+
+function aabneUdvlogForm() {
+  document.getElementById('udvlog-form').style.display = 'block';
+  document.getElementById('udvlog-dato').valueAsDate = new Date();
+  document.getElementById('udvlog-beskrivelse').value = '';
+  document.getElementById('udvlog-status').value = 'i gang';
+}
+
+function lukUdvlogForm() {
+  document.getElementById('udvlog-form').style.display = 'none';
+}
+
+async function gemUdvlogEntry() {
+  if (aktivRolle !== 'admin') { visToast('Kun Carsten kan tilføje til udviklingsloggen', true); return; }
+  const dato        = document.getElementById('udvlog-dato').value;
+  const status      = document.getElementById('udvlog-status').value;
+  const beskrivelse = document.getElementById('udvlog-beskrivelse').value.trim();
+  if (!dato || !beskrivelse) { visToast('Udfyld dato og beskrivelse', true); return; }
+  try {
+    await window.fb.gemUdviklingslogEntry({
+      dato, status, beskrivelse,
+      oprettetAf: aktivBruger?.email || '—'
+    });
+    lukUdvlogForm();
+    await indlaesUdviklingslog();
+    visToast('Entry tilføjet til udviklingsloggen');
+  } catch(e) {
+    visToast('Fejl: ' + e.message, true);
   }
 }
 
