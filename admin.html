@@ -432,6 +432,14 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
                   <option value="afsluttet">Afsluttet</option>
                 </select>
               </div>
+              <div class="form-felt">
+                <label>Starttidspunkt</label>
+                <input type="time" id="udvlog-start-tid">
+              </div>
+              <div class="form-felt">
+                <label>Sluttidspunkt — valgfri</label>
+                <input type="time" id="udvlog-slut-tid">
+              </div>
               <div class="form-felt form-fuld">
                 <label>Beskrivelse</label>
                 <textarea id="udvlog-beskrivelse" style="min-height:80px"
@@ -1738,10 +1746,11 @@ function renderUdviklingslog(liste) {
       </div>`;
     return;
   }
-  el.innerHTML = '<table class="tabel"><thead><tr><th>Dato</th><th>Status</th><th>Beskrivelse</th></tr></thead><tbody>' +
+  el.innerHTML = '<table class="tabel"><thead><tr><th>Start</th><th>Slut</th><th>Status</th><th>Beskrivelse</th></tr></thead><tbody>' +
     liste.map(e => `
       <tr>
-        <td style="white-space:nowrap">${formaterDato(e.dato)}</td>
+        <td style="white-space:nowrap;color:var(--tekst-mid)">${formaterDato(e.dato)}${e.startTid ? '<br><span style="font-size:12px">' + escHtml(e.startTid) + '</span>' : ''}</td>
+        <td style="white-space:nowrap;color:var(--tekst-mid)">${e.slutTid ? '<span style="font-size:12px">' + escHtml(e.slutTid) + '</span>' : '<span style="color:var(--tekst-lys)">—</span>'}</td>
         <td><span class="badge ${e.status === 'afsluttet' ? 'badge-afsluttet' : 'badge-i-gang'}">${escHtml(e.status || 'i gang')}</span></td>
         <td style="color:${e.status === 'afsluttet' ? 'var(--tekst)' : '#2a5db0'}">${escHtml(e.beskrivelse || '')}</td>
       </tr>`).join('') +
@@ -1751,6 +1760,8 @@ function renderUdviklingslog(liste) {
 function aabneUdvlogForm() {
   document.getElementById('udvlog-form').style.display = 'block';
   document.getElementById('udvlog-dato').valueAsDate = new Date();
+  document.getElementById('udvlog-start-tid').value = '';
+  document.getElementById('udvlog-slut-tid').value = '';
   document.getElementById('udvlog-beskrivelse').value = '';
   document.getElementById('udvlog-status').value = 'i gang';
 }
@@ -1763,11 +1774,16 @@ async function gemUdvlogEntry() {
   if (aktivRolle !== 'admin') { visToast('Kun Carsten kan tilføje til udviklingsloggen', true); return; }
   const dato        = document.getElementById('udvlog-dato').value;
   const status      = document.getElementById('udvlog-status').value;
+  const startTid    = document.getElementById('udvlog-start-tid').value;
+  const slutTid     = document.getElementById('udvlog-slut-tid').value;
   const beskrivelse = document.getElementById('udvlog-beskrivelse').value.trim();
   if (!dato || !beskrivelse) { visToast('Udfyld dato og beskrivelse', true); return; }
   try {
     await window.fb.gemUdviklingslogEntry({
-      dato, status, beskrivelse,
+      dato, status,
+      startTid: startTid || null,
+      slutTid:  slutTid  || null,
+      beskrivelse,
       oprettetAf: aktivBruger?.email || '—'
     });
     lukUdvlogForm();
