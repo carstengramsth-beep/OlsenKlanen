@@ -1743,7 +1743,7 @@ function renderUdviklingslog(liste) {
       <tr>
         <td style="white-space:nowrap">${formaterDato(e.dato)}</td>
         <td><span class="badge ${e.status === 'afsluttet' ? 'badge-afsluttet' : 'badge-i-gang'}">${escHtml(e.status || 'i gang')}</span></td>
-        <td>${escHtml(e.beskrivelse || '')}</td>
+        <td style="color:${e.status === 'afsluttet' ? 'var(--tekst)' : '#2a5db0'}">${escHtml(e.beskrivelse || '')}</td>
       </tr>`).join('') +
     '</tbody></table>';
 }
