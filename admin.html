@@ -730,45 +730,45 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
             <div class="bruger-kort">
               <div class="bruger-avatar-lille">K</div>
               <div class="bruger-info-li">
-                <div class="bruger-navn-li">Kurt</div>
-                <div class="bruger-email-li">kurt@olsen.dk</div>
+                <div class="bruger-navn-li">Kurt Vormslev Olsen</div>
+                <div class="bruger-email-li">kurt@vormslev.dk</div>
               </div>
               <div class="bruger-handlinger">
                 <span class="badge badge-redaktor">Redaktør</span>
-                <button class="btn btn-fare btn-sm" onclick="bekræftSletBruger('kurt@olsen.dk')">Fjern</button>
+                <button class="btn btn-fare btn-sm" onclick="bekræftSletBruger('kurt@vormslev.dk')">Fjern</button>
               </div>
             </div>
             <div class="bruger-kort">
               <div class="bruger-avatar-lille">S</div>
               <div class="bruger-info-li">
-                <div class="bruger-navn-li">Sanne</div>
-                <div class="bruger-email-li">sanne@mail.dk</div>
+                <div class="bruger-navn-li">Sanne Gram Fadel</div>
+                <div class="bruger-email-li">safi@dr.dk</div>
               </div>
               <div class="bruger-handlinger">
                 <span class="badge badge-redaktor">Redaktør</span>
-                <button class="btn btn-fare btn-sm" onclick="bekræftSletBruger('sanne@mail.dk')">Fjern</button>
+                <button class="btn btn-fare btn-sm" onclick="bekræftSletBruger('safi@dr.dk')">Fjern</button>
               </div>
             </div>
             <div class="bruger-kort">
               <div class="bruger-avatar-lille">T</div>
               <div class="bruger-info-li">
-                <div class="bruger-navn-li">Tommy</div>
-                <div class="bruger-email-li">tommy@familie.dk</div>
+                <div class="bruger-navn-li">Tommy Vormslev Olsen</div>
+                <div class="bruger-email-li">tvo@ishoejby.dk</div>
               </div>
               <div class="bruger-handlinger">
                 <span class="badge badge-redaktor">Redaktør</span>
-                <button class="btn btn-fare btn-sm" onclick="bekræftSletBruger('tommy@familie.dk')">Fjern</button>
+                <button class="btn btn-fare btn-sm" onclick="bekræftSletBruger('tvo@ishoejby.dk')">Fjern</button>
               </div>
             </div>
             <div class="bruger-kort">
               <div class="bruger-avatar-lille">K</div>
               <div class="bruger-info-li">
-                <div class="bruger-navn-li">Karin</div>
-                <div class="bruger-email-li">karin@familie.dk</div>
+                <div class="bruger-navn-li">Karin Lund</div>
+                <div class="bruger-email-li">kld@inmobia.com</div>
               </div>
               <div class="bruger-handlinger">
                 <span class="badge badge-redaktor">Redaktør</span>
-                <button class="btn btn-fare btn-sm" onclick="bekræftSletBruger('karin@familie.dk')">Fjern</button>
+                <button class="btn btn-fare btn-sm" onclick="bekræftSletBruger('kld@inmobia.com')">Fjern</button>
               </div>
             </div>
             <div id="ekstra-brugere"></div>
@@ -789,7 +789,7 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
                 </tr>
                 <tr>
                   <td><span class="badge badge-redaktor">Redaktør</span></td>
-                  <td>Kurt, Sanne, Tommy, Karin</td>
+                  <td>Kurt, Sanne, Tommy, Karin Lund</td>
                   <td>Nyheder · kalender · billeder · godkend familiemedlemmer</td>
                 </tr>
               </tbody>
@@ -1060,7 +1060,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
          sendPasswordResetEmail, createUserWithEmailAndPassword }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc,
+import { getFirestore, collection, getDocs, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
          doc, query, orderBy, limit, serverTimestamp, where }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, listAll, deleteObject }
@@ -1177,15 +1177,17 @@ window.fb = {
   gemUdviklingslogEntry: d => addDoc(collection(db,'udviklingslog'), {...d, oprettet:serverTimestamp()}),
   opdaterUdviklingslogEntry: (id, d) => updateDoc(doc(db,'udviklingslog',id), d),
   sletUdviklingslogEntry: id => deleteDoc(doc(db,'udviklingslog',id)),
+
+  // Brugere
+  hentBruger: email => getDoc(doc(db,'brugere',email)),
+  opretBrugerFirestore: (email, navn, rolle) =>
+    setDoc(doc(db,'brugere',email), {email, navn, rolle, oprettet:serverTimestamp()}),
+  sletBrugerFirestore: email => deleteDoc(doc(db,'brugere',email)),
 };
 </script>
 
 <!-- ══ UI JAVASCRIPT ══════════════════════════════ -->
 <script>
-// ── Roller ───────────────────────────────────────
-const ADMIN_EMAIL    = 'cg@gallerieg.dk';
-const REDAKTOR_EMAILS = ['kurt@olsen.dk','sanne@mail.dk','tommy@familie.dk','karin@familie.dk'];
-
 let aktivBruger = null;
 let aktivRolle  = null; // 'admin' | 'redaktor'
 
@@ -1196,14 +1198,26 @@ window.haandterAuth = async function(user) {
     return;
   }
   const email = user.email.toLowerCase();
-  if (email === ADMIN_EMAIL) {
-    aktivRolle = 'admin';
-  } else if (REDAKTOR_EMAILS.includes(email)) {
-    aktivRolle = 'redaktor';
-  } else {
-    // Ikke autoriseret
+  try {
+    const snap = await window.fb.hentBruger(email);
+    if (!snap.exists()) {
+      await window.fb.logUd();
+      visLoginBesked('fejl', 'Du har ikke adgang til admin-panelet. Kontakt Carsten.');
+      return;
+    }
+    const rolle = snap.data().rolle;
+    if (rolle === 'administrator') {
+      aktivRolle = 'admin';
+    } else if (rolle === 'redaktør') {
+      aktivRolle = 'redaktor';
+    } else {
+      await window.fb.logUd();
+      visLoginBesked('fejl', 'Du har ikke adgang til admin-panelet. Kontakt Carsten.');
+      return;
+    }
+  } catch(e) {
     await window.fb.logUd();
-    visLoginBesked('fejl', 'Du har ikke adgang til admin-panelet. Kontakt Carsten.');
+    visLoginBesked('fejl', 'Fejl ved adgangskontrol. Prøv igen.');
     return;
   }
   aktivBruger = user;
@@ -1861,6 +1875,8 @@ async function opretNyBruger() {
   if (kode.length < 8) { visToast('Adgangskode skal være mindst 8 tegn', true); return; }
   try {
     await window.fb.opretBruger(email, kode);
+    const firestoreRolle = rolle === 'redaktor' ? 'redaktør' : 'administrator';
+    await window.fb.opretBrugerFirestore(email, navn, firestoreRolle);
     await window.fb.logHandling(`Ny ${rolle} oprettet: ${navn} (${email})`, aktivBruger?.email);
     lukModal('opret-bruger-modal');
     visToast(`${navn} er oprettet som ${rolle}`);
@@ -1887,8 +1903,9 @@ function bekræftSletBruger(email) {
   if (aktivRolle !== 'admin') { visToast('Kun Carsten kan fjerne brugere', true); return; }
   bekræftSlet(
     `Vil du fjerne ${email} som bruger? Personen mister adgang til admin-panelet.`,
-    () => {
-      visToast(`${email} er fjernet (husk også at slette i Firebase Console)`, false);
+    async () => {
+      await window.fb.sletBrugerFirestore(email).catch(() => {});
+      visToast(`${email} er fjernet (husk at slette i Firebase Authentication)`, false);
       window.fb.logHandling(`Bruger fjernet: ${email}`, aktivBruger?.email);
     }
   );
