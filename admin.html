@@ -170,10 +170,28 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
 
 /* ── ONLINE PRESENCE ────────────────────────────── */
 .bruger-avatar-wrap{position:relative;display:inline-block}
-.online-prik{width:9px;height:9px;border-radius:50%;background:#ccc;
+.online-prik{width:9px;height:9px;border-radius:50%;background:#d94f4f;
   border:2px solid var(--hvid);position:absolute;bottom:0;right:0;
   transition:background .4s}
 .online-prik.aktiv{background:#3daa59;box-shadow:0 0 0 3px rgba(61,170,89,.18)}
+
+/* ── ONLINE-PANEL ───────────────────────────────── */
+.online-liste{display:flex;flex-direction:column;gap:0}
+.online-bruger{display:flex;align-items:center;gap:14px;
+  padding:13px 20px;border-bottom:1px solid var(--kant)}
+.online-bruger:last-child{border-bottom:none}
+.online-status-prik{width:13px;height:13px;border-radius:50%;
+  flex-shrink:0;transition:background .4s,box-shadow .4s}
+.online-status-prik.online{background:#3daa59;
+  box-shadow:0 0 0 4px rgba(61,170,89,.2)}
+.online-status-prik.offline{background:#d94f4f;
+  box-shadow:0 0 0 4px rgba(217,79,79,.1)}
+.online-bruger-navn{font-weight:600;font-size:14px;color:var(--mos-mork)}
+.online-bruger-email{font-size:11px;color:var(--tekst-mid);margin-top:1px}
+.online-bruger-status{font-size:11px;font-weight:600;letter-spacing:.5px;
+  margin-left:auto;text-transform:uppercase}
+.online-bruger-status.online{color:#3daa59}
+.online-bruger-status.offline{color:#d94f4f}
 .online-tæller{display:none;align-items:center;gap:5px;font-size:11px;
   font-family:'Jost',sans-serif;font-weight:600;letter-spacing:.5px;
   color:#3daa59;padding:3px 10px;background:rgba(61,170,89,.1);border-radius:20px}
@@ -379,6 +397,10 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
       <span class="nav-gruppe-label">Overblik</span>
       <div class="nav-item aktiv" onclick="visPanel('overblik',this)">
         <span class="nav-ikon">📊</span>Overblik
+      </div>
+      <div class="nav-item" onclick="visPanel('online',this)">
+        <span class="nav-ikon">🟢</span>Online nu
+        <span class="nav-admin-tag" id="online-nav-tæller" style="display:none">0</span>
       </div>
     </div>
     <div class="nav-gruppe">
@@ -720,6 +742,21 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
                 <tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--tekst-lys)">Henter…</td></tr>
               </tbody>
             </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ONLINE NU ────────────────────────── -->
+      <div class="panel" id="panel-online">
+        <div class="side-overskrift">
+          <div class="side-titel">Online nu</div>
+          <div class="side-sub">Hvem er logget ind på admin-panelet lige nu</div>
+        </div>
+        <div class="kort">
+          <div class="kort-body" style="padding:0">
+            <div class="online-liste" id="online-liste">
+              <!-- udfyldes dynamisk -->
+            </div>
           </div>
         </div>
       </div>
@@ -1353,19 +1390,54 @@ function startPresence(email, navn) {
   window.fb.lytPresence(opdaterOnlinePrikker);
 }
 
+const ALLE_BRUGERE = [
+  { email: 'cg@gallerieg.dk',   navn: 'Carsten Gram',         rolle: 'Administrator' },
+  { email: 'kurt@vormslev.dk',  navn: 'Kurt Vormslev Olsen',  rolle: 'Redaktør' },
+  { email: 'safi@dr.dk',        navn: 'Sanne Gram Fadel',     rolle: 'Redaktør' },
+  { email: 'tvo@ishoejby.dk',   navn: 'Tommy Vormslev Olsen', rolle: 'Redaktør' },
+  { email: 'kld@inmobia.com',   navn: 'Karin Lund',           rolle: 'Redaktør' },
+];
+
 function opdaterOnlinePrikker(data) {
-  document.querySelectorAll('.online-prik').forEach(p => p.classList.remove('aktiv'));
   const onlineEmails = new Set(Object.values(data).map(b => b.email));
 
+  // Opdater avatar-prikker i brugerlisten
+  document.querySelectorAll('.online-prik').forEach(p => p.classList.remove('aktiv'));
   onlineEmails.forEach(email => {
     const kort = document.querySelector(`.bruger-kort[data-email="${email}"]`);
     if (kort) kort.querySelector('.online-prik')?.classList.add('aktiv');
   });
 
+  // Opdater topbar-tæller
   const antal = onlineEmails.size;
-  const tæller = document.getElementById('online-tæller');
   document.getElementById('online-antal').textContent = antal;
+  const tæller = document.getElementById('online-tæller');
   antal > 0 ? tæller.classList.add('vis') : tæller.classList.remove('vis');
+
+  // Opdater nav-tæller
+  const navTæller = document.getElementById('online-nav-tæller');
+  if (antal > 0) {
+    navTæller.textContent = antal;
+    navTæller.style.display = '';
+  } else {
+    navTæller.style.display = 'none';
+  }
+
+  // Opdater online-panelet med alle brugere
+  const liste = document.getElementById('online-liste');
+  if (!liste) return;
+  liste.innerHTML = ALLE_BRUGERE.map(b => {
+    const er = onlineEmails.has(b.email);
+    return `
+      <div class="online-bruger">
+        <span class="online-status-prik ${er ? 'online' : 'offline'}"></span>
+        <div>
+          <div class="online-bruger-navn">${b.navn}</div>
+          <div class="online-bruger-email">${b.email} · ${b.rolle}</div>
+        </div>
+        <span class="online-bruger-status ${er ? 'online' : 'offline'}">${er ? 'Online' : 'Offline'}</span>
+      </div>`;
+  }).join('');
 }
 
 function fejlTekst(kode) {
