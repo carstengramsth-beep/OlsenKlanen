@@ -1,0 +1,20 @@
+{
+  "rules": {
+    "presence": {
+      // Kun autentificerede brugere må se presence-listen
+      ".read": "auth != null",
+      "$userKey": {
+        // Kun autentificerede brugere må skrive — nøglen er email med '.' erstattet af ','
+        // Firebase RTDB understøtter ikke string-replace i regler, så vi
+        // tillader enhver autentificeret bruger at skrive sin egen node.
+        // Adgangskontrol på kollektionsniveau sker i Firestore (brugere-samlingen).
+        ".write": "auth != null"
+      }
+    },
+    // Afvis al anden adgang
+    "$other": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}

@@ -1,0 +1,66 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Hjælpefunktion: er den indloggede bruger administrator eller redaktør?
+    function erAutoriseret() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/brugere/$(request.auth.token.email))
+        && get(/databases/$(database)/documents/brugere/$(request.auth.token.email)).data.rolle
+             in ['administrator', 'redaktør'];
+    }
+
+    // Hjælpefunktion: er den indloggede bruger administrator?
+    function erAdministrator() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/brugere/$(request.auth.token.email))
+        && get(/databases/$(database)/documents/brugere/$(request.auth.token.email)).data.rolle
+             == 'administrator';
+    }
+
+    // Brugerdokumenter – kun administrator må oprette og slette;
+    // administrator og redaktør må læse alle brugere.
+    match /brugere/{email} {
+      allow read: if erAutoriseret();
+      allow create, update: if erAdministrator();
+      allow delete: if erAdministrator();
+    }
+
+    // Indhold – administrator og redaktør må læse og skrive
+    match /nyheder/{id} {
+      allow read, write: if erAutoriseret();
+    }
+
+    match /kalender/{id} {
+      allow read, write: if erAutoriseret();
+    }
+
+    match /billeder/{id} {
+      allow read, write: if erAutoriseret();
+    }
+
+    match /godkendelser/{id} {
+      allow read, write: if erAutoriseret();
+    }
+
+    match /log/{id} {
+      allow read, write: if erAutoriseret();
+    }
+
+    match /udviklingslog/{id} {
+      allow read, write: if erAutoriseret();
+    }
+
+    // Systemindstillinger – kun administrator må ændre
+    match /system/{id} {
+      allow read: if erAutoriseret();
+      allow write: if erAdministrator();
+    }
+
+    // Afvis alt andet
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
