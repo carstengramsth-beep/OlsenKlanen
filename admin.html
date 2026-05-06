@@ -168,6 +168,20 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
 .badge-alle{background:rgba(58,90,46,.1);color:var(--mos)}
 .badge-admins{background:var(--guld-pale);color:#7a5510}
 
+/* ── ONLINE PRESENCE ────────────────────────────── */
+.bruger-avatar-wrap{position:relative;display:inline-block}
+.online-prik{width:9px;height:9px;border-radius:50%;background:#ccc;
+  border:2px solid var(--hvid);position:absolute;bottom:0;right:0;
+  transition:background .4s}
+.online-prik.aktiv{background:#3daa59;box-shadow:0 0 0 3px rgba(61,170,89,.18)}
+.online-tæller{display:none;align-items:center;gap:5px;font-size:11px;
+  font-family:'Jost',sans-serif;font-weight:600;letter-spacing:.5px;
+  color:#3daa59;padding:3px 10px;background:rgba(61,170,89,.1);border-radius:20px}
+.online-tæller.vis{display:inline-flex}
+.online-tæller-prik{width:6px;height:6px;border-radius:50%;background:#3daa59;
+  animation:puls-online 1.4s ease-in-out infinite}
+@keyframes puls-online{0%,100%{opacity:1}50%{opacity:.3}}
+
 /* ── KNAPPER ────────────────────────────────────── */
 .btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;
   letter-spacing:1.5px;text-transform:uppercase;font-weight:600;
@@ -344,6 +358,10 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
     <div class="topbar-venstre">
       <div class="topbar-logo">Olsen<em>Klanen</em></div>
       <div class="topbar-badge" id="topbar-rolle-badge">Administration</div>
+      <div class="online-tæller" id="online-tæller">
+        <span class="online-tæller-prik"></span>
+        <span id="online-antal">0</span>&nbsp;online
+      </div>
     </div>
     <div class="topbar-hoejre">
       <div class="bruger-info">
@@ -719,16 +737,22 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
           </div>
           <div class="kort-body" id="bruger-liste">
             <!-- Kendte brugere (statisk) -->
-            <div class="bruger-kort">
-              <div class="bruger-avatar-lille">C</div>
+            <div class="bruger-kort" data-email="cg@gallerieg.dk">
+              <div class="bruger-avatar-wrap">
+                <div class="bruger-avatar-lille">C</div>
+                <span class="online-prik"></span>
+              </div>
               <div class="bruger-info-li">
                 <div class="bruger-navn-li">Carsten Gram</div>
                 <div class="bruger-email-li">cg@gallerieg.dk</div>
               </div>
               <div class="bruger-handlinger"><span class="badge badge-admin">Admin</span></div>
             </div>
-            <div class="bruger-kort">
-              <div class="bruger-avatar-lille">K</div>
+            <div class="bruger-kort" data-email="kurt@vormslev.dk">
+              <div class="bruger-avatar-wrap">
+                <div class="bruger-avatar-lille">K</div>
+                <span class="online-prik"></span>
+              </div>
               <div class="bruger-info-li">
                 <div class="bruger-navn-li">Kurt Vormslev Olsen</div>
                 <div class="bruger-email-li">kurt@vormslev.dk</div>
@@ -738,8 +762,11 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
                 <button class="btn btn-fare btn-sm" onclick="bekræftSletBruger('kurt@vormslev.dk')">Fjern</button>
               </div>
             </div>
-            <div class="bruger-kort">
-              <div class="bruger-avatar-lille">S</div>
+            <div class="bruger-kort" data-email="safi@dr.dk">
+              <div class="bruger-avatar-wrap">
+                <div class="bruger-avatar-lille">S</div>
+                <span class="online-prik"></span>
+              </div>
               <div class="bruger-info-li">
                 <div class="bruger-navn-li">Sanne Gram Fadel</div>
                 <div class="bruger-email-li">safi@dr.dk</div>
@@ -749,8 +776,11 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
                 <button class="btn btn-fare btn-sm" onclick="bekræftSletBruger('safi@dr.dk')">Fjern</button>
               </div>
             </div>
-            <div class="bruger-kort">
-              <div class="bruger-avatar-lille">T</div>
+            <div class="bruger-kort" data-email="tvo@ishoejby.dk">
+              <div class="bruger-avatar-wrap">
+                <div class="bruger-avatar-lille">T</div>
+                <span class="online-prik"></span>
+              </div>
               <div class="bruger-info-li">
                 <div class="bruger-navn-li">Tommy Vormslev Olsen</div>
                 <div class="bruger-email-li">tvo@ishoejby.dk</div>
@@ -760,8 +790,11 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
                 <button class="btn btn-fare btn-sm" onclick="bekræftSletBruger('tvo@ishoejby.dk')">Fjern</button>
               </div>
             </div>
-            <div class="bruger-kort">
-              <div class="bruger-avatar-lille">K</div>
+            <div class="bruger-kort" data-email="kld@inmobia.com">
+              <div class="bruger-avatar-wrap">
+                <div class="bruger-avatar-lille">K</div>
+                <span class="online-prik"></span>
+              </div>
               <div class="bruger-info-li">
                 <div class="bruger-navn-li">Karin Lund</div>
                 <div class="bruger-email-li">kld@inmobia.com</div>
@@ -1065,6 +1098,9 @@ import { getFirestore, collection, getDocs, getDoc, setDoc, addDoc, updateDoc, d
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, listAll, deleteObject }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getDatabase, ref as dbRef, set, onValue, onDisconnect,
+         serverTimestamp as dbTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -1072,13 +1108,15 @@ const firebaseConfig = {
   projectId: "olsenklanen-familieside",
   storageBucket: "olsenklanen-familieside.firebasestorage.app",
   messagingSenderId: "640843662410",
-  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3",
+  databaseURL: "https://olsenklanen-familieside-default-rtdb.firebaseio.com"
 };
 
-const app = initializeApp(firebaseConfig);
+const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 const stor = getStorage(app);
+const rtdb = getDatabase(app);
 
 // Auth state → UI
 onAuthStateChanged(auth, user => {
@@ -1178,6 +1216,20 @@ window.fb = {
   opdaterUdviklingslogEntry: (id, d) => updateDoc(doc(db,'udviklingslog',id), d),
   sletUdviklingslogEntry: id => deleteDoc(doc(db,'udviklingslog',id)),
 
+  // Online presence (Realtime Database)
+  opsaetPresence: (email, navn) => {
+    const key     = email.replace(/\./g, ',');
+    const presRef = dbRef(rtdb, `presence/${key}`);
+    const connRef = dbRef(rtdb, '.info/connected');
+    onValue(connRef, snap => {
+      if (!snap.val()) return;
+      set(presRef, { email, navn, online: true, sidst: dbTimestamp() });
+      onDisconnect(presRef).remove();
+    });
+  },
+  lytPresence: callback => onValue(dbRef(rtdb, 'presence'), snap => callback(snap.val() || {})),
+  fjernPresence: email => set(dbRef(rtdb, `presence/${email.replace(/\./g, ',')}`), null),
+
   // Brugere
   hentBruger: email => getDoc(doc(db,'brugere',email)),
   opretBrugerFirestore: (email, navn, rolle) =>
@@ -1250,6 +1302,9 @@ function opsætAdminPanel(user) {
   // Sæt dagens dato i nyheds-form
   document.getElementById('nyhed-dato').valueAsDate = new Date();
 
+  // Start presence
+  startPresence(email, user.displayName || email);
+
   // Indlæs data
   indlaesAltData();
 }
@@ -1288,7 +1343,29 @@ async function logInd() {
 }
 
 function logUd() {
+  if (aktivBruger) window.fb.fjernPresence(aktivBruger.email);
   window.fb.logUd();
+}
+
+// ── Online presence ──────────────────────────────
+function startPresence(email, navn) {
+  window.fb.opsaetPresence(email, navn);
+  window.fb.lytPresence(opdaterOnlinePrikker);
+}
+
+function opdaterOnlinePrikker(data) {
+  document.querySelectorAll('.online-prik').forEach(p => p.classList.remove('aktiv'));
+  const onlineEmails = new Set(Object.values(data).map(b => b.email));
+
+  onlineEmails.forEach(email => {
+    const kort = document.querySelector(`.bruger-kort[data-email="${email}"]`);
+    if (kort) kort.querySelector('.online-prik')?.classList.add('aktiv');
+  });
+
+  const antal = onlineEmails.size;
+  const tæller = document.getElementById('online-tæller');
+  document.getElementById('online-antal').textContent = antal;
+  antal > 0 ? tæller.classList.add('vis') : tæller.classList.remove('vis');
 }
 
 function fejlTekst(kode) {
@@ -1883,8 +1960,11 @@ async function opretNyBruger() {
     // Tilføj til UI-listen
     const ekstra = document.getElementById('ekstra-brugere');
     ekstra.insertAdjacentHTML('beforeend', `
-      <div class="bruger-kort">
-        <div class="bruger-avatar-lille">${navn[0].toUpperCase()}</div>
+      <div class="bruger-kort" data-email="${escHtml(email)}">
+        <div class="bruger-avatar-wrap">
+          <div class="bruger-avatar-lille">${navn[0].toUpperCase()}</div>
+          <span class="online-prik"></span>
+        </div>
         <div class="bruger-info-li">
           <div class="bruger-navn-li">${escHtml(navn)}</div>
           <div class="bruger-email-li">${escHtml(email)}</div>
