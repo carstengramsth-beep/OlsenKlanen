@@ -186,6 +186,100 @@ td.alder-idag{background:var(--gron-pale);color:var(--gron);font-weight:700;bord
 .flag-footer-flag{font-size:26px;letter-spacing:6px;}
 .flag-footer-tekst{font-size:11px;color:rgba(255,255,255,0.35);margin-top:.4rem;letter-spacing:.5px;}
 
+/* ─── HILSEN-KNAP PÅ FEST-KORT ─── */
+.fest-kort-hojre{
+  display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;
+  flex-shrink:0;
+}
+.hilsen-knap{
+  background:var(--guld);color:var(--hvid);
+  border:none;border-radius:20px;cursor:pointer;
+  padding:3px 10px;font-size:11px;font-weight:600;
+  font-family:'Source Sans 3',sans-serif;
+  white-space:nowrap;
+}
+.hilsen-knap:hover{background:#b07820;}
+
+/* ─── HILSEN MODAL ─── */
+.hilsen-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.55);
+  z-index:1000;display:flex;align-items:center;justify-content:center;
+  padding:1rem;
+}
+.hilsen-modal{
+  background:var(--baggrund);
+  border:2px solid var(--guld);border-radius:12px;
+  max-width:500px;width:100%;max-height:88vh;overflow-y:auto;
+  box-shadow:0 8px 40px rgba(0,0,0,0.35);
+}
+.hilsen-modal-header{
+  background:var(--gron);
+  padding:.8rem 1.25rem;border-radius:10px 10px 0 0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.hilsen-modal-titel{
+  font-family:'Playfair Display',serif;
+  font-size:16px;color:var(--hvid);font-weight:400;
+}
+.hilsen-luk{
+  background:none;border:none;cursor:pointer;
+  color:rgba(255,255,255,0.6);font-size:22px;line-height:1;padding:0;
+}
+.hilsen-luk:hover{color:var(--hvid);}
+.hilsen-body{padding:1.25rem;}
+.hilsen-label{
+  display:block;font-size:12px;font-weight:600;
+  color:var(--tekst-lys);margin-bottom:4px;
+}
+.hilsen-input{
+  width:100%;padding:.55rem .75rem;margin-bottom:.75rem;
+  border:1.5px solid var(--border);border-radius:6px;
+  font-family:'Source Sans 3',sans-serif;font-size:14px;
+  background:var(--hvid);color:var(--tekst);
+}
+.hilsen-input:focus{outline:none;border-color:var(--gron);}
+textarea.hilsen-input{resize:vertical;min-height:80px;}
+.hilsen-fejl-tekst{color:#c0392b;font-size:12.5px;margin:.25rem 0 .5rem;}
+.hilsen-btn-row{display:flex;gap:.5rem;align-items:center;}
+.hilsen-btn-prim{
+  background:var(--gron);color:var(--hvid);
+  border:none;border-radius:6px;cursor:pointer;
+  padding:.5rem 1.25rem;font-size:13.5px;font-weight:600;
+  font-family:'Source Sans 3',sans-serif;
+}
+.hilsen-btn-prim:hover{background:var(--gron-lys);}
+.hilsen-btn-prim:disabled{opacity:.55;cursor:not-allowed;}
+.hilsen-btn-sek{
+  background:none;color:var(--tekst-lys);
+  border:1.5px solid var(--border);border-radius:6px;cursor:pointer;
+  padding:.45rem 1rem;font-size:13px;
+  font-family:'Source Sans 3',sans-serif;
+}
+.hilsen-btn-sek:hover{border-color:var(--gron);color:var(--gron);}
+/* Eksisterende hilsener */
+.hilsener-overskrift{
+  font-size:12px;font-weight:600;color:var(--tekst-lys);
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem;
+}
+.hilsen-kort{
+  background:var(--hvid);
+  border:1px solid rgba(212,201,160,0.5);
+  border-left:4px solid var(--guld);
+  border-radius:6px;padding:.55rem .9rem;margin-bottom:.45rem;
+}
+.hilsen-kort-fra{font-size:12px;font-weight:700;color:var(--gron);}
+.hilsen-kort-besked{font-size:13.5px;color:var(--tekst);margin-top:2px;white-space:pre-wrap;}
+.hilsen-kort-tid{font-size:11px;color:var(--tekst-lys);margin-top:3px;}
+.hilsen-ingen{
+  text-align:center;color:var(--tekst-lys);font-size:13px;
+  padding:.6rem;font-style:italic;
+}
+.hilsen-divider{border:none;border-top:1.5px solid var(--border);margin:.9rem 0;}
+.hilsen-succes{
+  color:#2d7a1f;font-size:13px;font-weight:600;
+  text-align:center;padding:.4rem;margin-top:.3rem;
+}
+
 /* ─── MOBIL ─── */
 @media(max-width:640px){
   .topbar-links{display:none;}
@@ -473,7 +567,7 @@ document.getElementById('footer-tekst').textContent =
       ikon = '✝️'; kortKlasse = 'konf'; beskrivelse = `Konfirmationsalder (${alderIAar} år)`;
     }
     liste.push({navn: p.navn, ikon, kortKlasse, beskrivelse, dage: d,
-      dato: `${p.dag}. ${MAANEDER_KORT[p.mdr-1]}`});
+      dato: `${p.dag}. ${MAANEDER_KORT[p.mdr-1]}`, noegle: p.navn});
   });
 
   BRYLLUPPER.forEach(b => {
@@ -490,7 +584,7 @@ document.getElementById('footer-tekst').textContent =
       beskrivelse = `Sølvbryllup — ${gifteAar} år gift${d===0?' 🎉':''}`;
     } else return;
     liste.push({navn: b.navne, ikon, kortKlasse, beskrivelse, dage: d,
-      dato: `${b.dag}. ${MAANEDER_KORT[b.mdr-1]}`});
+      dato: `${b.dag}. ${MAANEDER_KORT[b.mdr-1]}`, noegle: b.navne});
   });
 
   if (!liste.length) return; // Intet at vise — boksen forbliver skjult
@@ -508,13 +602,17 @@ document.getElementById('footer-tekst').textContent =
 
     const kort = document.createElement('div');
     kort.className = 'fest-kort ' + k.kortKlasse;
+    const safeNavn = k.noegle.replace(/"/g, '&quot;');
     kort.innerHTML =
       `<div class="fest-ikon">${k.ikon}</div>` +
       `<div class="fest-info">` +
         `<div class="fest-navn">${k.navn}</div>` +
         `<div class="fest-beskrivelse">${k.dato} · ${k.beskrivelse}</div>` +
       `</div>` +
-      `<div class="${chipKlasse}">${dagChip}</div>`;
+      `<div class="fest-kort-hojre">` +
+        `<div class="${chipKlasse}">${dagChip}</div>` +
+        `<button class="hilsen-knap" data-til="${safeNavn}" data-noegle="${safeNavn}">💌 Send en hilsen</button>` +
+      `</div>`;
     fl.appendChild(kort);
   });
 
@@ -584,6 +682,177 @@ for (let mi = 0; mi < 12; mi++) {
     `<th class="col-naeste center">Mærkedag ${NAESTE}</th>` +
     `</tr></thead><tbody>${tbody}</tbody></table>`;
   kal.appendChild(blok);
+}
+</script>
+
+<!-- ─── HILSEN MODAL ─────────────────────────────────────────────────────── -->
+<div id="hilsen-overlay" class="hilsen-overlay" style="display:none" onclick="if(event.target===this)lukModal()">
+  <div class="hilsen-modal">
+    <div class="hilsen-modal-header">
+      <div class="hilsen-modal-titel" id="hilsen-modal-titel">Send en hilsen</div>
+      <button class="hilsen-luk" onclick="lukModal()" title="Luk">×</button>
+    </div>
+
+    <!-- TRIN 1: Kodetjek -->
+    <div class="hilsen-body" id="hilsen-step1">
+      <p style="font-size:13.5px;color:var(--tekst-lys);margin-bottom:.85rem;">
+        Indtast koden for at se og sende hilsener.
+      </p>
+      <label class="hilsen-label" for="hilsen-kode-input">Kode</label>
+      <input class="hilsen-input" id="hilsen-kode-input" type="password"
+             placeholder="Skriv koden her…" autocomplete="off"
+             onkeydown="if(event.key==='Enter')tjekKode()">
+      <div class="hilsen-fejl-tekst" id="hilsen-kode-fejl" style="display:none">Forkert kode — prøv igen.</div>
+      <div class="hilsen-btn-row">
+        <button class="hilsen-btn-prim" onclick="tjekKode()">Fortsæt →</button>
+        <button class="hilsen-btn-sek" onclick="lukModal()">Annuller</button>
+      </div>
+    </div>
+
+    <!-- TRIN 2: Se hilsener + skriv ny -->
+    <div class="hilsen-body" id="hilsen-step2" style="display:none">
+      <div class="hilsener-overskrift">Hilsener til <span id="hilsen-til-navn"></span></div>
+      <div id="hilsen-liste"></div>
+      <div class="hilsen-divider"></div>
+      <label class="hilsen-label" for="hilsen-fra-input">Dit navn</label>
+      <input class="hilsen-input" id="hilsen-fra-input" type="text" placeholder="Skriv dit navn…" maxlength="60">
+      <label class="hilsen-label" for="hilsen-besked-input">Din hilsen</label>
+      <textarea class="hilsen-input" id="hilsen-besked-input" placeholder="Skriv din hilsen her…" maxlength="500" rows="4"></textarea>
+      <div class="hilsen-btn-row">
+        <button class="hilsen-btn-prim" id="hilsen-send-btn" onclick="sendHilsen()">Send hilsen 💌</button>
+        <button class="hilsen-btn-sek" onclick="lukModal()">Luk</button>
+      </div>
+      <div class="hilsen-succes" id="hilsen-succes" style="display:none">✓ Din hilsen er sendt!</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── FIREBASE + HILSEN-LOGIK ──────────────────────────────────────────── -->
+<script type="module">
+import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, query, where, orderBy, getDocs, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+let aktivNoegle = '';
+
+// ─── Åbn modal ───────────────────────────────────────────────────────────────
+window.aabneHilsenModal = function(noegle) {
+  aktivNoegle = noegle;
+  document.getElementById('hilsen-modal-titel').textContent = `Send en hilsen til ${noegle}`;
+  document.getElementById('hilsen-til-navn').textContent    = noegle;
+  document.getElementById('hilsen-kode-input').value        = '';
+  document.getElementById('hilsen-kode-fejl').style.display = 'none';
+  document.getElementById('hilsen-step1').style.display     = 'block';
+  document.getElementById('hilsen-step2').style.display     = 'none';
+  document.getElementById('hilsen-succes').style.display    = 'none';
+  document.getElementById('hilsen-fra-input').value         = '';
+  document.getElementById('hilsen-besked-input').value      = '';
+  document.getElementById('hilsen-overlay').style.display   = 'flex';
+  setTimeout(() => document.getElementById('hilsen-kode-input').focus(), 80);
+};
+
+// ─── Luk modal ───────────────────────────────────────────────────────────────
+window.lukModal = function() {
+  document.getElementById('hilsen-overlay').style.display = 'none';
+};
+
+// ─── Tjek kode ───────────────────────────────────────────────────────────────
+window.tjekKode = function() {
+  const kode = document.getElementById('hilsen-kode-input').value.trim();
+  if (kode.toLowerCase() !== 'vormslev') {
+    document.getElementById('hilsen-kode-fejl').style.display = 'block';
+    document.getElementById('hilsen-kode-input').select();
+    return;
+  }
+  document.getElementById('hilsen-kode-fejl').style.display = 'none';
+  document.getElementById('hilsen-step1').style.display     = 'none';
+  document.getElementById('hilsen-step2').style.display     = 'block';
+  indlaesHilsener(aktivNoegle);
+};
+
+// ─── Hent hilsener fra Firestore ─────────────────────────────────────────────
+async function indlaesHilsener(noegle) {
+  const liste = document.getElementById('hilsen-liste');
+  liste.innerHTML = '<div class="hilsen-ingen">Henter hilsener…</div>';
+  try {
+    const q    = query(collection(db, 'hilsener'), where('tilNoegle','==',noegle), orderBy('tidspunkt','desc'));
+    const snap = await getDocs(q);
+    liste.innerHTML = '';
+    if (snap.empty) {
+      liste.innerHTML = '<div class="hilsen-ingen">Ingen hilsener endnu — vær den første! 🎉</div>';
+    } else {
+      snap.forEach(dok => {
+        const h   = dok.data();
+        const tid = h.tidspunkt?.toDate ? h.tidspunkt.toDate() : null;
+        const el  = document.createElement('div');
+        el.className = 'hilsen-kort';
+        el.innerHTML =
+          `<div class="hilsen-kort-fra">${esc(h.fra)}</div>` +
+          `<div class="hilsen-kort-besked">${esc(h.besked)}</div>` +
+          (tid ? `<div class="hilsen-kort-tid">${formatDato(tid)}</div>` : '');
+        liste.appendChild(el);
+      });
+    }
+  } catch(e) {
+    liste.innerHTML = '<div class="hilsen-ingen">Kunne ikke hente hilsener. Prøv igen.</div>';
+  }
+}
+
+// ─── Send hilsen til Firestore ────────────────────────────────────────────────
+window.sendHilsen = async function() {
+  const fra    = document.getElementById('hilsen-fra-input').value.trim();
+  const besked = document.getElementById('hilsen-besked-input').value.trim();
+  if (!fra)    { document.getElementById('hilsen-fra-input').focus();    return; }
+  if (!besked) { document.getElementById('hilsen-besked-input').focus(); return; }
+
+  const btn = document.getElementById('hilsen-send-btn');
+  btn.disabled    = true;
+  btn.textContent = 'Sender…';
+
+  try {
+    await addDoc(collection(db, 'hilsener'), {
+      til: aktivNoegle, tilNoegle: aktivNoegle,
+      fra, besked,
+      tidspunkt: serverTimestamp()
+    });
+    document.getElementById('hilsen-fra-input').value    = '';
+    document.getElementById('hilsen-besked-input').value = '';
+    const succes = document.getElementById('hilsen-succes');
+    succes.style.display = 'block';
+    setTimeout(() => succes.style.display = 'none', 3500);
+    await indlaesHilsener(aktivNoegle);
+  } catch(e) {
+    alert('Fejl ved afsendelse — prøv igen.');
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = 'Send hilsen 💌';
+  }
+};
+
+// ─── Knapklik via event-delegation ───────────────────────────────────────────
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.hilsen-knap');
+  if (btn) window.aabneHilsenModal(btn.dataset.noegle);
+});
+
+// ─── Hjælpefunktioner ────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function formatDato(d) {
+  return d.toLocaleString('da-DK',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 </script>
 </body>

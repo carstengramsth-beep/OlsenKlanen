@@ -58,6 +58,15 @@ service cloud.firestore {
       allow write: if erAdministrator();
     }
 
+    // Hilsener – alle med koden kan læse og oprette (koden tjekkes i klienten)
+    match /hilsener/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['til','tilNoegle','fra','besked'])
+        && request.resource.data.fra is string && request.resource.data.fra.size() > 0 && request.resource.data.fra.size() <= 60
+        && request.resource.data.besked is string && request.resource.data.besked.size() > 0 && request.resource.data.besked.size() <= 500;
+      allow update, delete: if erAdministrator();
+    }
+
     // Afvis alt andet
     match /{document=**} {
       allow read, write: if false;
