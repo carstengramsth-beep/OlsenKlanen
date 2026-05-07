@@ -276,8 +276,15 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
 }
 .hilsen-divider{border:none;border-top:1.5px solid var(--border);margin:.9rem 0;}
 .hilsen-succes{
-  color:#2d7a1f;font-size:13px;font-weight:600;
-  text-align:center;padding:.4rem;margin-top:.3rem;
+  background:#e8f5e9;border:1.5px solid #4caf50;border-radius:8px;
+  color:#2d7a1f;font-size:15px;font-weight:700;
+  text-align:center;padding:.8rem 1rem;margin-top:.75rem;
+  letter-spacing:.2px;
+}
+.hilsen-send-fejl{
+  background:#fde8e8;border:1.5px solid #e74c3c;border-radius:8px;
+  color:#c0392b;font-size:13px;
+  padding:.6rem 1rem;margin-top:.5rem;
 }
 
 /* ─── MOBIL ─── */
@@ -686,11 +693,11 @@ for (let mi = 0; mi < 12; mi++) {
 </script>
 
 <!-- ─── HILSEN MODAL ─────────────────────────────────────────────────────── -->
-<div id="hilsen-overlay" class="hilsen-overlay" style="display:none" onclick="if(event.target===this)lukModal()">
+<div id="hilsen-overlay" class="hilsen-overlay" style="display:none">
   <div class="hilsen-modal">
     <div class="hilsen-modal-header">
       <div class="hilsen-modal-titel" id="hilsen-modal-titel">Send en hilsen</div>
-      <button class="hilsen-luk" onclick="lukModal()" title="Luk">×</button>
+      <button class="hilsen-luk" id="hilsen-luk-x" title="Luk">×</button>
     </div>
 
     <!-- TRIN 1: Kodetjek -->
@@ -700,12 +707,11 @@ for (let mi = 0; mi < 12; mi++) {
       </p>
       <label class="hilsen-label" for="hilsen-kode-input">Kode</label>
       <input class="hilsen-input" id="hilsen-kode-input" type="password"
-             placeholder="Skriv koden her…" autocomplete="off"
-             onkeydown="if(event.key==='Enter')tjekKode()">
+             placeholder="Skriv koden her…" autocomplete="off">
       <div class="hilsen-fejl-tekst" id="hilsen-kode-fejl" style="display:none">Forkert kode — prøv igen.</div>
       <div class="hilsen-btn-row">
-        <button class="hilsen-btn-prim" onclick="tjekKode()">Fortsæt →</button>
-        <button class="hilsen-btn-sek" onclick="lukModal()">Annuller</button>
+        <button class="hilsen-btn-prim" id="hilsen-kode-btn">Fortsæt →</button>
+        <button class="hilsen-btn-sek" id="hilsen-annuller-btn">Annuller</button>
       </div>
     </div>
 
@@ -719,10 +725,11 @@ for (let mi = 0; mi < 12; mi++) {
       <label class="hilsen-label" for="hilsen-besked-input">Din hilsen</label>
       <textarea class="hilsen-input" id="hilsen-besked-input" placeholder="Skriv din hilsen her…" maxlength="500" rows="4"></textarea>
       <div class="hilsen-btn-row">
-        <button class="hilsen-btn-prim" id="hilsen-send-btn" onclick="sendHilsen()">Send hilsen 💌</button>
-        <button class="hilsen-btn-sek" onclick="lukModal()">Luk</button>
+        <button class="hilsen-btn-prim" id="hilsen-send-btn">Send hilsen 💌</button>
+        <button class="hilsen-btn-sek" id="hilsen-luk-btn">Luk</button>
       </div>
-      <div class="hilsen-succes" id="hilsen-succes" style="display:none">✓ Din hilsen er sendt!</div>
+      <div class="hilsen-send-fejl" id="hilsen-send-fejl" style="display:none"></div>
+      <div class="hilsen-succes" id="hilsen-succes" style="display:none">✓ Din hilsen er sendt! 🎉</div>
     </div>
   </div>
 </div>
@@ -731,7 +738,7 @@ for (let mi = 0; mi < 12; mi++) {
 <script type="module">
 import { initializeApp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, push, get, query, orderByChild }
+import { getDatabase, ref, push, get }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
@@ -749,13 +756,22 @@ const rtdb = getDatabase(app);
 
 let aktivNoegle = '';
 
-// Laver navnet til en gyldig RTDB-nøgle (ingen punktummer, #, $, /, [ ])
-function tilNoegle(s) {
-  return s.replace(/[.#$\/\[\]]/g, '_');
+function tilKey(s) {
+  return s.replace(/[.#$\/\[\] ]/g, '_');
+}
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function formatDato(d) {
+  return d.toLocaleString('da-DK',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 
-// ─── Åbn modal ───────────────────────────────────────────────────────────────
-window.aabneHilsenModal = function(noegle) {
+// ─── Modal helpers ────────────────────────────────────────────────────────────
+function lukModal() {
+  document.getElementById('hilsen-overlay').style.display = 'none';
+}
+
+function aabneHilsenModal(noegle) {
   aktivNoegle = noegle;
   document.getElementById('hilsen-modal-titel').textContent = `Send en hilsen til ${noegle}`;
   document.getElementById('hilsen-til-navn').textContent    = noegle;
@@ -764,19 +780,15 @@ window.aabneHilsenModal = function(noegle) {
   document.getElementById('hilsen-step1').style.display     = 'block';
   document.getElementById('hilsen-step2').style.display     = 'none';
   document.getElementById('hilsen-succes').style.display    = 'none';
+  document.getElementById('hilsen-send-fejl').style.display = 'none';
   document.getElementById('hilsen-fra-input').value         = '';
   document.getElementById('hilsen-besked-input').value      = '';
   document.getElementById('hilsen-overlay').style.display   = 'flex';
   setTimeout(() => document.getElementById('hilsen-kode-input').focus(), 80);
-};
+}
 
-// ─── Luk modal ───────────────────────────────────────────────────────────────
-window.lukModal = function() {
-  document.getElementById('hilsen-overlay').style.display = 'none';
-};
-
-// ─── Tjek kode ───────────────────────────────────────────────────────────────
-window.tjekKode = function() {
+// ─── Kodetjek ─────────────────────────────────────────────────────────────────
+function tjekKode() {
   const kode = document.getElementById('hilsen-kode-input').value.trim();
   if (kode.toLowerCase() !== 'vormslev') {
     document.getElementById('hilsen-kode-fejl').style.display = 'block';
@@ -787,14 +799,14 @@ window.tjekKode = function() {
   document.getElementById('hilsen-step1').style.display     = 'none';
   document.getElementById('hilsen-step2').style.display     = 'block';
   indlaesHilsener(aktivNoegle);
-};
+}
 
-// ─── Hent hilsener fra Realtime Database ─────────────────────────────────────
+// ─── Hent hilsener ───────────────────────────────────────────────────────────
 async function indlaesHilsener(noegle) {
   const liste = document.getElementById('hilsen-liste');
   liste.innerHTML = '<div class="hilsen-ingen">Henter hilsener…</div>';
   try {
-    const snap = await get(ref(rtdb, `hilsener/${tilNoegle(noegle)}`));
+    const snap = await get(ref(rtdb, `hilsener/${tilKey(noegle)}`));
     liste.innerHTML = '';
     if (!snap.exists()) {
       liste.innerHTML = '<div class="hilsen-ingen">Ingen hilsener endnu — vær den første! 🎉</div>';
@@ -809,20 +821,20 @@ async function indlaesHilsener(noegle) {
       el.innerHTML =
         `<div class="hilsen-kort-fra">${esc(h.fra)}</div>` +
         `<div class="hilsen-kort-besked">${esc(h.besked)}</div>` +
-        (h.tidspunkt
-          ? `<div class="hilsen-kort-tid">${formatDato(new Date(h.tidspunkt))}</div>`
-          : '');
+        (h.tidspunkt ? `<div class="hilsen-kort-tid">${formatDato(new Date(h.tidspunkt))}</div>` : '');
       liste.appendChild(el);
     });
   } catch(e) {
-    liste.innerHTML = `<div class="hilsen-ingen">Kunne ikke hente hilsener.</div>`;
+    liste.innerHTML = '<div class="hilsen-ingen">Kunne ikke hente hilsener.</div>';
   }
 }
 
-// ─── Send hilsen til Realtime Database ───────────────────────────────────────
-window.sendHilsen = async function() {
+// ─── Send hilsen ─────────────────────────────────────────────────────────────
+async function sendHilsen() {
   const fra    = document.getElementById('hilsen-fra-input').value.trim();
   const besked = document.getElementById('hilsen-besked-input').value.trim();
+  document.getElementById('hilsen-send-fejl').style.display = 'none';
+
   if (!fra)    { document.getElementById('hilsen-fra-input').focus();    return; }
   if (!besked) { document.getElementById('hilsen-besked-input').focus(); return; }
 
@@ -831,35 +843,40 @@ window.sendHilsen = async function() {
   btn.textContent = 'Sender…';
 
   try {
-    await push(ref(rtdb, `hilsener/${tilNoegle(aktivNoegle)}`), {
+    await push(ref(rtdb, `hilsener/${tilKey(aktivNoegle)}`), {
       fra, besked, tidspunkt: Date.now()
     });
     document.getElementById('hilsen-fra-input').value    = '';
     document.getElementById('hilsen-besked-input').value = '';
-    document.getElementById('hilsen-succes').style.display = 'block';
-    setTimeout(() => document.getElementById('hilsen-succes').style.display = 'none', 3500);
+    const succes = document.getElementById('hilsen-succes');
+    succes.style.display = 'block';
     await indlaesHilsener(aktivNoegle);
   } catch(e) {
-    alert('Fejl ved afsendelse — prøv igen.');
+    const fejl = document.getElementById('hilsen-send-fejl');
+    fejl.textContent = 'Hilsenen kunne ikke sendes. Tjek at du er online og prøv igen.';
+    fejl.style.display = 'block';
   } finally {
     btn.disabled    = false;
     btn.textContent = 'Send hilsen 💌';
   }
-};
+}
 
-// ─── Knapklik via event-delegation ───────────────────────────────────────────
+// ─── Event listeners (modul kører efter DOM er klar) ─────────────────────────
+document.getElementById('hilsen-kode-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') tjekKode();
+});
+document.getElementById('hilsen-kode-btn').addEventListener('click',     tjekKode);
+document.getElementById('hilsen-annuller-btn').addEventListener('click',  lukModal);
+document.getElementById('hilsen-send-btn').addEventListener('click',      sendHilsen);
+document.getElementById('hilsen-luk-btn').addEventListener('click',       lukModal);
+document.getElementById('hilsen-luk-x').addEventListener('click',         lukModal);
+document.getElementById('hilsen-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('hilsen-overlay')) lukModal();
+});
 document.addEventListener('click', e => {
   const btn = e.target.closest('.hilsen-knap');
-  if (btn) window.aabneHilsenModal(btn.dataset.noegle);
+  if (btn) aabneHilsenModal(btn.dataset.noegle);
 });
-
-// ─── Hjælpefunktioner ────────────────────────────────────────────────────────
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function formatDato(d) {
-  return d.toLocaleString('da-DK',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-}
 </script>
 </body>
 </html>
