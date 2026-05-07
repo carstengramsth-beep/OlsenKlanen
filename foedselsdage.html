@@ -456,43 +456,46 @@ document.getElementById('footer-tekst').textContent =
 const kal = document.getElementById('kalender');
 
 for (let m = 1; m <= 12; m++) {
-  const folk = FOEDSLER.filter(p => p.mdr===m).sort((a,b)=>a.dag-b.dag);
-  const bryl = BRYLLUPPER.filter(b => b.mdr===m).sort((a,b)=>a.dag-b.dag);
+  const folk = FOEDSLER.filter(p => p.mdr===m);
+  const bryl = BRYLLUPPER.filter(b => b.mdr===m);
   if (!folk.length && !bryl.length) continue;
 
-  let rows = '';
+  // Byg én samlet liste og sortér efter dag
+  const raekker = [];
 
-  // Fødselsdagsrækker
   folk.forEach(p => {
-    const idag    = erFodselsdagIdag(p.dag, p.mdr);
-    const alder   = alderPrIdag(p.dag, p.mdr, p.aar);
-    const alderVis = alder >= 0 ? alder : '—';
-    const alderKl  = idag ? ' class="alder-idag"' : '';
-    const iaarBadge  = foedselsBadge(p.aar, I_AAR);
-    const naesteBadge = foedselsBadge(p.aar, NAESTE);
-
-    rows += `<tr>
+    const erI    = erFodselsdagIdag(p.dag, p.mdr);
+    const alder  = alderPrIdag(p.dag, p.mdr, p.aar);
+    raekker.push({
+      dag: p.dag,
+      html: `<tr>
       <td class="col-dato">${p.dag}. ${MAANEDER_KORT[m-1]}</td>
       <td class="col-navn">${p.navn}</td>
-      <td class="col-alder"${alderKl}>${alderVis}</td>
-      <td class="col-iaar">${iaarBadge}</td>
-      <td class="col-naeste">${naesteBadge}</td>
-    </tr>`;
+      <td class="col-alder"${erI?' class="alder-idag"':''}>${alder >= 0 ? alder : '—'}</td>
+      <td class="col-iaar">${foedselsBadge(p.aar, I_AAR)}</td>
+      <td class="col-naeste">${foedselsBadge(p.aar, NAESTE)}</td>
+    </tr>`
+    });
   });
 
-  // Bryllupsrækker
   bryl.forEach(b => {
-    const iaarBadge  = brylBadge(b.aar, I_AAR);
-    const naesteBadge = brylBadge(b.aar, NAESTE);
-    if (!iaarBadge && !naesteBadge) return;
-    rows += `<tr>
+    const ib = brylBadge(b.aar, I_AAR);
+    const nb = brylBadge(b.aar, NAESTE);
+    if (!ib && !nb) return;
+    raekker.push({
+      dag: b.dag,
+      html: `<tr>
       <td class="col-dato">${b.dag}. ${MAANEDER_KORT[m-1]}</td>
       <td class="col-navn">${b.navne}</td>
       <td class="col-alder">—</td>
-      <td class="col-iaar">${iaarBadge}</td>
-      <td class="col-naeste">${naesteBadge}</td>
-    </tr>`;
+      <td class="col-iaar">${ib}</td>
+      <td class="col-naeste">${nb}</td>
+    </tr>`
+    });
   });
+
+  raekker.sort((a, b) => a.dag - b.dag);
+  const rows = raekker.map(r => r.html).join('');
 
   kal.innerHTML += `
     <div class="maaned-blok">
