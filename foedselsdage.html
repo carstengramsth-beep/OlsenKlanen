@@ -186,19 +186,21 @@ td.alder-idag{background:var(--gron-pale);color:var(--gron);font-weight:700;bord
 .flag-footer-flag{font-size:26px;letter-spacing:6px;}
 .flag-footer-tekst{font-size:11px;color:rgba(255,255,255,0.35);margin-top:.4rem;letter-spacing:.5px;}
 
-/* ─── HILSEN-KNAP PÅ FEST-KORT ─── */
+/* ─── KNAPPER PÅ FEST-KORT ─── */
 .fest-kort-hojre{
   display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;
   flex-shrink:0;
 }
-.hilsen-knap{
-  background:var(--guld);color:var(--hvid);
+.hilsen-knap,.hilsen-knap-laes{
   border:none;border-radius:20px;cursor:pointer;
   padding:3px 10px;font-size:11px;font-weight:600;
   font-family:'Source Sans 3',sans-serif;
-  white-space:nowrap;
+  white-space:nowrap;color:var(--hvid);
 }
+.hilsen-knap     {background:var(--guld);}
 .hilsen-knap:hover{background:#b07820;}
+.hilsen-knap-laes     {background:var(--gron);}
+.hilsen-knap-laes:hover{background:var(--gron-lys);}
 
 /* ─── HILSEN MODAL ─── */
 .hilsen-overlay{
@@ -618,7 +620,8 @@ document.getElementById('footer-tekst').textContent =
       `</div>` +
       `<div class="fest-kort-hojre">` +
         `<div class="${chipKlasse}">${dagChip}</div>` +
-        `<button class="hilsen-knap" data-til="${safeNavn}" data-noegle="${safeNavn}">💌 Send en hilsen</button>` +
+        `<button class="hilsen-knap"      data-noegle="${safeNavn}" data-mode="send">💌 Send hilsen</button>` +
+        `<button class="hilsen-knap-laes" data-noegle="${safeNavn}" data-mode="laes">📬 Læs hilsener</button>` +
       `</div>`;
     fl.appendChild(kort);
   });
@@ -715,21 +718,27 @@ for (let mi = 0; mi < 12; mi++) {
       </div>
     </div>
 
-    <!-- TRIN 2: Se hilsener + skriv ny -->
-    <div class="hilsen-body" id="hilsen-step2" style="display:none">
-      <div class="hilsener-overskrift">Hilsener til <span id="hilsen-til-navn"></span></div>
-      <div id="hilsen-liste"></div>
-      <div class="hilsen-divider"></div>
+    <!-- TRIN 2A: Kun skriveformular -->
+    <div class="hilsen-body" id="hilsen-step-send" style="display:none">
       <label class="hilsen-label" for="hilsen-fra-input">Dit navn</label>
       <input class="hilsen-input" id="hilsen-fra-input" type="text" placeholder="Skriv dit navn…" maxlength="60">
       <label class="hilsen-label" for="hilsen-besked-input">Din hilsen</label>
       <textarea class="hilsen-input" id="hilsen-besked-input" placeholder="Skriv din hilsen her…" maxlength="500" rows="4"></textarea>
       <div class="hilsen-btn-row">
         <button class="hilsen-btn-prim" id="hilsen-send-btn">Send hilsen 💌</button>
-        <button class="hilsen-btn-sek" id="hilsen-luk-btn">Luk</button>
+        <button class="hilsen-btn-sek"  id="hilsen-luk-send-btn">Luk</button>
       </div>
       <div class="hilsen-send-fejl" id="hilsen-send-fejl" style="display:none"></div>
-      <div class="hilsen-succes" id="hilsen-succes" style="display:none">✓ Din hilsen er sendt! 🎉</div>
+      <div class="hilsen-succes"    id="hilsen-succes"    style="display:none">✓ Din hilsen er sendt! 🎉</div>
+    </div>
+
+    <!-- TRIN 2B: Kun hilsener-liste -->
+    <div class="hilsen-body" id="hilsen-step-laes" style="display:none">
+      <div class="hilsener-overskrift">Hilsener til <span id="hilsen-til-navn"></span></div>
+      <div id="hilsen-liste"></div>
+      <div class="hilsen-btn-row" style="margin-top:.85rem">
+        <button class="hilsen-btn-sek" id="hilsen-luk-laes-btn">Luk</button>
+      </div>
     </div>
   </div>
 </div>
@@ -755,6 +764,7 @@ const app  = initializeApp(firebaseConfig);
 const rtdb = getDatabase(app);
 
 let aktivNoegle = '';
+let aktivMode   = 'send'; // 'send' eller 'laes'
 
 function tilKey(s) {
   return s.replace(/[.#$\/\[\] ]/g, '_');
@@ -771,14 +781,16 @@ function lukModal() {
   document.getElementById('hilsen-overlay').style.display = 'none';
 }
 
-function aabneHilsenModal(noegle) {
+function aabneHilsenModal(noegle, mode) {
   aktivNoegle = noegle;
-  document.getElementById('hilsen-modal-titel').textContent = `Send en hilsen til ${noegle}`;
-  document.getElementById('hilsen-til-navn').textContent    = noegle;
+  aktivMode   = mode;
+  document.getElementById('hilsen-modal-titel').textContent =
+    mode === 'laes' ? `Hilsener til ${noegle}` : `Send en hilsen til ${noegle}`;
   document.getElementById('hilsen-kode-input').value        = '';
   document.getElementById('hilsen-kode-fejl').style.display = 'none';
   document.getElementById('hilsen-step1').style.display     = 'block';
-  document.getElementById('hilsen-step2').style.display     = 'none';
+  document.getElementById('hilsen-step-send').style.display = 'none';
+  document.getElementById('hilsen-step-laes').style.display = 'none';
   document.getElementById('hilsen-succes').style.display    = 'none';
   document.getElementById('hilsen-send-fejl').style.display = 'none';
   document.getElementById('hilsen-fra-input').value         = '';
@@ -797,8 +809,14 @@ function tjekKode() {
   }
   document.getElementById('hilsen-kode-fejl').style.display = 'none';
   document.getElementById('hilsen-step1').style.display     = 'none';
-  document.getElementById('hilsen-step2').style.display     = 'block';
-  indlaesHilsener(aktivNoegle);
+  if (aktivMode === 'laes') {
+    document.getElementById('hilsen-til-navn').textContent    = aktivNoegle;
+    document.getElementById('hilsen-step-laes').style.display = 'block';
+    indlaesHilsener(aktivNoegle);
+  } else {
+    document.getElementById('hilsen-step-send').style.display = 'block';
+    setTimeout(() => document.getElementById('hilsen-fra-input').focus(), 80);
+  }
 }
 
 // ─── Hent hilsener ───────────────────────────────────────────────────────────
@@ -865,17 +883,18 @@ async function sendHilsen() {
 document.getElementById('hilsen-kode-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') tjekKode();
 });
-document.getElementById('hilsen-kode-btn').addEventListener('click',     tjekKode);
+document.getElementById('hilsen-kode-btn').addEventListener('click',      tjekKode);
 document.getElementById('hilsen-annuller-btn').addEventListener('click',  lukModal);
 document.getElementById('hilsen-send-btn').addEventListener('click',      sendHilsen);
-document.getElementById('hilsen-luk-btn').addEventListener('click',       lukModal);
+document.getElementById('hilsen-luk-send-btn').addEventListener('click',  lukModal);
+document.getElementById('hilsen-luk-laes-btn').addEventListener('click',  lukModal);
 document.getElementById('hilsen-luk-x').addEventListener('click',         lukModal);
 document.getElementById('hilsen-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('hilsen-overlay')) lukModal();
 });
 document.addEventListener('click', e => {
-  const btn = e.target.closest('.hilsen-knap');
-  if (btn) aabneHilsenModal(btn.dataset.noegle);
+  const btn = e.target.closest('.hilsen-knap, .hilsen-knap-laes');
+  if (btn) aabneHilsenModal(btn.dataset.noegle, btn.dataset.mode);
 });
 </script>
 </body>
