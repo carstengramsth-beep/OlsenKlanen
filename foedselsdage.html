@@ -455,73 +455,69 @@ document.getElementById('footer-tekst').textContent =
 })();
 
 // ─── KALENDER MÅNEDER ────────────────────────────────────────────────────────
-// Pre-sortér: måned 1→12, inden for måneden dag 1→31
-FOEDSLER.sort((a, b) => a.mdr - b.mdr || a.dag - b.dag);
-BRYLLUPPER.sort((a, b) => a.mdr - b.mdr || a.dag - b.dag);
+// Fordel i 12 måneds-spande (indeks 0 = januar, 11 = december)
+const maanedSpande = Array.from({length: 12}, () => []);
+FOEDSLER.forEach(p => maanedSpande[p.mdr - 1].push({type:'f', p}));
+BRYLLUPPER.forEach(b => maanedSpande[b.mdr - 1].push({type:'b', b}));
 
-let kalHTML = '';
+// Sortér inden for hver spand efter dag
+maanedSpande.forEach(spand => spand.sort((a, b) => {
+  const dagA = a.type === 'f' ? a.p.dag : a.b.dag;
+  const dagB = b.type === 'f' ? b.p.dag : b.b.dag;
+  return dagA - dagB;
+}));
 
-for (let m = 1; m <= 12; m++) {
-  const folk = FOEDSLER.filter(p => p.mdr === m);
-  const bryl = BRYLLUPPER.filter(b => b.mdr === m);
-  if (!folk.length && !bryl.length) continue;
+const kal = document.getElementById('kalender');
 
-  // Saml alle rækker for måneden og sortér efter dag
-  const raekker = [];
+// Byg én div per måned og tilføj med appendChild — garanterer januar→december rækkefølge
+for (let mi = 0; mi < 12; mi++) {
+  const spand = maanedSpande[mi];
+  if (!spand.length) continue;
 
-  folk.forEach(p => {
-    const erI   = erFodselsdagIdag(p.dag, p.mdr);
-    const alder = alderPrIdag(p.dag, p.mdr, p.aar);
-    raekker.push({
-      dag: p.dag,
-      html: `<tr>
-        <td class="col-dato">${p.dag}. ${MAANEDER_KORT[m-1]} ${p.aar}</td>
+  // Byg tabel-rækker
+  let tbody = '';
+  spand.forEach(item => {
+    if (item.type === 'f') {
+      const p   = item.p;
+      const erI = erFodselsdagIdag(p.dag, p.mdr);
+      const al  = alderPrIdag(p.dag, p.mdr, p.aar);
+      tbody += `<tr>
+        <td class="col-dato">${p.dag}. ${MAANEDER_KORT[mi]} ${p.aar}</td>
         <td class="col-navn">${p.navn}</td>
-        <td class="${erI ? 'col-alder alder-idag' : 'col-alder'}">${alder >= 0 ? alder : '—'}</td>
+        <td class="${erI ? 'col-alder alder-idag' : 'col-alder'}">${al >= 0 ? al : '—'}</td>
         <td class="col-iaar">${foedselsBadge(p.aar, I_AAR)}</td>
         <td class="col-naeste">${foedselsBadge(p.aar, NAESTE)}</td>
-      </tr>`
-    });
-  });
-
-  bryl.forEach(b => {
-    const ib = brylBadge(b.aar, I_AAR);
-    const nb = brylBadge(b.aar, NAESTE);
-    if (!ib && !nb) return;
-    raekker.push({
-      dag: b.dag,
-      html: `<tr>
-        <td class="col-dato">${b.dag}. ${MAANEDER_KORT[m-1]}</td>
+      </tr>`;
+    } else {
+      const b  = item.b;
+      const ib = brylBadge(b.aar, I_AAR);
+      const nb = brylBadge(b.aar, NAESTE);
+      if (!ib && !nb) return;
+      tbody += `<tr>
+        <td class="col-dato">${b.dag}. ${MAANEDER_KORT[mi]}</td>
         <td class="col-navn">${b.navne}</td>
         <td class="col-alder">—</td>
         <td class="col-iaar">${ib}</td>
         <td class="col-naeste">${nb}</td>
-      </tr>`
-    });
+      </tr>`;
+    }
   });
 
-  raekker.sort((a, b) => a.dag - b.dag);
+  const folkAntal = spand.filter(x => x.type === 'f').length;
 
-  kalHTML += `<div class="maaned-blok">
-    <div class="maaned-header">
-      ${MAANEDER[m-1]}
-      <span class="maaned-antal">${folk.length} person${folk.length === 1 ? '' : 'er'}</span>
-    </div>
-    <table class="tabel">
-      <thead><tr>
-        <th class="col-dato">Dato</th>
-        <th>Navn</th>
-        <th class="col-alder center">Alder</th>
-        <th class="col-iaar center">Mærkedag ${I_AAR}</th>
-        <th class="col-naeste center">Mærkedag ${NAESTE}</th>
-      </tr></thead>
-      <tbody>${raekker.map(r => r.html).join('')}</tbody>
-    </table>
-  </div>`;
+  // Opret et nyt DOM-element for måneden og tilføj det — ingen innerHTML-parsing af hele listen
+  const blok = document.createElement('div');
+  blok.className = 'maaned-blok';
+  blok.innerHTML =
+    `<div class="maaned-header">${MAANEDER[mi]}<span class="maaned-antal">${folkAntal} person${folkAntal === 1 ? '' : 'er'}</span></div>` +
+    `<table class="tabel"><thead><tr>` +
+    `<th class="col-dato">Dato</th><th>Navn</th>` +
+    `<th class="col-alder center">Alder</th>` +
+    `<th class="col-iaar center">Mærkedag ${I_AAR}</th>` +
+    `<th class="col-naeste center">Mærkedag ${NAESTE}</th>` +
+    `</tr></thead><tbody>${tbody}</tbody></table>`;
+  kal.appendChild(blok);
 }
-
-// Sæt alt HTML på én gang — undgår browser-omordning ved gentagne innerHTML +=
-document.getElementById('kalender').innerHTML = kalHTML;
 </script>
 </body>
 </html>
