@@ -3,221 +3,164 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OlsenKlanen — Fødselsdage & Mærkedage</title>
+<title>OlsenKlanen — Årets fødselsdage og mærkedage</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 
 :root{
-  --gron:#2d5016;--gron-lys:#4a7c2a;--gron-pale:#e8f0dc;
+  --gron:#2d5016;--gron-lys:#4a7c2a;--gron-pale:#c8e6b0;
   --guld:#c8952a;--guld-lys:#f5e6c8;--guld-pale:#fdf8ee;
-  --sølv:#8a8a8a;--sølv-lys:#f0f0f0;--sølv-pale:#e8e8e8;
-  --lilla:#6b3580;--lilla-lys:#e8d5f5;--lilla-pale:#f5eeff;
-  --rund-bg:#dff2d8;--rund-kant:#2d7a1f;--rund-tekst:#1a4d10;
+  --sølv:#888;--sølv-lys:#f4f4f4;
+  --lilla:#6b3580;--lilla-pale:#f3eaff;
   --hvid:#fefcf8;--tekst:#1a1a0e;--tekst-lys:#5a5a40;--border:#d4c9a0;
   --baggrund:#fffde0;
 }
 
-body{
-  font-family:'Source Sans 3',sans-serif;
-  background:var(--baggrund);
-  color:var(--tekst);
-  min-height:100vh;
+body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var(--tekst);min-height:100vh;}
+
+/* ─── FLAG-BANNER ─── */
+.flag-banner{
+  background:var(--gron);
+  text-align:center;
+  padding:0.55rem 0;
+  font-size:26px;
+  letter-spacing:6px;
+  border-bottom:3px solid var(--guld);
 }
 
 /* ─── TOPBAR ─── */
 .topbar{
   background:var(--gron);
-  border-bottom:3px solid var(--guld);
-  padding:0 1.5rem; height:52px;
-  display:flex; align-items:center; justify-content:space-between;
-  position:sticky; top:0; z-index:100;
+  padding:0 1.5rem; height:50px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 8px rgba(0,0,0,0.2);
 }
-.topbar-logo{
-  font-family:'Playfair Display',serif;
-  font-size:20px; font-weight:500;
-  color:var(--hvid); text-decoration:none; letter-spacing:-0.3px;
-}
-.topbar-links{display:flex; gap:1.25rem;}
-.topbar-links a{
-  font-size:12px; color:rgba(255,255,255,0.65);
-  text-decoration:none; letter-spacing:0.3px;
-}
-.topbar-links a:hover{color:var(--guld-lys);}
-.topbar-links a.aktiv{color:var(--guld-lys);}
+.topbar-logo{font-family:'Playfair Display',serif;font-size:19px;font-weight:500;color:var(--hvid);text-decoration:none;}
+.topbar-links{display:flex;gap:1.25rem;}
+.topbar-links a{font-size:12px;color:rgba(255,255,255,0.6);text-decoration:none;}
+.topbar-links a:hover,.topbar-links a.aktiv{color:var(--guld-lys);}
 
 /* ─── SIDE-HEADER ─── */
 .side-header{
   background:var(--gron);
-  padding:2rem 2rem 1.5rem;
-  border-bottom:1px solid rgba(200,149,42,0.3);
+  padding:1.75rem 1rem 1.5rem;
   text-align:center;
+  border-bottom:1px solid rgba(200,149,42,0.35);
 }
-.side-header h1{
-  font-family:'Playfair Display',serif;
-  font-size:36px; font-weight:400; color:var(--hvid);
-  margin-bottom:0.3rem;
-}
-.side-header p{font-size:13px; color:rgba(255,255,255,0.55); letter-spacing:1px;}
-.guld-streg{width:40px;height:2px;background:var(--guld);margin:1rem auto 0;border-radius:2px;}
+.side-header h1{font-family:'Playfair Display',serif;font-size:clamp(22px,5vw,36px);font-weight:400;color:var(--hvid);margin-bottom:0.3rem;}
+.side-header p{font-size:12px;color:rgba(255,255,255,0.5);letter-spacing:1px;}
+.guld-streg{width:40px;height:2px;background:var(--guld);margin:.9rem auto 0;border-radius:2px;}
 
 /* ─── WRAPPER ─── */
-.wrapper{max-width:900px; margin:0 auto; padding:1.75rem 1rem 3rem;}
+.wrapper{max-width:960px;margin:0 auto;padding:1.5rem 1rem 2.5rem;}
 
 /* ─── NÆSTE MÆRKEDAGE ─── */
 .naeste-boks{
-  background:var(--hvid);
-  border:1px solid var(--border);
-  border-top:4px solid var(--gron);
-  border-radius:6px;
-  margin-bottom:2rem;
-  box-shadow:0 2px 12px rgba(0,0,0,0.07);
+  background:var(--hvid);border:1px solid var(--border);
+  border-top:4px solid var(--gron);border-radius:6px;
+  margin-bottom:1.75rem;
+  box-shadow:0 2px 10px rgba(0,0,0,0.07);
 }
-.naeste-boks-header{
-  padding:0.75rem 1.25rem;
-  background:var(--guld-pale);
+.naeste-header{
+  padding:.65rem 1.1rem;background:var(--guld-pale);
   border-bottom:1px solid var(--border);
-  display:flex; align-items:center; gap:0.5rem;
-  font-family:'Playfair Display',serif;
-  font-size:17px; font-weight:500; color:var(--tekst);
+  font-family:'Playfair Display',serif;font-size:16px;font-weight:500;color:var(--tekst);
+  display:flex;align-items:center;gap:.5rem;
 }
-.naeste-tom{
-  padding:1rem 1.25rem;
-  font-size:13px; color:var(--tekst-lys); font-style:italic;
-}
-.naeste-tabel{width:100%; border-collapse:collapse;}
-.naeste-tabel td{
-  padding:0.55rem 1rem;
-  font-size:13px;
-  border-bottom:1px solid rgba(212,201,160,0.4);
-  vertical-align:middle;
-}
+.naeste-tabel{width:100%;border-collapse:collapse;}
+.naeste-tabel td{padding:.45rem 1rem;font-size:13px;border-bottom:1px solid rgba(212,201,160,0.35);vertical-align:middle;}
 .naeste-tabel tr:last-child td{border-bottom:none;}
-.naeste-tabel .td-dato{
-  width:90px; font-weight:500; color:var(--gron);
-  white-space:nowrap;
-}
-.naeste-tabel .td-dage{
-  width:80px; font-size:11px; color:var(--tekst-lys);
-  text-align:right; white-space:nowrap;
-}
-.naeste-tabel tr.idag-row .td-dato{color:var(--guld);}
+.naeste-tabel .nt-dato{width:80px;font-weight:600;color:var(--gron);white-space:nowrap;}
+.naeste-tabel .nt-dage{width:85px;font-size:11px;color:var(--tekst-lys);text-align:right;white-space:nowrap;}
+.naeste-tabel tr.row-idag .nt-dato{color:var(--guld);}
+.naeste-tom{padding:.9rem 1.1rem;font-size:13px;color:var(--tekst-lys);font-style:italic;}
 
 /* ─── LEGENDE ─── */
 .legende{
-  display:flex; flex-wrap:wrap; gap:0.75rem 1.5rem;
-  padding:0.75rem 1.25rem;
-  background:var(--hvid);
-  border:1px solid var(--border);
-  border-radius:6px;
-  margin-bottom:2rem;
-  font-size:12px;
+  display:flex;flex-wrap:wrap;gap:.5rem 1.25rem;
+  padding:.6rem 1rem;background:var(--hvid);
+  border:1px solid var(--border);border-radius:6px;
+  margin-bottom:1.75rem;font-size:12px;color:var(--tekst-lys);
 }
-.legende-item{display:flex; align-items:center; gap:0.4rem; color:var(--tekst-lys);}
-.farve-plet{
-  display:inline-block; width:14px; height:14px;
-  border-radius:3px; border:1px solid rgba(0,0,0,0.15);
-  flex-shrink:0;
-}
+.leg{display:flex;align-items:center;gap:.35rem;}
 
 /* ─── MÅNEDS-BLOK ─── */
-.maaned-blok{margin-bottom:2.25rem;}
+.maaned-blok{margin-bottom:2rem;}
 .maaned-header{
-  font-family:'Playfair Display',serif;
-  font-size:22px; font-weight:500;
-  color:var(--hvid);
-  background:var(--gron);
-  padding:0.5rem 1rem;
-  border-radius:5px 5px 0 0;
-  display:flex; align-items:baseline; justify-content:space-between;
+  font-family:'Playfair Display',serif;font-size:20px;font-weight:500;
+  color:var(--hvid);background:var(--gron);
+  padding:.45rem 1rem;border-radius:5px 5px 0 0;
+  display:flex;align-items:baseline;justify-content:space-between;
 }
-.maaned-antal{font-size:12px; font-weight:300; color:rgba(255,255,255,0.6); font-family:'Source Sans 3',sans-serif;}
+.maaned-antal{font-size:11px;font-weight:300;color:rgba(255,255,255,0.55);font-family:'Source Sans 3',sans-serif;}
 
 /* ─── TABEL ─── */
 .tabel{
-  width:100%; border-collapse:collapse;
-  border:1px solid var(--border);
-  border-top:none;
-  background:var(--hvid);
-  border-radius:0 0 5px 5px;
-  overflow:hidden;
+  width:100%;border-collapse:collapse;
+  border:1px solid var(--border);border-top:none;
+  background:var(--hvid);border-radius:0 0 5px 5px;overflow:hidden;
   box-shadow:0 2px 8px rgba(0,0,0,0.05);
 }
-.tabel thead tr{background:rgba(45,80,22,0.08);}
+.tabel thead tr{background:rgba(45,80,22,0.07);}
 .tabel th{
-  padding:0.5rem 0.85rem;
-  font-size:11px; font-weight:600;
-  color:var(--tekst-lys); text-transform:uppercase; letter-spacing:0.5px;
-  text-align:left; border-bottom:2px solid var(--border);
+  padding:.42rem .75rem;font-size:10.5px;font-weight:600;
+  color:var(--tekst-lys);text-transform:uppercase;letter-spacing:.5px;
+  text-align:left;border-bottom:2px solid var(--border);
 }
-.tabel th.td-alder,.tabel th.td-maerke{text-align:center;}
+.tabel th.center{text-align:center;}
 .tabel td{
-  padding:0.52rem 0.85rem;
-  font-size:13.5px;
-  border-bottom:1px solid rgba(212,201,160,0.35);
+  padding:.46rem .75rem;font-size:13.5px;
+  border-bottom:1px solid rgba(212,201,160,0.3);
   vertical-align:middle;
 }
+.tabel tbody tr:hover{background:rgba(0,0,0,0.02);}
 .tabel tr:last-child td{border-bottom:none;}
-.tabel tbody tr:hover{background:rgba(0,0,0,0.025);}
 
-.td-dato{width:70px; font-weight:500; color:var(--gron); white-space:nowrap;}
-.td-navn{min-width:200px;}
-.td-alder{width:70px; text-align:center; color:var(--tekst-lys); font-size:13px;}
-.td-maerke{width:160px; text-align:center;}
+/* kolonnebredder */
+.col-dato  {width:68px;font-weight:600;color:var(--gron);white-space:nowrap;}
+.col-navn  {min-width:160px;}
+.col-alder {width:60px;text-align:center;}
+.col-iaar  {width:140px;text-align:center;}
+.col-naeste{width:140px;text-align:center;}
 
-/* ─── RÆKKEFREMHÆVNING ─── */
-tr.rund{background:var(--rund-bg);}
-tr.rund:hover{background:#d0edc5;}
-tr.rund .td-dato{color:var(--rund-kant);}
-tr.rund .td-alder{color:var(--rund-tekst); font-weight:600;}
-
-tr.konf{background:var(--lilla-pale);}
-tr.konf:hover{background:var(--lilla-lys);}
-tr.konf .td-dato{color:var(--lilla);}
-
-tr.sølv{background:var(--sølv-lys);}
-tr.sølv:hover{background:var(--sølv-pale);}
-tr.sølv .td-dato{color:var(--sølv);}
-
-tr.guld-bryl{background:var(--guld-lys);}
-tr.guld-bryl:hover{background:#eedca8;}
-tr.guld-bryl .td-dato{color:#8a6010;}
-
-tr.idag-foeds{background:#fff8cc;}
-tr.idag-foeds:hover{background:#fff1a0;}
-tr.idag-foeds .td-dato{color:#b8790a; font-weight:700;}
+/* alder-celle: grøn baggrund ved fødselsdag i dag */
+td.alder-idag{background:var(--gron-pale);color:var(--gron);font-weight:700;border-radius:4px;}
 
 /* ─── BADGES ─── */
 .badge{
-  display:inline-flex; align-items:center; gap:3px;
-  font-size:11px; font-weight:600;
-  padding:2px 8px; border-radius:20px;
-  white-space:nowrap;
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:11px;font-weight:600;
+  padding:2px 7px;border-radius:20px;white-space:nowrap;
 }
-.badge-rund{background:var(--rund-kant); color:white;}
-.badge-konf{background:var(--lilla); color:white;}
-.badge-sølv{background:#777; color:white;}
-.badge-guld{background:var(--guld); color:white;}
-.badge-idag{background:#c8790a; color:white;}
+.b-rund {background:#2d7a1f;color:#fff;}
+.b-konf {background:var(--lilla);color:#fff;}
+.b-sølv {background:var(--sølv);color:#fff;}
+.b-guld {background:var(--guld);color:#fff;}
 
-/* ─── FOOTER ─── */
-footer{
-  background:var(--gron); border-top:2px solid var(--guld);
-  text-align:center; padding:1.25rem;
-  color:rgba(255,255,255,0.4); font-size:12px;
+/* ─── FLAG-FOOTER ─── */
+.flag-footer{
+  background:var(--gron);
+  border-top:3px solid var(--guld);
+  text-align:center;padding:.9rem 0 .6rem;
 }
+.flag-footer-flag{font-size:26px;letter-spacing:6px;}
+.flag-footer-tekst{font-size:11px;color:rgba(255,255,255,0.35);margin-top:.4rem;letter-spacing:.5px;}
 
 /* ─── MOBIL ─── */
-@media(max-width:600px){
+@media(max-width:640px){
   .topbar-links{display:none;}
-  .side-header h1{font-size:26px;}
-  .tabel th.td-dato,.tabel td.td-dato{display:none;}
-  .td-maerke{width:auto;}
-  .maaned-header{font-size:18px;}
+  .col-naeste{display:none;}
+  .tabel th:last-child{display:none;}
+  .flag-banner{font-size:20px;letter-spacing:3px;}
 }
 </style>
 </head>
 <body>
+
+<!-- FLAG TOP -->
+<div class="flag-banner">🇩🇰 🇩🇰 🇩🇰 🇩🇰 🇩🇰</div>
 
 <!-- TOPBAR -->
 <div class="topbar">
@@ -240,31 +183,35 @@ footer{
 
   <!-- NÆSTE MÆRKEDAGE -->
   <div class="naeste-boks">
-    <div class="naeste-boks-header">📅 Kommende mærkedage — næste 30 dage</div>
+    <div class="naeste-header">📅 Kommende mærkedage — næste 30 dage</div>
     <div id="naeste-indhold"></div>
   </div>
 
   <!-- LEGENDE -->
   <div class="legende">
-    <div class="legende-item"><span class="farve-plet" style="background:var(--rund-bg);border-color:var(--rund-kant)"></span>🎂 Rund fødselsdag (50, 60, 70, 75, 80, 85 eller 90 år)</div>
-    <div class="legende-item"><span class="farve-plet" style="background:var(--lilla-pale);border-color:var(--lilla)"></span>✝️ Konfirmationsalder (15–16 år)</div>
-    <div class="legende-item"><span class="farve-plet" style="background:var(--sølv-lys);border-color:#aaa"></span>💍 Sølvbryllup (25 år gift)</div>
-    <div class="legende-item"><span class="farve-plet" style="background:var(--guld-lys);border-color:var(--guld)"></span>💍 Guldbryllup (50 år gift)</div>
-    <div class="legende-item"><span class="farve-plet" style="background:#fff8cc;border-color:#c8790a"></span>Fødselsdag i dag</div>
+    <div class="leg">🎂 <span class="badge b-rund">Rund fødselsdag</span> 50, 60, 70, 75, 80, 85 eller 90 år</div>
+    <div class="leg">👦👧 <span class="badge b-konf">Konfirmation</span> 15–16 år</div>
+    <div class="leg">💍 <span class="badge b-sølv">Sølvbryllup</span> 25 år gift</div>
+    <div class="leg">💍 <span class="badge b-guld">Guldbryllup</span> 50 år gift</div>
+    <div class="leg" style="background:#c8e6b0;padding:1px 6px;border-radius:4px;">Grøn alder = fødselsdag i dag</div>
   </div>
 
-  <!-- MÅNEDER genereres af JS -->
+  <!-- KALENDER -->
   <div id="kalender"></div>
 
 </div>
 
-<footer id="footer-tekst"></footer>
+<!-- FLAG BUND -->
+<div class="flag-footer">
+  <div class="flag-footer-flag">🇩🇰 🇩🇰 🇩🇰 🇩🇰 🇩🇰</div>
+  <div class="flag-footer-tekst" id="footer-tekst"></div>
+</div>
 
 <script>
-const MAANEDER = ['Januar','Februar','Marts','April','Maj','Juni','Juli','August','September','Oktober','November','December'];
+const MAANEDER      = ['Januar','Februar','Marts','April','Maj','Juni','Juli','August','September','Oktober','November','December'];
 const MAANEDER_KORT = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
-const RUNDE_ALDRE = [50,60,70,75,80,85,90];
-const KONF_ALDRE  = [15,16];
+const RUNDE_ALDRE   = [50,60,70,75,80,85,90];
+const KONF_ALDRE    = [15,16];
 
 // ─── FØDSELSDAGE ────────────────────────────────────────────────────────────
 const FOEDSLER = [
@@ -407,139 +354,147 @@ const FOEDSLER = [
   {navn:"Ida Holmgaard",                     dag:31, mdr:12, aar:2007},
 ];
 
-// ─── BRYLLUPPER (tilføj vielsesdato + navne her) ─────────────────────────────
-// Format: {navne:"Navn A & Navn B", dag:10, mdr:6, aar:1976}
+// Bryllupper: {navne, dag, mdr, aar (vielsesår)}
 const BRYLLUPPER = [
-  // Eksempel (slet eller erstat med rigtige data):
+  // Tilføj vielsesdatoer her, fx:
   // {navne:"Carsten Gram & Karin Gram Lund", dag:19, mdr:4, aar:1976},
 ];
 
 // ─── HJÆLPEFUNKTIONER ────────────────────────────────────────────────────────
 
-const idag = new Date(); idag.setHours(0,0,0,0);
-const idagAar = idag.getFullYear();
+const IDAG = new Date(); IDAG.setHours(0,0,0,0);
+const I_AAR  = IDAG.getFullYear();  // 2026
+const NAESTE = I_AAR + 1;           // 2027
 
-function dageHenTil(dag, mdr) {
-  let d = new Date(idagAar, mdr-1, dag); d.setHours(0,0,0,0);
-  if (d < idag) d.setFullYear(idagAar + 1);
-  return Math.round((d - idag) / 86400000);
+function erFodselsdagIdag(dag, mdr) {
+  return IDAG.getDate() === dag && (IDAG.getMonth()+1) === mdr;
 }
 
 function alderPrIdag(dag, mdr, fodselsaar) {
-  let a = idagAar - fodselsaar;
-  if ((idag.getMonth()+1) < mdr || ((idag.getMonth()+1) === mdr && idag.getDate() < dag)) a--;
+  let a = I_AAR - fodselsaar;
+  if ((IDAG.getMonth()+1) < mdr || ((IDAG.getMonth()+1)===mdr && IDAG.getDate()<dag)) a--;
   return a;
 }
 
-function alderIDenneKalenderaar(fodselsaar) {
-  return idagAar - fodselsaar;
+function dageHenTil(dag, mdr) {
+  let d = new Date(I_AAR, mdr-1, dag); d.setHours(0,0,0,0);
+  if (d < IDAG) d.setFullYear(I_AAR+1);
+  return Math.round((d - IDAG)/86400000);
 }
 
-function erIdag(dag, mdr) {
-  return idag.getDate() === dag && (idag.getMonth()+1) === mdr;
+// Returnerer badge-HTML for et givet kalenderår (fodselsaar = person.aar)
+function foedselsBadge(fodselsaar, checkAar) {
+  const alder = checkAar - fodselsaar;
+  if (RUNDE_ALDRE.includes(alder))
+    return `<span class="badge b-rund">🎂 ${alder} år</span>`;
+  if (KONF_ALDRE.includes(alder))
+    return `<span class="badge b-konf">👦👧 Konfirmation</span>`;
+  return '';
 }
 
-function typeInfo(p) {
-  // Returnerer {klasse, badge} eller null
-  const alder = alderPrIdag(p.dag, p.mdr, p.aar);
-  const alderKal = alderIDenneKalenderaar(p.aar);
-  if (erIdag(p.dag, p.mdr)) {
-    if (RUNDE_ALDRE.includes(alderKal))
-      return {klasse:'rund idag-foeds', badge:`<span class="badge badge-rund">🎂 ${alderKal} år</span><span class="badge badge-idag">I dag!</span>`};
-    if (KONF_ALDRE.includes(alderKal))
-      return {klasse:'konf idag-foeds', badge:`<span class="badge badge-konf">✝️ Konfirmationsalder</span><span class="badge badge-idag">I dag!</span>`};
-    return {klasse:'idag-foeds', badge:`<span class="badge badge-idag">🎂 I dag!</span>`};
-  }
-  if (RUNDE_ALDRE.includes(alderKal))
-    return {klasse:'rund', badge:`<span class="badge badge-rund">🎂 ${alderKal} år</span>`};
-  if (KONF_ALDRE.includes(alderKal))
-    return {klasse:'konf', badge:`<span class="badge badge-konf">✝️ Konf.alder</span>`};
-  return {klasse:'', badge:''};
-}
-
-function bryllupsType(aar) {
-  const gifteAar = idagAar - aar;
-  if (gifteAar === 50) return {klasse:'guld-bryl', badge:`<span class="badge badge-guld">💍 Guldbryllup</span>`};
-  if (gifteAar === 25) return {klasse:'sølv', badge:`<span class="badge badge-sølv">💍 Sølvbryllup</span>`};
-  return null;
+// Badge for bryllup
+function brylBadge(vielsesaar, checkAar) {
+  const gifteAar = checkAar - vielsesaar;
+  if (gifteAar === 50) return `<span class="badge b-guld">💍 Guldbryllup</span>`;
+  if (gifteAar === 25) return `<span class="badge b-sølv">💍 Sølvbryllup</span>`;
+  return '';
 }
 
 // ─── HEADER / FOOTER ─────────────────────────────────────────────────────────
 document.getElementById('header-sub').textContent =
-  `${FOEDSLER.length} familiemedlemmer · Alder beregnet løbende`;
+  `${FOEDSLER.length} familiemedlemmer · ${I_AAR} og ${NAESTE}`;
 document.getElementById('footer-tekst').textContent =
-  `OlsenKlanen · Fødselsdage & Mærkedage · Opdateret pr. ${idag.toLocaleDateString('da-DK',{day:'numeric',month:'long',year:'numeric'})}`;
+  `OlsenKlanen · Fødselsdage & Mærkedage · ${I_AAR}–${NAESTE}`;
 
 // ─── NÆSTE 30 DAGE ───────────────────────────────────────────────────────────
 (function() {
-  const kommende = [];
+  const liste = [];
 
   FOEDSLER.forEach(p => {
     const d = dageHenTil(p.dag, p.mdr);
     if (d > 30) return;
-    const alderKal = alderIDenneKalenderaar(p.aar);
-    const alder    = alderPrIdag(p.dag, p.mdr, p.aar) + (d > 0 ? 1 : 0);
-    let badge = '';
-    if (d === 0) badge = '<span class="badge badge-idag">I dag!</span>';
-    if (RUNDE_ALDRE.includes(alderKal)) badge += `<span class="badge badge-rund">🎂 ${alderKal} år</span>`;
-    else if (KONF_ALDRE.includes(alderKal)) badge += `<span class="badge badge-konf">✝️ Konfirmationsalder</span>`;
-    kommende.push({dato:`${p.dag}. ${MAANEDER_KORT[p.mdr-1]}`, navn:p.navn, note:`fylder ${alder} år`, badge, dage:d, erIdag:d===0});
+    const fylder = (d === 0 ? I_AAR : I_AAR + 1) - p.aar;
+    let badge = foedselsBadge(p.aar, d === 0 ? I_AAR : I_AAR);
+    // Vis hvad de fylder uanset om det er rundt
+    const alderTekst = `fylder ${fylder} år`;
+    liste.push({
+      dato:`${p.dag}. ${MAANEDER_KORT[p.mdr-1]}`,
+      navn:p.navn, note:alderTekst, badge, dage:d
+    });
   });
 
   BRYLLUPPER.forEach(b => {
     const d = dageHenTil(b.dag, b.mdr);
     if (d > 30) return;
-    const bt = bryllupsType(b.aar);
-    if (!bt) return;
-    kommende.push({dato:`${b.dag}. ${MAANEDER_KORT[b.mdr-1]}`, navn:b.navne, note:'bryllupsdag', badge:bt.badge, dage:d, erIdag:d===0});
+    const badge = brylBadge(b.aar, d===0 ? I_AAR : I_AAR);
+    if (!badge) return;
+    liste.push({dato:`${b.dag}. ${MAANEDER_KORT[b.mdr-1]}`,
+      navn:b.navne, note:'bryllupsdag', badge, dage:d});
   });
 
-  kommende.sort((a,b) => a.dage - b.dage);
+  liste.sort((a,b) => a.dage - b.dage);
 
   const el = document.getElementById('naeste-indhold');
-  if (kommende.length === 0) {
-    el.innerHTML = '<div class="naeste-tom">Ingen mærkedage de næste 30 dage.</div>';
+  if (!liste.length) {
+    el.innerHTML = '<div class="naeste-tom">Ingen særlige mærkedage de næste 30 dage.</div>';
     return;
   }
-  let html = '<table class="naeste-tabel"><tbody>';
-  kommende.forEach(k => {
-    const dagTekst = k.erIdag ? '<strong>I dag</strong>' : (k.dage === 1 ? 'I morgen' : `Om ${k.dage} dage`);
-    html += `<tr class="${k.erIdag ? 'idag-row' : ''}">
-      <td class="td-dato">${k.dato}</td>
-      <td>${k.navn} <span style="color:var(--tekst-lys);font-size:12px">${k.note}</span> ${k.badge}</td>
-      <td class="td-dage">${dagTekst}</td>
+  let h = '<table class="naeste-tabel"><tbody>';
+  liste.forEach(k => {
+    const dagTekst = k.dage===0 ? '<strong>I dag!</strong>' : k.dage===1 ? 'I morgen' : `Om ${k.dage} dage`;
+    h += `<tr class="${k.dage===0?'row-idag':''}">
+      <td class="nt-dato">${k.dato}</td>
+      <td>${k.navn} <span style="font-size:12px;color:var(--tekst-lys)">${k.note}</span> ${k.badge}</td>
+      <td class="nt-dage">${dagTekst}</td>
     </tr>`;
   });
-  html += '</tbody></table>';
-  el.innerHTML = html;
+  h += '</tbody></table>';
+  el.innerHTML = h;
 })();
 
 // ─── KALENDER MÅNEDER ────────────────────────────────────────────────────────
-const kalender = document.getElementById('kalender');
+const kal = document.getElementById('kalender');
 
 for (let m = 1; m <= 12; m++) {
-  const folk = FOEDSLER.filter(p => p.mdr === m).sort((a,b) => a.dag - b.dag);
-  const bryl = BRYLLUPPER.filter(b => b.mdr === m).sort((a,b) => a.dag - b.dag);
-  if (folk.length === 0 && bryl.length === 0) continue;
+  const folk = FOEDSLER.filter(p => p.mdr===m).sort((a,b)=>a.dag-b.dag);
+  const bryl = BRYLLUPPER.filter(b => b.mdr===m).sort((a,b)=>a.dag-b.dag);
+  if (!folk.length && !bryl.length) continue;
 
-  // Saml alle rækker i sorteret rækkefølge
-  const raekker = [];
+  let rows = '';
+
+  // Fødselsdagsrækker
   folk.forEach(p => {
-    const ti = typeInfo(p);
-    const alder = alderPrIdag(p.dag, p.mdr, p.aar);
-    const alderKal = alderIDenneKalenderaar(p.aar);
-    const visAlder = alder >= 0 ? (erIdag(p.dag,p.mdr) ? alderKal : alder) : '—';
-    raekker.push({dag:p.dag, klasse:ti.klasse, datoTekst:`${p.dag}. ${MAANEDER_KORT[m-1]}`, navn:p.navn, alder:visAlder, badge:ti.badge});
-  });
-  bryl.forEach(b => {
-    const bt = bryllupsType(b.aar);
-    if (!bt) return;
-    const aar = idagAar - b.aar;
-    raekker.push({dag:b.dag, klasse:bt.klasse, datoTekst:`${b.dag}. ${MAANEDER_KORT[m-1]}`, navn:b.navne, alder:`${aar} år`, badge:bt.badge});
-  });
-  raekker.sort((a,b) => a.dag - b.dag);
+    const idag    = erFodselsdagIdag(p.dag, p.mdr);
+    const alder   = alderPrIdag(p.dag, p.mdr, p.aar);
+    const alderVis = alder >= 0 ? alder : '—';
+    const alderKl  = idag ? ' class="alder-idag"' : '';
+    const iaarBadge  = foedselsBadge(p.aar, I_AAR);
+    const naesteBadge = foedselsBadge(p.aar, NAESTE);
 
-  let html = `
+    rows += `<tr>
+      <td class="col-dato">${p.dag}. ${MAANEDER_KORT[m-1]}</td>
+      <td class="col-navn">${p.navn}</td>
+      <td class="col-alder"${alderKl}>${alderVis}</td>
+      <td class="col-iaar">${iaarBadge}</td>
+      <td class="col-naeste">${naesteBadge}</td>
+    </tr>`;
+  });
+
+  // Bryllupsrækker
+  bryl.forEach(b => {
+    const iaarBadge  = brylBadge(b.aar, I_AAR);
+    const naesteBadge = brylBadge(b.aar, NAESTE);
+    if (!iaarBadge && !naesteBadge) return;
+    rows += `<tr>
+      <td class="col-dato">${b.dag}. ${MAANEDER_KORT[m-1]}</td>
+      <td class="col-navn">${b.navne}</td>
+      <td class="col-alder">—</td>
+      <td class="col-iaar">${iaarBadge}</td>
+      <td class="col-naeste">${naesteBadge}</td>
+    </tr>`;
+  });
+
+  kal.innerHTML += `
     <div class="maaned-blok">
       <div class="maaned-header">
         ${MAANEDER[m-1]}
@@ -547,24 +502,15 @@ for (let m = 1; m <= 12; m++) {
       </div>
       <table class="tabel">
         <thead><tr>
-          <th class="td-dato">Dato</th>
+          <th class="col-dato">Dato</th>
           <th>Navn</th>
-          <th class="td-alder">Alder</th>
-          <th class="td-maerke">Mærkedag</th>
+          <th class="col-alder center">Alder</th>
+          <th class="col-iaar center">Mærkedag ${I_AAR}</th>
+          <th class="col-naeste center">Mærkedag ${NAESTE}</th>
         </tr></thead>
-        <tbody>`;
-
-  raekker.forEach(r => {
-    html += `<tr class="${r.klasse}">
-      <td class="td-dato">${r.datoTekst}</td>
-      <td class="td-navn">${r.navn}</td>
-      <td class="td-alder">${r.alder}</td>
-      <td class="td-maerke">${r.badge}</td>
-    </tr>`;
-  });
-
-  html += '</tbody></table></div>';
-  kalender.innerHTML += html;
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
 }
 </script>
 </body>
