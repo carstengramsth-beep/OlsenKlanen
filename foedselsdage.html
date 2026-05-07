@@ -56,26 +56,63 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 /* ─── WRAPPER ─── */
 .wrapper{max-width:960px;margin:0 auto;padding:1.5rem 1rem 2.5rem;}
 
-/* ─── NÆSTE MÆRKEDAGE ─── */
-.naeste-boks{
-  background:var(--hvid);border:1px solid var(--border);
-  border-top:4px solid var(--gron);border-radius:6px;
+/* ─── FESTLIG MÆRKEDAGE-BOKS ─── */
+.fest-boks{
+  background:linear-gradient(135deg,#fffbe6 0%,#fff8f0 50%,#f0fff4 100%);
+  border:2px solid var(--guld);
+  border-radius:12px;
   margin-bottom:1.75rem;
-  box-shadow:0 2px 10px rgba(0,0,0,0.07);
+  box-shadow:0 4px 20px rgba(200,149,42,0.2);
+  overflow:hidden;
 }
-.naeste-header{
-  padding:.65rem 1.1rem;background:var(--guld-pale);
-  border-bottom:1px solid var(--border);
-  font-family:'Playfair Display',serif;font-size:16px;font-weight:500;color:var(--tekst);
+.fest-header{
+  background:linear-gradient(90deg,var(--gron) 0%,#3d6b20 100%);
+  padding:.75rem 1.25rem;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:.5rem;
+}
+.fest-header-titel{
+  font-family:'Playfair Display',serif;
+  font-size:17px;font-weight:500;color:var(--hvid);
   display:flex;align-items:center;gap:.5rem;
 }
-.naeste-tabel{width:100%;border-collapse:collapse;}
-.naeste-tabel td{padding:.45rem 1rem;font-size:13px;border-bottom:1px solid rgba(212,201,160,0.35);vertical-align:middle;}
-.naeste-tabel tr:last-child td{border-bottom:none;}
-.naeste-tabel .nt-dato{width:80px;font-weight:600;color:var(--gron);white-space:nowrap;}
-.naeste-tabel .nt-dage{width:85px;font-size:11px;color:var(--tekst-lys);text-align:right;white-space:nowrap;}
-.naeste-tabel tr.row-idag .nt-dato{color:var(--guld);}
-.naeste-tom{padding:.9rem 1.1rem;font-size:13px;color:var(--tekst-lys);font-style:italic;}
+.fest-header-flag{font-size:20px;letter-spacing:3px;}
+.fest-liste{padding:.75rem 1.25rem .5rem;display:flex;flex-direction:column;gap:.5rem;}
+.fest-kort{
+  background:var(--hvid);
+  border:1px solid rgba(200,149,42,0.3);
+  border-left:4px solid var(--guld);
+  border-radius:8px;
+  padding:.6rem 1rem;
+  display:flex;align-items:center;gap:.85rem;
+  box-shadow:0 1px 4px rgba(0,0,0,0.05);
+}
+.fest-kort.idag{
+  border-left-color:#c0392b;
+  background:linear-gradient(90deg,#fff5f5,var(--hvid));
+}
+.fest-kort.rund{ border-left-color:#2d7a1f; }
+.fest-kort.konf{ border-left-color:var(--lilla); }
+.fest-kort.bryl-sølv{ border-left-color:var(--sølv); }
+.fest-kort.bryl-guld{ border-left-color:var(--guld); }
+.fest-ikon{font-size:26px;flex-shrink:0;line-height:1;}
+.fest-info{flex:1;min-width:0;}
+.fest-navn{font-size:14px;font-weight:600;color:var(--tekst);}
+.fest-beskrivelse{font-size:12px;color:var(--tekst-lys);margin-top:1px;}
+.fest-dage{
+  font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:20px;
+  background:var(--guld-pale);color:var(--guld);
+  border:1px solid rgba(200,149,42,0.3);
+  white-space:nowrap;flex-shrink:0;
+}
+.fest-dage.idag-chip{background:#fde8e8;color:#c0392b;border-color:#f5c6c6;}
+.fest-bund{
+  text-align:center;padding:.4rem .5rem .6rem;
+  font-size:20px;letter-spacing:4px;
+  background:rgba(200,149,42,0.06);
+  border-top:1px solid rgba(200,149,42,0.2);
+}
 
 /* ─── LEGENDE ─── */
 .legende{
@@ -181,10 +218,14 @@ td.alder-idag{background:var(--gron-pale);color:var(--gron);font-weight:700;bord
 
 <div class="wrapper">
 
-  <!-- NÆSTE MÆRKEDAGE -->
-  <div class="naeste-boks">
-    <div class="naeste-header">📅 Kommende mærkedage — næste 30 dage</div>
-    <div id="naeste-indhold"></div>
+  <!-- FESTLIG MÆRKEDAGE-BOKS (vises kun hvis mærkedage inden for 10 dage) -->
+  <div class="fest-boks" id="fest-boks" style="display:none">
+    <div class="fest-header">
+      <div class="fest-header-titel">🎊 Mærkedage de næste 10 dage 🎊</div>
+      <div class="fest-header-flag">🇩🇰 🌸 🇩🇰</div>
+    </div>
+    <div class="fest-liste" id="fest-liste"></div>
+    <div class="fest-bund">🌸 🎊 🇩🇰 🎊 🌸</div>
   </div>
 
   <!-- LEGENDE -->
@@ -407,51 +448,76 @@ document.getElementById('header-sub').textContent =
 document.getElementById('footer-tekst').textContent =
   `OlsenKlanen · Fødselsdage & Mærkedage · ${I_AAR}–${NAESTE}`;
 
-// ─── NÆSTE 30 DAGE ───────────────────────────────────────────────────────────
+// ─── FESTLIG MÆRKEDAGE-BOKS (kun runde fødselsdage, konfirmationer og bryllupper inden for 10 dage) ───
 (function() {
   const liste = [];
 
   FOEDSLER.forEach(p => {
     const d = dageHenTil(p.dag, p.mdr);
-    if (d > 30) return;
-    // Hvilket år falder næste fødselsdag? (i år hvis ikke passeret, ellers næste år)
+    if (d > 10) return;
     const nextYear = new Date(I_AAR, p.mdr-1, p.dag) < IDAG ? I_AAR+1 : I_AAR;
-    const fylder = nextYear - p.aar;
-    const badge = foedselsBadge(p.aar, nextYear);
-    const alderTekst = `fylder ${fylder} år`;
-    liste.push({
-      dato:`${p.dag}. ${MAANEDER_KORT[p.mdr-1]}`,
-      navn:p.navn, note:alderTekst, badge, dage:d
-    });
+    const alderIAar = nextYear - p.aar;
+    const erRund = RUNDE_ALDRE.includes(alderIAar);
+    const erKonf = KONF_ALDRE.includes(alderIAar);
+    if (!erRund && !erKonf) return; // Kun mærkedage — ikke almindelige fødselsdage
+
+    let ikon, kortKlasse, beskrivelse;
+    if (erRund && d === 0) {
+      ikon = '🎂'; kortKlasse = 'rund idag'; beskrivelse = `Fylder ${alderIAar} år — I dag! 🎉`;
+    } else if (erRund) {
+      ikon = '🎂'; kortKlasse = 'rund'; beskrivelse = `Fylder ${alderIAar} år`;
+    } else if (erKonf && d === 0) {
+      ikon = '✝️'; kortKlasse = 'konf idag'; beskrivelse = `Konfirmationsalder — I dag!`;
+    } else {
+      ikon = '✝️'; kortKlasse = 'konf'; beskrivelse = `Konfirmationsalder (${alderIAar} år)`;
+    }
+    liste.push({navn: p.navn, ikon, kortKlasse, beskrivelse, dage: d,
+      dato: `${p.dag}. ${MAANEDER_KORT[p.mdr-1]}`});
   });
 
   BRYLLUPPER.forEach(b => {
     const d = dageHenTil(b.dag, b.mdr);
-    if (d > 30) return;
-    const badge = brylBadge(b.aar, d===0 ? I_AAR : I_AAR);
-    if (!badge) return;
-    liste.push({dato:`${b.dag}. ${MAANEDER_KORT[b.mdr-1]}`,
-      navn:b.navne, note:'bryllupsdag', badge, dage:d});
+    if (d > 10) return;
+    const nextYear = new Date(I_AAR, b.mdr-1, b.dag) < IDAG ? I_AAR+1 : I_AAR;
+    const gifteAar = nextYear - b.aar;
+    let ikon, kortKlasse, beskrivelse;
+    if (gifteAar === 50) {
+      ikon = '💍'; kortKlasse = 'bryl-guld' + (d===0 ? ' idag' : '');
+      beskrivelse = `Guldbryllup — ${gifteAar} år gift${d===0?' 🎉':''}`;
+    } else if (gifteAar === 25) {
+      ikon = '💍'; kortKlasse = 'bryl-sølv' + (d===0 ? ' idag' : '');
+      beskrivelse = `Sølvbryllup — ${gifteAar} år gift${d===0?' 🎉':''}`;
+    } else return;
+    liste.push({navn: b.navne, ikon, kortKlasse, beskrivelse, dage: d,
+      dato: `${b.dag}. ${MAANEDER_KORT[b.mdr-1]}`});
   });
 
-  liste.sort((a,b) => a.dage - b.dage);
+  if (!liste.length) return; // Intet at vise — boksen forbliver skjult
 
-  const el = document.getElementById('naeste-indhold');
-  if (!liste.length) {
-    el.innerHTML = '<div class="naeste-tom">Ingen særlige mærkedage de næste 30 dage.</div>';
-    return;
-  }
-  let h = '<table class="naeste-tabel"><tbody>';
+  liste.sort((a, b) => a.dage - b.dage);
+
+  const boks = document.getElementById('fest-boks');
+  const fl   = document.getElementById('fest-liste');
+
   liste.forEach(k => {
-    const dagTekst = k.dage===0 ? '<strong>I dag!</strong>' : k.dage===1 ? 'I morgen' : `Om ${k.dage} dage`;
-    h += `<tr class="${k.dage===0?'row-idag':''}">
-      <td class="nt-dato">${k.dato}</td>
-      <td>${k.navn} <span style="font-size:12px;color:var(--tekst-lys)">${k.note}</span> ${k.badge}</td>
-      <td class="nt-dage">${dagTekst}</td>
-    </tr>`;
+    const dagChip = k.dage === 0 ? 'I dag! 🎊'
+                  : k.dage === 1 ? 'I morgen'
+                  : `Om ${k.dage} dage`;
+    const chipKlasse = k.dage === 0 ? 'fest-dage idag-chip' : 'fest-dage';
+
+    const kort = document.createElement('div');
+    kort.className = 'fest-kort ' + k.kortKlasse;
+    kort.innerHTML =
+      `<div class="fest-ikon">${k.ikon}</div>` +
+      `<div class="fest-info">` +
+        `<div class="fest-navn">${k.navn}</div>` +
+        `<div class="fest-beskrivelse">${k.dato} · ${k.beskrivelse}</div>` +
+      `</div>` +
+      `<div class="${chipKlasse}">${dagChip}</div>`;
+    fl.appendChild(kort);
   });
-  h += '</tbody></table>';
-  el.innerHTML = h;
+
+  boks.style.display = 'block';
 })();
 
 // ─── KALENDER MÅNEDER ────────────────────────────────────────────────────────
