@@ -727,11 +727,12 @@ for (let mi = 0; mi < 12; mi++) {
   </div>
 </div>
 
-<!-- ─── FIREBASE + HILSEN-LOGIK ──────────────────────────────────────────── -->
+<!-- ─── FIREBASE + HILSEN-LOGIK (Realtime Database) ──────────────────────── -->
 <script type="module">
-import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, query, where, orderBy, getDocs, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { initializeApp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, get, query, orderByChild }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -739,13 +740,19 @@ const firebaseConfig = {
   projectId: "olsenklanen-familieside",
   storageBucket: "olsenklanen-familieside.firebasestorage.app",
   messagingSenderId: "640843662410",
-  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3",
+  databaseURL: "https://olsenklanen-familieside-default-rtdb.europe-west1.firebasedatabase.app"
 };
 
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
+const app  = initializeApp(firebaseConfig);
+const rtdb = getDatabase(app);
 
 let aktivNoegle = '';
+
+// Laver navnet til en gyldig RTDB-nøgle (ingen punktummer, #, $, /, [ ])
+function tilNoegle(s) {
+  return s.replace(/[.#$\/\[\]]/g, '_');
+}
 
 // ─── Åbn modal ───────────────────────────────────────────────────────────────
 window.aabneHilsenModal = function(noegle) {
@@ -782,35 +789,37 @@ window.tjekKode = function() {
   indlaesHilsener(aktivNoegle);
 };
 
-// ─── Hent hilsener fra Firestore ─────────────────────────────────────────────
+// ─── Hent hilsener fra Realtime Database ─────────────────────────────────────
 async function indlaesHilsener(noegle) {
   const liste = document.getElementById('hilsen-liste');
   liste.innerHTML = '<div class="hilsen-ingen">Henter hilsener…</div>';
   try {
-    const q    = query(collection(db, 'hilsener'), where('tilNoegle','==',noegle), orderBy('tidspunkt','desc'));
-    const snap = await getDocs(q);
+    const snap = await get(ref(rtdb, `hilsener/${tilNoegle(noegle)}`));
     liste.innerHTML = '';
-    if (snap.empty) {
+    if (!snap.exists()) {
       liste.innerHTML = '<div class="hilsen-ingen">Ingen hilsener endnu — vær den første! 🎉</div>';
-    } else {
-      snap.forEach(dok => {
-        const h   = dok.data();
-        const tid = h.tidspunkt?.toDate ? h.tidspunkt.toDate() : null;
-        const el  = document.createElement('div');
-        el.className = 'hilsen-kort';
-        el.innerHTML =
-          `<div class="hilsen-kort-fra">${esc(h.fra)}</div>` +
-          `<div class="hilsen-kort-besked">${esc(h.besked)}</div>` +
-          (tid ? `<div class="hilsen-kort-tid">${formatDato(tid)}</div>` : '');
-        liste.appendChild(el);
-      });
+      return;
     }
+    const entries = [];
+    snap.forEach(child => entries.push(child.val()));
+    entries.sort((a, b) => (b.tidspunkt || 0) - (a.tidspunkt || 0));
+    entries.forEach(h => {
+      const el = document.createElement('div');
+      el.className = 'hilsen-kort';
+      el.innerHTML =
+        `<div class="hilsen-kort-fra">${esc(h.fra)}</div>` +
+        `<div class="hilsen-kort-besked">${esc(h.besked)}</div>` +
+        (h.tidspunkt
+          ? `<div class="hilsen-kort-tid">${formatDato(new Date(h.tidspunkt))}</div>`
+          : '');
+      liste.appendChild(el);
+    });
   } catch(e) {
-    liste.innerHTML = '<div class="hilsen-ingen">Kunne ikke hente hilsener. Prøv igen.</div>';
+    liste.innerHTML = `<div class="hilsen-ingen">Kunne ikke hente hilsener.</div>`;
   }
 }
 
-// ─── Send hilsen til Firestore ────────────────────────────────────────────────
+// ─── Send hilsen til Realtime Database ───────────────────────────────────────
 window.sendHilsen = async function() {
   const fra    = document.getElementById('hilsen-fra-input').value.trim();
   const besked = document.getElementById('hilsen-besked-input').value.trim();
@@ -822,16 +831,13 @@ window.sendHilsen = async function() {
   btn.textContent = 'Sender…';
 
   try {
-    await addDoc(collection(db, 'hilsener'), {
-      til: aktivNoegle, tilNoegle: aktivNoegle,
-      fra, besked,
-      tidspunkt: serverTimestamp()
+    await push(ref(rtdb, `hilsener/${tilNoegle(aktivNoegle)}`), {
+      fra, besked, tidspunkt: Date.now()
     });
     document.getElementById('hilsen-fra-input').value    = '';
     document.getElementById('hilsen-besked-input').value = '';
-    const succes = document.getElementById('hilsen-succes');
-    succes.style.display = 'block';
-    setTimeout(() => succes.style.display = 'none', 3500);
+    document.getElementById('hilsen-succes').style.display = 'block';
+    setTimeout(() => document.getElementById('hilsen-succes').style.display = 'none', 3500);
     await indlaesHilsener(aktivNoegle);
   } catch(e) {
     alert('Fejl ved afsendelse — prøv igen.');

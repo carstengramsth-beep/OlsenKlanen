@@ -11,6 +11,16 @@
         ".write": "auth != null"
       }
     },
+    // Hilsener – alle kan læse og oprette nye (kode-tjek sker i klienten)
+    "hilsener": {
+      "$tilKey": {
+        ".read": true,
+        "$id": {
+          ".write": "!data.exists()",
+          ".validate": "newData.hasChildren(['fra','besked','tidspunkt']) && newData.child('fra').isString() && newData.child('fra').val().length > 0 && newData.child('besked').isString() && newData.child('besked').val().length > 0"
+        }
+      }
+    },
     // Afvis al anden adgang
     "$other": {
       ".read": false,
