@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen — Setup: Brugerroller</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; background: #1a3009; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+  .kort { background: #fefcf8; border-radius: 12px; padding: 2rem; max-width: 520px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+  h1 { font-size: 20px; color: #1a1a0e; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: #666; margin-bottom: 1.5rem; }
+  .bruger-liste { margin-bottom: 1.5rem; }
+  .bruger { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; background: #f5f5f0; border: 1.5px solid #e0ddc8; font-size: 13px; }
+  .bruger .email { font-weight: 500; color: #1a1a0e; }
+  .bruger .rolle { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; }
+  .rolle.admin { background: #b8892a; color: #fff; }
+  .rolle.editor { background: #3a5a2e; color: #fff; }
+  .status { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; }
+  .status.afventer { background: #f5f5f0; color: #888; }
+  .status.ok { background: #e8f5e9; color: #2d6b30; }
+  .status.fejl { background: #fcebeb; color: #a32d2d; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; flex-shrink: 0; }
+  .status.ok .dot { background: #2d6b30; }
+  .status.fejl .dot { background: #a32d2d; }
+  .knap { width: 100%; padding: 12px; font-size: 15px; font-weight: 500; color: #fefcf8; background: #2d5016; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s; margin-top: 0.5rem; }
+  .knap:hover { background: #4a7c2a; }
+  .knap:disabled { background: #ccc; cursor: not-allowed; }
+  #resultat { margin-top: 1rem; padding: 12px; border-radius: 6px; font-size: 13px; display: none; }
+  #resultat.ok { background: #e8f5e9; color: #2d6b30; border-left: 3px solid #2d6b30; }
+  #resultat.fejl { background: #fcebeb; color: #a32d2d; border-left: 3px solid #a32d2d; }
+</style>
+</head>
+<body>
+<div class="kort">
+  <h1>OlsenKlanen — Brugerroller Setup</h1>
+  <p class="sub">Opretter "users"-samlingen i Firestore med roller for alle 5 brugere.</p>
+
+  <div class="bruger-liste">
+    <div class="bruger"><span class="email">cg@gallerieg.dk</span><span class="rolle admin">admin</span></div>
+    <div class="bruger"><span class="email">kurt@vormslev.dk</span><span class="rolle editor">editor</span></div>
+    <div class="bruger"><span class="email">safi@dr.dk</span><span class="rolle editor">editor</span></div>
+    <div class="bruger"><span class="email">tvo@ishoejby.dk</span><span class="rolle editor">editor</span></div>
+    <div class="bruger"><span class="email">kld@inmobia.com</span><span class="rolle editor">editor</span></div>
+  </div>
+
+  <div id="status-liste"></div>
+
+  <button class="knap" id="start-knap" onclick="kørSetup()">Start setup</button>
+  <div id="resultat"></div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+    authDomain: "olsenklanen-familieside.firebaseapp.com",
+    projectId: "olsenklanen-familieside",
+    storageBucket: "olsenklanen-familieside.firebasestorage.app",
+    messagingSenderId: "640843662410",
+    appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const brugere = [
+    { email: "cg@gallerieg.dk",   rolle: "admin"  },
+    { email: "kurt@vormslev.dk",  rolle: "editor" },
+    { email: "safi@dr.dk",        rolle: "editor" },
+    { email: "tvo@ishoejby.dk",   rolle: "editor" },
+    { email: "kld@inmobia.com",   rolle: "editor" }
+  ];
+
+  function visStatus(email, type, tekst) {
+    const liste = document.getElementById("status-liste");
+    let el = document.getElementById("s-" + email.replace(/[@.]/g, "_"));
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "s-" + email.replace(/[@.]/g, "_");
+      liste.appendChild(el);
+    }
+    el.className = "status " + type;
+    el.innerHTML = `<span class="dot"></span><span><strong>${email}</strong> — ${tekst}</span>`;
+  }
+
+  window.kørSetup = async function() {
+    const knap = document.getElementById("start-knap");
+    const resultat = document.getElementById("resultat");
+    knap.disabled = true;
+    knap.textContent = "Arbejder...";
+    resultat.style.display = "none";
+
+    brugere.forEach(b => visStatus(b.email, "afventer", "Afventer..."));
+
+    try {
+      await signInWithEmailAndPassword(auth, "cg@gallerieg.dk", "Olsen26");
+    } catch (e) {
+      resultat.textContent = "Login mislykkedes: " + e.message;
+      resultat.className = "fejl";
+      resultat.style.display = "block";
+      knap.disabled = false;
+      knap.textContent = "Prøv igen";
+      return;
+    }
+
+    let fejl = 0;
+    for (const b of brugere) {
+      try {
+        await setDoc(doc(db, "users", b.email), {
+          email: b.email,
+          rolle: b.rolle,
+          oprettet: serverTimestamp()
+        });
+        visStatus(b.email, "ok", "Oprettet (" + b.rolle + ")");
+      } catch (e) {
+        visStatus(b.email, "fejl", "Fejl: " + e.message);
+        fejl++;
+      }
+    }
+
+    if (fejl === 0) {
+      resultat.textContent = "Alle 5 brugere er oprettet i Firestore-samlingen \"users\". Du kan nu slette denne fil.";
+      resultat.className = "ok";
+    } else {
+      resultat.textContent = fejl + " bruger(e) mislykkedes. Tjek Firestore-regler eller netværksforbindelsen.";
+      resultat.className = "fejl";
+    }
+    resultat.style.display = "block";
+    knap.textContent = "Færdig";
+  };
+</script>
+</body>
+</html>

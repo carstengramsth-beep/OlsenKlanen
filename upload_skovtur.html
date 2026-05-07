@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen — Upload Skovtur 2025</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:system-ui,sans-serif;background:#1a3009;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1rem;}
+  .kort{background:#fefcf8;border-radius:12px;padding:2rem;max-width:560px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
+  h1{font-size:20px;color:#1a1a0e;margin-bottom:4px;}
+  .sub{font-size:13px;color:#666;margin-bottom:1.5rem;line-height:1.6;}
+  .trin{background:#f5f5f0;border:1.5px solid #e0ddc8;border-radius:8px;padding:1rem 1.25rem;margin-bottom:1rem;}
+  .trin-nr{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#b8892a;margin-bottom:4px;}
+  .trin h3{font-size:14px;color:#1a1a0e;margin-bottom:8px;}
+  .fil-række{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .fil-label{font-size:12px;font-weight:500;color:#4a4a35;width:140px;flex-shrink:0;}
+  .fil-input{flex:1;font-size:12px;padding:6px 10px;border:1.5px solid #d4c9a0;border-radius:5px;background:#fff;color:#1a1a0e;}
+  .fil-status{width:18px;height:18px;border-radius:50%;background:#e0ddc8;flex-shrink:0;}
+  .fil-status.ok{background:#2d6b30;}
+  .fil-status.fejl{background:#a32d2d;}
+  .fil-status.loading{background:#b8892a;animation:puls 1s infinite;}
+  @keyframes puls{0%,100%{opacity:1}50%{opacity:0.4}}
+  .knap{width:100%;padding:12px;font-size:15px;font-weight:500;color:#fefcf8;background:#2d5016;border:none;border-radius:6px;cursor:pointer;transition:background 0.2s;margin-top:0.5rem;}
+  .knap:hover:not(:disabled){background:#4a7c2a}
+  .knap:disabled{background:#ccc;cursor:not-allowed}
+  #resultat{margin-top:1rem;padding:12px 14px;border-radius:6px;font-size:13px;line-height:1.6;display:none;}
+  #resultat.ok{background:#e8f5e9;color:#2d6b30;border-left:3px solid #2d6b30;}
+  #resultat.fejl{background:#fcebeb;color:#a32d2d;border-left:3px solid #a32d2d;}
+  .advarsel{background:#fff8e1;border-left:3px solid #b8892a;padding:10px 14px;border-radius:0 6px 6px 0;font-size:12px;color:#4a4a35;line-height:1.6;margin-bottom:1rem;}
+  a{color:#2d5016;}
+</style>
+</head>
+<body>
+<div class="kort">
+  <h1>Upload Skovtur 2025 — Haderslev</h1>
+  <p class="sub">Uploader de 4 billeder til Firebase Storage og aktiverer galleriet på forsiden.</p>
+
+  <div class="advarsel">
+    <strong>Forudsætning:</strong> Firebase Storage skal være aktiveret.<br>
+    Gå til <a href="https://console.firebase.google.com/project/olsenklanen-familieside/storage" target="_blank">console.firebase.google.com → Storage</a> og klik "Kom godt i gang" hvis det ikke allerede er gjort.<br>
+    Vælg <strong>Test-tilstand</strong> (kan låses ned bagefter) og vælg <strong>europe-west1</strong> som placering.
+  </div>
+
+  <div class="trin">
+    <div class="trin-nr">Trin 1 — Vælg billederne</div>
+    <h3>Vælg de 4 skovturbilleder fra din Downloads-mappe</h3>
+    <div class="fil-række">
+      <span class="fil-label">IMG_4390.JPEG (hoved)</span>
+      <input class="fil-input" type="file" id="f0" accept="image/*">
+      <span class="fil-status" id="s0"></span>
+    </div>
+    <div class="fil-række">
+      <span class="fil-label">IMG_4405.JPEG</span>
+      <input class="fil-input" type="file" id="f1" accept="image/*">
+      <span class="fil-status" id="s1"></span>
+    </div>
+    <div class="fil-række">
+      <span class="fil-label">IMG_4336.JPEG</span>
+      <input class="fil-input" type="file" id="f2" accept="image/*">
+      <span class="fil-status" id="s2"></span>
+    </div>
+    <div class="fil-række">
+      <span class="fil-label">IMG_4395.JPEG</span>
+      <input class="fil-input" type="file" id="f3" accept="image/*">
+      <span class="fil-status" id="s3"></span>
+    </div>
+  </div>
+
+  <button class="knap" id="upload-knap" onclick="startUpload()">Upload til Firebase Storage</button>
+  <div id="resultat"></div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+    authDomain: "olsenklanen-familieside.firebaseapp.com",
+    projectId: "olsenklanen-familieside",
+    storageBucket: "olsenklanen-familieside.firebasestorage.app",
+    messagingSenderId: "640843662410",
+    appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const storage = getStorage(app);
+
+  const navne = ["IMG_4390.JPEG","IMG_4405.JPEG","IMG_4336.JPEG","IMG_4395.JPEG"];
+
+  window.startUpload = async function() {
+    const knap = document.getElementById("upload-knap");
+    const resultat = document.getElementById("resultat");
+    knap.disabled = true;
+    knap.textContent = "Logger ind...";
+    resultat.style.display = "none";
+
+    // Tjek at alle filer er valgt
+    for (let i = 0; i < 4; i++) {
+      if (!document.getElementById("f" + i).files[0]) {
+        resultat.textContent = "Vælg alle 4 billeder først.";
+        resultat.className = "fejl";
+        resultat.style.display = "block";
+        knap.disabled = false;
+        knap.textContent = "Upload til Firebase Storage";
+        return;
+      }
+    }
+
+    // Login
+    try {
+      await signInWithEmailAndPassword(auth, "cg@gallerieg.dk", "Olsen26");
+    } catch (e) {
+      resultat.textContent = "Login fejlede: " + e.message;
+      resultat.className = "fejl";
+      resultat.style.display = "block";
+      knap.disabled = false;
+      knap.textContent = "Prøv igen";
+      return;
+    }
+
+    knap.textContent = "Uploader...";
+    const urls = {};
+    let fejl = 0;
+
+    for (let i = 0; i < 4; i++) {
+      const statusEl = document.getElementById("s" + i);
+      statusEl.className = "fil-status loading";
+      const fil = document.getElementById("f" + i).files[0];
+      const navn = navne[i];
+      try {
+        const storageRef = ref(storage, "skovtur-2025/" + navn);
+        const snap = await uploadBytes(storageRef, fil, { contentType: "image/jpeg" });
+        const url = await getDownloadURL(snap.ref);
+        urls[navn] = url;
+        statusEl.className = "fil-status ok";
+      } catch (e) {
+        statusEl.className = "fil-status fejl";
+        fejl++;
+        console.error(navn, e);
+      }
+    }
+
+    if (fejl === 0) {
+      resultat.innerHTML = "<strong>Alle 4 billeder uploadet!</strong><br>Galleriet er nu aktivt på forsiden (index.html).<br>Du kan slette denne fil.";
+      resultat.className = "ok";
+    } else {
+      resultat.innerHTML = "<strong>" + fejl + " billede(r) fejlede.</strong><br>Tjek at Firebase Storage er aktiveret og prøv igen.";
+      resultat.className = "fejl";
+    }
+    resultat.style.display = "block";
+    knap.textContent = "Færdig";
+  };
+</script>
+</body>
+</html>
