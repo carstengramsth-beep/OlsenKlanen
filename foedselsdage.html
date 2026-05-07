@@ -453,28 +453,28 @@ document.getElementById('footer-tekst').textContent =
 })();
 
 // ─── KALENDER MÅNEDER ────────────────────────────────────────────────────────
-const kal = document.getElementById('kalender');
+let kalHTML = '';
 
 for (let m = 1; m <= 12; m++) {
-  const folk = FOEDSLER.filter(p => p.mdr===m);
-  const bryl = BRYLLUPPER.filter(b => b.mdr===m);
+  const folk = FOEDSLER.filter(p => p.mdr === m);
+  const bryl = BRYLLUPPER.filter(b => b.mdr === m);
   if (!folk.length && !bryl.length) continue;
 
-  // Byg én samlet liste og sortér efter dag
+  // Saml alle rækker for måneden og sortér efter dag
   const raekker = [];
 
   folk.forEach(p => {
-    const erI    = erFodselsdagIdag(p.dag, p.mdr);
-    const alder  = alderPrIdag(p.dag, p.mdr, p.aar);
+    const erI   = erFodselsdagIdag(p.dag, p.mdr);
+    const alder = alderPrIdag(p.dag, p.mdr, p.aar);
     raekker.push({
       dag: p.dag,
       html: `<tr>
-      <td class="col-dato">${p.dag}. ${MAANEDER_KORT[m-1]}</td>
-      <td class="col-navn">${p.navn}</td>
-      <td class="col-alder"${erI?' class="alder-idag"':''}>${alder >= 0 ? alder : '—'}</td>
-      <td class="col-iaar">${foedselsBadge(p.aar, I_AAR)}</td>
-      <td class="col-naeste">${foedselsBadge(p.aar, NAESTE)}</td>
-    </tr>`
+        <td class="col-dato">${p.dag}. ${MAANEDER_KORT[m-1]}</td>
+        <td class="col-navn">${p.navn}</td>
+        <td class="col-alder"${erI ? ' class="alder-idag"' : ''}>${alder >= 0 ? alder : '—'}</td>
+        <td class="col-iaar">${foedselsBadge(p.aar, I_AAR)}</td>
+        <td class="col-naeste">${foedselsBadge(p.aar, NAESTE)}</td>
+      </tr>`
     });
   });
 
@@ -485,36 +485,37 @@ for (let m = 1; m <= 12; m++) {
     raekker.push({
       dag: b.dag,
       html: `<tr>
-      <td class="col-dato">${b.dag}. ${MAANEDER_KORT[m-1]}</td>
-      <td class="col-navn">${b.navne}</td>
-      <td class="col-alder">—</td>
-      <td class="col-iaar">${ib}</td>
-      <td class="col-naeste">${nb}</td>
-    </tr>`
+        <td class="col-dato">${b.dag}. ${MAANEDER_KORT[m-1]}</td>
+        <td class="col-navn">${b.navne}</td>
+        <td class="col-alder">—</td>
+        <td class="col-iaar">${ib}</td>
+        <td class="col-naeste">${nb}</td>
+      </tr>`
     });
   });
 
   raekker.sort((a, b) => a.dag - b.dag);
-  const rows = raekker.map(r => r.html).join('');
 
-  kal.innerHTML += `
-    <div class="maaned-blok">
-      <div class="maaned-header">
-        ${MAANEDER[m-1]}
-        <span class="maaned-antal">${folk.length} person${folk.length===1?'':'er'}</span>
-      </div>
-      <table class="tabel">
-        <thead><tr>
-          <th class="col-dato">Dato</th>
-          <th>Navn</th>
-          <th class="col-alder center">Alder</th>
-          <th class="col-iaar center">Mærkedag ${I_AAR}</th>
-          <th class="col-naeste center">Mærkedag ${NAESTE}</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
+  kalHTML += `<div class="maaned-blok">
+    <div class="maaned-header">
+      ${MAANEDER[m-1]}
+      <span class="maaned-antal">${folk.length} person${folk.length === 1 ? '' : 'er'}</span>
+    </div>
+    <table class="tabel">
+      <thead><tr>
+        <th class="col-dato">Dato</th>
+        <th>Navn</th>
+        <th class="col-alder center">Alder</th>
+        <th class="col-iaar center">Mærkedag ${I_AAR}</th>
+        <th class="col-naeste center">Mærkedag ${NAESTE}</th>
+      </tr></thead>
+      <tbody>${raekker.map(r => r.html).join('')}</tbody>
+    </table>
+  </div>`;
 }
+
+// Sæt alt HTML på én gang — undgår browser-omordning ved gentagne innerHTML +=
+document.getElementById('kalender').innerHTML = kalHTML;
 </script>
 </body>
 </html>
