@@ -371,9 +371,10 @@ function erFodselsdagIdag(dag, mdr) {
 }
 
 function alderPrIdag(dag, mdr, fodselsaar) {
-  let a = I_AAR - fodselsaar;
-  if ((IDAG.getMonth()+1) < mdr || ((IDAG.getMonth()+1)===mdr && IDAG.getDate()<dag)) a--;
-  return a;
+  // Nuværende år minus fødselsår, minus 1 hvis fødselsdagen endnu ikke er nået i år
+  const fødselsdagNået = (IDAG.getMonth()+1) > mdr ||
+    ((IDAG.getMonth()+1) === mdr && IDAG.getDate() >= dag);
+  return I_AAR - fodselsaar - (fødselsdagNået ? 0 : 1);
 }
 
 function dageHenTil(dag, mdr) {
@@ -413,9 +414,10 @@ document.getElementById('footer-tekst').textContent =
   FOEDSLER.forEach(p => {
     const d = dageHenTil(p.dag, p.mdr);
     if (d > 30) return;
-    const fylder = (d === 0 ? I_AAR : I_AAR + 1) - p.aar;
-    let badge = foedselsBadge(p.aar, d === 0 ? I_AAR : I_AAR);
-    // Vis hvad de fylder uanset om det er rundt
+    // Hvilket år falder næste fødselsdag? (i år hvis ikke passeret, ellers næste år)
+    const nextYear = new Date(I_AAR, p.mdr-1, p.dag) < IDAG ? I_AAR+1 : I_AAR;
+    const fylder = nextYear - p.aar;
+    const badge = foedselsBadge(p.aar, nextYear);
     const alderTekst = `fylder ${fylder} år`;
     liste.push({
       dato:`${p.dag}. ${MAANEDER_KORT[p.mdr-1]}`,
@@ -475,7 +477,7 @@ for (let m = 1; m <= 12; m++) {
       html: `<tr>
         <td class="col-dato">${p.dag}. ${MAANEDER_KORT[m-1]} ${p.aar}</td>
         <td class="col-navn">${p.navn}</td>
-        <td class="col-alder"${erI ? ' class="alder-idag"' : ''}>${alder >= 0 ? alder : '—'}</td>
+        <td class="${erI ? 'col-alder alder-idag' : 'col-alder'}">${alder >= 0 ? alder : '—'}</td>
         <td class="col-iaar">${foedselsBadge(p.aar, I_AAR)}</td>
         <td class="col-naeste">${foedselsBadge(p.aar, NAESTE)}</td>
       </tr>`
