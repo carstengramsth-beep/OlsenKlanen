@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen — Fødselsdagskalender</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --mos:        #3a5a2e;
+  --mos-mork:   #243b1c;
+  --mos-lys:    #5a7f4a;
+  --guld:       #b8892a;
+  --guld-lys:   #d4a84b;
+  --guld-pale:  #f5e9cc;
+  --creme:      #faf6ee;
+  --creme-mork: #f0e8d8;
+  --tekst:      #2a2015;
+  --tekst-mid:  #5a4f3a;
+  --tekst-lys:  #8a7d65;
+  --hvid:       #fffdf8;
+  --rund-bg:    #e8f4e0;
+  --rund-kant:  #4a7c2a;
+  --rund-tekst: #2d5016;
+  --idag-bg:    #fff4cc;
+  --idag-kant:  #c8952a;
+}
+
+html { scroll-behavior: smooth; }
+body { font-family: 'Jost', sans-serif; background: var(--creme-mork); color: var(--tekst); line-height: 1.6; }
+
+/* ─── NAVIGATION ─── */
+nav {
+  background: var(--mos-mork);
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+}
+.nav-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; height: 58px;
+}
+.nav-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; font-weight: 600;
+  color: var(--guld-lys); text-decoration: none; letter-spacing: 0.5px;
+}
+.nav-links { display: flex; gap: 1.5rem; }
+.nav-links a {
+  color: rgba(255,255,255,0.7); text-decoration: none;
+  font-size: 13px; font-weight: 400; letter-spacing: 0.5px;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--guld-lys); }
+
+/* ─── HERO ─── */
+.hero {
+  background: linear-gradient(135deg, var(--mos-mork) 0%, var(--mos) 100%);
+  padding: 4rem 2rem 3rem; text-align: center;
+}
+.hero-over {
+  font-size: 11px; font-weight: 500; letter-spacing: 4px;
+  text-transform: uppercase; color: var(--guld-lys);
+  margin-bottom: 1rem;
+}
+.hero-titel {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(38px, 6vw, 64px); font-weight: 300;
+  color: var(--hvid); line-height: 1.1;
+  margin-bottom: 0.75rem;
+}
+.hero-sub {
+  font-size: 15px; color: rgba(255,255,255,0.6);
+  font-weight: 300;
+}
+.hero-streg { width: 50px; height: 2px; background: var(--guld); margin: 1.5rem auto 0; border-radius: 2px; }
+
+/* ─── INDHOLD ─── */
+.indhold { max-width: 1100px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+/* ─── NÆSTE PANEL ─── */
+.naeste-panel {
+  background: var(--hvid);
+  border-radius: 14px;
+  border: 1px solid rgba(184,137,42,0.25);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  padding: 1.75rem 2rem;
+  margin-bottom: 2.5rem;
+}
+.panel-overskrift {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px; font-weight: 600;
+  color: var(--mos-mork); margin-bottom: 1.25rem;
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.panel-overskrift span { font-size: 22px; }
+.naeste-liste { display: flex; flex-direction: column; gap: 0.6rem; }
+.naeste-item {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 0.65rem 1rem; border-radius: 8px;
+  background: var(--creme); transition: background 0.15s;
+}
+.naeste-item.idag { background: var(--idag-bg); border-left: 3px solid var(--idag-kant); }
+.naeste-item.rund-fods { background: var(--rund-bg); border-left: 3px solid var(--rund-kant); }
+.naeste-dato-boks {
+  min-width: 52px; text-align: center;
+  background: var(--mos); border-radius: 8px;
+  padding: 0.35rem 0.5rem;
+}
+.naeste-dato-dag { font-size: 20px; font-weight: 600; color: var(--hvid); line-height: 1; }
+.naeste-dato-mdr { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--guld-lys); }
+.naeste-info { flex: 1; }
+.naeste-navn { font-size: 15px; font-weight: 500; color: var(--tekst); }
+.naeste-alder { font-size: 12px; color: var(--tekst-mid); }
+.naeste-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+/* ─── LEGENDE ─── */
+.legende {
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+  margin-bottom: 2rem; padding: 1rem 1.25rem;
+  background: var(--hvid); border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+.legende-item { display: flex; align-items: center; gap: 0.5rem; font-size: 13px; color: var(--tekst-mid); }
+.legende-farve {
+  width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0;
+}
+
+/* ─── MÅNEDS-SEKTIONER ─── */
+.maaned-sektion { margin-bottom: 2.5rem; }
+.maaned-header {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px; font-weight: 400; color: var(--mos-mork);
+  border-bottom: 2px solid var(--guld);
+  padding-bottom: 0.4rem; margin-bottom: 1rem;
+  display: flex; align-items: baseline; gap: 0.75rem;
+}
+.maaned-antal { font-size: 13px; color: var(--tekst-lys); font-family: 'Jost', sans-serif; font-weight: 300; }
+
+.person-gitter {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.6rem;
+}
+
+.person-kort {
+  background: var(--hvid);
+  border-radius: 10px; border: 1px solid rgba(0,0,0,0.08);
+  padding: 0.75rem 1rem;
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  transition: box-shadow 0.15s, transform 0.15s;
+  position: relative;
+}
+.person-kort:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); transform: translateY(-1px); }
+
+.person-kort.rund {
+  background: var(--rund-bg);
+  border-color: var(--rund-kant);
+}
+.person-kort.idag-foeds {
+  background: var(--idag-bg);
+  border-color: var(--idag-kant);
+  border-width: 2px;
+}
+
+.dato-boble {
+  min-width: 42px; text-align: center;
+  background: var(--mos); border-radius: 8px;
+  padding: 0.3rem 0.4rem; flex-shrink: 0;
+}
+.dato-boble-dag { font-size: 18px; font-weight: 600; color: var(--hvid); line-height: 1; }
+.dato-boble-mdr { font-size: 8px; text-transform: uppercase; letter-spacing: 1px; color: var(--guld-lys); }
+
+.person-kort.rund .dato-boble { background: var(--rund-kant); }
+.person-kort.idag-foeds .dato-boble { background: var(--idag-kant); }
+
+.person-info { flex: 1; min-width: 0; }
+.person-navn { font-size: 14px; font-weight: 500; color: var(--tekst); line-height: 1.3; word-wrap: break-word; }
+.person-detaljer { font-size: 12px; color: var(--tekst-mid); margin-top: 2px; }
+.person-badges { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-top: 4px; }
+
+/* ─── BADGES ─── */
+.badge {
+  font-size: 10px; font-weight: 600;
+  padding: 2px 7px; border-radius: 20px;
+  letter-spacing: 0.3px; white-space: nowrap;
+}
+.badge-rund { background: var(--rund-kant); color: white; }
+.badge-idag { background: var(--idag-kant); color: white; }
+.badge-snart { background: var(--guld); color: white; }
+
+/* ─── STATISTIK ─── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem; margin-bottom: 2.5rem;
+}
+.stat-kort {
+  background: var(--hvid); border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 1.25rem 1rem; text-align: center;
+}
+.stat-tal { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 400; color: var(--mos); line-height: 1; }
+.stat-label { font-size: 12px; color: var(--tekst-mid); margin-top: 4px; }
+
+/* ─── FOOTER ─── */
+footer {
+  background: var(--mos-mork); text-align: center;
+  padding: 1.5rem; color: rgba(255,255,255,0.4);
+  font-size: 12px;
+}
+
+/* ─── MOBIL ─── */
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .hero { padding: 2.5rem 1rem 2rem; }
+  .indhold { padding: 1.5rem 1rem 3rem; }
+  .naeste-panel { padding: 1.25rem 1rem; }
+  .person-gitter { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .legende { gap: 0.75rem; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 400px) {
+  .person-gitter { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">OlsenKlanen</a>
+    <div class="nav-links">
+      <a href="index.html">Forside</a>
+      <a href="skovtur2025.html">Skovtur 2025</a>
+      <a href="foedselsdage.html" style="color:var(--guld-lys)">Fødselsdage</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-over">OlsenKlanen</div>
+  <h1 class="hero-titel">Fødselsdagskalender</h1>
+  <p class="hero-sub" id="hero-aar"></p>
+  <div class="hero-streg"></div>
+</div>
+
+<div class="indhold">
+
+  <!-- STATISTIK -->
+  <div class="stat-grid" id="stat-grid"></div>
+
+  <!-- NÆSTE FØDSELSDAGE -->
+  <div class="naeste-panel">
+    <div class="panel-overskrift"><span>🎂</span> Næste fødselsdage</div>
+    <div class="naeste-liste" id="naeste-liste"></div>
+  </div>
+
+  <!-- LEGENDE -->
+  <div class="legende">
+    <div class="legende-item">
+      <div class="legende-farve" style="background:var(--rund-kant)"></div>
+      Rund fødselsdag (50, 60, 70, 75, 80, 85 eller 90 år)
+    </div>
+    <div class="legende-item">
+      <div class="legende-farve" style="background:var(--idag-kant)"></div>
+      Fødselsdag i dag
+    </div>
+    <div class="legende-item">
+      <div class="legende-farve" style="background:var(--guld)"></div>
+      Fødselsdag inden for 14 dage
+    </div>
+  </div>
+
+  <!-- MÅNEDER -->
+  <div id="maaneder-container"></div>
+
+</div>
+
+<footer id="footer-tekst"></footer>
+
+<script>
+const MAANEDER = ['Januar','Februar','Marts','April','Maj','Juni','Juli','August','September','Oktober','November','December'];
+const MAANEDER_KORT = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+const RUNDE_ALDRE = [50, 60, 70, 75, 80, 85, 90];
+
+const FAMILIE = [
+  // JANUAR
+  { navn:"Trine Gram",                        dag:6,  mdr:1,  aar:1980 },
+  { navn:"Elisabeth Helene Gram",             dag:11, mdr:1,  aar:1948 },
+  { navn:"Kasper Vormslev Olsen",             dag:12, mdr:1,  aar:1972 },
+  { navn:"Emeli Vormslev Frøling Pedersen",   dag:18, mdr:1,  aar:2009 },
+  { navn:"Sigurd Præstegaard Olsen",          dag:20, mdr:1,  aar:2016 },
+  { navn:"Jette Carlberg Olsen",              dag:21, mdr:1,  aar:1963 },
+  { navn:"Michael Vormslev Baldersø",         dag:23, mdr:1,  aar:1985 },
+  { navn:"Matilde Amalie Nonboe Nielsen",     dag:26, mdr:1,  aar:1991 },
+  { navn:"Paulina Schmidt",                   dag:28, mdr:1,  aar:1993 },
+  // FEBRUAR
+  { navn:"Filip Lund",                        dag:1,  mdr:2,  aar:2016 },
+  { navn:"Flemming Lund",                     dag:1,  mdr:2,  aar:1972 },
+  { navn:"Jannik Vormslev Rümenapp",          dag:4,  mdr:2,  aar:2003 },
+  { navn:"Noelia Vormslev Buch",              dag:6,  mdr:2,  aar:2021 },
+  { navn:"Kim Kanstrup",                      dag:6,  mdr:2,  aar:1974 },
+  { navn:"Bettina Beknow",                    dag:7,  mdr:2,  aar:1964 },
+  { navn:"Ria Østerlund Lund",                dag:7,  mdr:2,  aar:1980 },
+  { navn:"Louise Majgaard Olsen",             dag:8,  mdr:2,  aar:1995 },
+  { navn:"Jens Gram Pedersen",                dag:8,  mdr:2,  aar:1984 },
+  { navn:"Rikke Vormslev Tingberg",           dag:9,  mdr:2,  aar:1979 },
+  { navn:"Elliot Schmidt Baldersø",           dag:12, mdr:2,  aar:2022 },
+  { navn:"Noa Bierbaum Mikkelsen",            dag:13, mdr:2,  aar:2012 },
+  { navn:"Bent Rasmussen",                    dag:15, mdr:2,  aar:1945 },
+  { navn:"Elsebeth Rasmussen",                dag:18, mdr:2,  aar:1948 },
+  { navn:"Simon Peter Hansen",                dag:23, mdr:2,  aar:1984 },
+  { navn:"Lyda Vormslev Bidstrup",            dag:27, mdr:2,  aar:2010 },
+  // MARTS
+  { navn:"Jytte Vormslev Tingberg",           dag:1,  mdr:3,  aar:1951 },
+  { navn:"Nina Vormslev Lennert",             dag:4,  mdr:3,  aar:1958 },
+  { navn:"Nano Fadel",                        dag:6,  mdr:3,  aar:1974 },
+  { navn:"Dicte Vormslev Kanstrup",           dag:12, mdr:3,  aar:2001 },
+  { navn:"Emma Gram Fadel",                   dag:15, mdr:3,  aar:2012 },
+  { navn:"Mikkel Engelmand Olsen",            dag:17, mdr:3,  aar:2010 },
+  { navn:"Lina Edel Engelmand Olsen",         dag:21, mdr:3,  aar:2013 },
+  { navn:"Rasmus Billstrøm",                  dag:27, mdr:3,  aar:1995 },
+  { navn:"Milla Vormslev Brendstrup",         dag:27, mdr:3,  aar:2013 },
+  { navn:"Bent Vormslev Westergaard-Hansen",  dag:30, mdr:3,  aar:1955 },
+  // APRIL
+  { navn:"Jesper Olesen",                     dag:1,  mdr:4,  aar:1985 },
+  { navn:"Norr Lund Olsen",                   dag:1,  mdr:4,  aar:2018 },
+  { navn:"Carl-Kristian Blankenberg Gram",    dag:2,  mdr:4,  aar:2007 },
+  { navn:"Oscar Carlo Lund",                  dag:2,  mdr:4,  aar:2008 },
+  { navn:"Jesper Hedegaard Petersen",         dag:8,  mdr:4,  aar:1975 },
+  { navn:"Jannie Vormslev Rumenapp",          dag:11, mdr:4,  aar:1995 },
+  { navn:"Alexandra Sofia Lund",              dag:12, mdr:4,  aar:2014 },
+  { navn:"Martin Majgaard Olsen",             dag:12, mdr:4,  aar:1989 },
+  { navn:"Jacob Præstegård Olsen",            dag:13, mdr:4,  aar:1982 },
+  { navn:"Frederik Lund",                     dag:14, mdr:4,  aar:2007 },
+  { navn:"Asta-Elisabeth Blankenberg Gram",   dag:14, mdr:4,  aar:2010 },
+  { navn:"Lars Albjerg Olsen",                dag:17, mdr:4,  aar:1966 },
+  { navn:"Iben Carlberg Olsen",               dag:20, mdr:4,  aar:1985 },
+  { navn:"Anne Marie Lund",                   dag:21, mdr:4,  aar:1993 },
+  { navn:"Astrid Vormslev Kanstrup",          dag:23, mdr:4,  aar:2007 },
+  { navn:"Steen Vormslev Olsen",              dag:26, mdr:4,  aar:1961 },
+  { navn:"Vigga Vormslev Bidstrup",           dag:28, mdr:4,  aar:2007 },
+  // MAJ
+  { navn:"Diana Lund",                        dag:1,  mdr:5,  aar:1992 },
+  { navn:"Katja Vormslev Kanstrup",           dag:6,  mdr:5,  aar:1975 },
+  { navn:"Morten Præstegård Olsen",           dag:7,  mdr:5,  aar:1991 },
+  { navn:"Birthe Schøne",                     dag:11, mdr:5,  aar:1941 },
+  { navn:"Line Bekow",                        dag:14, mdr:5,  aar:1992 },
+  { navn:"Tina Ki Bok Blankenberg Gram",      dag:16, mdr:5,  aar:1972 },
+  { navn:"Lærke Aarup Pedersen",              dag:22, mdr:5,  aar:1982 },
+  { navn:"Svend Vormslev Olsen",              dag:23, mdr:5,  aar:1963 },
+  { navn:"Lotte Vormslev Lennert",            dag:24, mdr:5,  aar:1987 },
+  { navn:"Kristine Vormslev Hernvig",         dag:26, mdr:5,  aar:1981 },
+  { navn:"Nicki Benjamin Buch",               dag:27, mdr:5,  aar:1993 },
+  { navn:"Stefan Vormslev Olsen",             dag:27, mdr:5,  aar:1973 },
+  { navn:"Morten Erik Vormslev Baldersø",     dag:29, mdr:5,  aar:1991 },
+  // JUNI
+  { navn:"Anne Mette Jensen",                 dag:1,  mdr:6,  aar:1979 },
+  { navn:"Gitte Vormslev Baldersø",           dag:2,  mdr:6,  aar:1962 },
+  { navn:"Mette Westergaard-Hansen",          dag:5,  mdr:6,  aar:1989 },
+  { navn:"Axel Ebbe Carlberg Hansen",         dag:6,  mdr:6,  aar:2022 },
+  { navn:"Birgit Westergaard-Hansen",         dag:9,  mdr:6,  aar:1958 },
+  { navn:"Bertram Vormslev Kanstrup",         dag:11, mdr:6,  aar:2003 },
+  { navn:"Thera Gram Ottesen",                dag:12, mdr:6,  aar:1998 },
+  { navn:"Eline My Nonboe Baldersø",          dag:22, mdr:6,  aar:2017 },
+  { navn:"Mille Olesen",                      dag:24, mdr:6,  aar:2013 },
+  { navn:"Jytte Olsen",                       dag:26, mdr:6,  aar:1948 },
+  { navn:"Benjamin Bidstrup",                 dag:27, mdr:6,  aar:1973 },
+  { navn:"Kurt Vormslev Olsen",               dag:28, mdr:6,  aar:1948 },
+  // JULI
+  { navn:"Esther Betty Gram",                 dag:5,  mdr:7,  aar:2018 },
+  { navn:"Fria Lund Olsen",                   dag:12, mdr:7,  aar:2019 },
+  { navn:"Luna Marie Bierbaum",               dag:12, mdr:7,  aar:2019 },
+  { navn:"Laura Albjerg Beknow",              dag:13, mdr:7,  aar:2000 },
+  { navn:"Jesper Majgaard Olsen",             dag:14, mdr:7,  aar:1991 },
+  { navn:"Milia Vormslev Hernvig",            dag:14, mdr:7,  aar:2009 },
+  { navn:"Rene Gram",                         dag:21, mdr:7,  aar:1972 },
+  { navn:"Gunner Carlberg",                   dag:24, mdr:7,  aar:1941 },
+  // AUGUST
+  { navn:"Martin Vormslev Baldersø",          dag:13, mdr:8,  aar:1987 },
+  { navn:"Malte Christian Bierbaum",          dag:14, mdr:8,  aar:2014 },
+  { navn:"Christian Vormslev Olsen",          dag:16, mdr:8,  aar:1941 },
+  { navn:"Lise Majgaard Olsen",               dag:22, mdr:8,  aar:1964 },
+  { navn:"Mads Olesen",                       dag:25, mdr:8,  aar:2016 },
+  // SEPTEMBER
+  { navn:"Tine Carlberg Olsen",               dag:2,  mdr:9,  aar:1988 },
+  { navn:"Tricia V. Hernvig",                 dag:2,  mdr:9,  aar:2005 },
+  { navn:"Svend August Lund",                 dag:3,  mdr:9,  aar:2016 },
+  { navn:"Marie Olesen",                      dag:9,  mdr:9,  aar:2019 },
+  { navn:"Per Albjerg Beknow",                dag:10, mdr:9,  aar:1963 },
+  { navn:"Karin Gram Lund",                   dag:11, mdr:9,  aar:1946 },
+  { navn:"Mette Holmgaard",                   dag:12, mdr:9,  aar:1971 },
+  { navn:"Carsten Gram",                      dag:15, mdr:9,  aar:1952 },
+  { navn:"Jan Nielsen",                       dag:21, mdr:9,  aar:1956 },
+  { navn:"Charles Aarup Pedersen",            dag:25, mdr:9,  aar:1946 },
+  { navn:"Lise Vormslev Olsen",               dag:30, mdr:9,  aar:1937 },
+  // OKTOBER
+  { navn:"Sanne Gram Fadel",                  dag:2,  mdr:10, aar:1975 },
+  { navn:"Lene Vormslev Hansen",              dag:6,  mdr:10, aar:1964 },
+  { navn:"Anders Bierbaum",                   dag:12, mdr:10, aar:1982 },
+  { navn:"Lili Carlberg",                     dag:14, mdr:10, aar:1942 },
+  { navn:"Alba Hernandez Lund",               dag:18, mdr:10, aar:1979 },
+  { navn:"Jens Vormslev Lennert",             dag:19, mdr:10, aar:1995 },
+  // NOVEMBER
+  { navn:"Kenneth Lund",                      dag:5,  mdr:11, aar:1974 },
+  { navn:"Elinor Luna Nonboe Baldersø",       dag:8,  mdr:11, aar:2022 },
+  { navn:"Christina Olesen",                  dag:18, mdr:11, aar:1986 },
+  { navn:"Amalia Sofia Lund",                 dag:23, mdr:11, aar:2004 },
+  { navn:"Tom Petersen",                      dag:25, mdr:11, aar:1963 },
+  { navn:"Richard Lund",                      dag:26, mdr:11, aar:1943 },
+  { navn:"Mads Emil Lund",                    dag:26, mdr:11, aar:2010 },
+  // DECEMBER
+  { navn:"Anja Vormslev Olsen",               dag:8,  mdr:12, aar:1987 },
+  { navn:"Tommy Vormslev Olsen",              dag:8,  mdr:12, aar:1960 },
+  { navn:"Alberte Ebba Carlberg Hansen",      dag:9,  mdr:12, aar:2018 },
+  { navn:"Solvejg Præstegaard Olsen",         dag:10, mdr:12, aar:1958 },
+  { navn:"Vibeke Gram Pedersen",              dag:16, mdr:12, aar:1948 },
+  { navn:"Jan Vormslev Olsen",                dag:21, mdr:12, aar:1957 },
+  { navn:"Mie Bierbaum",                      dag:22, mdr:12, aar:1985 },
+  { navn:"Max Vormslev Frøling Pedersen",     dag:22, mdr:12, aar:2013 },
+  { navn:"Valde Præstegaard Olsen",           dag:25, mdr:12, aar:2014 },
+  { navn:"Luna Gram Fadel",                   dag:25, mdr:12, aar:2015 },
+  { navn:"Ida Holmgaard",                     dag:31, mdr:12, aar:2007 },
+];
+
+// ─── HJÆLPEFUNKTIONER ───────────────────────────────────────────────────────
+
+function beregnAlder(dag, mdr, fodselsaar, referenceDato) {
+  const ref = referenceDato || new Date();
+  let alder = ref.getFullYear() - fodselsaar;
+  const harHaftFoeds = (ref.getMonth() + 1 > mdr) ||
+                       (ref.getMonth() + 1 === mdr && ref.getDate() >= dag);
+  if (!harHaftFoeds) alder--;
+  return alder;
+}
+
+function alderDenneAar(fodselsaar) {
+  return new Date().getFullYear() - fodselsaar;
+}
+
+function erRunFodselsdag(fodselsaar) {
+  return RUNDE_ALDRE.includes(alderDenneAar(fodselsaar));
+}
+
+function dageHenTilFoedsel(dag, mdr) {
+  const idag = new Date();
+  idag.setHours(0,0,0,0);
+  let naeste = new Date(idag.getFullYear(), mdr - 1, dag);
+  naeste.setHours(0,0,0,0);
+  if (naeste < idag) naeste.setFullYear(idag.getFullYear() + 1);
+  return Math.round((naeste - idag) / 86400000);
+}
+
+function erFodselsdagIdag(dag, mdr) {
+  const idag = new Date();
+  return idag.getDate() === dag && (idag.getMonth() + 1) === mdr;
+}
+
+function formatDato(dag, mdr, aar) {
+  return `${dag}. ${MAANEDER[mdr-1].toLowerCase()} ${aar}`;
+}
+
+function alderTekst(alder) {
+  if (alder < 0) return '';
+  if (alder === 0) return 'Nyfødt';
+  return `${alder} år`;
+}
+
+// ─── BYGG SIDEN ─────────────────────────────────────────────────────────────
+
+const idag = new Date();
+document.getElementById('hero-aar').textContent =
+  `Alle ${FAMILIE.length} familiemedlemmer · ${idag.getFullYear()}`;
+document.getElementById('footer-tekst').textContent =
+  `OlsenKlanen · Fødselsdagskalender · Alder beregnet pr. ${idag.toLocaleDateString('da-DK', {day:'numeric', month:'long', year:'numeric'})}`;
+
+// ─── STATISTIK ───────────────────────────────────────────────────────────────
+const rundeIAar = FAMILIE.filter(p => erRunFodselsdag(p.aar)).length;
+const fodtIdag  = FAMILIE.filter(p => erFodselsdagIdag(p.dag, p.mdr)).length;
+const eldst     = FAMILIE.reduce((a,b) => a.aar < b.aar ? a : b);
+const yngst     = FAMILIE.reduce((a,b) => a.aar > b.aar ? a : b);
+
+const statData = [
+  { tal: FAMILIE.length, label: 'Familiemedlemmer' },
+  { tal: rundeIAar,      label: `Runde fødselsdage i ${idag.getFullYear()}` },
+  { tal: fodtIdag,       label: 'Fødselsdag i dag' },
+  { tal: beregnAlder(eldst.dag, eldst.mdr, eldst.aar), label: `Ældste: ${eldst.navn.split(' ')[0]}` },
+];
+const sg = document.getElementById('stat-grid');
+statData.forEach(s => {
+  const k = document.createElement('div');
+  k.className = 'stat-kort';
+  k.innerHTML = `<div class="stat-tal">${s.tal}</div><div class="stat-label">${s.label}</div>`;
+  sg.appendChild(k);
+});
+
+// ─── NÆSTE FØDSELSDAGE ───────────────────────────────────────────────────────
+const medDage = FAMILIE.map(p => ({ ...p, dageHen: dageHenTilFoedsel(p.dag, p.mdr) }))
+  .sort((a,b) => a.dageHen - b.dageHen)
+  .slice(0, 10);
+
+const nl = document.getElementById('naeste-liste');
+medDage.forEach(p => {
+  const alder = beregnAlder(p.dag, p.mdr, p.aar) + (p.dageHen > 0 ? 1 : 0);
+  const rund = RUNDE_ALDRE.includes(alder);
+  const erIdag = p.dageHen === 0;
+
+  let klasser = 'naeste-item';
+  if (erIdag) klasser += ' idag';
+  else if (rund) klasser += ' rund-foeds';
+
+  let badges = '';
+  if (erIdag) badges += '<span class="badge badge-idag">🎂 I dag!</span>';
+  if (rund) badges += `<span class="badge badge-rund">⭐ ${alder} år</span>`;
+  if (!erIdag && p.dageHen <= 14 && p.dageHen > 0) badges += `<span class="badge badge-snart">Om ${p.dageHen} dag${p.dageHen===1?'':'e'}</span>`;
+
+  const dagTekst = erIdag ? 'I dag' : `Om ${p.dageHen} dag${p.dageHen===1?'':'e'}`;
+
+  nl.innerHTML += `
+    <div class="${klasser}">
+      <div class="naeste-dato-boks">
+        <div class="naeste-dato-dag">${p.dag}</div>
+        <div class="naeste-dato-mdr">${MAANEDER_KORT[p.mdr-1]}</div>
+      </div>
+      <div class="naeste-info">
+        <div class="naeste-navn">${p.navn}</div>
+        <div class="naeste-alder">${formatDato(p.dag, p.mdr, p.aar)} · fylder ${alder} år · ${dagTekst}</div>
+      </div>
+      <div class="naeste-badges">${badges}</div>
+    </div>`;
+});
+
+// ─── MÅNEDER ─────────────────────────────────────────────────────────────────
+const container = document.getElementById('maaneder-container');
+
+for (let m = 1; m <= 12; m++) {
+  const personer = FAMILIE.filter(p => p.mdr === m)
+    .sort((a,b) => a.dag - b.dag);
+
+  if (personer.length === 0) continue;
+
+  const sek = document.createElement('div');
+  sek.className = 'maaned-sektion';
+  sek.id = `maaned-${m}`;
+
+  sek.innerHTML = `
+    <div class="maaned-header">
+      ${MAANEDER[m-1]}
+      <span class="maaned-antal">${personer.length} person${personer.length===1?'':'er'}</span>
+    </div>
+    <div class="person-gitter" id="gitter-${m}"></div>`;
+
+  container.appendChild(sek);
+
+  const gitter = sek.querySelector(`#gitter-${m}`);
+  personer.forEach(p => {
+    const alder = beregnAlder(p.dag, p.mdr, p.aar);
+    const alderDette = alderDenneAar(p.aar);
+    const rund = erRunFodselsdag(p.aar);
+    const erIdag = erFodselsdagIdag(p.dag, p.mdr);
+    const dageHen = dageHenTilFoedsel(p.dag, p.mdr);
+    const snart = !erIdag && dageHen <= 14;
+
+    let kortKlasse = 'person-kort';
+    if (erIdag) kortKlasse += ' idag-foeds';
+    else if (rund) kortKlasse += ' rund';
+
+    let badges = '';
+    if (erIdag) badges += '<span class="badge badge-idag">🎂 I dag!</span>';
+    if (rund) badges += `<span class="badge badge-rund">⭐ ${alderDette} år</span>`;
+    if (snart && !rund) badges += `<span class="badge badge-snart">Om ${dageHen}d</span>`;
+
+    const aldersvis = alder >= 0 ? alderTekst(alder) : '';
+
+    gitter.innerHTML += `
+      <div class="${kortKlasse}">
+        <div class="dato-boble">
+          <div class="dato-boble-dag">${p.dag}</div>
+          <div class="dato-boble-mdr">${MAANEDER_KORT[p.mdr-1]}</div>
+        </div>
+        <div class="person-info">
+          <div class="person-navn">${p.navn}</div>
+          <div class="person-detaljer">${p.aar} · ${aldersvis}</div>
+          ${badges ? `<div class="person-badges">${badges}</div>` : ''}
+        </div>
+      </div>`;
+  });
+}
+</script>
+</body>
+</html>
