@@ -14,6 +14,7 @@
   --hvid:#fefcf8;--tekst:#1a1a0e;--tekst-lys:#5a5a40;--border:#d4c9a0;
   --baggrund:#fffde0;
   --fare:#c0392b;--fare-pale:#fdf0ef;--ok:#2d6e2d;--ok-pale:#e8f5e9;
+  --lilla:#6b3580;--lilla-pale:#f3eaff;
 }
 body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var(--tekst);min-height:100vh}
 
@@ -23,19 +24,24 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 /* ── TOPBAR ── */
 .topbar{background:var(--gron);padding:0 1.5rem;height:50px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .topbar-logo{font-family:'Playfair Display',serif;font-size:19px;font-weight:500;color:var(--hvid);text-decoration:none}
-.topbar-hojre{display:flex;align-items:center;gap:1.5rem}
+.topbar-hojre{display:flex;align-items:center;gap:1.25rem}
 .topbar-links{display:flex;gap:1.25rem}
 .topbar-links a{font-size:12px;color:rgba(255,255,255,.6);text-decoration:none}
 .topbar-links a:hover,.topbar-links a.aktiv{color:var(--guld-lys)}
 #login-knap{background:none;border:1px solid rgba(255,255,255,.35);color:rgba(255,255,255,.75);font-size:11px;letter-spacing:1px;padding:5px 13px;cursor:pointer;font-family:'Source Sans 3',sans-serif;transition:all .2s;border-radius:2px}
 #login-knap:hover{border-color:var(--guld-lys);color:var(--guld-lys)}
 #bruger-info{display:none;align-items:center;gap:.75rem}
-#bruger-rolle{font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:2px;font-weight:700}
-#bruger-rolle.administrator{background:var(--guld);color:var(--tekst)}
-#bruger-rolle.redaktør{background:rgba(255,255,255,.2);color:var(--hvid)}
-#bruger-email{font-size:11px;color:rgba(255,255,255,.6)}
+.bruger-rolle-badge{font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:2px;font-weight:700}
+.bruger-rolle-badge.administrator{background:var(--guld);color:var(--tekst)}
+.bruger-rolle-badge.redaktør{background:rgba(255,255,255,.2);color:var(--hvid)}
+.bruger-rolle-badge.familie{background:var(--lilla);color:var(--hvid)}
+#bruger-navn{font-size:11px;color:rgba(255,255,255,.65)}
 #log-ud-knap{background:none;border:none;color:rgba(255,255,255,.4);font-size:11px;cursor:pointer;padding:0;font-family:'Source Sans 3',sans-serif;transition:color .2s}
 #log-ud-knap:hover{color:var(--fare)}
+
+/* ── FAMILIE-BANNER (vises når familie er logget ind) ── */
+#familie-banner{display:none;background:var(--lilla-pale);border-bottom:2px solid var(--lilla);padding:.65rem 1.5rem;font-size:13px;color:var(--lilla);text-align:center}
+#familie-banner strong{font-weight:700}
 
 /* ── SIDE-HEADER ── */
 .side-header{background:var(--gron);padding:1.75rem 1rem 1.5rem;text-align:center;border-bottom:1px solid rgba(200,149,42,.35)}
@@ -59,6 +65,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 /* ── KORT ── */
 .kort{background:var(--hvid);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;flex-direction:column;transition:box-shadow .2s}
 .kort:hover{box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.kort.egen{border-color:var(--lilla);box-shadow:0 2px 8px rgba(107,53,128,.25)}
 
 .kort-hoved{background:var(--gron);padding:.75rem 1rem;display:flex;align-items:center;gap:.75rem;cursor:pointer;user-select:none}
 .nr-badge{background:var(--guld);color:var(--tekst);font-size:10px;font-weight:700;padding:3px 8px;border-radius:3px;white-space:nowrap;flex-shrink:0;letter-spacing:.5px}
@@ -66,8 +73,9 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 .expand-pil{color:rgba(255,255,255,.5);font-size:13px;flex-shrink:0;transition:transform .25s}
 .kort.udvidet .expand-pil{transform:rotate(180deg)}
 
+/* Primære kontaktinfo (altid synlig) */
 .kort-krop{padding:1rem;flex:1;cursor:pointer}
-.info-linje{display:flex;gap:.65rem;align-items:flex-start;margin-bottom:.65rem;font-size:13px}
+.info-linje{display:flex;gap:.65rem;align-items:flex-start;margin-bottom:.6rem;font-size:13px}
 .info-linje:last-child{margin-bottom:0}
 .info-ikon{font-size:14px;flex-shrink:0;margin-top:1px;width:18px}
 .info-tekst{line-height:1.4;word-break:break-word;color:var(--tekst)}
@@ -75,93 +83,132 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 .info-tekst a:hover{text-decoration:underline}
 .tom-info{color:var(--tekst-lys);font-style:italic}
 
-/* Familie-sektion: skjult som standard, vist når kort er udvidet */
-.familie-sektion{overflow:hidden;max-height:0;transition:max-height .3s ease,padding .3s ease;padding:0 1rem;cursor:pointer}
-.kort.udvidet .familie-sektion{max-height:600px;padding:.75rem 1rem}
-.familie-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tekst-lys);font-weight:600;margin-bottom:.5rem}
-.familie-liste{font-size:13px;color:var(--tekst);line-height:1.8}
-.familie-tom{font-size:12px;color:var(--tekst-lys);font-style:italic}
-.familie-separator{border:none;border-top:1px solid var(--border);margin:0}
+/* Udvidet sektion: familie + begivenheder */
+.udvidet-sektion{max-height:0;overflow:hidden;transition:max-height .35s ease;background:#f9f7f0;border-top:0 solid var(--border);transition:max-height .35s ease,border-top-width .35s}
+.kort.udvidet .udvidet-sektion{max-height:1200px;border-top-width:1px}
 
-/* Fod: klik-hint + rediger-knap */
+/* Familiemedlemmer */
+.familie-blok{padding:1rem}
+.gruppe-titel{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gron);font-weight:700;margin-bottom:.6rem;padding-bottom:.3rem;border-bottom:1px solid var(--gron-pale)}
+.person-rad{display:flex;flex-direction:column;gap:.2rem;padding:.5rem .65rem;background:var(--hvid);border:1px solid var(--border);border-radius:5px;margin-bottom:.4rem}
+.person-rad:last-child{margin-bottom:0}
+.person-navn{font-size:13.5px;font-weight:600;color:var(--tekst)}
+.person-detaljer{display:flex;flex-wrap:wrap;gap:.4rem .9rem;margin-top:.15rem}
+.person-detalje{font-size:11.5px;color:var(--tekst-lys)}
+.person-detalje a{color:var(--gron);text-decoration:none}
+.person-detalje a:hover{text-decoration:underline}
+.gruppe-tom{font-size:12px;color:var(--tekst-lys);font-style:italic;padding:.3rem 0}
+
+/* Begivenheder */
+.begi-blok{padding:.75rem 1rem;border-top:1px solid var(--border)}
+.begi-titel{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--guld);font-weight:700;margin-bottom:.6rem}
+.begi-rad{display:flex;flex-direction:column;gap:.15rem;padding:.4rem .65rem;background:var(--guld-pale);border:1px solid var(--guld-lys);border-radius:5px;margin-bottom:.35rem}
+.begi-rad:last-child{margin-bottom:0}
+.begi-type{font-size:12px;font-weight:700;color:var(--guld)}
+.begi-dato{font-size:12px;color:var(--tekst-lys)}
+.begi-besk{font-size:12px;color:var(--tekst)}
+
+/* Fod */
 .kort-fod{padding:.65rem 1rem;border-top:1px solid var(--border);background:var(--guld-pale);display:flex;align-items:center;justify-content:space-between;gap:.5rem}
 .klik-hint{font-size:11px;color:var(--tekst-lys);font-style:italic;cursor:pointer}
-.kort.udvidet .klik-hint{display:none}
-
+.kort.udvidet .klik-hint{opacity:0;pointer-events:none}
 .rediger-knap{background:var(--gron);color:var(--hvid);border:none;font-size:13px;font-weight:700;letter-spacing:.5px;padding:9px 20px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:background .2s,box-shadow .2s;display:none;flex-shrink:0;box-shadow:0 2px 8px rgba(45,80,22,.4)}
 .rediger-knap:hover{background:var(--gron-lys);box-shadow:0 4px 12px rgba(45,80,22,.5)}
 body.kan-redigere .rediger-knap{display:inline-block}
+body.familie-session .rediger-knap.egen-rediger{display:inline-block}
 
-/* ── REDIGERINGS-MODAL ── */
+/* ── MODALER (fælles overlay) ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto}
 .modal-overlay.vis{display:flex}
 
-/* Login-modal */
-#login-modal .modal-boks{background:var(--hvid);max-width:400px;width:100%;border-top:3px solid var(--guld);box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative;margin:auto}
+/* ── LOGIN-MODAL (tabbed) ── */
+.login-boks{background:var(--hvid);max-width:420px;width:100%;border-top:3px solid var(--guld);box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative;margin:auto;border-radius:0 0 6px 6px}
+.login-tabs{display:flex;border-bottom:2px solid var(--border)}
+.login-tab{flex:1;padding:.75rem 1rem;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:700;cursor:pointer;background:none;border:none;color:var(--tekst-lys);font-family:'Source Sans 3',sans-serif;transition:color .2s,border-bottom .2s;border-bottom:2px solid transparent;margin-bottom:-2px}
+.login-tab.aktiv{color:var(--gron);border-bottom-color:var(--gron)}
+.login-panel{display:none;padding:1.5rem}
+.login-panel.vis{display:block}
 .modal-luk{position:absolute;top:.75rem;right:1rem;background:none;border:none;font-size:24px;cursor:pointer;color:var(--tekst-lys);line-height:1;padding:2px 6px;transition:color .2s}
 .modal-luk:hover{color:var(--tekst)}
-.modal-header{padding:1.75rem 1.75rem 0}
-.modal-titel{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:var(--gron)}
-.modal-body{padding:1.25rem 1.75rem 1.75rem}
-.modal-felt{margin-bottom:1rem}
-.modal-felt label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--tekst-lys);font-weight:600;margin-bottom:5px}
-.modal-felt input{width:100%;border:1px solid rgba(200,149,42,.35);padding:.65rem .9rem;font-size:14px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:#faf6ee;outline:none;border-radius:3px;transition:border-color .2s}
-.modal-felt input:focus{border-color:var(--gron);background:#fff}
-.modal-login-knap{width:100%;background:var(--gron);color:var(--hvid);border:none;padding:.75rem;font-size:12px;letter-spacing:1.5px;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:3px;transition:background .2s;margin-top:.25rem}
-.modal-login-knap:hover{background:var(--gron-lys)}
-.modal-fejl{color:var(--fare);font-size:12px;margin-top:.6rem;display:none}
-
-/* Kodeord: øje-knap og caps lock */
+.modal-panel-titel{font-family:'Playfair Display',serif;font-size:18px;font-weight:400;color:var(--gron);margin-bottom:1.1rem}
+.mfelt{margin-bottom:.9rem}
+.mfelt label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--tekst-lys);font-weight:600;margin-bottom:4px}
+.mfelt input{width:100%;border:1px solid rgba(200,149,42,.35);padding:.6rem .85rem;font-size:14px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:#faf6ee;outline:none;border-radius:3px;transition:border-color .2s}
+.mfelt input:focus{border-color:var(--gron);background:#fff}
 .kodeord-wrap{position:relative}
-.kodeord-wrap input{padding-right:44px!important}
+.kodeord-wrap input{padding-right:44px}
 .vis-kode-knap{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--tekst-lys);padding:4px;display:flex;align-items:center;transition:color .2s}
 .vis-kode-knap:hover{color:var(--gron)}
 .capslock-advarsel{display:none;align-items:center;gap:.4rem;background:#fff8e1;border:1px solid #f0c060;color:#7a5a00;font-size:12px;padding:.4rem .65rem;border-radius:3px;margin-top:.5rem}
 .capslock-advarsel.vis{display:flex}
+.login-knap-stor{width:100%;background:var(--gron);color:var(--hvid);border:none;padding:.75rem;font-size:12px;letter-spacing:1.5px;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:3px;transition:background .2s;margin-top:.4rem}
+.login-knap-stor:hover{background:var(--gron-lys)}
+.modal-fejl{font-size:12px;margin-top:.6rem;display:none}
+.modal-fejl.roed{color:var(--fare);display:block}
 
-/* Redigerings-modal */
-#edit-modal .edit-boks{background:var(--hvid);max-width:560px;width:100%;border-top:4px solid var(--gron);box-shadow:0 24px 70px rgba(0,0,0,.4);position:relative;margin:auto;border-radius:0 0 8px 8px}
+/* ── REDIGERINGS-MODAL ── */
+.edit-boks{background:var(--hvid);max-width:600px;width:100%;border-top:4px solid var(--gron);box-shadow:0 24px 70px rgba(0,0,0,.4);position:relative;margin:auto;border-radius:0 0 8px 8px}
 .edit-modal-header{background:var(--gron);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
-.edit-modal-titel{font-family:'Playfair Display',serif;font-size:18px;font-weight:400;color:var(--hvid);line-height:1.3}
+.edit-modal-titel{font-family:'Playfair Display',serif;font-size:17px;font-weight:400;color:var(--hvid);line-height:1.3}
 .edit-modal-luk{background:none;border:none;font-size:24px;cursor:pointer;color:rgba(255,255,255,.6);line-height:1;padding:2px 6px;flex-shrink:0;transition:color .2s}
 .edit-modal-luk:hover{color:var(--hvid)}
-.edit-modal-krop{padding:1.5rem}
+.edit-krop{padding:1.25rem 1.5rem}
 
-.ef-felt{margin-bottom:1.1rem}
-.ef-felt label{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tekst-lys);font-weight:700;margin-bottom:5px}
-.ef-felt input,.ef-felt textarea{width:100%;border:1px solid var(--border);padding:.55rem .85rem;font-size:13.5px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:#faf8f2;outline:none;border-radius:4px;transition:border-color .2s}
-.ef-felt input:focus,.ef-felt textarea:focus{border-color:var(--gron);background:#fff}
-.ef-felt textarea{min-height:72px;resize:vertical;line-height:1.55}
+/* Felt-gruppe i edit-modal */
+.edit-sek-titel{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gron);font-weight:700;margin:1.25rem 0 .6rem;padding-bottom:.35rem;border-bottom:1px solid var(--gron-pale)}
+.edit-sek-titel:first-child{margin-top:0}
+.ef{margin-bottom:.75rem}
+.ef label{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tekst-lys);font-weight:700;margin-bottom:4px}
+.ef input,.ef textarea,.ef select{width:100%;border:1px solid var(--border);padding:.5rem .75rem;font-size:13px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:#faf8f2;outline:none;border-radius:3px;transition:border-color .2s}
+.ef input:focus,.ef textarea:focus,.ef select:focus{border-color:var(--gron);background:#fff}
+.ef textarea{min-height:68px;resize:vertical;line-height:1.5}
+.ef-2{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}
+.ef-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.65rem}
 
-/* Familiemedlemmer-liste */
-.familie-overskrift{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tekst-lys);font-weight:700;margin-bottom:.6rem}
-.familie-liste-edit{display:flex;flex-direction:column;gap:.4rem;margin-bottom:.75rem}
-.familie-rad{display:flex;align-items:center;gap:.5rem;background:#f5f0e4;border:1px solid var(--border);border-radius:4px;padding:.4rem .5rem .4rem .75rem}
-.familie-rad-navn{flex:1;font-size:13px;color:var(--tekst)}
-.familie-slet{background:none;border:none;color:var(--tekst-lys);font-size:18px;cursor:pointer;line-height:1;padding:0 4px;transition:color .2s;flex-shrink:0}
-.familie-slet:hover{color:var(--fare)}
-.familie-tilfoej-rad{display:flex;gap:.5rem}
-.familie-ny-input{flex:1;border:1px solid var(--border);padding:.5rem .75rem;font-size:13px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:#faf8f2;outline:none;border-radius:4px;transition:border-color .2s}
-.familie-ny-input:focus{border-color:var(--gron);background:#fff}
-.familie-tilfoej-knap{background:var(--gron);color:var(--hvid);border:none;padding:.5rem 1rem;font-size:12px;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;white-space:nowrap;transition:background .2s}
-.familie-tilfoej-knap:hover{background:var(--gron-lys)}
+/* Person-kort i edit */
+.person-edit-kort{background:#f5f0e4;border:1px solid var(--border);border-radius:5px;padding:.75rem;margin-bottom:.6rem}
+.person-edit-hoed{display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem}
+.person-edit-hoed .rolle-badge{font-size:10px;padding:2px 8px;border-radius:2px;font-weight:700;letter-spacing:.5px}
+.rolle-badge.forælder{background:var(--gron);color:var(--hvid)}
+.rolle-badge.barn{background:var(--guld);color:var(--tekst)}
+.person-edit-navn-vis{font-size:13px;font-weight:600;flex:1;color:var(--tekst)}
+.person-slet{background:none;border:none;color:var(--tekst-lys);font-size:20px;cursor:pointer;line-height:1;padding:0 2px;transition:color .2s;margin-left:auto}
+.person-slet:hover{color:var(--fare)}
+.person-edit-felter{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.person-edit-felter input,.person-edit-felter select{width:100%;border:1px solid var(--border);padding:.4rem .6rem;font-size:12.5px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:var(--hvid);outline:none;border-radius:3px}
+.person-edit-felter input:focus,.person-edit-felter select:focus{border-color:var(--gron)}
+.person-edit-felter .fuld{grid-column:1/-1}
+.tilfoej-rad{display:flex;gap:.5rem;margin-top:.35rem}
+.tilfoej-knap{background:none;border:1px solid var(--gron);color:var(--gron);font-size:12px;font-weight:700;padding:6px 14px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:3px;transition:all .2s;white-space:nowrap}
+.tilfoej-knap:hover{background:var(--gron);color:var(--hvid)}
 
-.edit-modal-fod{padding:1rem 1.5rem;border-top:1px solid var(--border);background:var(--guld-pale);display:flex;align-items:center;gap:.75rem;border-radius:0 0 8px 8px}
+/* Begivenhed-rad i edit */
+.begi-edit-rad{display:grid;grid-template-columns:auto 1fr auto auto;gap:.5rem;align-items:center;background:#f5f0e4;border:1px solid var(--border);border-radius:4px;padding:.5rem .65rem;margin-bottom:.45rem}
+.begi-edit-rad select,.begi-edit-rad input{border:1px solid var(--border);padding:.35rem .55rem;font-size:12px;font-family:'Source Sans 3',sans-serif;background:var(--hvid);outline:none;border-radius:3px}
+.begi-edit-rad select:focus,.begi-edit-rad input:focus{border-color:var(--gron)}
+.begi-slet{background:none;border:none;color:var(--tekst-lys);font-size:18px;cursor:pointer;padding:0 2px;transition:color .2s}
+.begi-slet:hover{color:var(--fare)}
+
+/* Edit-fod */
+.edit-fod{padding:.9rem 1.5rem;border-top:1px solid var(--border);background:var(--guld-pale);display:flex;align-items:center;gap:.75rem;border-radius:0 0 8px 8px;flex-wrap:wrap}
 .edit-gem-knap{background:var(--gron);color:var(--hvid);border:none;padding:9px 24px;font-size:13px;letter-spacing:.5px;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:background .2s}
 .edit-gem-knap:hover{background:var(--gron-lys)}
 .edit-gem-knap:disabled{opacity:.6;cursor:default}
-.edit-annuller-knap{background:none;border:1px solid var(--border);color:var(--tekst-lys);padding:9px 18px;font-size:13px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:all .2s}
-.edit-annuller-knap:hover{border-color:var(--tekst);color:var(--tekst)}
-.edit-gem-status{font-size:12px;margin-left:auto}
-.edit-gem-status.ok{color:var(--ok)}
-.edit-gem-status.fejl{color:var(--fare)}
+.edit-annuller{background:none;border:1px solid var(--border);color:var(--tekst-lys);padding:9px 18px;font-size:13px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:all .2s}
+.edit-annuller:hover{border-color:var(--tekst);color:var(--tekst)}
+.edit-status{font-size:12px;margin-left:auto}
+.edit-status.ok{color:var(--ok)}
+.edit-status.fejl{color:var(--fare)}
 
 /* ── RESPONSIVE ── */
 @media(max-width:640px){
   .topbar-links{display:none}
   .grid{grid-template-columns:1fr}
-  .soege-input{min-width:160px}
-  #bruger-email{display:none}
+  .ef-2,.ef-3{grid-template-columns:1fr}
+  .begi-edit-rad{grid-template-columns:1fr 1fr;grid-template-rows:auto auto}
+  .person-edit-felter{grid-template-columns:1fr}
+  .person-edit-felter .fuld{grid-column:1}
+  #bruger-navn{display:none}
   .modal-overlay{padding:1rem .5rem}
 }
 </style>
@@ -180,27 +227,53 @@ body.kan-redigere .rediger-knap{display:inline-block}
       <a href="medlemskartotek.html" class="aktiv">Medlemmer</a>
     </div>
     <div id="bruger-info">
-      <span id="bruger-rolle"></span>
-      <span id="bruger-email"></span>
+      <span id="bruger-rolle-badge" class="bruger-rolle-badge"></span>
+      <span id="bruger-navn"></span>
       <button id="log-ud-knap">Log ud</button>
     </div>
     <button id="login-knap">Log ind</button>
   </div>
 </nav>
 
-<!-- Login-modal -->
+<div id="familie-banner">
+  Du er logget ind som <strong id="familie-banner-navn"></strong> — klik <strong>✏️ Rediger</strong> på jeres kort for at opdatere oplysninger.
+</div>
+
+<!-- Login-modal med to faner -->
 <div class="modal-overlay" id="login-modal">
-  <div class="modal-boks">
-    <button class="modal-luk" id="modal-luk" aria-label="Luk">×</button>
-    <div class="modal-header">
-      <div class="modal-titel">Log ind</div>
+  <div class="login-boks">
+    <button class="modal-luk" id="modal-luk">×</button>
+    <div class="login-tabs">
+      <button class="login-tab aktiv" data-tab="familie">👨‍👩‍👧 Familie</button>
+      <button class="login-tab" data-tab="admin">🔑 Administrator</button>
     </div>
-    <div class="modal-body">
-      <div class="modal-felt">
+
+    <!-- Familie-fane -->
+    <div class="login-panel vis" id="panel-familie">
+      <div class="modal-panel-titel">Log ind som familie</div>
+      <div class="mfelt">
+        <label>Medlemsnummer</label>
+        <input type="text" id="fam-nr" placeholder="Fx: 23" inputmode="numeric">
+      </div>
+      <div class="mfelt">
+        <label>PIN-kode</label>
+        <input type="password" id="fam-kode" placeholder="••••" inputmode="numeric">
+      </div>
+      <button class="login-knap-stor" id="fam-login-knap">Log ind</button>
+      <div class="modal-fejl" id="fam-fejl"></div>
+      <p style="font-size:11px;color:var(--tekst-lys);margin-top:.75rem;line-height:1.5">
+        PIN-koden er sat af administrator. Kontakt Karin eller Carsten hvis du ikke har fået en kode.
+      </p>
+    </div>
+
+    <!-- Admin-fane -->
+    <div class="login-panel" id="panel-admin">
+      <div class="modal-panel-titel">Administrator / Redaktør</div>
+      <div class="mfelt">
         <label>Email</label>
         <input type="email" id="modal-email" placeholder="din@email.dk" autocomplete="username">
       </div>
-      <div class="modal-felt">
+      <div class="mfelt">
         <label>Kodeord</label>
         <div class="kodeord-wrap">
           <input type="password" id="modal-kode" placeholder="••••••••" autocomplete="current-password">
@@ -210,8 +283,8 @@ body.kan-redigere .rediger-knap{display:inline-block}
         </div>
         <div class="capslock-advarsel" id="capslock-advarsel">⚠️ Caps Lock er slået til</div>
       </div>
-      <button class="modal-login-knap" id="modal-login-knap">Log ind</button>
-      <div class="modal-fejl" id="modal-fejl">Forkert email eller kodeord.</div>
+      <button class="login-knap-stor" id="modal-login-knap">Log ind</button>
+      <div class="modal-fejl" id="modal-fejl"></div>
     </div>
   </div>
 </div>
@@ -220,42 +293,59 @@ body.kan-redigere .rediger-knap{display:inline-block}
 <div class="modal-overlay" id="edit-modal">
   <div class="edit-boks">
     <div class="edit-modal-header">
-      <div class="edit-modal-titel" id="edit-modal-titel">Rediger medlem</div>
-      <button class="edit-modal-luk" id="edit-modal-luk" aria-label="Luk">×</button>
+      <div class="edit-modal-titel" id="edit-modal-titel">Rediger</div>
+      <button class="edit-modal-luk" id="edit-modal-luk">×</button>
     </div>
-    <div class="edit-modal-krop">
-      <div class="ef-felt">
-        <label>Medlemsnummer</label>
-        <input type="text" id="ef-nr">
-      </div>
-      <div class="ef-felt">
-        <label>Navne</label>
+    <div class="edit-krop">
+
+      <div class="edit-sek-titel">Husstandsoplysninger</div>
+      <div class="ef">
+        <label>Navne på husstanden</label>
         <input type="text" id="ef-navne">
       </div>
-      <div class="ef-felt">
+      <div class="ef-2">
+        <div class="ef">
+          <label>Medlemsnummer</label>
+          <input type="text" id="ef-nr">
+        </div>
+        <div class="ef" id="ef-kode-wrapper">
+          <label>Familie-login PIN</label>
+          <input type="text" id="ef-kode" placeholder="F.eks. 1234" maxlength="10">
+        </div>
+      </div>
+      <div class="ef">
         <label>Adresse (linjeskift = ny linje)</label>
         <textarea id="ef-adresse"></textarea>
       </div>
-      <div class="ef-felt">
-        <label>Telefon / mobil</label>
-        <input type="text" id="ef-tlf">
+      <div class="ef-2">
+        <div class="ef">
+          <label>Telefon / mobil</label>
+          <input type="text" id="ef-tlf">
+        </div>
+        <div class="ef">
+          <label>Email</label>
+          <input type="text" id="ef-email">
+        </div>
       </div>
-      <div class="ef-felt">
-        <label>Email</label>
-        <input type="text" id="ef-email">
+
+      <div class="edit-sek-titel">Familiemedlemmer</div>
+      <div id="person-liste-edit"></div>
+      <div class="tilfoej-rad">
+        <button class="tilfoej-knap" id="tilfoej-foraelder">➕ Forælder</button>
+        <button class="tilfoej-knap" id="tilfoej-barn">➕ Barn</button>
       </div>
-      <hr style="border:none;border-top:1px solid var(--border);margin:1.25rem 0">
-      <div class="familie-overskrift">Tilknyttede familiemedlemmer</div>
-      <div class="familie-liste-edit" id="familie-liste-edit"></div>
-      <div class="familie-tilfoej-rad">
-        <input type="text" class="familie-ny-input" id="familie-ny-input" placeholder="Fx: Morten Gram (1985)">
-        <button class="familie-tilfoej-knap" id="familie-tilfoej-knap">+ Tilføj</button>
+
+      <div class="edit-sek-titel">Begivenheder</div>
+      <div id="begi-liste-edit"></div>
+      <div class="tilfoej-rad">
+        <button class="tilfoej-knap" id="tilfoej-begi">➕ Begivenhed</button>
       </div>
+
     </div>
-    <div class="edit-modal-fod">
+    <div class="edit-fod">
       <button class="edit-gem-knap" id="edit-gem-knap">💾 Gem ændringer</button>
-      <button class="edit-annuller-knap" id="edit-annuller-knap">Annullér</button>
-      <span class="edit-gem-status" id="edit-gem-status"></span>
+      <button class="edit-annuller" id="edit-annuller">Annullér</button>
+      <span class="edit-status" id="edit-status"></span>
     </div>
   </div>
 </div>
@@ -282,6 +372,9 @@ import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// Firestore-regler for 'membres': allow read, write: if true;
+// (familier skriver uden Firebase Auth — OK for familieside)
+
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
   authDomain: "olsenklanen-familieside.firebaseapp.com",
@@ -296,72 +389,114 @@ const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-// ── STANDARDDATA (januar 2026) ────────────────────────────────
+// ── STANDARDDATA ──────────────────────────────────────────────
+// familiemedlemmer: [{navn, rolle, mobil, email, foedselsdato}]
+// begivenheder:    [{type, dato, beskrivelse}]
 const STANDARD = [
-  { nr:"4",  navne:"Bibs og Bent Westergaard-Hansen",          adresse:"Nørremøllevej 5, Ø.Snogbæk\n6400 Sønderborg",          tlf:"74468171",                              email:"bent.w-h@mail.dk",                   familie:"" },
-  { nr:"8",  navne:"Elisabeth og Carsten Gram",                adresse:"Bjælkerupvej 111\n4660 Store Heddinge",                 tlf:"E: 2060 4377 / C: 2073 2525",           email:"eg@paritas.dk / cg@prinfoparitas.dk", familie:"" },
-  { nr:"13", navne:"Gitte Vormslev Baldersø",                  adresse:"Tofteholmen 110\n2690 Karlslunde",                      tlf:"46153299 / 22541177",                   email:"Vormslev1@hotmail.com",               familie:"" },
-  { nr:"14", navne:"Svend Vormslev Olsen",                     adresse:"Vejlebrovej 152, 2.tv\n2635 Ishøj",                    tlf:"53542096",                              email:"vormslev@ishoejby.dk",                familie:"" },
-  { nr:"16", navne:"Christian V. Olsen",                       adresse:"Kong Hans Allé 1c st. tv\n2860 Søborg",                tlf:"44940108 / 50453327",                   email:"chrvo@mail.dk",                      familie:"" },
-  { nr:"17", navne:"Tina og René Gram",                        adresse:"Henningsens Allé 42\n2900 Hellerup",                   tlf:"39303317 / 51223317",                   email:"rene_gram@prokura.dk",                familie:"" },
-  { nr:"19", navne:"Jette og Tommy Olsen",                     adresse:"Elmelunden 14\n2635 Ishøj",                            tlf:"43731284 / 20321284 / 24681116 / 29871284", email:"tvo@ishoejby.dk",                familie:"" },
-  { nr:"20", navne:"Iben og Ronnie Olsen",                     adresse:"Spolestræde 127\n2635 Ishøj",                          tlf:"29925429",                              email:"ibse85@hotmail.com",                  familie:"" },
-  { nr:"21", navne:"Jytte Tingberg og Jan Nielsen",            adresse:"Lerager 75\n3600 Frederikssund",                       tlf:"47311227 / 20483471",                   email:"jan.jytte@tdcadsl.dk",               familie:"" },
-  { nr:"22", navne:"Jytte og Kurt Olsen",                      adresse:"Skærager 21\n2620 Albertslund",                       tlf:"43646828 / 40745767",                   email:"kvo@vormslev.dk",                    familie:"" },
-  { nr:"23", navne:"Karin og Richard Lund",                    adresse:"Risvangen 19\n2700 Brønshøj",                         tlf:"38285643 / 25764845 / 20207643",        email:"karin.lund@tele2adsl.dk",            familie:"" },
-  { nr:"24", navne:"Tine Carlberg Olsen og Simon Hansen",      adresse:"Vildtbanestien 9, 3.th\n2635 Ishøj",                  tlf:"28716973",                              email:"tco@ishoejby.dk",                    familie:"" },
-  { nr:"26", navne:"Lene Vormslev Hansen og Tom Petersen",     adresse:"Ved skellet 16\n6400 Sønderborg",                     tlf:"74433840 / 22452103",                   email:"petsen@mail1.stofanet.dk",           familie:"" },
-  { nr:"27", navne:"Lili og Gunner Carlberg",                  adresse:"Egelunden 24\n2635 Ishøj",                            tlf:"29990110 / 40883730",                   email:"gunlil@ishoejby.dk",                 familie:"" },
-  { nr:"28", navne:"Lilli og Egon Olsen",                      adresse:"Islevbrovej 55, 1. L6\n2610 Rødovre",                 tlf:"44847985 / 40628700",                   email:"egon-v-olsen@mail.tele.dk",          familie:"" },
-  { nr:"29", navne:"Lise og Sten V. Olsen",                    adresse:"Søndervang 29\n6840 Oksbøl",                          tlf:"75272337 / 50562337",                   email:"steenoglise29@gmail.com",            familie:"" },
-  { nr:"30", navne:"Lise og Jørgen Olsen",                     adresse:"Slåenvej 127\n6715 Esbjerg N",                        tlf:"75132015",                              email:"liseogjorgenolsen@get2net.dk",        familie:"" },
-  { nr:"32", navne:"Nina og Finn Lennert",                     adresse:"Ørstedsgade 7\n6400 Sønderborg",                      tlf:"42433109",                              email:"ninalennert@hotmail.com",             familie:"" },
-  { nr:"33", navne:"Solveig og Jan Olsen",                     adresse:"Vestervej 12\n6980 Tim",                              tlf:"97333070",                              email:"vestervej12@yahoo.dk",                familie:"" },
-  { nr:"34", navne:"Tove og Steve Ebersole",                   adresse:"Bentzonsvej 10, 1.tv\n2000 Frederiksberg C",          tlf:"38870323",                              email:"",                                   familie:"" },
-  { nr:"35", navne:"Vibeke og Charles Petersen",               adresse:"Rugtorvet 8, Karlby\n8543 Hornslet",                  tlf:"86974604",                              email:"",                                   familie:"" },
-  { nr:"36", navne:"Anja V. Olsen",                            adresse:"Åbakkevej 38, 2.tv\n2720 Vanløse",                    tlf:"20963548",                              email:"",                                   familie:"" },
-  { nr:"39", navne:"Kenneth Lund",                             adresse:"Vester nørremarksvej 3\n5762 Vester Skerninge",       tlf:"38896535 / 27146535",                   email:"lundkenneth@hotmail.com",             familie:"" },
-  { nr:"40", navne:"Mette Holmgaard",                          adresse:"Enighedsvej 6 E, 2.th\n2920 Charlottenlund",          tlf:"",                                      email:"",                                   familie:"" },
-  { nr:"41", navne:"Stefan V. Olsen",                          adresse:"Egelunden 98\n2635 Ishøj",                            tlf:"",                                      email:"stef@ishoejby.dk",                   familie:"" },
-  { nr:"42", navne:"Jacob P. Olsen",                           adresse:"Tim Kirkevej 46\n6980 Tim",                           tlf:"40250264",                              email:"jacob1304@ofir.dk",                  familie:"" },
-  { nr:"45", navne:"Flemming Lund og Alba",                    adresse:"",                                                    tlf:"",                                      email:"",                                   familie:"" },
-  { nr:"49", navne:"Elsebeth og Bent Rasmussen",               adresse:"Elmelunden 12\n2635 Ishøj",                           tlf:"43733736",                              email:"bjr@ishoejby.dk",                    familie:"" },
-  { nr:"51", navne:"Kristine og Martin Hernvig",               adresse:"Morbærvænget 5\n3600 Frederikssund",                  tlf:"47385695",                              email:"",                                   familie:"" },
-  { nr:"52", navne:"Rikke V. Tingberg og Benjamin Bidstrup",   adresse:"H.V.Nyholmsvej 2, 4. lejl. 4\n2000 Frederiksberg C", tlf:"35395757 / 28122930",                   email:"rikke.tingberg@get2net.dk",          familie:"" },
+  { nr:"4",  navne:"Bibs og Bent Westergaard-Hansen",         adresse:"Nørremøllevej 5, Ø.Snogbæk\n6400 Sønderborg",        tlf:"74468171",                              email:"bent.w-h@mail.dk",                  kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"8",  navne:"Elisabeth og Carsten Gram",               adresse:"Bjælkerupvej 111\n4660 Store Heddinge",               tlf:"E: 2060 4377 / C: 2073 2525",           email:"eg@paritas.dk / cg@prinfoparitas.dk",kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"13", navne:"Gitte Vormslev Baldersø",                 adresse:"Tofteholmen 110\n2690 Karlslunde",                    tlf:"46153299 / 22541177",                   email:"Vormslev1@hotmail.com",             kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"14", navne:"Svend Vormslev Olsen",                    adresse:"Vejlebrovej 152, 2.tv\n2635 Ishøj",                  tlf:"53542096",                              email:"vormslev@ishoejby.dk",              kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"16", navne:"Christian V. Olsen",                      adresse:"Kong Hans Allé 1c st. tv\n2860 Søborg",              tlf:"44940108 / 50453327",                   email:"chrvo@mail.dk",                    kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"17", navne:"Tina og René Gram",                       adresse:"Henningsens Allé 42\n2900 Hellerup",                 tlf:"39303317 / 51223317",                   email:"rene_gram@prokura.dk",             kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"19", navne:"Jette og Tommy Olsen",                    adresse:"Elmelunden 14\n2635 Ishøj",                          tlf:"43731284 / 20321284 / 24681116 / 29871284",email:"tvo@ishoejby.dk",               kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"20", navne:"Iben og Ronnie Olsen",                    adresse:"Spolestræde 127\n2635 Ishøj",                        tlf:"29925429",                              email:"ibse85@hotmail.com",                kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"21", navne:"Jytte Tingberg og Jan Nielsen",           adresse:"Lerager 75\n3600 Frederikssund",                     tlf:"47311227 / 20483471",                   email:"jan.jytte@tdcadsl.dk",             kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"22", navne:"Jytte og Kurt Olsen",                     adresse:"Skærager 21\n2620 Albertslund",                     tlf:"43646828 / 40745767",                   email:"kvo@vormslev.dk",                  kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"23", navne:"Karin og Richard Lund",                   adresse:"Risvangen 19\n2700 Brønshøj",                       tlf:"38285643 / 25764845 / 20207643",        email:"karin.lund@tele2adsl.dk",          kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"24", navne:"Tine Carlberg Olsen og Simon Hansen",     adresse:"Vildtbanestien 9, 3.th\n2635 Ishøj",                tlf:"28716973",                              email:"tco@ishoejby.dk",                  kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"26", navne:"Lene Vormslev Hansen og Tom Petersen",    adresse:"Ved skellet 16\n6400 Sønderborg",                   tlf:"74433840 / 22452103",                   email:"petsen@mail1.stofanet.dk",         kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"27", navne:"Lili og Gunner Carlberg",                 adresse:"Egelunden 24\n2635 Ishøj",                          tlf:"29990110 / 40883730",                   email:"gunlil@ishoejby.dk",               kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"28", navne:"Lilli og Egon Olsen",                     adresse:"Islevbrovej 55, 1. L6\n2610 Rødovre",               tlf:"44847985 / 40628700",                   email:"egon-v-olsen@mail.tele.dk",        kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"29", navne:"Lise og Sten V. Olsen",                   adresse:"Søndervang 29\n6840 Oksbøl",                        tlf:"75272337 / 50562337",                   email:"steenoglise29@gmail.com",          kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"30", navne:"Lise og Jørgen Olsen",                    adresse:"Slåenvej 127\n6715 Esbjerg N",                      tlf:"75132015",                              email:"liseogjorgenolsen@get2net.dk",     kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"32", navne:"Nina og Finn Lennert",                    adresse:"Ørstedsgade 7\n6400 Sønderborg",                    tlf:"42433109",                              email:"ninalennert@hotmail.com",          kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"33", navne:"Solveig og Jan Olsen",                    adresse:"Vestervej 12\n6980 Tim",                            tlf:"97333070",                              email:"vestervej12@yahoo.dk",             kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"34", navne:"Tove og Steve Ebersole",                  adresse:"Bentzonsvej 10, 1.tv\n2000 Frederiksberg C",        tlf:"38870323",                              email:"",                                 kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"35", navne:"Vibeke og Charles Petersen",              adresse:"Rugtorvet 8, Karlby\n8543 Hornslet",                tlf:"86974604",                              email:"",                                 kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"36", navne:"Anja V. Olsen",                           adresse:"Åbakkevej 38, 2.tv\n2720 Vanløse",                  tlf:"20963548",                              email:"",                                 kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"39", navne:"Kenneth Lund",                            adresse:"Vester nørremarksvej 3\n5762 Vester Skerninge",     tlf:"38896535 / 27146535",                   email:"lundkenneth@hotmail.com",          kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"40", navne:"Mette Holmgaard",                         adresse:"Enighedsvej 6 E, 2.th\n2920 Charlottenlund",        tlf:"",                                      email:"",                                 kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"41", navne:"Stefan V. Olsen",                         adresse:"Egelunden 98\n2635 Ishøj",                          tlf:"",                                      email:"stef@ishoejby.dk",                 kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"42", navne:"Jacob P. Olsen",                          adresse:"Tim Kirkevej 46\n6980 Tim",                         tlf:"40250264",                              email:"jacob1304@ofir.dk",                kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"45", navne:"Flemming Lund og Alba",                   adresse:"",                                                  tlf:"",                                      email:"",                                 kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"49", navne:"Elsebeth og Bent Rasmussen",              adresse:"Elmelunden 12\n2635 Ishøj",                         tlf:"43733736",                              email:"bjr@ishoejby.dk",                  kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"51", navne:"Kristine og Martin Hernvig",              adresse:"Morbærvænget 5\n3600 Frederikssund",                tlf:"47385695",                              email:"",                                 kode:"", familiemedlemmer:[], begivenheder:[] },
+  { nr:"52", navne:"Rikke V. Tingberg og Benjamin Bidstrup",  adresse:"H.V.Nyholmsvej 2, 4. lejl. 4\n2000 Frederiksberg C",tlf:"35395757 / 28122930",                 email:"rikke.tingberg@get2net.dk",        kode:"", familiemedlemmer:[], begivenheder:[] },
 ];
 
 // ── STATE ─────────────────────────────────────────────────────
 let data = STANDARD.map(m => ({...m}));
 let soegeTekst = '';
-let aktivtRedigerNr = null;   // Hvilket kort er åbent i edit-modal
-let familieLinjer = [];        // Arbejdskopi af familie-listen i modalen
+let aktivtNr = null;
+let personListe = [];    // arbejdskopi i edit-modal
+let begiListe   = [];    // arbejdskopi i edit-modal
+let familieSession = null; // {nr, navne} — familie logget ind via PIN
 
-// ── KORTRENDERER ──────────────────────────────────────────────
+// ── HJÆLPEFUNKTIONER ─────────────────────────────────────────
+const MAANEDER = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december'];
+
+function formatDato(str) {
+  if (!str) return '';
+  const [y, m, d] = str.split('-');
+  if (!y || !m || !d) return str;
+  return `${parseInt(d)}. ${MAANEDER[parseInt(m)-1]} ${y}`;
+}
+
 function adrHtml(s) {
   return (s || '').split('\n').map(l => l.trim()).filter(Boolean).join('<br>');
 }
 
+const BEGI_TYPE = {
+  'sølvbryllup':  '🥂 Sølvbryllup (25 år)',
+  'guldbryllup':  '💍 Guldbryllup (50 år)',
+  'diamantbryllup':'💎 Diamantbryllup (60 år)',
+  'jubilæum':     '🎉 Jubilæum',
+  'andet':        '📅 Andet',
+};
+
+function begiLabel(type) { return BEGI_TYPE[type] || type; }
+
+// Kan nuværende bruger redigere dette nr?
+function kanRedigere(nr) {
+  if (document.body.classList.contains('kan-redigere')) return true;
+  return familieSession && familieSession.nr === nr;
+}
+
+// ── KORTRENDERER ─────────────────────────────────────────────
 function byggKort(m) {
+  const erEgen = familieSession && familieSession.nr === m.nr;
+  const visRediger = kanRedigere(m.nr);
+
+  const foraeldreHtml = byggPersonGruppe(
+    (m.familiemedlemmer || []).filter(p => p.rolle === 'forælder'), 'Forældre'
+  );
+  const boernHtml = byggPersonGruppe(
+    (m.familiemedlemmer || []).filter(p => p.rolle === 'barn'), 'Børn'
+  );
+
+  const begiHtml = (m.begivenheder || []).length
+    ? `<div class="begi-blok">
+        <div class="begi-titel">Begivenheder</div>
+        ${m.begivenheder.map(b => `
+          <div class="begi-rad">
+            <div class="begi-type">${begiLabel(b.type)}</div>
+            <div class="begi-dato">${formatDato(b.dato)}</div>
+            ${b.beskrivelse ? `<div class="begi-besk">${b.beskrivelse}</div>` : ''}
+          </div>`).join('')}
+       </div>` : '';
+
+  const emailHtml = (m.email || '').split('/').map(e => e.trim()).filter(Boolean)
+    .map(e => `<a href="mailto:${e}">${e}</a>`).join('<br>');
+
   const el = document.createElement('div');
-  el.className = 'kort';
+  el.className = 'kort' + (erEgen ? ' egen' : '');
   el.dataset.nr = m.nr;
-
-  const familieLinjer = (m.familie || '').split('\n').map(l => l.trim()).filter(Boolean);
-  const harFamilie = familieLinjer.length > 0;
-
-  const familieIndhold = harFamilie
-    ? familieLinjer.map(n => `<div>${n}</div>`).join('')
-    : '<div class="familie-tom">Ingen familiemedlemmer registreret</div>';
-
-  const emailLinjer = (m.email || '').split('/').map(e => e.trim()).filter(Boolean);
-  const emailHtml = emailLinjer.length
-    ? emailLinjer.map(e => `<a href="mailto:${e}">${e}</a>`).join('<br>')
-    : '<span class="tom-info">Ingen email</span>';
 
   el.innerHTML = `
     <div class="kort-hoved">
       <span class="nr-badge">Mdl. nr. ${m.nr}</span>
-      <span class="kort-navn">${m.navne}</span>
+      <span class="kort-navn">${m.navne}${erEgen ? ' <span style="font-size:11px;opacity:.7">(jeres kort)</span>' : ''}</span>
       <span class="expand-pil">▾</span>
     </div>
     <div class="kort-krop">
@@ -375,20 +510,38 @@ function byggKort(m) {
       </div>
       <div class="info-linje">
         <span class="info-ikon">✉️</span>
-        <span class="info-tekst">${emailHtml}</span>
+        <span class="info-tekst">${emailHtml || '<span class="tom-info">Ingen email</span>'}</span>
       </div>
     </div>
-    <hr class="familie-separator">
-    <div class="familie-sektion">
-      <div class="familie-label">👨‍👩‍👧 Familiemedlemmer</div>
-      <div class="familie-liste">${familieIndhold}</div>
+    <div class="udvidet-sektion">
+      <div class="familie-blok">
+        ${foraeldreHtml}${boernHtml}
+      </div>
+      ${begiHtml}
     </div>
     <div class="kort-fod">
-      <span class="klik-hint">▾ Klik for at se familiemedlemmer</span>
-      <button class="rediger-knap" data-nr="${m.nr}">✏️ Rediger</button>
+      <span class="klik-hint">▾ Se familiemedlemmer</span>
+      ${visRediger
+        ? `<button class="rediger-knap ${erEgen ? 'egen-rediger' : ''}" data-nr="${m.nr}" style="display:inline-block">✏️ Rediger</button>`
+        : `<button class="rediger-knap ${erEgen ? 'egen-rediger' : ''}" data-nr="${m.nr}">✏️ Rediger</button>`}
     </div>`;
-
   return el;
+}
+
+function byggPersonGruppe(personer, label) {
+  if (!personer.length) return '';
+  return `<div style="margin-bottom:.8rem">
+    <div class="gruppe-titel">${label}</div>
+    ${personer.map(p => `
+      <div class="person-rad">
+        <span class="person-navn">${p.navn}</span>
+        <div class="person-detaljer">
+          ${p.mobil   ? `<span class="person-detalje">📱 ${p.mobil}</span>` : ''}
+          ${p.email   ? `<span class="person-detalje">✉️ <a href="mailto:${p.email}">${p.email}</a></span>` : ''}
+          ${p.foedselsdato ? `<span class="person-detalje">🎂 ${formatDato(p.foedselsdato)}</span>` : ''}
+        </div>
+      </div>`).join('')}
+  </div>`;
 }
 
 // ── GRID-RENDER ───────────────────────────────────────────────
@@ -401,7 +554,7 @@ function renderGrid() {
       m.navne.toLowerCase().includes(q) ||
       (m.adresse || '').toLowerCase().includes(q) ||
       (m.tlf || '').includes(q) ||
-      (m.familie || '').toLowerCase().includes(q)
+      (m.familiemedlemmer || []).some(p => p.navn.toLowerCase().includes(q))
     )
     .sort((a, b) => +a.nr - +b.nr);
 
@@ -417,137 +570,17 @@ function renderGrid() {
   synlige.forEach(m => grid.appendChild(byggKort(m)));
 }
 
-// ── EXPAND/COLLAPSE VED KORTKLIK ──────────────────────────────
+// ── EXPAND/COLLAPSE ───────────────────────────────────────────
 document.getElementById('grid').addEventListener('click', e => {
-  // Rediger-knap: åbn modal, lad ikke expand ske
-  const rBtn = e.target.closest('.rediger-knap');
-  if (rBtn) {
+  if (e.target.closest('.rediger-knap')) {
     e.stopPropagation();
-    aabneEditModal(rBtn.dataset.nr);
+    aabneEditModal(e.target.closest('.rediger-knap').dataset.nr);
     return;
   }
-
-  // Email-link: lad browseren håndtere det
   if (e.target.closest('a')) return;
-
-  // Alt andet på kortet: toggle expand
-  const kort = e.target.closest('.kort');
-  if (kort) kort.classList.toggle('udvidet');
+  const k = e.target.closest('.kort');
+  if (k) k.classList.toggle('udvidet');
 });
-
-// ── REDIGERINGS-MODAL ─────────────────────────────────────────
-const editModal    = document.getElementById('edit-modal');
-const editStatusEl = document.getElementById('edit-gem-status');
-const editGemKnap  = document.getElementById('edit-gem-knap');
-
-function familieRadHtml(navn, idx) {
-  return `<div class="familie-rad" data-idx="${idx}">
-    <span class="familie-rad-navn">${navn}</span>
-    <button class="familie-slet" data-slet="${idx}" aria-label="Fjern">×</button>
-  </div>`;
-}
-
-function renderFamilieListeEdit() {
-  document.getElementById('familie-liste-edit').innerHTML =
-    familieLinjer.map((n, i) => familieRadHtml(n, i)).join('') ||
-    '<div style="font-size:12px;color:var(--tekst-lys);font-style:italic;margin-bottom:.4rem">Ingen endnu — tilføj nedenfor</div>';
-}
-
-function aabneEditModal(nr) {
-  const m = data.find(x => x.nr === nr);
-  if (!m) return;
-  aktivtRedigerNr = nr;
-  familieLinjer = (m.familie || '').split('\n').map(l => l.trim()).filter(Boolean);
-
-  document.getElementById('edit-modal-titel').textContent = `Rediger — ${m.navne}`;
-  document.getElementById('ef-nr').value      = m.nr;
-  document.getElementById('ef-navne').value   = m.navne;
-  document.getElementById('ef-adresse').value = m.adresse || '';
-  document.getElementById('ef-tlf').value     = m.tlf || '';
-  document.getElementById('ef-email').value   = m.email || '';
-  document.getElementById('familie-ny-input').value = '';
-  editStatusEl.textContent = '';
-  editStatusEl.className = 'edit-gem-status';
-  editGemKnap.disabled = false;
-
-  renderFamilieListeEdit();
-  editModal.classList.add('vis');
-  setTimeout(() => document.getElementById('ef-navne').focus(), 80);
-}
-
-function lukkeEditModal() {
-  editModal.classList.remove('vis');
-  aktivtRedigerNr = null;
-}
-
-// Klik på × ved et familiemedlem
-document.getElementById('familie-liste-edit').addEventListener('click', e => {
-  const sletKnap = e.target.closest('[data-slet]');
-  if (!sletKnap) return;
-  familieLinjer.splice(+sletKnap.dataset.slet, 1);
-  renderFamilieListeEdit();
-});
-
-// Tilføj nyt familiemedlem
-function tilfoejFamilieMedlem() {
-  const input = document.getElementById('familie-ny-input');
-  const navn = input.value.trim();
-  if (!navn) return;
-  familieLinjer.push(navn);
-  input.value = '';
-  renderFamilieListeEdit();
-  input.focus();
-}
-
-document.getElementById('familie-tilfoej-knap').addEventListener('click', tilfoejFamilieMedlem);
-document.getElementById('familie-ny-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') { e.preventDefault(); tilfoejFamilieMedlem(); }
-});
-
-// Gem
-editGemKnap.addEventListener('click', async () => {
-  const gammelNr = aktivtRedigerNr;
-  const nytNr    = document.getElementById('ef-nr').value.trim();
-
-  if (!nytNr) {
-    editStatusEl.className = 'edit-gem-status fejl';
-    editStatusEl.textContent = 'Medlemsnummer må ikke være tomt.';
-    return;
-  }
-
-  const opdateret = {
-    nr:      nytNr,
-    navne:   document.getElementById('ef-navne').value.trim(),
-    adresse: document.getElementById('ef-adresse').value.trim(),
-    tlf:     document.getElementById('ef-tlf').value.trim(),
-    email:   document.getElementById('ef-email').value.trim(),
-    familie: familieLinjer.join('\n'),
-  };
-
-  editGemKnap.disabled = true;
-  editStatusEl.className = 'edit-gem-status';
-  editStatusEl.textContent = 'Gemmer…';
-
-  try {
-    await setDoc(doc(db, 'medlemmer', nytNr), opdateret);
-    if (nytNr !== gammelNr) await deleteDoc(doc(db, 'medlemmer', gammelNr));
-
-    const idx = data.findIndex(x => x.nr === gammelNr);
-    if (idx >= 0) data[idx] = opdateret;
-    else data.push(opdateret);
-
-    renderGrid();
-    lukkeEditModal();
-  } catch (err) {
-    editGemKnap.disabled = false;
-    editStatusEl.className = 'edit-gem-status fejl';
-    editStatusEl.textContent = 'Fejl: ' + (err.message || 'Kunne ikke gemme');
-  }
-});
-
-document.getElementById('edit-annuller-knap').addEventListener('click', lukkeEditModal);
-document.getElementById('edit-modal-luk').addEventListener('click', lukkeEditModal);
-editModal.addEventListener('click', e => { if (e.target === editModal) lukkeEditModal(); });
 
 // ── SØGNING ───────────────────────────────────────────────────
 document.getElementById('soege').addEventListener('input', e => {
@@ -555,65 +588,253 @@ document.getElementById('soege').addEventListener('input', e => {
   renderGrid();
 });
 
-// ── AUTH: administrator OG redaktør kan redigere ──────────────
-async function hentRolle(user) {
-  if (!user) return null;
-  try {
-    const snap = await getDoc(doc(db, 'brugere', user.uid));
-    return snap.exists() ? (snap.data().rolle || null) : null;
-  } catch { return null; }
+// ── EDIT-MODAL ────────────────────────────────────────────────
+const editModal    = document.getElementById('edit-modal');
+const editStatusEl = document.getElementById('edit-status');
+const editGemKnap  = document.getElementById('edit-gem-knap');
+
+function renderPersonEdit() {
+  const el = document.getElementById('person-liste-edit');
+  if (!personListe.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--tekst-lys);font-style:italic;margin-bottom:.5rem">Ingen familiemedlemmer endnu — brug knapperne herunder.</div>';
+    return;
+  }
+  el.innerHTML = personListe.map((p, i) => `
+    <div class="person-edit-kort">
+      <div class="person-edit-hoed">
+        <span class="rolle-badge ${p.rolle}">${p.rolle}</span>
+        <span class="person-edit-navn-vis">${p.navn || '(nyt medlem)'}</span>
+        <button class="person-slet" data-slet="${i}">×</button>
+      </div>
+      <div class="person-edit-felter">
+        <input class="fuld" data-pi="${i}" data-felt="navn" placeholder="Fuldt navn" value="${p.navn||''}">
+        <select data-pi="${i}" data-felt="rolle">
+          <option value="forælder" ${p.rolle==='forælder'?'selected':''}>Forælder</option>
+          <option value="barn"     ${p.rolle==='barn'    ?'selected':''}>Barn</option>
+        </select>
+        <input data-pi="${i}" data-felt="mobil"        placeholder="Mobil"        value="${p.mobil||''}">
+        <input data-pi="${i}" data-felt="email"        placeholder="Email"        value="${p.email||''}">
+        <input data-pi="${i}" data-felt="foedselsdato" type="date" title="Fødselsdato" value="${p.foedselsdato||''}">
+      </div>
+    </div>`).join('');
 }
 
-onAuthStateChanged(auth, async user => {
-  const brugerInfo = document.getElementById('bruger-info');
-  const loginKnap  = document.getElementById('login-knap');
+function renderBegiEdit() {
+  const el = document.getElementById('begi-liste-edit');
+  if (!begiListe.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--tekst-lys);font-style:italic;margin-bottom:.5rem">Ingen begivenheder endnu.</div>';
+    return;
+  }
+  el.innerHTML = begiListe.map((b, i) => `
+    <div class="begi-edit-rad">
+      <select data-bi="${i}" data-felt="type">
+        ${Object.entries(BEGI_TYPE).map(([v,l]) =>
+          `<option value="${v}" ${b.type===v?'selected':''}>${l}</option>`).join('')}
+      </select>
+      <input data-bi="${i}" data-felt="beskrivelse" placeholder="Beskrivelse" value="${b.beskrivelse||''}">
+      <input data-bi="${i}" data-felt="dato" type="date" value="${b.dato||''}">
+      <button class="begi-slet" data-bslet="${i}">×</button>
+    </div>`).join('');
+}
 
-  if (user) {
-    const rolle = await hentRolle(user);
-    if (rolle === 'administrator' || rolle === 'redaktør') {
-      document.body.classList.add('kan-redigere');
-      document.getElementById('bruger-rolle').textContent = rolle.charAt(0).toUpperCase() + rolle.slice(1);
-      document.getElementById('bruger-rolle').className = 'bruger-rolle ' + rolle;
-      document.getElementById('bruger-email').textContent = user.email;
-      brugerInfo.style.display = 'flex';
-      loginKnap.style.display = 'none';
-      return;
-    }
+// Event delegation i edit-modal
+document.getElementById('person-liste-edit').addEventListener('click', e => {
+  const s = e.target.closest('[data-slet]');
+  if (s) { personListe.splice(+s.dataset.slet, 1); renderPersonEdit(); }
+});
+document.getElementById('person-liste-edit').addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.pi !== undefined && t.dataset.felt) {
+    personListe[+t.dataset.pi][t.dataset.felt] = t.value;
+    if (t.dataset.felt === 'navn' || t.dataset.felt === 'rolle') renderPersonEdit();
+  }
+});
+document.getElementById('person-liste-edit').addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.pi !== undefined && t.dataset.felt) {
+    personListe[+t.dataset.pi][t.dataset.felt] = t.value;
+  }
+});
+
+document.getElementById('begi-liste-edit').addEventListener('click', e => {
+  const s = e.target.closest('[data-bslet]');
+  if (s) { begiListe.splice(+s.dataset.bslet, 1); renderBegiEdit(); }
+});
+document.getElementById('begi-liste-edit').addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.bi !== undefined && t.dataset.felt) {
+    begiListe[+t.dataset.bi][t.dataset.felt] = t.value;
+  }
+});
+document.getElementById('begi-liste-edit').addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.bi !== undefined && t.dataset.felt) {
+    begiListe[+t.dataset.bi][t.dataset.felt] = t.value;
+  }
+});
+
+document.getElementById('tilfoej-foraelder').addEventListener('click', () => {
+  personListe.push({ navn:'', rolle:'forælder', mobil:'', email:'', foedselsdato:'' });
+  renderPersonEdit();
+});
+document.getElementById('tilfoej-barn').addEventListener('click', () => {
+  personListe.push({ navn:'', rolle:'barn', mobil:'', email:'', foedselsdato:'' });
+  renderPersonEdit();
+});
+document.getElementById('tilfoej-begi').addEventListener('click', () => {
+  begiListe.push({ type:'sølvbryllup', dato:'', beskrivelse:'' });
+  renderBegiEdit();
+});
+
+function aabneEditModal(nr) {
+  const m = data.find(x => x.nr === nr);
+  if (!m) return;
+  aktivtNr  = nr;
+  personListe = (m.familiemedlemmer || []).map(p => ({...p}));
+  begiListe   = (m.begivenheder    || []).map(b => ({...b}));
+
+  document.getElementById('edit-modal-titel').textContent = `Rediger — ${m.navne}`;
+  document.getElementById('ef-nr').value      = m.nr;
+  document.getElementById('ef-navne').value   = m.navne;
+  document.getElementById('ef-adresse').value = m.adresse || '';
+  document.getElementById('ef-tlf').value     = m.tlf || '';
+  document.getElementById('ef-email').value   = m.email || '';
+
+  // PIN kun synlig for admin/redaktør
+  const visKode = document.body.classList.contains('kan-redigere');
+  document.getElementById('ef-kode-wrapper').style.display = visKode ? '' : 'none';
+  document.getElementById('ef-kode').value = visKode ? (m.kode || '') : '';
+  document.getElementById('ef-nr').readOnly = !document.body.classList.contains('kan-redigere');
+
+  editStatusEl.textContent = '';
+  editStatusEl.className = 'edit-status';
+  editGemKnap.disabled = false;
+
+  renderPersonEdit();
+  renderBegiEdit();
+  editModal.classList.add('vis');
+  setTimeout(() => document.getElementById('ef-navne').focus(), 80);
+}
+
+function lukEditModal() {
+  editModal.classList.remove('vis');
+  aktivtNr = null;
+}
+
+editGemKnap.addEventListener('click', async () => {
+  const gammelNr = aktivtNr;
+  const nytNr    = document.getElementById('ef-nr').value.trim();
+  if (!nytNr) {
+    editStatusEl.className = 'edit-status fejl';
+    editStatusEl.textContent = 'Medlemsnummer må ikke være tomt.';
+    return;
   }
 
-  document.body.classList.remove('kan-redigere');
-  brugerInfo.style.display = 'none';
-  loginKnap.style.display = 'inline-block';
+  const erAdmin = document.body.classList.contains('kan-redigere');
+  const opdateret = {
+    nr:      nytNr,
+    navne:   document.getElementById('ef-navne').value.trim(),
+    adresse: document.getElementById('ef-adresse').value.trim(),
+    tlf:     document.getElementById('ef-tlf').value.trim(),
+    email:   document.getElementById('ef-email').value.trim(),
+    kode:    erAdmin ? document.getElementById('ef-kode').value.trim() : (data.find(x=>x.nr===gammelNr)||{}).kode || '',
+    familiemedlemmer: personListe.filter(p => p.navn.trim()),
+    begivenheder:     begiListe.filter(b => b.dato || b.beskrivelse),
+  };
+
+  editGemKnap.disabled = true;
+  editStatusEl.className = 'edit-status';
+  editStatusEl.textContent = 'Gemmer…';
+
+  try {
+    await setDoc(doc(db, 'membres', nytNr), opdateret);
+    if (nytNr !== gammelNr && erAdmin) await deleteDoc(doc(db, 'membres', gammelNr));
+
+    const idx = data.findIndex(x => x.nr === gammelNr);
+    if (idx >= 0) data[idx] = opdateret; else data.push(opdateret);
+
+    renderGrid();
+    lukEditModal();
+  } catch (err) {
+    editGemKnap.disabled = false;
+    editStatusEl.className = 'edit-status fejl';
+    editStatusEl.textContent = 'Fejl: ' + (err.message || 'Kunne ikke gemme');
+  }
 });
 
-// ── LOGIN MODAL ───────────────────────────────────────────────
+document.getElementById('edit-annuller').addEventListener('click', lukEditModal);
+document.getElementById('edit-modal-luk').addEventListener('click', lukEditModal);
+editModal.addEventListener('click', e => { if (e.target === editModal) lukEditModal(); });
+
+// ── LOGIN MODAL (faner) ───────────────────────────────────────
 const loginModal = document.getElementById('login-modal');
-const modalFejl  = document.getElementById('modal-fejl');
 
-document.getElementById('login-knap').addEventListener('click', () => {
-  modalFejl.style.display = 'none';
-  loginModal.classList.add('vis');
-  setTimeout(() => document.getElementById('modal-email').focus(), 80);
-});
+document.getElementById('login-knap').addEventListener('click', () => loginModal.classList.add('vis'));
 document.getElementById('modal-luk').addEventListener('click', () => loginModal.classList.remove('vis'));
 loginModal.addEventListener('click', e => { if (e.target === loginModal) loginModal.classList.remove('vis'); });
 
+document.querySelectorAll('.login-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('aktiv'));
+    document.querySelectorAll('.login-panel').forEach(p => p.classList.remove('vis'));
+    tab.classList.add('aktiv');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('vis');
+  });
+});
+
+// Familie-login
+document.getElementById('fam-login-knap').addEventListener('click', async () => {
+  const nr   = document.getElementById('fam-nr').value.trim();
+  const kode = document.getElementById('fam-kode').value.trim();
+  const fejl = document.getElementById('fam-fejl');
+  fejl.className = 'modal-fejl';
+  fejl.textContent = '';
+
+  if (!nr || !kode) {
+    fejl.className = 'modal-fejl roed';
+    fejl.textContent = 'Udfyld både medlemsnummer og PIN-kode.';
+    return;
+  }
+
+  try {
+    const snap = await getDoc(doc(db, 'membres', nr));
+    if (!snap.exists()) throw new Error('Ukendt medlemsnummer.');
+    const md = snap.data();
+    if (!md.kode || md.kode !== kode) throw new Error('Forkert PIN-kode.');
+
+    familieSession = { nr, navne: md.navne };
+    sessionStorage.setItem('familieSession', JSON.stringify(familieSession));
+    visFamilieSession();
+    loginModal.classList.remove('vis');
+    renderGrid();
+  } catch (err) {
+    fejl.className = 'modal-fejl roed';
+    fejl.textContent = err.message || 'Kunne ikke logge ind.';
+  }
+});
+document.getElementById('fam-kode').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('fam-login-knap').click();
+});
+
+// Admin-login
 document.getElementById('modal-login-knap').addEventListener('click', async () => {
   const email = document.getElementById('modal-email').value.trim();
   const kode  = document.getElementById('modal-kode').value;
-  modalFejl.style.display = 'none';
+  const fejl  = document.getElementById('modal-fejl');
+  fejl.className = 'modal-fejl';
   try {
     await signInWithEmailAndPassword(auth, email, kode);
     loginModal.classList.remove('vis');
   } catch {
-    modalFejl.style.display = 'block';
+    fejl.className = 'modal-fejl roed';
+    fejl.textContent = 'Forkert email eller kodeord.';
   }
 });
 document.getElementById('modal-kode').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('modal-login-knap').click();
 });
 
-// Vis/skjul kodeord
+// Øje-ikon
 document.getElementById('vis-kode-knap').addEventListener('click', () => {
   const input = document.getElementById('modal-kode');
   const ikon  = document.getElementById('oje-ikon');
@@ -625,20 +846,97 @@ document.getElementById('vis-kode-knap').addEventListener('click', () => {
     ikon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
   }
 });
-
-// Caps Lock-advarsel
 document.getElementById('modal-kode').addEventListener('keyup', e => {
   document.getElementById('capslock-advarsel').classList.toggle('vis', e.getModifierState('CapsLock'));
 });
-document.getElementById('log-ud-knap').addEventListener('click', () => signOut(auth));
 
-// ── INDLÆSNING ────────────────────────────────────────────────
-async function initialiserSide() {
-  renderGrid();
+// Log ud
+document.getElementById('log-ud-knap').addEventListener('click', () => {
+  if (familieSession) {
+    familieSession = null;
+    sessionStorage.removeItem('familieSession');
+    document.body.classList.remove('familie-session');
+    document.getElementById('familie-banner').style.display = 'none';
+    document.getElementById('bruger-info').style.display = 'none';
+    document.getElementById('login-knap').style.display = 'inline-block';
+    renderGrid();
+  } else {
+    signOut(auth);
+  }
+});
+
+// ── AUTH STATE ────────────────────────────────────────────────
+function visFamilieSession() {
+  document.body.classList.add('familie-session');
+  document.getElementById('bruger-rolle-badge').textContent = 'Familie';
+  document.getElementById('bruger-rolle-badge').className = 'bruger-rolle-badge familie';
+  document.getElementById('bruger-navn').textContent = familieSession.navne;
+  document.getElementById('bruger-info').style.display = 'flex';
+  document.getElementById('login-knap').style.display = 'none';
+  document.getElementById('familie-banner-navn').textContent = familieSession.navne;
+  document.getElementById('familie-banner').style.display = 'block';
+}
+
+async function hentRolle(user) {
+  if (!user) return null;
   try {
-    const snap = await getDocs(collection(db, 'medlemmer'));
+    const s = await getDoc(doc(db, 'brugere', user.uid));
+    return s.exists() ? (s.data().rolle || null) : null;
+  } catch { return null; }
+}
+
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    const rolle = await hentRolle(user);
+    if (rolle === 'administrator' || rolle === 'redaktør') {
+      familieSession = null;
+      sessionStorage.removeItem('familieSession');
+      document.body.classList.remove('familie-session');
+      document.body.classList.add('kan-redigere');
+      document.getElementById('bruger-rolle-badge').textContent = rolle.charAt(0).toUpperCase()+rolle.slice(1);
+      document.getElementById('bruger-rolle-badge').className = 'bruger-rolle-badge ' + rolle;
+      document.getElementById('bruger-navn').textContent = user.email;
+      document.getElementById('bruger-info').style.display = 'flex';
+      document.getElementById('login-knap').style.display = 'none';
+      document.getElementById('familie-banner').style.display = 'none';
+      renderGrid();
+      return;
+    }
+  }
+  document.body.classList.remove('kan-redigere');
+  if (!familieSession) {
+    document.getElementById('bruger-info').style.display = 'none';
+    document.getElementById('login-knap').style.display = 'inline-block';
+    document.getElementById('familie-banner').style.display = 'none';
+  }
+});
+
+// ── INITIAL LOAD ──────────────────────────────────────────────
+function migrerFamilie(fd) {
+  // Migrér gammel 'familie'-streng til nyt array-format
+  if (typeof fd.familie === 'string' && !fd.familiemedlemmer) {
+    const linjer = fd.familie.split('\n').map(l => l.trim()).filter(Boolean);
+    fd.familiemedlemmer = linjer.map(navn => ({ navn, rolle:'barn', mobil:'', email:'', foedselsdato:'' }));
+  }
+  if (!fd.familiemedlemmer) fd.familiemedlemmer = [];
+  if (!fd.begivenheder)     fd.begivenheder     = [];
+  if (!fd.kode)             fd.kode             = '';
+  return fd;
+}
+
+async function initialiserSide() {
+  // Gensyn familie-session fra sessionStorage
+  try {
+    const gem = sessionStorage.getItem('familieSession');
+    if (gem) { familieSession = JSON.parse(gem); visFamilieSession(); }
+  } catch { familieSession = null; }
+
+  renderGrid();
+
+  try {
+    const snap = await getDocs(collection(db, 'membres'));
     snap.forEach(d => {
-      const fd = d.data();
+      const fd = migrerFamilie({ ...d.data() });
       const idx = data.findIndex(x => x.nr === d.id);
       if (idx >= 0) data[idx] = { ...data[idx], ...fd };
       else data.push(fd);
