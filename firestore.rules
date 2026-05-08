@@ -67,6 +67,12 @@ service cloud.firestore {
       allow update, delete: if erAdministrator();
     }
 
+    // Medlemskartotek – public read/write så familier kan logge ind med PIN og redigere egne data
+    match /membres/{id} {
+      allow read: if true;
+      allow write: if true;
+    }
+
     // Afvis alt andet
     match /{document=**} {
       allow read, write: if false;
