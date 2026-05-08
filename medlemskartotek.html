@@ -88,8 +88,8 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 .klik-hint{font-size:11px;color:var(--tekst-lys);font-style:italic;cursor:pointer}
 .kort.udvidet .klik-hint{display:none}
 
-.rediger-knap{background:var(--gron);color:var(--hvid);border:none;font-size:12px;font-weight:700;letter-spacing:.5px;padding:7px 16px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:background .2s;display:none;flex-shrink:0}
-.rediger-knap:hover{background:var(--gron-lys)}
+.rediger-knap{background:var(--gron);color:var(--hvid);border:none;font-size:13px;font-weight:700;letter-spacing:.5px;padding:9px 20px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:background .2s,box-shadow .2s;display:none;flex-shrink:0;box-shadow:0 2px 8px rgba(45,80,22,.4)}
+.rediger-knap:hover{background:var(--gron-lys);box-shadow:0 4px 12px rgba(45,80,22,.5)}
 body.kan-redigere .rediger-knap{display:inline-block}
 
 /* ── REDIGERINGS-MODAL ── */
@@ -110,6 +110,14 @@ body.kan-redigere .rediger-knap{display:inline-block}
 .modal-login-knap{width:100%;background:var(--gron);color:var(--hvid);border:none;padding:.75rem;font-size:12px;letter-spacing:1.5px;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:3px;transition:background .2s;margin-top:.25rem}
 .modal-login-knap:hover{background:var(--gron-lys)}
 .modal-fejl{color:var(--fare);font-size:12px;margin-top:.6rem;display:none}
+
+/* Kodeord: øje-knap og caps lock */
+.kodeord-wrap{position:relative}
+.kodeord-wrap input{padding-right:44px!important}
+.vis-kode-knap{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--tekst-lys);padding:4px;display:flex;align-items:center;transition:color .2s}
+.vis-kode-knap:hover{color:var(--gron)}
+.capslock-advarsel{display:none;align-items:center;gap:.4rem;background:#fff8e1;border:1px solid #f0c060;color:#7a5a00;font-size:12px;padding:.4rem .65rem;border-radius:3px;margin-top:.5rem}
+.capslock-advarsel.vis{display:flex}
 
 /* Redigerings-modal */
 #edit-modal .edit-boks{background:var(--hvid);max-width:560px;width:100%;border-top:4px solid var(--gron);box-shadow:0 24px 70px rgba(0,0,0,.4);position:relative;margin:auto;border-radius:0 0 8px 8px}
@@ -194,7 +202,13 @@ body.kan-redigere .rediger-knap{display:inline-block}
       </div>
       <div class="modal-felt">
         <label>Kodeord</label>
-        <input type="password" id="modal-kode" placeholder="••••••••" autocomplete="current-password">
+        <div class="kodeord-wrap">
+          <input type="password" id="modal-kode" placeholder="••••••••" autocomplete="current-password">
+          <button type="button" class="vis-kode-knap" id="vis-kode-knap" aria-label="Vis/skjul kodeord">
+            <svg id="oje-ikon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="capslock-advarsel" id="capslock-advarsel">⚠️ Caps Lock er slået til</div>
       </div>
       <button class="modal-login-knap" id="modal-login-knap">Log ind</button>
       <div class="modal-fejl" id="modal-fejl">Forkert email eller kodeord.</div>
@@ -597,6 +611,24 @@ document.getElementById('modal-login-knap').addEventListener('click', async () =
 });
 document.getElementById('modal-kode').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('modal-login-knap').click();
+});
+
+// Vis/skjul kodeord
+document.getElementById('vis-kode-knap').addEventListener('click', () => {
+  const input = document.getElementById('modal-kode');
+  const ikon  = document.getElementById('oje-ikon');
+  if (input.type === 'password') {
+    input.type = 'text';
+    ikon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    input.type = 'password';
+    ikon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+});
+
+// Caps Lock-advarsel
+document.getElementById('modal-kode').addEventListener('keyup', e => {
+  document.getElementById('capslock-advarsel').classList.toggle('vis', e.getModifierState('CapsLock'));
 });
 document.getElementById('log-ud-knap').addEventListener('click', () => signOut(auth));
 
