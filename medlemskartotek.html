@@ -887,21 +887,26 @@ async function hentRolle(user) {
 
 onAuthStateChanged(auth, async user => {
   if (user) {
-    const rolle = await hentRolle(user);
-    if (rolle === 'administrator' || rolle === 'redaktør') {
-      familieSession = null;
-      sessionStorage.removeItem('familieSession');
-      document.body.classList.remove('familie-session');
-      document.body.classList.add('kan-redigere');
-      document.getElementById('bruger-rolle-badge').textContent = rolle.charAt(0).toUpperCase()+rolle.slice(1);
-      document.getElementById('bruger-rolle-badge').className = 'bruger-rolle-badge ' + rolle;
-      document.getElementById('bruger-navn').textContent = user.email;
-      document.getElementById('bruger-info').style.display = 'flex';
-      document.getElementById('login-knap').style.display = 'none';
-      document.getElementById('familie-banner').style.display = 'none';
-      renderGrid();
-      return;
-    }
+    // Alle Firebase Auth-brugere er admin/redaktør på dette site
+    familieSession = null;
+    sessionStorage.removeItem('familieSession');
+    document.body.classList.remove('familie-session');
+    document.body.classList.add('kan-redigere');
+    document.getElementById('bruger-navn').textContent = user.email;
+    document.getElementById('bruger-info').style.display = 'flex';
+    document.getElementById('login-knap').style.display = 'none';
+    document.getElementById('familie-banner').style.display = 'none';
+    renderGrid();
+
+    // Hent rolle til badge-tekst (blokerer ikke redigering)
+    let rolle = 'administrator';
+    try {
+      const s = await getDoc(doc(db, 'brugere', user.uid));
+      if (s.exists() && s.data().rolle) rolle = s.data().rolle;
+    } catch { /* vis administrator som fallback */ }
+    document.getElementById('bruger-rolle-badge').textContent = rolle.charAt(0).toUpperCase()+rolle.slice(1);
+    document.getElementById('bruger-rolle-badge').className = 'bruger-rolle-badge ' + rolle;
+    return;
   }
   document.body.classList.remove('kan-redigere');
   if (!familieSession) {
