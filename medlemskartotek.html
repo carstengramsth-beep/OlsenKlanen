@@ -39,6 +39,13 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 #log-ud-knap{background:none;border:none;color:rgba(255,255,255,.4);font-size:11px;cursor:pointer;padding:0;font-family:'Source Sans 3',sans-serif;transition:color .2s}
 #log-ud-knap:hover{color:var(--fare)}
 
+/* ── ADMIN-BJÆLKE (vises når administrator er logget ind) ── */
+#admin-bjaelke{display:none;background:var(--gron-lys);color:#fff;padding:.65rem 1.5rem;font-size:13px;font-weight:500;align-items:center;justify-content:space-between;gap:1rem;position:sticky;top:50px;z-index:190;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+body.kan-redigere #admin-bjaelke{display:flex}
+#admin-bjaelke strong{font-weight:700}
+#admin-log-ud{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.35);color:#fff;font-size:11px;font-weight:700;letter-spacing:.5px;padding:5px 14px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:2px;transition:background .2s;flex-shrink:0}
+#admin-log-ud:hover{background:rgba(0,0,0,.38)}
+
 /* ── FAMILIE-BANNER (vises når familie er logget ind) ── */
 #familie-banner{display:none;background:var(--lilla-pale);border-bottom:2px solid var(--lilla);padding:.65rem 1.5rem;font-size:13px;color:var(--lilla);text-align:center}
 #familie-banner strong{font-weight:700}
@@ -241,6 +248,11 @@ body.familie-session .rediger-knap.egen-rediger{display:inline-block}
     <button id="login-knap">Log ind</button>
   </div>
 </nav>
+
+<div id="admin-bjaelke">
+  <span>🔑 Du er logget ind som <strong id="admin-bjaelke-rolle">Administrator</strong> — <span id="admin-bjaelke-navn"></span></span>
+  <button id="admin-log-ud">Log ud</button>
+</div>
 
 <div id="familie-banner">
   Du er logget ind som <strong id="familie-banner-navn"></strong> — klik <strong>✏️ Rediger</strong> på jeres kort for at opdatere oplysninger.
@@ -917,7 +929,11 @@ editModal.addEventListener('click', e => { if (e.target === editModal) lukEditMo
 // ── LOGIN MODAL (faner) ───────────────────────────────────────
 const loginModal = document.getElementById('login-modal');
 
-document.getElementById('login-knap').addEventListener('click', () => loginModal.classList.add('vis'));
+document.getElementById('login-knap').addEventListener('click', () => {
+  if (document.body.classList.contains('kan-redigere') || familieSession) return;
+  loginModal.classList.add('vis');
+});
+document.getElementById('admin-log-ud').addEventListener('click', () => signOut(auth));
 document.getElementById('modal-luk').addEventListener('click', () => loginModal.classList.remove('vis'));
 loginModal.addEventListener('click', e => { if (e.target === loginModal) loginModal.classList.remove('vis'); });
 
@@ -1040,7 +1056,9 @@ onAuthStateChanged(auth, async user => {
     sessionStorage.removeItem('familieSession');
     document.body.classList.remove('familie-session');
     document.body.classList.add('kan-redigere');
-    document.getElementById('bruger-navn').textContent = user.email;
+    const visNavn = user.displayName || user.email;
+    document.getElementById('bruger-navn').textContent = visNavn;
+    document.getElementById('admin-bjaelke-navn').textContent = visNavn;
     document.getElementById('bruger-info').style.display = 'flex';
     document.getElementById('login-knap').style.display = 'none';
     document.getElementById('familie-banner').style.display = 'none';
@@ -1052,8 +1070,10 @@ onAuthStateChanged(auth, async user => {
       const s = await getDoc(doc(db, 'brugere', user.uid));
       if (s.exists() && s.data().rolle) rolle = s.data().rolle;
     } catch { /* vis administrator som fallback */ }
-    document.getElementById('bruger-rolle-badge').textContent = rolle.charAt(0).toUpperCase()+rolle.slice(1);
+    const rolleVis = rolle.charAt(0).toUpperCase() + rolle.slice(1);
+    document.getElementById('bruger-rolle-badge').textContent = rolleVis;
     document.getElementById('bruger-rolle-badge').className = 'bruger-rolle-badge ' + rolle;
+    document.getElementById('admin-bjaelke-rolle').textContent = rolleVis;
     return;
   }
   document.body.classList.remove('kan-redigere');
