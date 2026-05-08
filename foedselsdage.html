@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>OlsenKlanen — Årets fødselsdage og mærkedage</title>
+<title>OlsenKlanen — Begivenheder</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -157,11 +157,13 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 .tabel tr:last-child td{border-bottom:none;}
 
 /* kolonnebredder */
-.col-dato  {width:110px;font-weight:600;color:var(--gron);white-space:nowrap;}
-.col-navn  {min-width:160px;}
-.col-alder {width:60px;text-align:center;}
-.col-iaar  {width:140px;text-align:center;}
-.col-naeste{width:140px;text-align:center;}
+.col-dato       {width:110px;font-weight:600;color:var(--gron);white-space:nowrap;}
+.col-navn       {min-width:140px;}
+.col-alder      {width:55px;text-align:center;}
+.col-iaar       {width:145px;text-align:center;}
+.col-dato-iaar  {width:80px;text-align:center;font-size:12px;color:var(--gron);font-weight:600;white-space:nowrap;}
+.col-naeste     {width:145px;text-align:center;}
+.col-dato-naeste{width:80px;text-align:center;font-size:12px;color:var(--tekst-lys);white-space:nowrap;}
 
 /* alder-celle: grøn baggrund ved fødselsdag i dag */
 td.alder-idag{background:var(--gron-pale);color:var(--gron);font-weight:700;border-radius:4px;}
@@ -289,14 +291,13 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
   padding:.6rem 1rem;margin-top:.5rem;
 }
 
-/* ─── MÆRKEDAG-DATO ─── */
-.maerkedag-dato{font-size:11px;color:var(--tekst-lys);margin-top:3px;text-align:center;white-space:nowrap;}
+/* ─── NAVN UNDER BADGE I MÆRKEDAG-CELLE ─── */
+.maerkedag-navn{font-size:10.5px;color:var(--tekst-lys);margin-top:3px;text-align:center;font-style:italic;}
 
 /* ─── MOBIL ─── */
 @media(max-width:640px){
   .topbar-links{display:none;}
-  .col-naeste{display:none;}
-  .tabel th:last-child{display:none;}
+  .col-naeste,.col-dato-naeste,.col-dato-iaar{display:none;}
   .flag-banner{font-size:20px;letter-spacing:3px;}
 }
 </style>
@@ -318,7 +319,7 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
 
 <!-- SIDE-HEADER -->
 <div class="side-header">
-  <h1>Årets fødselsdage og mærkedage</h1>
+  <h1>Årets begivenheder og mærkedage</h1>
   <p id="header-sub"></p>
   <div class="guld-streg"></div>
 </div>
@@ -532,22 +533,22 @@ function dageHenTil(dag, mdr) {
 }
 
 function maerkeDato(dag, mdr, aar) {
-  return `<div class="maerkedag-dato">${dag}. ${MAANEDER_KORT[mdr-1]} ${aar}</div>`;
+  return `${dag}. ${MAANEDER_KORT[mdr-1]} ${aar}`;
 }
 
-function foedselsBadge(dag, mdr, fodselsaar, checkAar) {
+function foedselsBadge(dag, mdr, fodselsaar, navn, checkAar) {
   const alder = checkAar - fodselsaar;
   if (RUNDE_ALDRE.includes(alder))
-    return `<span class="badge b-rund">🎂 ${alder} år</span>${maerkeDato(dag, mdr, checkAar)}`;
+    return `<span class="badge b-rund">🎂 ${alder} år</span><div class="maerkedag-navn">${navn}</div>`;
   if (KONF_ALDRE.includes(alder))
-    return `<span class="badge b-konf">🙏 ${checkAar === I_AAR ? 'Konfirmation i år!' : 'Konfirmation næste år!'}</span>${maerkeDato(dag, mdr, checkAar)}`;
+    return `<span class="badge b-konf">🙏 ${checkAar === I_AAR ? 'Konfirmation i år!' : 'Konfirmation næste år!'}</span><div class="maerkedag-navn">${navn}</div>`;
   return '';
 }
 
-function brylBadge(dag, mdr, vielsesaar, checkAar) {
+function brylBadge(dag, mdr, vielsesaar, navne, checkAar) {
   const gifteAar = checkAar - vielsesaar;
-  if (gifteAar === 50) return `<span class="badge b-guld">💍 Guldbryllup</span>${maerkeDato(dag, mdr, checkAar)}`;
-  if (gifteAar === 25) return `<span class="badge b-sølv">💍 Sølvbryllup</span>${maerkeDato(dag, mdr, checkAar)}`;
+  if (gifteAar === 50) return `<span class="badge b-guld">💍 Guldbryllup</span><div class="maerkedag-navn">${navne}</div>`;
+  if (gifteAar === 25) return `<span class="badge b-sølv">💍 Sølvbryllup</span><div class="maerkedag-navn">${navne}</div>`;
   return '';
 }
 
@@ -555,7 +556,7 @@ function brylBadge(dag, mdr, vielsesaar, checkAar) {
 document.getElementById('header-sub').textContent =
   `${FOEDSLER.length} familiemedlemmer · ${I_AAR} og ${NAESTE}`;
 document.getElementById('footer-tekst').textContent =
-  `OlsenKlanen · Fødselsdage & Mærkedage · ${I_AAR}–${NAESTE}`;
+  `OlsenKlanen · Begivenheder & Mærkedage · ${I_AAR}–${NAESTE}`;
 
 // ─── FESTLIG MÆRKEDAGE-BOKS (kun runde fødselsdage, konfirmationer og bryllupper inden for 10 dage) ───
 (function() {
@@ -661,24 +662,30 @@ for (let mi = 0; mi < 12; mi++) {
       const p   = item.p;
       const erI = erFodselsdagIdag(p.dag, p.mdr);
       const al  = alderPrIdag(p.dag, p.mdr, p.aar);
+      const ib  = foedselsBadge(p.dag, p.mdr, p.aar, p.navn, I_AAR);
+      const nb  = foedselsBadge(p.dag, p.mdr, p.aar, p.navn, NAESTE);
       tbody += `<tr>
         <td class="col-dato">${p.dag}. ${MAANEDER_KORT[mi]} ${p.aar}</td>
         <td class="col-navn">${p.navn}</td>
         <td class="${erI ? 'col-alder alder-idag' : 'col-alder'}">${al >= 0 ? al : '—'}</td>
-        <td class="col-iaar">${foedselsBadge(p.dag, p.mdr, p.aar, I_AAR)}</td>
-        <td class="col-naeste">${foedselsBadge(p.dag, p.mdr, p.aar, NAESTE)}</td>
+        <td class="col-iaar">${ib}</td>
+        <td class="col-dato-iaar">${ib ? maerkeDato(p.dag, p.mdr, I_AAR) : ''}</td>
+        <td class="col-naeste">${nb}</td>
+        <td class="col-dato-naeste">${nb ? maerkeDato(p.dag, p.mdr, NAESTE) : ''}</td>
       </tr>`;
     } else {
       const b  = item.b;
-      const ib = brylBadge(b.dag, b.mdr, b.aar, I_AAR);
-      const nb = brylBadge(b.dag, b.mdr, b.aar, NAESTE);
+      const ib = brylBadge(b.dag, b.mdr, b.aar, b.navne, I_AAR);
+      const nb = brylBadge(b.dag, b.mdr, b.aar, b.navne, NAESTE);
       if (!ib && !nb) return;
       tbody += `<tr>
         <td class="col-dato">${b.dag}. ${MAANEDER_KORT[mi]}</td>
         <td class="col-navn">${b.navne}</td>
         <td class="col-alder">—</td>
         <td class="col-iaar">${ib}</td>
+        <td class="col-dato-iaar">${ib ? maerkeDato(b.dag, b.mdr, I_AAR) : ''}</td>
         <td class="col-naeste">${nb}</td>
+        <td class="col-dato-naeste">${nb ? maerkeDato(b.dag, b.mdr, NAESTE) : ''}</td>
       </tr>`;
     }
   });
@@ -691,10 +698,12 @@ for (let mi = 0; mi < 12; mi++) {
   blok.innerHTML =
     `<div class="maaned-header">${MAANEDER[mi]}<span class="maaned-antal">${folkAntal} person${folkAntal === 1 ? '' : 'er'}</span></div>` +
     `<table class="tabel"><thead><tr>` +
-    `<th class="col-dato">Dato</th><th>Navn</th>` +
+    `<th class="col-dato">Fødselsdato</th><th>Navn</th>` +
     `<th class="col-alder center">Alder</th>` +
     `<th class="col-iaar center">Mærkedag ${I_AAR}</th>` +
+    `<th class="col-dato-iaar center">Dato</th>` +
     `<th class="col-naeste center">Mærkedag ${NAESTE}</th>` +
+    `<th class="col-dato-naeste center">Dato</th>` +
     `</tr></thead><tbody>${tbody}</tbody></table>`;
   kal.appendChild(blok);
 }
