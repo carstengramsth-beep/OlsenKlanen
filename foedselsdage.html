@@ -309,7 +309,7 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
   <div class="topbar-links">
     <a href="index.html">Forside</a>
     <a href="skovtur2025.html">Skovtur 2025</a>
-    <a href="foedselsdage.html" class="aktiv">Fødselsdage</a>
+    <a href="foedselsdage.html" class="aktiv">Begivenheder</a>
   </div>
 </div>
 
@@ -335,7 +335,7 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
   <!-- LEGENDE -->
   <div class="legende">
     <div class="leg">🎂 <span class="badge b-rund">Rund fødselsdag</span> 50, 60, 70, 75, 80, 85 eller 90 år</div>
-    <div class="leg">👦👧 <span class="badge b-konf">Konfirmation</span> 15–16 år</div>
+    <div class="leg">🙏 <span class="badge b-konf">Konfirmation i år!</span> eller <span class="badge b-konf">Konfirmation næste år!</span> 15–16 år</div>
     <div class="leg">💍 <span class="badge b-sølv">Sølvbryllup</span> 25 år gift</div>
     <div class="leg">💍 <span class="badge b-guld">Guldbryllup</span> 50 år gift</div>
     <div class="leg" style="background:#c8e6b0;padding:1px 6px;border-radius:4px;">Grøn alder = fødselsdag i dag</div>
@@ -534,7 +534,7 @@ function foedselsBadge(fodselsaar, checkAar) {
   if (RUNDE_ALDRE.includes(alder))
     return `<span class="badge b-rund">🎂 ${alder} år</span>`;
   if (KONF_ALDRE.includes(alder))
-    return `<span class="badge b-konf">👦👧 Konfirmation</span>`;
+    return `<span class="badge b-konf">🙏 ${checkAar === I_AAR ? 'Konfirmation i år!' : 'Konfirmation næste år!'}</span>`;
   return '';
 }
 
