@@ -169,8 +169,9 @@ body.familie-session .rediger-knap.egen-rediger{display:inline-block}
 .person-edit-kort{background:#f5f0e4;border:1px solid var(--border);border-radius:5px;padding:.75rem;margin-bottom:.6rem}
 .person-edit-hoed{display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem}
 .person-edit-hoed .rolle-badge{font-size:10px;padding:2px 8px;border-radius:2px;font-weight:700;letter-spacing:.5px}
+.rolle-badge.ægtefælle-partner{background:var(--guld);color:var(--tekst)}
 .rolle-badge.forælder{background:var(--gron);color:var(--hvid)}
-.rolle-badge.barn{background:var(--guld);color:var(--tekst)}
+.rolle-badge.barn{background:var(--guld-lys);color:var(--tekst)}
 .rolle-badge.familiemedlem{background:var(--lilla);color:var(--hvid)}
 .rolle-badge.ven-af-huset{background:var(--tekst-lys);color:var(--hvid)}
 .person-edit-navn-vis{font-size:13px;font-weight:600;flex:1;color:var(--tekst)}
@@ -514,10 +515,11 @@ function kanRedigere(nr) {
 
 // ── KORTRENDERER ─────────────────────────────────────────────
 const ROLLE_GRUPPER = [
-  { rolle:'forælder',      label:'Forældre' },
-  { rolle:'barn',          label:'Børn' },
-  { rolle:'familiemedlem', label:'Familiemedlemmer' },
-  { rolle:'ven af huset',  label:'Venner af huset' },
+  { rolle:'ægtefælle / partner', label:'Ægtefælle / Partner' },
+  { rolle:'forælder',            label:'Forældre' },
+  { rolle:'barn',                label:'Børn' },
+  { rolle:'familiemedlem',       label:'Familiemedlemmer' },
+  { rolle:'ven af huset',        label:'Venner af huset' },
 ];
 
 function byggKort(m) {
@@ -663,10 +665,11 @@ function renderPersonEdit() {
       <div class="person-edit-felter">
         <input class="fuld" data-pi="${i}" data-felt="navn" placeholder="Fuldt navn" value="${p.navn||''}">
         <select data-pi="${i}" data-felt="rolle">
-          <option value="forælder"      ${p.rolle==='forælder'     ?'selected':''}>Forælder</option>
-          <option value="barn"          ${p.rolle==='barn'         ?'selected':''}>Barn</option>
-          <option value="familiemedlem" ${p.rolle==='familiemedlem'?'selected':''}>Familiemedlem</option>
-          <option value="ven af huset"  ${p.rolle==='ven af huset' ?'selected':''}>Ven af huset</option>
+          <option value="ægtefælle / partner" ${p.rolle==='ægtefælle / partner'?'selected':''}>Ægtefælle / Partner</option>
+          <option value="forælder"            ${p.rolle==='forælder'           ?'selected':''}>Forælder</option>
+          <option value="barn"                ${p.rolle==='barn'               ?'selected':''}>Barn</option>
+          <option value="familiemedlem"       ${p.rolle==='familiemedlem'      ?'selected':''}>Familiemedlem</option>
+          <option value="ven af huset"        ${p.rolle==='ven af huset'       ?'selected':''}>Ven af huset</option>
         </select>
         <input data-pi="${i}" data-felt="mobil"        placeholder="Mobil"        value="${p.mobil||''}">
         <input data-pi="${i}" data-felt="email"        placeholder="Email"        value="${p.email||''}">
