@@ -289,6 +289,9 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
   padding:.6rem 1rem;margin-top:.5rem;
 }
 
+/* ─── MÆRKEDAG-DATO ─── */
+.maerkedag-dato{font-size:11px;color:var(--tekst-lys);margin-top:3px;text-align:center;white-space:nowrap;}
+
 /* ─── MOBIL ─── */
 @media(max-width:640px){
   .topbar-links{display:none;}
@@ -528,21 +531,23 @@ function dageHenTil(dag, mdr) {
   return Math.round((d - IDAG)/86400000);
 }
 
-// Returnerer badge-HTML for et givet kalenderår (fodselsaar = person.aar)
-function foedselsBadge(fodselsaar, checkAar) {
+function maerkeDato(dag, mdr, aar) {
+  return `<div class="maerkedag-dato">${dag}. ${MAANEDER_KORT[mdr-1]} ${aar}</div>`;
+}
+
+function foedselsBadge(dag, mdr, fodselsaar, checkAar) {
   const alder = checkAar - fodselsaar;
   if (RUNDE_ALDRE.includes(alder))
-    return `<span class="badge b-rund">🎂 ${alder} år</span>`;
+    return `<span class="badge b-rund">🎂 ${alder} år</span>${maerkeDato(dag, mdr, checkAar)}`;
   if (KONF_ALDRE.includes(alder))
-    return `<span class="badge b-konf">🙏 ${checkAar === I_AAR ? 'Konfirmation i år!' : 'Konfirmation næste år!'}</span>`;
+    return `<span class="badge b-konf">🙏 ${checkAar === I_AAR ? 'Konfirmation i år!' : 'Konfirmation næste år!'}</span>${maerkeDato(dag, mdr, checkAar)}`;
   return '';
 }
 
-// Badge for bryllup
-function brylBadge(vielsesaar, checkAar) {
+function brylBadge(dag, mdr, vielsesaar, checkAar) {
   const gifteAar = checkAar - vielsesaar;
-  if (gifteAar === 50) return `<span class="badge b-guld">💍 Guldbryllup</span>`;
-  if (gifteAar === 25) return `<span class="badge b-sølv">💍 Sølvbryllup</span>`;
+  if (gifteAar === 50) return `<span class="badge b-guld">💍 Guldbryllup</span>${maerkeDato(dag, mdr, checkAar)}`;
+  if (gifteAar === 25) return `<span class="badge b-sølv">💍 Sølvbryllup</span>${maerkeDato(dag, mdr, checkAar)}`;
   return '';
 }
 
@@ -660,13 +665,13 @@ for (let mi = 0; mi < 12; mi++) {
         <td class="col-dato">${p.dag}. ${MAANEDER_KORT[mi]} ${p.aar}</td>
         <td class="col-navn">${p.navn}</td>
         <td class="${erI ? 'col-alder alder-idag' : 'col-alder'}">${al >= 0 ? al : '—'}</td>
-        <td class="col-iaar">${foedselsBadge(p.aar, I_AAR)}</td>
-        <td class="col-naeste">${foedselsBadge(p.aar, NAESTE)}</td>
+        <td class="col-iaar">${foedselsBadge(p.dag, p.mdr, p.aar, I_AAR)}</td>
+        <td class="col-naeste">${foedselsBadge(p.dag, p.mdr, p.aar, NAESTE)}</td>
       </tr>`;
     } else {
       const b  = item.b;
-      const ib = brylBadge(b.aar, I_AAR);
-      const nb = brylBadge(b.aar, NAESTE);
+      const ib = brylBadge(b.dag, b.mdr, b.aar, I_AAR);
+      const nb = brylBadge(b.dag, b.mdr, b.aar, NAESTE);
       if (!ib && !nb) return;
       tbody += `<tr>
         <td class="col-dato">${b.dag}. ${MAANEDER_KORT[mi]}</td>
