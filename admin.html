@@ -1342,6 +1342,10 @@ function opsætAdminPanel(user) {
   // Start presence
   startPresence(email, user.displayName || email);
 
+  // Marker eget brugerkort grønt med det samme (RTDB er asynkront)
+  const egetKort = document.querySelector(`.bruger-kort[data-email="${email}"]`);
+  if (egetKort) egetKort.querySelector('.online-prik')?.classList.add('aktiv');
+
   // Indlæs data
   indlaesAltData();
 }
@@ -1902,23 +1906,42 @@ function renderUdviklingslog(liste) {
       </div>`;
     return;
   }
-  const erAdmin = aktivRolle === 'admin';
-  el.innerHTML = '<table class="tabel"><thead><tr><th>Start</th><th>Slut</th><th>Status</th><th>Beskrivelse</th>' + (erAdmin ? '<th></th>' : '') + '</tr></thead><tbody>' +
-    liste.map(e => {
-      const iGang = e.status !== 'afsluttet';
-      const afslutKnap = erAdmin && iGang
-        ? `<button class="btn btn-ok btn-sm" onclick="afslutUdvlogEntry('${e.id}')">Afslut</button>`
-        : '';
-      return `
-        <tr>
-          <td style="white-space:nowrap;color:var(--tekst-mid)">${formaterDato(e.dato)}<br><span style="font-size:12px">${escHtml(e.startTid || '')}</span></td>
-          <td style="white-space:nowrap;color:var(--tekst-mid)">${e.slutTid ? '<span style="font-size:12px">' + escHtml(e.slutTid) + '</span>' : '<span style="color:var(--tekst-lys)">—</span>'}</td>
-          <td><span class="badge ${iGang ? 'badge-i-gang' : 'badge-afsluttet'}">${escHtml(e.status || 'i gang')}</span></td>
-          <td style="color:${iGang ? '#2a5db0' : 'var(--tekst)'}">${escHtml(e.beskrivelse || '')}</td>
-          ${erAdmin ? '<td>' + afslutKnap + '</td>' : ''}
-        </tr>`;
-    }).join('') +
-    '</tbody></table>';
+
+  const aktive     = liste.filter(e => e.status !== 'afsluttet');
+  const afsluttede = liste.filter(e => e.status === 'afsluttet');
+  const erAdmin    = aktivRolle === 'admin';
+
+  const thead = visHandling =>
+    '<thead><tr><th>Start</th><th>Slut</th><th>Status</th><th>Beskrivelse</th>' +
+    (visHandling ? '<th></th>' : '') + '</tr></thead>';
+
+  const rækker = (entries, visHandling) => entries.map(e => {
+    const iGang = e.status !== 'afsluttet';
+    const afslutKnap = visHandling && iGang
+      ? `<button class="btn btn-ok btn-sm" onclick="afslutUdvlogEntry('${e.id}')">Afslut</button>`
+      : '';
+    return `<tr>
+      <td style="white-space:nowrap;color:var(--tekst-mid)">${formaterDato(e.dato)}<br><span style="font-size:12px">${escHtml(e.startTid || '')}</span></td>
+      <td style="white-space:nowrap;color:var(--tekst-mid)">${e.slutTid ? '<span style="font-size:12px">' + escHtml(e.slutTid) + '</span>' : '<span style="color:var(--tekst-lys)">—</span>'}</td>
+      <td><span class="badge ${iGang ? 'badge-i-gang' : 'badge-afsluttet'}">${escHtml(e.status || 'i gang')}</span></td>
+      <td style="color:${iGang ? '#2a5db0' : 'var(--tekst)'}">${escHtml(e.beskrivelse || '')}</td>
+      ${visHandling ? '<td>' + afslutKnap + '</td>' : ''}
+    </tr>`;
+  }).join('');
+
+  let html = aktive.length
+    ? '<table class="tabel">' + thead(erAdmin) + '<tbody>' + rækker(aktive, erAdmin) + '</tbody></table>'
+    : '<div style="padding:1.5rem;color:var(--tekst-lys);font-size:13px;text-align:center">Ingen aktive projekter</div>';
+
+  if (afsluttede.length) {
+    html += `
+      <div style="padding:.75rem 1.5rem;background:var(--creme-mork);border-top:2px solid var(--guld-pale);margin-top:.25rem">
+        <span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--mos-mork);font-weight:600">🗄 Arkiv — Afsluttede projekter</span>
+      </div>
+      <table class="tabel">` + thead(false) + `<tbody>` + rækker(afsluttede, false) + `</tbody></table>`;
+  }
+
+  el.innerHTML = html;
 }
 
 function aabneUdvlogForm() {
