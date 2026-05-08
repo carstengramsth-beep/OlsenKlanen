@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>OlsenKlanen — Medlemskartotek</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gron:#2d5016;--gron-lys:#4a7c2a;--gron-pale:#c8e6b0;
+  --guld:#c8952a;--guld-lys:#f5e6c8;--guld-pale:#fdf8ee;
+  --hvid:#fefcf8;--tekst:#1a1a0e;--tekst-lys:#5a5a40;--border:#d4c9a0;
+  --baggrund:#fffde0;
+  --fare:#c0392b;--ok:#2d6e2d;--ok-lys:#e8f5e9;
+}
+body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var(--tekst);min-height:100vh}
+
+/* ── FLAG-BANNER ── */
+.flag-banner{background:var(--gron);text-align:center;padding:.55rem 0;font-size:26px;letter-spacing:6px;border-bottom:3px solid var(--guld)}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--gron);padding:0 1.5rem;height:50px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.topbar-logo{font-family:'Playfair Display',serif;font-size:19px;font-weight:500;color:var(--hvid);text-decoration:none}
+.topbar-hojre{display:flex;align-items:center;gap:1.5rem}
+.topbar-links{display:flex;gap:1.25rem}
+.topbar-links a{font-size:12px;color:rgba(255,255,255,.6);text-decoration:none}
+.topbar-links a:hover,.topbar-links a.aktiv{color:var(--guld-lys)}
+#login-knap{background:none;border:1px solid rgba(255,255,255,.35);color:rgba(255,255,255,.75);font-size:11px;letter-spacing:1px;padding:5px 13px;cursor:pointer;font-family:'Source Sans 3',sans-serif;transition:all .2s;border-radius:2px}
+#login-knap:hover{border-color:var(--guld-lys);color:var(--guld-lys)}
+#admin-badge{display:none;align-items:center;gap:.75rem}
+#admin-email{font-size:11px;color:var(--guld-lys)}
+#log-ud-knap{background:none;border:none;color:rgba(255,255,255,.45);font-size:11px;cursor:pointer;padding:0;font-family:'Source Sans 3',sans-serif;transition:color .2s}
+#log-ud-knap:hover{color:var(--fare)}
+
+/* ── SIDE-HEADER ── */
+.side-header{background:var(--gron);padding:1.75rem 1rem 1.5rem;text-align:center;border-bottom:1px solid rgba(200,149,42,.35)}
+.side-header h1{font-family:'Playfair Display',serif;font-size:clamp(22px,5vw,36px);font-weight:400;color:var(--hvid);margin-bottom:.3rem}
+.side-header p{font-size:12px;color:rgba(255,255,255,.5);letter-spacing:1px}
+.guld-streg{width:40px;height:2px;background:var(--guld);margin:.9rem auto 0;border-radius:2px}
+
+/* ── WRAPPER ── */
+.wrapper{max-width:1120px;margin:0 auto;padding:1.5rem 1rem 3rem}
+
+/* ── SØGEBAR ── */
+.soegebar{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap}
+.soege-input{flex:1;min-width:220px;border:1px solid var(--border);background:var(--hvid);padding:.6rem 1rem;font-size:14px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);outline:none;border-radius:4px;transition:border-color .2s}
+.soege-input:focus{border-color:var(--gron)}
+.antal-linje{font-size:12px;color:var(--tekst-lys);white-space:nowrap}
+
+/* ── GRID ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.25rem}
+.ingen-resultater{grid-column:1/-1;text-align:center;padding:3rem 1rem;color:var(--tekst-lys);font-style:italic}
+
+/* ── KORT ── */
+.kort{background:var(--hvid);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;flex-direction:column;transition:box-shadow .2s}
+.kort:hover{box-shadow:0 4px 16px rgba(0,0,0,.1)}
+
+.kort-hoved{background:var(--gron);padding:.75rem 1rem;display:flex;align-items:center;gap:.75rem}
+.nr-badge{background:var(--guld);color:var(--tekst);font-size:10px;font-weight:700;padding:3px 8px;border-radius:3px;white-space:nowrap;flex-shrink:0;letter-spacing:.5px}
+.kort-navn{font-family:'Playfair Display',serif;font-size:15px;font-weight:400;color:var(--hvid);line-height:1.3}
+
+.kort-krop{padding:1rem;flex:1}
+.info-linje{display:flex;gap:.65rem;align-items:flex-start;margin-bottom:.65rem;font-size:13px}
+.info-linje:last-child{margin-bottom:0}
+.info-ikon{font-size:14px;flex-shrink:0;margin-top:1px;width:18px}
+.info-tekst{line-height:1.4;word-break:break-word;color:var(--tekst)}
+.info-tekst a{color:var(--gron);text-decoration:none}
+.info-tekst a:hover{text-decoration:underline}
+.tom-info{color:var(--tekst-lys);font-style:italic}
+
+.familie-sektion{margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--border)}
+.familie-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tekst-lys);font-weight:600;margin-bottom:.4rem}
+.familie-liste{font-size:12.5px;color:var(--tekst);line-height:1.7}
+
+.kort-fod{padding:.6rem 1rem;border-top:1px solid var(--border);background:var(--guld-pale);display:flex;justify-content:flex-end}
+.rediger-knap{background:none;border:1px solid var(--gron);color:var(--gron);font-size:11px;letter-spacing:.5px;padding:5px 14px;cursor:pointer;font-family:'Source Sans 3',sans-serif;font-weight:600;transition:all .2s;border-radius:3px;display:none}
+.rediger-knap:hover{background:var(--gron);color:var(--hvid)}
+body.er-admin .rediger-knap{display:inline-block}
+
+/* ── REDIGÉR FORM ── */
+.edit-form{padding:1rem 1rem .75rem;background:#f5f0e4}
+.edit-felt{margin-bottom:.75rem}
+.edit-felt label{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tekst-lys);font-weight:600;margin-bottom:4px}
+.edit-felt input,.edit-felt textarea{width:100%;border:1px solid var(--border);padding:.5rem .75rem;font-size:13px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:var(--hvid);outline:none;border-radius:3px;transition:border-color .2s}
+.edit-felt input:focus,.edit-felt textarea:focus{border-color:var(--gron);background:#fff}
+.edit-felt textarea{min-height:68px;resize:vertical;line-height:1.5}
+.edit-knapper{display:flex;align-items:center;gap:.5rem;margin-top:.75rem}
+.gem-knap{background:var(--gron);color:var(--hvid);border:none;padding:7px 18px;font-size:12px;letter-spacing:.5px;font-weight:600;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:3px;transition:background .2s}
+.gem-knap:hover{background:var(--gron-lys)}
+.gem-knap:disabled{opacity:.6;cursor:default}
+.annuller-knap{background:none;border:1px solid var(--border);color:var(--tekst-lys);padding:7px 14px;font-size:12px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:3px;transition:all .2s}
+.annuller-knap:hover{border-color:var(--tekst);color:var(--tekst)}
+.gem-status{font-size:12px;margin-right:auto}
+.gem-status.ok{color:var(--ok)}
+.gem-status.fejl{color:var(--fare)}
+
+/* ── LOGIN MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.vis{display:flex}
+.modal-boks{background:var(--hvid);max-width:380px;width:100%;border-top:3px solid var(--guld);box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative}
+.modal-luk{position:absolute;top:.75rem;right:1rem;background:none;border:none;font-size:22px;cursor:pointer;color:var(--tekst-lys);line-height:1;padding:0}
+.modal-luk:hover{color:var(--tekst)}
+.modal-header{padding:1.75rem 1.75rem 0}
+.modal-titel{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:var(--gron)}
+.modal-body{padding:1.25rem 1.75rem 1.75rem}
+.modal-felt{margin-bottom:1rem}
+.modal-felt label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--tekst-lys);font-weight:600;margin-bottom:5px}
+.modal-felt input{width:100%;border:1px solid rgba(200,149,42,.35);padding:.65rem .9rem;font-size:14px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:#faf6ee;outline:none;border-radius:3px;transition:border-color .2s}
+.modal-felt input:focus{border-color:var(--gron);background:#fff}
+.modal-login-knap{width:100%;background:var(--gron);color:var(--hvid);border:none;padding:.75rem;font-size:12px;letter-spacing:1.5px;font-weight:600;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:3px;transition:background .2s;margin-top:.25rem}
+.modal-login-knap:hover{background:var(--gron-lys)}
+.modal-fejl{color:var(--fare);font-size:12px;margin-top:.6rem;display:none}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  .topbar-links{display:none}
+  .grid{grid-template-columns:1fr}
+  .soege-input{min-width:160px}
+}
+</style>
+</head>
+<body>
+
+<div class="flag-banner">🇩🇰 🇩🇰 🇩🇰 🇩🇰 🇩🇰</div>
+
+<nav class="topbar">
+  <a href="index.html" class="topbar-logo">OlsenKlanen</a>
+  <div class="topbar-hojre">
+    <div class="topbar-links">
+      <a href="index.html">Forside</a>
+      <a href="skovtur2025.html">Skovtur 2025</a>
+      <a href="foedselsdage.html">Fødselsdage</a>
+      <a href="medlemskartotek.html" class="aktiv">Medlemmer</a>
+    </div>
+    <div id="admin-badge">
+      <span id="admin-email"></span>
+      <button id="log-ud-knap">Log ud</button>
+    </div>
+    <button id="login-knap">Log ind</button>
+  </div>
+</nav>
+
+<!-- Login modal -->
+<div class="modal-overlay" id="login-modal">
+  <div class="modal-boks">
+    <button class="modal-luk" id="modal-luk" aria-label="Luk">×</button>
+    <div class="modal-header">
+      <div class="modal-titel">Log ind</div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-felt">
+        <label>Email</label>
+        <input type="email" id="modal-email" placeholder="din@email.dk" autocomplete="username">
+      </div>
+      <div class="modal-felt">
+        <label>Kodeord</label>
+        <input type="password" id="modal-kode" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="modal-login-knap" id="modal-login-knap">Log ind</button>
+      <div class="modal-fejl" id="modal-fejl">Forkert email eller kodeord.</div>
+    </div>
+  </div>
+</div>
+
+<header class="side-header">
+  <h1>Medlemskartotek</h1>
+  <p>OlsenKlanens registrerede familier · opdateret januar 2026</p>
+  <div class="guld-streg"></div>
+</header>
+
+<div class="wrapper">
+  <div class="soegebar">
+    <input type="search" class="soege-input" id="soege" placeholder="Søg på navn, adresse, telefon…">
+    <div class="antal-linje" id="antal-linje"></div>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<script type="module">
+import { initializeApp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3",
+  databaseURL: "https://olsenklanen-familieside-default-rtdb.europe-west1.firebasedatabase.app"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── STANDARDDATA (januar 2026) ────────────────────────────────
+const STANDARD = [
+  { nr:"4",  navne:"Bibs og Bent Westergaard-Hansen",          adresse:"Nørremøllevej 5, Ø.Snogbæk\n6400 Sønderborg",          tlf:"74468171",                              email:"bent.w-h@mail.dk",                   familie:"" },
+  { nr:"8",  navne:"Elisabeth og Carsten Gram",                adresse:"Bjælkerupvej 111\n4660 Store Heddinge",                 tlf:"E: 2060 4377 / C: 2073 2525",           email:"eg@paritas.dk / cg@prinfoparitas.dk", familie:"" },
+  { nr:"13", navne:"Gitte Vormslev Baldersø",                  adresse:"Tofteholmen 110\n2690 Karlslunde",                      tlf:"46153299 / 22541177",                   email:"Vormslev1@hotmail.com",               familie:"" },
+  { nr:"14", navne:"Svend Vormslev Olsen",                     adresse:"Vejlebrovej 152, 2.tv\n2635 Ishøj",                    tlf:"53542096",                              email:"vormslev@ishoejby.dk",                familie:"" },
+  { nr:"16", navne:"Christian V. Olsen",                       adresse:"Kong Hans Allé 1c st. tv\n2860 Søborg",                tlf:"44940108 / 50453327",                   email:"chrvo@mail.dk",                      familie:"" },
+  { nr:"17", navne:"Tina og René Gram",                        adresse:"Henningsens Allé 42\n2900 Hellerup",                   tlf:"39303317 / 51223317",                   email:"rene_gram@prokura.dk",                familie:"" },
+  { nr:"19", navne:"Jette og Tommy Olsen",                     adresse:"Elmelunden 14\n2635 Ishøj",                            tlf:"43731284 / 20321284 / 24681116 / 29871284", email:"tvo@ishoejby.dk",                familie:"" },
+  { nr:"20", navne:"Iben og Ronnie Olsen",                     adresse:"Spolestræde 127\n2635 Ishøj",                          tlf:"29925429",                              email:"ibse85@hotmail.com",                  familie:"" },
+  { nr:"21", navne:"Jytte Tingberg og Jan Nielsen",            adresse:"Lerager 75\n3600 Frederikssund",                       tlf:"47311227 / 20483471",                   email:"jan.jytte@tdcadsl.dk",               familie:"" },
+  { nr:"22", navne:"Jytte og Kurt Olsen",                      adresse:"Skærager 21\n2620 Albertslund",                       tlf:"43646828 / 40745767",                   email:"kvo@vormslev.dk",                    familie:"" },
+  { nr:"23", navne:"Karin og Richard Lund",                    adresse:"Risvangen 19\n2700 Brønshøj",                         tlf:"38285643 / 25764845 / 20207643",        email:"karin.lund@tele2adsl.dk",            familie:"" },
+  { nr:"24", navne:"Tine Carlberg Olsen og Simon Hansen",      adresse:"Vildtbanestien 9, 3.th\n2635 Ishøj",                  tlf:"28716973",                              email:"tco@ishoejby.dk",                    familie:"" },
+  { nr:"26", navne:"Lene Vormslev Hansen og Tom Petersen",     adresse:"Ved skellet 16\n6400 Sønderborg",                     tlf:"74433840 / 22452103",                   email:"petsen@mail1.stofanet.dk",           familie:"" },
+  { nr:"27", navne:"Lili og Gunner Carlberg",                  adresse:"Egelunden 24\n2635 Ishøj",                            tlf:"29990110 / 40883730",                   email:"gunlil@ishoejby.dk",                 familie:"" },
+  { nr:"28", navne:"Lilli og Egon Olsen",                      adresse:"Islevbrovej 55, 1. L6\n2610 Rødovre",                 tlf:"44847985 / 40628700",                   email:"egon-v-olsen@mail.tele.dk",          familie:"" },
+  { nr:"29", navne:"Lise og Sten V. Olsen",                    adresse:"Søndervang 29\n6840 Oksbøl",                          tlf:"75272337 / 50562337",                   email:"steenoglise29@gmail.com",            familie:"" },
+  { nr:"30", navne:"Lise og Jørgen Olsen",                     adresse:"Slåenvej 127\n6715 Esbjerg N",                        tlf:"75132015",                              email:"liseogjorgenolsen@get2net.dk",        familie:"" },
+  { nr:"32", navne:"Nina og Finn Lennert",                     adresse:"Ørstedsgade 7\n6400 Sønderborg",                      tlf:"42433109",                              email:"ninalennert@hotmail.com",             familie:"" },
+  { nr:"33", navne:"Solveig og Jan Olsen",                     adresse:"Vestervej 12\n6980 Tim",                              tlf:"97333070",                              email:"vestervej12@yahoo.dk",                familie:"" },
+  { nr:"34", navne:"Tove og Steve Ebersole",                   adresse:"Bentzonsvej 10, 1.tv\n2000 Frederiksberg C",          tlf:"38870323",                              email:"",                                   familie:"" },
+  { nr:"35", navne:"Vibeke og Charles Petersen",               adresse:"Rugtorvet 8, Karlby\n8543 Hornslet",                  tlf:"86974604",                              email:"",                                   familie:"" },
+  { nr:"36", navne:"Anja V. Olsen",                            adresse:"Åbakkevej 38, 2.tv\n2720 Vanløse",                    tlf:"20963548",                              email:"",                                   familie:"" },
+  { nr:"39", navne:"Kenneth Lund",                             adresse:"Vester nørremarksvej 3\n5762 Vester Skerninge",       tlf:"38896535 / 27146535",                   email:"lundkenneth@hotmail.com",             familie:"" },
+  { nr:"40", navne:"Mette Holmgaard",                          adresse:"Enighedsvej 6 E, 2.th\n2920 Charlottenlund",          tlf:"",                                      email:"",                                   familie:"" },
+  { nr:"41", navne:"Stefan V. Olsen",                          adresse:"Egelunden 98\n2635 Ishøj",                            tlf:"",                                      email:"stef@ishoejby.dk",                   familie:"" },
+  { nr:"42", navne:"Jacob P. Olsen",                           adresse:"Tim Kirkevej 46\n6980 Tim",                           tlf:"40250264",                              email:"jacob1304@ofir.dk",                  familie:"" },
+  { nr:"45", navne:"Flemming Lund og Alba",                    adresse:"",                                                    tlf:"",                                      email:"",                                   familie:"" },
+  { nr:"49", navne:"Elsebeth og Bent Rasmussen",               adresse:"Elmelunden 12\n2635 Ishøj",                           tlf:"43733736",                              email:"bjr@ishoejby.dk",                    familie:"" },
+  { nr:"51", navne:"Kristine og Martin Hernvig",               adresse:"Morbærvænget 5\n3600 Frederikssund",                  tlf:"47385695",                              email:"",                                   familie:"" },
+  { nr:"52", navne:"Rikke V. Tingberg og Benjamin Bidstrup",   adresse:"H.V.Nyholmsvej 2, 4. lejl. 4\n2000 Frederiksberg C", tlf:"35395757 / 28122930",                   email:"rikke.tingberg@get2net.dk",          familie:"" },
+];
+
+// ── STATE ─────────────────────────────────────────────────────
+let data = STANDARD.map(m => ({...m}));
+let soegeTekst = '';
+
+// ── HJÆLPEFUNKTIONER ──────────────────────────────────────────
+function adrHtml(s) {
+  return (s || '').split('\n').map(l => l.trim()).filter(Boolean).join('<br>');
+}
+
+function visKortHtml(m) {
+  const adr = adrHtml(m.adresse);
+  const familieLinjer = (m.familie || '').split('\n').map(l => l.trim()).filter(Boolean);
+  const familieHtml = familieLinjer.length
+    ? `<div class="familie-sektion">
+         <div class="familie-label">Tilknyttede familiemedlemmer</div>
+         <div class="familie-liste">${familieLinjer.join('<br>')}</div>
+       </div>` : '';
+
+  return `
+    <div class="kort-hoved">
+      <span class="nr-badge">Mdl. nr. ${m.nr}</span>
+      <span class="kort-navn">${m.navne}</span>
+    </div>
+    <div class="kort-krop">
+      <div class="info-linje">
+        <span class="info-ikon">📍</span>
+        <span class="info-tekst">${adr || '<span class="tom-info">Ingen adresse</span>'}</span>
+      </div>
+      <div class="info-linje">
+        <span class="info-ikon">📞</span>
+        <span class="info-tekst">${m.tlf || '<span class="tom-info">Ingen telefon</span>'}</span>
+      </div>
+      <div class="info-linje">
+        <span class="info-ikon">✉️</span>
+        <span class="info-tekst">${m.email
+          ? m.email.split('/').map(e => `<a href="mailto:${e.trim()}">${e.trim()}</a>`).join(' / ')
+          : '<span class="tom-info">Ingen email</span>'}</span>
+      </div>
+      ${familieHtml}
+    </div>
+    <div class="kort-fod">
+      <button class="rediger-knap" data-nr="${m.nr}">✏️ Rediger</button>
+    </div>`;
+}
+
+function visEditHtml(m) {
+  return `
+    <div class="kort-hoved">
+      <span class="nr-badge">Mdl. nr. ${m.nr}</span>
+      <span class="kort-navn">${m.navne}</span>
+    </div>
+    <div class="edit-form">
+      <div class="edit-felt">
+        <label>Medlemsnummer</label>
+        <input id="ef-nr" value="${m.nr}">
+      </div>
+      <div class="edit-felt">
+        <label>Navne</label>
+        <input id="ef-navne" value="${m.navne}">
+      </div>
+      <div class="edit-felt">
+        <label>Adresse (linjeskift = ny linje)</label>
+        <textarea id="ef-adresse">${m.adresse || ''}</textarea>
+      </div>
+      <div class="edit-felt">
+        <label>Telefon / mobil</label>
+        <input id="ef-tlf" value="${m.tlf || ''}">
+      </div>
+      <div class="edit-felt">
+        <label>Email</label>
+        <input id="ef-email" value="${m.email || ''}">
+      </div>
+      <div class="edit-felt">
+        <label>Tilknyttede familiemedlemmer (én pr. linje)</label>
+        <textarea id="ef-familie">${m.familie || ''}</textarea>
+      </div>
+      <div class="edit-knapper">
+        <span class="gem-status" id="gem-status-${m.nr}"></span>
+        <button class="annuller-knap" data-annuller="${m.nr}">Annullér</button>
+        <button class="gem-knap" id="gem-knap-${m.nr}" data-gem="${m.nr}">💾 Gem</button>
+      </div>
+    </div>`;
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  const q = soegeTekst.toLowerCase();
+  const synlige = data
+    .filter(m =>
+      !q ||
+      m.navne.toLowerCase().includes(q) ||
+      (m.adresse || '').toLowerCase().includes(q) ||
+      (m.tlf || '').includes(q) ||
+      (m.familie || '').toLowerCase().includes(q)
+    )
+    .sort((a, b) => +a.nr - +b.nr);
+
+  const antalEl = document.getElementById('antal-linje');
+  antalEl.textContent = synlige.length === data.length
+    ? `${data.length} familier`
+    : `${synlige.length} af ${data.length} familier`;
+
+  grid.innerHTML = '';
+  if (!synlige.length) {
+    grid.innerHTML = '<div class="ingen-resultater">Ingen familier matcher søgningen.</div>';
+    return;
+  }
+  synlige.forEach(m => {
+    const el = document.createElement('div');
+    el.className = 'kort';
+    el.dataset.nr = m.nr;
+    el.innerHTML = visKortHtml(m);
+    grid.appendChild(el);
+  });
+}
+
+// ── EDIT ──────────────────────────────────────────────────────
+function aabneRedigering(nr) {
+  const m = data.find(x => x.nr === nr);
+  const el = document.querySelector(`.kort[data-nr="${nr}"]`);
+  if (!m || !el) return;
+  el.innerHTML = visEditHtml(m);
+  el.querySelector('#ef-navne').focus();
+}
+
+function annullerRedigering(nr) {
+  const m = data.find(x => x.nr === nr);
+  const el = document.querySelector(`.kort[data-nr="${nr}"]`);
+  if (!m || !el) return;
+  el.innerHTML = visKortHtml(m);
+}
+
+async function gemRedigering(gammelNr) {
+  const nytNr    = document.getElementById('ef-nr').value.trim();
+  const statusEl = document.getElementById(`gem-status-${gammelNr}`);
+  const gemKnap  = document.getElementById(`gem-knap-${gammelNr}`);
+
+  if (!nytNr) {
+    statusEl.className = 'gem-status fejl';
+    statusEl.textContent = 'Medlemsnummer må ikke være tomt.';
+    return;
+  }
+
+  const opdateret = {
+    nr:      nytNr,
+    navne:   document.getElementById('ef-navne').value.trim(),
+    adresse: document.getElementById('ef-adresse').value.trim(),
+    tlf:     document.getElementById('ef-tlf').value.trim(),
+    email:   document.getElementById('ef-email').value.trim(),
+    familie: document.getElementById('ef-familie').value.trim(),
+  };
+
+  gemKnap.disabled = true;
+  statusEl.className = 'gem-status';
+  statusEl.textContent = 'Gemmer…';
+
+  try {
+    // Gem/overskriv i Firestore
+    await setDoc(doc(db, 'medlemmer', nytNr), opdateret);
+
+    // Slet gammelt dokument hvis nummer er ændret
+    if (nytNr !== gammelNr) {
+      await deleteDoc(doc(db, 'medlemmer', gammelNr));
+    }
+
+    // Opdatér lokal state
+    const idx = data.findIndex(x => x.nr === gammelNr);
+    if (idx >= 0) data[idx] = opdateret;
+    else data.push(opdateret);
+
+    // Re-render kortet i visnings-mode
+    const el = document.querySelector(`.kort[data-nr="${gammelNr}"]`);
+    if (el) {
+      el.dataset.nr = nytNr;
+      el.innerHTML = visKortHtml(opdateret);
+    }
+  } catch (e) {
+    gemKnap.disabled = false;
+    statusEl.className = 'gem-status fejl';
+    statusEl.textContent = 'Fejl: ' + (e.message || 'Kunne ikke gemme');
+  }
+}
+
+// ── EVENT DELEGATION ──────────────────────────────────────────
+document.getElementById('grid').addEventListener('click', e => {
+  const rBtn = e.target.closest('.rediger-knap');
+  if (rBtn) { aabneRedigering(rBtn.dataset.nr); return; }
+
+  const aBtn = e.target.closest('[data-annuller]');
+  if (aBtn) { annullerRedigering(aBtn.dataset.annuller); return; }
+
+  const gBtn = e.target.closest('[data-gem]');
+  if (gBtn) { gemRedigering(gBtn.dataset.gem); return; }
+});
+
+// ── SØGNING ───────────────────────────────────────────────────
+document.getElementById('soege').addEventListener('input', e => {
+  soegeTekst = e.target.value;
+  renderGrid();
+});
+
+// ── AUTH ──────────────────────────────────────────────────────
+async function erAdministrator(user) {
+  if (!user) return false;
+  try {
+    const snap = await getDoc(doc(db, 'brugere', user.uid));
+    return snap.exists() && snap.data().rolle === 'administrator';
+  } catch { return false; }
+}
+
+onAuthStateChanged(auth, async user => {
+  const badge    = document.getElementById('admin-badge');
+  const loginKnap = document.getElementById('login-knap');
+
+  if (user && await erAdministrator(user)) {
+    document.body.classList.add('er-admin');
+    document.getElementById('admin-email').textContent = user.email;
+    badge.style.display = 'flex';
+    loginKnap.style.display = 'none';
+  } else {
+    document.body.classList.remove('er-admin');
+    badge.style.display = 'none';
+    loginKnap.style.display = 'inline-block';
+  }
+});
+
+// ── LOGIN MODAL ───────────────────────────────────────────────
+const modal     = document.getElementById('login-modal');
+const modalFejl = document.getElementById('modal-fejl');
+
+document.getElementById('login-knap').addEventListener('click', () => {
+  modalFejl.style.display = 'none';
+  modal.classList.add('vis');
+  setTimeout(() => document.getElementById('modal-email').focus(), 80);
+});
+document.getElementById('modal-luk').addEventListener('click', () => modal.classList.remove('vis'));
+modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('vis'); });
+
+document.getElementById('modal-login-knap').addEventListener('click', async () => {
+  const email = document.getElementById('modal-email').value.trim();
+  const kode  = document.getElementById('modal-kode').value;
+  modalFejl.style.display = 'none';
+  try {
+    await signInWithEmailAndPassword(auth, email, kode);
+    modal.classList.remove('vis');
+  } catch {
+    modalFejl.style.display = 'block';
+  }
+});
+
+document.getElementById('modal-kode').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('modal-login-knap').click();
+});
+
+document.getElementById('log-ud-knap').addEventListener('click', () => signOut(auth));
+
+// ── INDLÆSNING ────────────────────────────────────────────────
+async function initialiserSide() {
+  renderGrid(); // Vis standarddata straks
+
+  try {
+    const snap = await getDocs(collection(db, 'medlemmer'));
+    snap.forEach(d => {
+      const fd = d.data();
+      const idx = data.findIndex(x => x.nr === d.id);
+      if (idx >= 0) data[idx] = { ...data[idx], ...fd };
+      else data.push(fd);
+    });
+    renderGrid(); // Opdatér med Firestore-data hvis tilgængeligt
+  } catch { /* Firestore ikke tilgængeligt – standarddata vises */ }
+}
+
+initialiserSide();
+</script>
+</body>
+</html>
