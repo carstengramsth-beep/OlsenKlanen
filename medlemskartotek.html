@@ -13,7 +13,7 @@
   --guld:#c8952a;--guld-lys:#f5e6c8;--guld-pale:#fdf8ee;
   --hvid:#fefcf8;--tekst:#1a1a0e;--tekst-lys:#5a5a40;--border:#d4c9a0;
   --baggrund:#fffde0;
-  --fare:#c0392b;--ok:#2d6e2d;--ok-lys:#e8f5e9;
+  --fare:#c0392b;--fare-pale:#fdf0ef;--ok:#2d6e2d;--ok-pale:#e8f5e9;
 }
 body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var(--tekst);min-height:100vh}
 
@@ -29,9 +29,12 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 .topbar-links a:hover,.topbar-links a.aktiv{color:var(--guld-lys)}
 #login-knap{background:none;border:1px solid rgba(255,255,255,.35);color:rgba(255,255,255,.75);font-size:11px;letter-spacing:1px;padding:5px 13px;cursor:pointer;font-family:'Source Sans 3',sans-serif;transition:all .2s;border-radius:2px}
 #login-knap:hover{border-color:var(--guld-lys);color:var(--guld-lys)}
-#admin-badge{display:none;align-items:center;gap:.75rem}
-#admin-email{font-size:11px;color:var(--guld-lys)}
-#log-ud-knap{background:none;border:none;color:rgba(255,255,255,.45);font-size:11px;cursor:pointer;padding:0;font-family:'Source Sans 3',sans-serif;transition:color .2s}
+#bruger-info{display:none;align-items:center;gap:.75rem}
+#bruger-rolle{font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:2px;font-weight:700}
+#bruger-rolle.administrator{background:var(--guld);color:var(--tekst)}
+#bruger-rolle.redaktør{background:rgba(255,255,255,.2);color:var(--hvid)}
+#bruger-email{font-size:11px;color:rgba(255,255,255,.6)}
+#log-ud-knap{background:none;border:none;color:rgba(255,255,255,.4);font-size:11px;cursor:pointer;padding:0;font-family:'Source Sans 3',sans-serif;transition:color .2s}
 #log-ud-knap:hover{color:var(--fare)}
 
 /* ── SIDE-HEADER ── */
@@ -57,11 +60,13 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 .kort{background:var(--hvid);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;flex-direction:column;transition:box-shadow .2s}
 .kort:hover{box-shadow:0 4px 16px rgba(0,0,0,.1)}
 
-.kort-hoved{background:var(--gron);padding:.75rem 1rem;display:flex;align-items:center;gap:.75rem}
+.kort-hoved{background:var(--gron);padding:.75rem 1rem;display:flex;align-items:center;gap:.75rem;cursor:pointer;user-select:none}
 .nr-badge{background:var(--guld);color:var(--tekst);font-size:10px;font-weight:700;padding:3px 8px;border-radius:3px;white-space:nowrap;flex-shrink:0;letter-spacing:.5px}
-.kort-navn{font-family:'Playfair Display',serif;font-size:15px;font-weight:400;color:var(--hvid);line-height:1.3}
+.kort-navn{font-family:'Playfair Display',serif;font-size:15px;font-weight:400;color:var(--hvid);line-height:1.3;flex:1}
+.expand-pil{color:rgba(255,255,255,.5);font-size:13px;flex-shrink:0;transition:transform .25s}
+.kort.udvidet .expand-pil{transform:rotate(180deg)}
 
-.kort-krop{padding:1rem;flex:1}
+.kort-krop{padding:1rem;flex:1;cursor:pointer}
 .info-linje{display:flex;gap:.65rem;align-items:flex-start;margin-bottom:.65rem;font-size:13px}
 .info-linje:last-child{margin-bottom:0}
 .info-ikon{font-size:14px;flex-shrink:0;margin-top:1px;width:18px}
@@ -70,37 +75,30 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 .info-tekst a:hover{text-decoration:underline}
 .tom-info{color:var(--tekst-lys);font-style:italic}
 
-.familie-sektion{margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--border)}
-.familie-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tekst-lys);font-weight:600;margin-bottom:.4rem}
-.familie-liste{font-size:12.5px;color:var(--tekst);line-height:1.7}
+/* Familie-sektion: skjult som standard, vist når kort er udvidet */
+.familie-sektion{overflow:hidden;max-height:0;transition:max-height .3s ease,padding .3s ease;padding:0 1rem;cursor:pointer}
+.kort.udvidet .familie-sektion{max-height:600px;padding:.75rem 1rem}
+.familie-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tekst-lys);font-weight:600;margin-bottom:.5rem}
+.familie-liste{font-size:13px;color:var(--tekst);line-height:1.8}
+.familie-tom{font-size:12px;color:var(--tekst-lys);font-style:italic}
+.familie-separator{border:none;border-top:1px solid var(--border);margin:0}
 
-.kort-fod{padding:.6rem 1rem;border-top:1px solid var(--border);background:var(--guld-pale);display:flex;justify-content:flex-end}
-.rediger-knap{background:none;border:1px solid var(--gron);color:var(--gron);font-size:11px;letter-spacing:.5px;padding:5px 14px;cursor:pointer;font-family:'Source Sans 3',sans-serif;font-weight:600;transition:all .2s;border-radius:3px;display:none}
-.rediger-knap:hover{background:var(--gron);color:var(--hvid)}
-body.er-admin .rediger-knap{display:inline-block}
+/* Fod: klik-hint + rediger-knap */
+.kort-fod{padding:.65rem 1rem;border-top:1px solid var(--border);background:var(--guld-pale);display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.klik-hint{font-size:11px;color:var(--tekst-lys);font-style:italic;cursor:pointer}
+.kort.udvidet .klik-hint{display:none}
 
-/* ── REDIGÉR FORM ── */
-.edit-form{padding:1rem 1rem .75rem;background:#f5f0e4}
-.edit-felt{margin-bottom:.75rem}
-.edit-felt label{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tekst-lys);font-weight:600;margin-bottom:4px}
-.edit-felt input,.edit-felt textarea{width:100%;border:1px solid var(--border);padding:.5rem .75rem;font-size:13px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:var(--hvid);outline:none;border-radius:3px;transition:border-color .2s}
-.edit-felt input:focus,.edit-felt textarea:focus{border-color:var(--gron);background:#fff}
-.edit-felt textarea{min-height:68px;resize:vertical;line-height:1.5}
-.edit-knapper{display:flex;align-items:center;gap:.5rem;margin-top:.75rem}
-.gem-knap{background:var(--gron);color:var(--hvid);border:none;padding:7px 18px;font-size:12px;letter-spacing:.5px;font-weight:600;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:3px;transition:background .2s}
-.gem-knap:hover{background:var(--gron-lys)}
-.gem-knap:disabled{opacity:.6;cursor:default}
-.annuller-knap{background:none;border:1px solid var(--border);color:var(--tekst-lys);padding:7px 14px;font-size:12px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:3px;transition:all .2s}
-.annuller-knap:hover{border-color:var(--tekst);color:var(--tekst)}
-.gem-status{font-size:12px;margin-right:auto}
-.gem-status.ok{color:var(--ok)}
-.gem-status.fejl{color:var(--fare)}
+.rediger-knap{background:var(--gron);color:var(--hvid);border:none;font-size:12px;font-weight:700;letter-spacing:.5px;padding:7px 16px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:background .2s;display:none;flex-shrink:0}
+.rediger-knap:hover{background:var(--gron-lys)}
+body.kan-redigere .rediger-knap{display:inline-block}
 
-/* ── LOGIN MODAL ── */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;padding:1rem}
+/* ── REDIGERINGS-MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto}
 .modal-overlay.vis{display:flex}
-.modal-boks{background:var(--hvid);max-width:380px;width:100%;border-top:3px solid var(--guld);box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative}
-.modal-luk{position:absolute;top:.75rem;right:1rem;background:none;border:none;font-size:22px;cursor:pointer;color:var(--tekst-lys);line-height:1;padding:0}
+
+/* Login-modal */
+#login-modal .modal-boks{background:var(--hvid);max-width:400px;width:100%;border-top:3px solid var(--guld);box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative;margin:auto}
+.modal-luk{position:absolute;top:.75rem;right:1rem;background:none;border:none;font-size:24px;cursor:pointer;color:var(--tekst-lys);line-height:1;padding:2px 6px;transition:color .2s}
 .modal-luk:hover{color:var(--tekst)}
 .modal-header{padding:1.75rem 1.75rem 0}
 .modal-titel{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:var(--gron)}
@@ -109,15 +107,54 @@ body.er-admin .rediger-knap{display:inline-block}
 .modal-felt label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--tekst-lys);font-weight:600;margin-bottom:5px}
 .modal-felt input{width:100%;border:1px solid rgba(200,149,42,.35);padding:.65rem .9rem;font-size:14px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:#faf6ee;outline:none;border-radius:3px;transition:border-color .2s}
 .modal-felt input:focus{border-color:var(--gron);background:#fff}
-.modal-login-knap{width:100%;background:var(--gron);color:var(--hvid);border:none;padding:.75rem;font-size:12px;letter-spacing:1.5px;font-weight:600;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:3px;transition:background .2s;margin-top:.25rem}
+.modal-login-knap{width:100%;background:var(--gron);color:var(--hvid);border:none;padding:.75rem;font-size:12px;letter-spacing:1.5px;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:3px;transition:background .2s;margin-top:.25rem}
 .modal-login-knap:hover{background:var(--gron-lys)}
 .modal-fejl{color:var(--fare);font-size:12px;margin-top:.6rem;display:none}
+
+/* Redigerings-modal */
+#edit-modal .edit-boks{background:var(--hvid);max-width:560px;width:100%;border-top:4px solid var(--gron);box-shadow:0 24px 70px rgba(0,0,0,.4);position:relative;margin:auto;border-radius:0 0 8px 8px}
+.edit-modal-header{background:var(--gron);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.edit-modal-titel{font-family:'Playfair Display',serif;font-size:18px;font-weight:400;color:var(--hvid);line-height:1.3}
+.edit-modal-luk{background:none;border:none;font-size:24px;cursor:pointer;color:rgba(255,255,255,.6);line-height:1;padding:2px 6px;flex-shrink:0;transition:color .2s}
+.edit-modal-luk:hover{color:var(--hvid)}
+.edit-modal-krop{padding:1.5rem}
+
+.ef-felt{margin-bottom:1.1rem}
+.ef-felt label{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tekst-lys);font-weight:700;margin-bottom:5px}
+.ef-felt input,.ef-felt textarea{width:100%;border:1px solid var(--border);padding:.55rem .85rem;font-size:13.5px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:#faf8f2;outline:none;border-radius:4px;transition:border-color .2s}
+.ef-felt input:focus,.ef-felt textarea:focus{border-color:var(--gron);background:#fff}
+.ef-felt textarea{min-height:72px;resize:vertical;line-height:1.55}
+
+/* Familiemedlemmer-liste */
+.familie-overskrift{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tekst-lys);font-weight:700;margin-bottom:.6rem}
+.familie-liste-edit{display:flex;flex-direction:column;gap:.4rem;margin-bottom:.75rem}
+.familie-rad{display:flex;align-items:center;gap:.5rem;background:#f5f0e4;border:1px solid var(--border);border-radius:4px;padding:.4rem .5rem .4rem .75rem}
+.familie-rad-navn{flex:1;font-size:13px;color:var(--tekst)}
+.familie-slet{background:none;border:none;color:var(--tekst-lys);font-size:18px;cursor:pointer;line-height:1;padding:0 4px;transition:color .2s;flex-shrink:0}
+.familie-slet:hover{color:var(--fare)}
+.familie-tilfoej-rad{display:flex;gap:.5rem}
+.familie-ny-input{flex:1;border:1px solid var(--border);padding:.5rem .75rem;font-size:13px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:#faf8f2;outline:none;border-radius:4px;transition:border-color .2s}
+.familie-ny-input:focus{border-color:var(--gron);background:#fff}
+.familie-tilfoej-knap{background:var(--gron);color:var(--hvid);border:none;padding:.5rem 1rem;font-size:12px;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;white-space:nowrap;transition:background .2s}
+.familie-tilfoej-knap:hover{background:var(--gron-lys)}
+
+.edit-modal-fod{padding:1rem 1.5rem;border-top:1px solid var(--border);background:var(--guld-pale);display:flex;align-items:center;gap:.75rem;border-radius:0 0 8px 8px}
+.edit-gem-knap{background:var(--gron);color:var(--hvid);border:none;padding:9px 24px;font-size:13px;letter-spacing:.5px;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:background .2s}
+.edit-gem-knap:hover{background:var(--gron-lys)}
+.edit-gem-knap:disabled{opacity:.6;cursor:default}
+.edit-annuller-knap{background:none;border:1px solid var(--border);color:var(--tekst-lys);padding:9px 18px;font-size:13px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:all .2s}
+.edit-annuller-knap:hover{border-color:var(--tekst);color:var(--tekst)}
+.edit-gem-status{font-size:12px;margin-left:auto}
+.edit-gem-status.ok{color:var(--ok)}
+.edit-gem-status.fejl{color:var(--fare)}
 
 /* ── RESPONSIVE ── */
 @media(max-width:640px){
   .topbar-links{display:none}
   .grid{grid-template-columns:1fr}
   .soege-input{min-width:160px}
+  #bruger-email{display:none}
+  .modal-overlay{padding:1rem .5rem}
 }
 </style>
 </head>
@@ -134,15 +171,16 @@ body.er-admin .rediger-knap{display:inline-block}
       <a href="foedselsdage.html">Fødselsdage</a>
       <a href="medlemskartotek.html" class="aktiv">Medlemmer</a>
     </div>
-    <div id="admin-badge">
-      <span id="admin-email"></span>
+    <div id="bruger-info">
+      <span id="bruger-rolle"></span>
+      <span id="bruger-email"></span>
       <button id="log-ud-knap">Log ud</button>
     </div>
     <button id="login-knap">Log ind</button>
   </div>
 </nav>
 
-<!-- Login modal -->
+<!-- Login-modal -->
 <div class="modal-overlay" id="login-modal">
   <div class="modal-boks">
     <button class="modal-luk" id="modal-luk" aria-label="Luk">×</button>
@@ -160,6 +198,50 @@ body.er-admin .rediger-knap{display:inline-block}
       </div>
       <button class="modal-login-knap" id="modal-login-knap">Log ind</button>
       <div class="modal-fejl" id="modal-fejl">Forkert email eller kodeord.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Redigerings-modal -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="edit-boks">
+    <div class="edit-modal-header">
+      <div class="edit-modal-titel" id="edit-modal-titel">Rediger medlem</div>
+      <button class="edit-modal-luk" id="edit-modal-luk" aria-label="Luk">×</button>
+    </div>
+    <div class="edit-modal-krop">
+      <div class="ef-felt">
+        <label>Medlemsnummer</label>
+        <input type="text" id="ef-nr">
+      </div>
+      <div class="ef-felt">
+        <label>Navne</label>
+        <input type="text" id="ef-navne">
+      </div>
+      <div class="ef-felt">
+        <label>Adresse (linjeskift = ny linje)</label>
+        <textarea id="ef-adresse"></textarea>
+      </div>
+      <div class="ef-felt">
+        <label>Telefon / mobil</label>
+        <input type="text" id="ef-tlf">
+      </div>
+      <div class="ef-felt">
+        <label>Email</label>
+        <input type="text" id="ef-email">
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:1.25rem 0">
+      <div class="familie-overskrift">Tilknyttede familiemedlemmer</div>
+      <div class="familie-liste-edit" id="familie-liste-edit"></div>
+      <div class="familie-tilfoej-rad">
+        <input type="text" class="familie-ny-input" id="familie-ny-input" placeholder="Fx: Morten Gram (1985)">
+        <button class="familie-tilfoej-knap" id="familie-tilfoej-knap">+ Tilføj</button>
+      </div>
+    </div>
+    <div class="edit-modal-fod">
+      <button class="edit-gem-knap" id="edit-gem-knap">💾 Gem ændringer</button>
+      <button class="edit-annuller-knap" id="edit-annuller-knap">Annullér</button>
+      <span class="edit-gem-status" id="edit-gem-status"></span>
     </div>
   </div>
 </div>
@@ -237,30 +319,41 @@ const STANDARD = [
 // ── STATE ─────────────────────────────────────────────────────
 let data = STANDARD.map(m => ({...m}));
 let soegeTekst = '';
+let aktivtRedigerNr = null;   // Hvilket kort er åbent i edit-modal
+let familieLinjer = [];        // Arbejdskopi af familie-listen i modalen
 
-// ── HJÆLPEFUNKTIONER ──────────────────────────────────────────
+// ── KORTRENDERER ──────────────────────────────────────────────
 function adrHtml(s) {
   return (s || '').split('\n').map(l => l.trim()).filter(Boolean).join('<br>');
 }
 
-function visKortHtml(m) {
-  const adr = adrHtml(m.adresse);
-  const familieLinjer = (m.familie || '').split('\n').map(l => l.trim()).filter(Boolean);
-  const familieHtml = familieLinjer.length
-    ? `<div class="familie-sektion">
-         <div class="familie-label">Tilknyttede familiemedlemmer</div>
-         <div class="familie-liste">${familieLinjer.join('<br>')}</div>
-       </div>` : '';
+function byggKort(m) {
+  const el = document.createElement('div');
+  el.className = 'kort';
+  el.dataset.nr = m.nr;
 
-  return `
+  const familieLinjer = (m.familie || '').split('\n').map(l => l.trim()).filter(Boolean);
+  const harFamilie = familieLinjer.length > 0;
+
+  const familieIndhold = harFamilie
+    ? familieLinjer.map(n => `<div>${n}</div>`).join('')
+    : '<div class="familie-tom">Ingen familiemedlemmer registreret</div>';
+
+  const emailLinjer = (m.email || '').split('/').map(e => e.trim()).filter(Boolean);
+  const emailHtml = emailLinjer.length
+    ? emailLinjer.map(e => `<a href="mailto:${e}">${e}</a>`).join('<br>')
+    : '<span class="tom-info">Ingen email</span>';
+
+  el.innerHTML = `
     <div class="kort-hoved">
       <span class="nr-badge">Mdl. nr. ${m.nr}</span>
       <span class="kort-navn">${m.navne}</span>
+      <span class="expand-pil">▾</span>
     </div>
     <div class="kort-krop">
       <div class="info-linje">
         <span class="info-ikon">📍</span>
-        <span class="info-tekst">${adr || '<span class="tom-info">Ingen adresse</span>'}</span>
+        <span class="info-tekst">${adrHtml(m.adresse) || '<span class="tom-info">Ingen adresse</span>'}</span>
       </div>
       <div class="info-linje">
         <span class="info-ikon">📞</span>
@@ -268,57 +361,23 @@ function visKortHtml(m) {
       </div>
       <div class="info-linje">
         <span class="info-ikon">✉️</span>
-        <span class="info-tekst">${m.email
-          ? m.email.split('/').map(e => `<a href="mailto:${e.trim()}">${e.trim()}</a>`).join(' / ')
-          : '<span class="tom-info">Ingen email</span>'}</span>
+        <span class="info-tekst">${emailHtml}</span>
       </div>
-      ${familieHtml}
+    </div>
+    <hr class="familie-separator">
+    <div class="familie-sektion">
+      <div class="familie-label">👨‍👩‍👧 Familiemedlemmer</div>
+      <div class="familie-liste">${familieIndhold}</div>
     </div>
     <div class="kort-fod">
+      <span class="klik-hint">▾ Klik for at se familiemedlemmer</span>
       <button class="rediger-knap" data-nr="${m.nr}">✏️ Rediger</button>
     </div>`;
+
+  return el;
 }
 
-function visEditHtml(m) {
-  return `
-    <div class="kort-hoved">
-      <span class="nr-badge">Mdl. nr. ${m.nr}</span>
-      <span class="kort-navn">${m.navne}</span>
-    </div>
-    <div class="edit-form">
-      <div class="edit-felt">
-        <label>Medlemsnummer</label>
-        <input id="ef-nr" value="${m.nr}">
-      </div>
-      <div class="edit-felt">
-        <label>Navne</label>
-        <input id="ef-navne" value="${m.navne}">
-      </div>
-      <div class="edit-felt">
-        <label>Adresse (linjeskift = ny linje)</label>
-        <textarea id="ef-adresse">${m.adresse || ''}</textarea>
-      </div>
-      <div class="edit-felt">
-        <label>Telefon / mobil</label>
-        <input id="ef-tlf" value="${m.tlf || ''}">
-      </div>
-      <div class="edit-felt">
-        <label>Email</label>
-        <input id="ef-email" value="${m.email || ''}">
-      </div>
-      <div class="edit-felt">
-        <label>Tilknyttede familiemedlemmer (én pr. linje)</label>
-        <textarea id="ef-familie">${m.familie || ''}</textarea>
-      </div>
-      <div class="edit-knapper">
-        <span class="gem-status" id="gem-status-${m.nr}"></span>
-        <button class="annuller-knap" data-annuller="${m.nr}">Annullér</button>
-        <button class="gem-knap" id="gem-knap-${m.nr}" data-gem="${m.nr}">💾 Gem</button>
-      </div>
-    </div>`;
-}
-
-// ── RENDER ────────────────────────────────────────────────────
+// ── GRID-RENDER ───────────────────────────────────────────────
 function renderGrid() {
   const grid = document.getElementById('grid');
   const q = soegeTekst.toLowerCase();
@@ -332,8 +391,7 @@ function renderGrid() {
     )
     .sort((a, b) => +a.nr - +b.nr);
 
-  const antalEl = document.getElementById('antal-linje');
-  antalEl.textContent = synlige.length === data.length
+  document.getElementById('antal-linje').textContent = synlige.length === data.length
     ? `${data.length} familier`
     : `${synlige.length} af ${data.length} familier`;
 
@@ -342,39 +400,104 @@ function renderGrid() {
     grid.innerHTML = '<div class="ingen-resultater">Ingen familier matcher søgningen.</div>';
     return;
   }
-  synlige.forEach(m => {
-    const el = document.createElement('div');
-    el.className = 'kort';
-    el.dataset.nr = m.nr;
-    el.innerHTML = visKortHtml(m);
-    grid.appendChild(el);
-  });
+  synlige.forEach(m => grid.appendChild(byggKort(m)));
 }
 
-// ── EDIT ──────────────────────────────────────────────────────
-function aabneRedigering(nr) {
+// ── EXPAND/COLLAPSE VED KORTKLIK ──────────────────────────────
+document.getElementById('grid').addEventListener('click', e => {
+  // Rediger-knap: åbn modal, lad ikke expand ske
+  const rBtn = e.target.closest('.rediger-knap');
+  if (rBtn) {
+    e.stopPropagation();
+    aabneEditModal(rBtn.dataset.nr);
+    return;
+  }
+
+  // Email-link: lad browseren håndtere det
+  if (e.target.closest('a')) return;
+
+  // Alt andet på kortet: toggle expand
+  const kort = e.target.closest('.kort');
+  if (kort) kort.classList.toggle('udvidet');
+});
+
+// ── REDIGERINGS-MODAL ─────────────────────────────────────────
+const editModal    = document.getElementById('edit-modal');
+const editStatusEl = document.getElementById('edit-gem-status');
+const editGemKnap  = document.getElementById('edit-gem-knap');
+
+function familieRadHtml(navn, idx) {
+  return `<div class="familie-rad" data-idx="${idx}">
+    <span class="familie-rad-navn">${navn}</span>
+    <button class="familie-slet" data-slet="${idx}" aria-label="Fjern">×</button>
+  </div>`;
+}
+
+function renderFamilieListeEdit() {
+  document.getElementById('familie-liste-edit').innerHTML =
+    familieLinjer.map((n, i) => familieRadHtml(n, i)).join('') ||
+    '<div style="font-size:12px;color:var(--tekst-lys);font-style:italic;margin-bottom:.4rem">Ingen endnu — tilføj nedenfor</div>';
+}
+
+function aabneEditModal(nr) {
   const m = data.find(x => x.nr === nr);
-  const el = document.querySelector(`.kort[data-nr="${nr}"]`);
-  if (!m || !el) return;
-  el.innerHTML = visEditHtml(m);
-  el.querySelector('#ef-navne').focus();
+  if (!m) return;
+  aktivtRedigerNr = nr;
+  familieLinjer = (m.familie || '').split('\n').map(l => l.trim()).filter(Boolean);
+
+  document.getElementById('edit-modal-titel').textContent = `Rediger — ${m.navne}`;
+  document.getElementById('ef-nr').value      = m.nr;
+  document.getElementById('ef-navne').value   = m.navne;
+  document.getElementById('ef-adresse').value = m.adresse || '';
+  document.getElementById('ef-tlf').value     = m.tlf || '';
+  document.getElementById('ef-email').value   = m.email || '';
+  document.getElementById('familie-ny-input').value = '';
+  editStatusEl.textContent = '';
+  editStatusEl.className = 'edit-gem-status';
+  editGemKnap.disabled = false;
+
+  renderFamilieListeEdit();
+  editModal.classList.add('vis');
+  setTimeout(() => document.getElementById('ef-navne').focus(), 80);
 }
 
-function annullerRedigering(nr) {
-  const m = data.find(x => x.nr === nr);
-  const el = document.querySelector(`.kort[data-nr="${nr}"]`);
-  if (!m || !el) return;
-  el.innerHTML = visKortHtml(m);
+function lukkeEditModal() {
+  editModal.classList.remove('vis');
+  aktivtRedigerNr = null;
 }
 
-async function gemRedigering(gammelNr) {
+// Klik på × ved et familiemedlem
+document.getElementById('familie-liste-edit').addEventListener('click', e => {
+  const sletKnap = e.target.closest('[data-slet]');
+  if (!sletKnap) return;
+  familieLinjer.splice(+sletKnap.dataset.slet, 1);
+  renderFamilieListeEdit();
+});
+
+// Tilføj nyt familiemedlem
+function tilfoejFamilieMedlem() {
+  const input = document.getElementById('familie-ny-input');
+  const navn = input.value.trim();
+  if (!navn) return;
+  familieLinjer.push(navn);
+  input.value = '';
+  renderFamilieListeEdit();
+  input.focus();
+}
+
+document.getElementById('familie-tilfoej-knap').addEventListener('click', tilfoejFamilieMedlem);
+document.getElementById('familie-ny-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); tilfoejFamilieMedlem(); }
+});
+
+// Gem
+editGemKnap.addEventListener('click', async () => {
+  const gammelNr = aktivtRedigerNr;
   const nytNr    = document.getElementById('ef-nr').value.trim();
-  const statusEl = document.getElementById(`gem-status-${gammelNr}`);
-  const gemKnap  = document.getElementById(`gem-knap-${gammelNr}`);
 
   if (!nytNr) {
-    statusEl.className = 'gem-status fejl';
-    statusEl.textContent = 'Medlemsnummer må ikke være tomt.';
+    editStatusEl.className = 'edit-gem-status fejl';
+    editStatusEl.textContent = 'Medlemsnummer må ikke være tomt.';
     return;
   }
 
@@ -384,51 +507,33 @@ async function gemRedigering(gammelNr) {
     adresse: document.getElementById('ef-adresse').value.trim(),
     tlf:     document.getElementById('ef-tlf').value.trim(),
     email:   document.getElementById('ef-email').value.trim(),
-    familie: document.getElementById('ef-familie').value.trim(),
+    familie: familieLinjer.join('\n'),
   };
 
-  gemKnap.disabled = true;
-  statusEl.className = 'gem-status';
-  statusEl.textContent = 'Gemmer…';
+  editGemKnap.disabled = true;
+  editStatusEl.className = 'edit-gem-status';
+  editStatusEl.textContent = 'Gemmer…';
 
   try {
-    // Gem/overskriv i Firestore
     await setDoc(doc(db, 'medlemmer', nytNr), opdateret);
+    if (nytNr !== gammelNr) await deleteDoc(doc(db, 'medlemmer', gammelNr));
 
-    // Slet gammelt dokument hvis nummer er ændret
-    if (nytNr !== gammelNr) {
-      await deleteDoc(doc(db, 'medlemmer', gammelNr));
-    }
-
-    // Opdatér lokal state
     const idx = data.findIndex(x => x.nr === gammelNr);
     if (idx >= 0) data[idx] = opdateret;
     else data.push(opdateret);
 
-    // Re-render kortet i visnings-mode
-    const el = document.querySelector(`.kort[data-nr="${gammelNr}"]`);
-    if (el) {
-      el.dataset.nr = nytNr;
-      el.innerHTML = visKortHtml(opdateret);
-    }
-  } catch (e) {
-    gemKnap.disabled = false;
-    statusEl.className = 'gem-status fejl';
-    statusEl.textContent = 'Fejl: ' + (e.message || 'Kunne ikke gemme');
+    renderGrid();
+    lukkeEditModal();
+  } catch (err) {
+    editGemKnap.disabled = false;
+    editStatusEl.className = 'edit-gem-status fejl';
+    editStatusEl.textContent = 'Fejl: ' + (err.message || 'Kunne ikke gemme');
   }
-}
-
-// ── EVENT DELEGATION ──────────────────────────────────────────
-document.getElementById('grid').addEventListener('click', e => {
-  const rBtn = e.target.closest('.rediger-knap');
-  if (rBtn) { aabneRedigering(rBtn.dataset.nr); return; }
-
-  const aBtn = e.target.closest('[data-annuller]');
-  if (aBtn) { annullerRedigering(aBtn.dataset.annuller); return; }
-
-  const gBtn = e.target.closest('[data-gem]');
-  if (gBtn) { gemRedigering(gBtn.dataset.gem); return; }
 });
+
+document.getElementById('edit-annuller-knap').addEventListener('click', lukkeEditModal);
+document.getElementById('edit-modal-luk').addEventListener('click', lukkeEditModal);
+editModal.addEventListener('click', e => { if (e.target === editModal) lukkeEditModal(); });
 
 // ── SØGNING ───────────────────────────────────────────────────
 document.getElementById('soege').addEventListener('input', e => {
@@ -436,42 +541,48 @@ document.getElementById('soege').addEventListener('input', e => {
   renderGrid();
 });
 
-// ── AUTH ──────────────────────────────────────────────────────
-async function erAdministrator(user) {
-  if (!user) return false;
+// ── AUTH: administrator OG redaktør kan redigere ──────────────
+async function hentRolle(user) {
+  if (!user) return null;
   try {
     const snap = await getDoc(doc(db, 'brugere', user.uid));
-    return snap.exists() && snap.data().rolle === 'administrator';
-  } catch { return false; }
+    return snap.exists() ? (snap.data().rolle || null) : null;
+  } catch { return null; }
 }
 
 onAuthStateChanged(auth, async user => {
-  const badge    = document.getElementById('admin-badge');
-  const loginKnap = document.getElementById('login-knap');
+  const brugerInfo = document.getElementById('bruger-info');
+  const loginKnap  = document.getElementById('login-knap');
 
-  if (user && await erAdministrator(user)) {
-    document.body.classList.add('er-admin');
-    document.getElementById('admin-email').textContent = user.email;
-    badge.style.display = 'flex';
-    loginKnap.style.display = 'none';
-  } else {
-    document.body.classList.remove('er-admin');
-    badge.style.display = 'none';
-    loginKnap.style.display = 'inline-block';
+  if (user) {
+    const rolle = await hentRolle(user);
+    if (rolle === 'administrator' || rolle === 'redaktør') {
+      document.body.classList.add('kan-redigere');
+      document.getElementById('bruger-rolle').textContent = rolle.charAt(0).toUpperCase() + rolle.slice(1);
+      document.getElementById('bruger-rolle').className = 'bruger-rolle ' + rolle;
+      document.getElementById('bruger-email').textContent = user.email;
+      brugerInfo.style.display = 'flex';
+      loginKnap.style.display = 'none';
+      return;
+    }
   }
+
+  document.body.classList.remove('kan-redigere');
+  brugerInfo.style.display = 'none';
+  loginKnap.style.display = 'inline-block';
 });
 
 // ── LOGIN MODAL ───────────────────────────────────────────────
-const modal     = document.getElementById('login-modal');
-const modalFejl = document.getElementById('modal-fejl');
+const loginModal = document.getElementById('login-modal');
+const modalFejl  = document.getElementById('modal-fejl');
 
 document.getElementById('login-knap').addEventListener('click', () => {
   modalFejl.style.display = 'none';
-  modal.classList.add('vis');
+  loginModal.classList.add('vis');
   setTimeout(() => document.getElementById('modal-email').focus(), 80);
 });
-document.getElementById('modal-luk').addEventListener('click', () => modal.classList.remove('vis'));
-modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('vis'); });
+document.getElementById('modal-luk').addEventListener('click', () => loginModal.classList.remove('vis'));
+loginModal.addEventListener('click', e => { if (e.target === loginModal) loginModal.classList.remove('vis'); });
 
 document.getElementById('modal-login-knap').addEventListener('click', async () => {
   const email = document.getElementById('modal-email').value.trim();
@@ -479,22 +590,19 @@ document.getElementById('modal-login-knap').addEventListener('click', async () =
   modalFejl.style.display = 'none';
   try {
     await signInWithEmailAndPassword(auth, email, kode);
-    modal.classList.remove('vis');
+    loginModal.classList.remove('vis');
   } catch {
     modalFejl.style.display = 'block';
   }
 });
-
 document.getElementById('modal-kode').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('modal-login-knap').click();
 });
-
 document.getElementById('log-ud-knap').addEventListener('click', () => signOut(auth));
 
 // ── INDLÆSNING ────────────────────────────────────────────────
 async function initialiserSide() {
-  renderGrid(); // Vis standarddata straks
-
+  renderGrid();
   try {
     const snap = await getDocs(collection(db, 'medlemmer'));
     snap.forEach(d => {
@@ -503,8 +611,8 @@ async function initialiserSide() {
       if (idx >= 0) data[idx] = { ...data[idx], ...fd };
       else data.push(fd);
     });
-    renderGrid(); // Opdatér med Firestore-data hvis tilgængeligt
-  } catch { /* Firestore ikke tilgængeligt – standarddata vises */ }
+    renderGrid();
+  } catch { /* standarddata vises */ }
 }
 
 initialiserSide();
