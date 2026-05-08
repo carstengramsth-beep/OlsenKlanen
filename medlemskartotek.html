@@ -30,6 +30,8 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 .topbar-links a:hover,.topbar-links a.aktiv{color:var(--guld-lys)}
 #login-knap{background:none;border:1px solid rgba(255,255,255,.35);color:rgba(255,255,255,.75);font-size:11px;letter-spacing:1px;padding:5px 13px;cursor:pointer;font-family:'Source Sans 3',sans-serif;transition:all .2s;border-radius:2px}
 #login-knap:hover{border-color:var(--guld-lys);color:var(--guld-lys)}
+#olsenbanden-knap{display:none;background:var(--guld);color:var(--tekst);font-size:11px;font-weight:700;letter-spacing:.5px;padding:5px 13px;border-radius:2px;text-decoration:none;font-family:'Source Sans 3',sans-serif;transition:all .2s;white-space:nowrap}
+#olsenbanden-knap:hover{background:#b07820;color:var(--hvid)}
 #bruger-info{display:none;align-items:center;gap:.75rem}
 .bruger-rolle-badge{font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:2px;font-weight:700}
 .bruger-rolle-badge.administrator{background:var(--guld);color:var(--tekst)}
@@ -246,6 +248,7 @@ body.familie-session .rediger-knap.egen-rediger{display:inline-block}
       <button id="log-ud-knap">Log ud</button>
     </div>
     <button id="login-knap" style="display:none">Log ind</button>
+    <a href="admin.html" id="olsenbanden-knap">OlsenBanden</a>
   </div>
 </nav>
 
@@ -1024,6 +1027,7 @@ document.getElementById('log-ud-knap').addEventListener('click', () => {
     document.getElementById('familie-banner').style.display = 'none';
     document.getElementById('bruger-info').style.display = 'none';
     document.getElementById('login-knap').style.display = 'inline-block';
+    document.getElementById('olsenbanden-knap').style.display = 'none';
     renderGrid();
   } else {
     signOut(auth);
@@ -1062,6 +1066,7 @@ onAuthStateChanged(auth, async user => {
     document.getElementById('admin-bjaelke-navn').textContent = visNavn;
     document.getElementById('bruger-info').style.display = 'flex';
     document.getElementById('login-knap').style.display = 'none';
+    document.getElementById('olsenbanden-knap').style.display = 'inline-block';
     document.getElementById('familie-banner').style.display = 'none';
     renderGrid();
 
@@ -1081,6 +1086,7 @@ onAuthStateChanged(auth, async user => {
   if (!familieSession) {
     document.getElementById('bruger-info').style.display = 'none';
     document.getElementById('login-knap').style.display = 'inline-block';
+    document.getElementById('olsenbanden-knap').style.display = 'none';
     document.getElementById('familie-banner').style.display = 'none';
   }
 });
