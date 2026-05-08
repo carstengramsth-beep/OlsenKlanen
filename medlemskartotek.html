@@ -216,6 +216,61 @@ body.familie-session .rediger-knap.egen-rediger{display:inline-block}
 .ef input.felt-tom,.ef select.felt-tom{border-color:var(--fare)!important;background:#fff5f5!important}
 .ef input.felt-ok,.ef select.felt-ok{border-color:var(--ok)!important;background:#f2fff2!important}
 
+/* ── FJERN KNAP I EDIT-FOD ── */
+.edit-fjern{background:none;border:1px solid var(--fare);color:var(--fare);padding:8px 16px;font-size:12px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:all .2s;margin-left:auto}
+.edit-fjern:hover{background:var(--fare);color:#fff}
+
+/* ── FJERN-DIALOG ── */
+.fjern-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:600;display:flex;align-items:center;justify-content:center;padding:1rem}
+.fjern-boks{background:var(--hvid);border-radius:8px;max-width:460px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.4);overflow:hidden}
+.fjern-hoved{background:var(--fare);padding:.9rem 1.25rem;display:flex;align-items:center;justify-content:space-between}
+.fjern-titel{font-family:'Playfair Display',serif;font-size:17px;color:#fff;font-weight:400}
+.fjern-luk-x{background:none;border:none;font-size:22px;color:rgba(255,255,255,.7);cursor:pointer;line-height:1;padding:0 4px;transition:color .2s}
+.fjern-luk-x:hover{color:#fff}
+.fjern-krop{padding:1.25rem}
+.fjern-info-tekst{font-size:13px;color:var(--tekst-lys);margin-bottom:1rem}
+.fjern-aarsag-gruppe{display:flex;flex-direction:column;gap:.55rem;margin-bottom:1rem}
+.fjern-aarsag-valg{display:flex;align-items:flex-start;gap:.6rem;cursor:pointer;font-size:13.5px;color:var(--tekst);line-height:1.4}
+.fjern-aarsag-valg input[type=radio]{margin-top:3px;flex-shrink:0;accent-color:var(--fare)}
+.fjern-ekstra{margin:.4rem 0 .2rem 1.5rem}
+.fjern-ekstra label{font-size:11px;color:var(--tekst-lys);display:block;margin-bottom:3px}
+.fjern-ekstra input,.fjern-ekstra textarea{width:100%;border:1.5px solid var(--border);border-radius:4px;padding:.4rem .65rem;font-size:13px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:var(--hvid)}
+.fjern-ekstra input:focus,.fjern-ekstra textarea:focus{outline:none;border-color:var(--fare)}
+.fjern-bekraeft{background:var(--fare);color:#fff;border:none;border-radius:4px;padding:.55rem 1.25rem;font-size:13px;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;flex:1;transition:background .2s}
+.fjern-bekraeft:hover:not(:disabled){background:#a93226}
+.fjern-bekraeft:disabled{opacity:.5;cursor:not-allowed}
+.fjern-annuller-knap{background:none;color:var(--tekst-lys);border:1.5px solid var(--border);border-radius:4px;padding:.5rem 1rem;font-size:13px;cursor:pointer;font-family:'Source Sans 3',sans-serif;transition:all .2s}
+.fjern-annuller-knap:hover{border-color:var(--tekst);color:var(--tekst)}
+.fjern-fejl-tekst{color:var(--fare);font-size:12px;margin-top:.6rem;display:none}
+
+/* ── HISTORISK PERSON ── */
+.historisk-btn-wrapper{text-align:center;margin:1.5rem 0;display:none}
+body.kan-redigere .historisk-btn-wrapper{display:block}
+.tilfoej-historisk-knap{background:none;border:2px dashed var(--tekst-lys);color:var(--tekst-lys);font-size:13px;padding:.6rem 1.75rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:all .2s}
+.tilfoej-historisk-knap:hover{border-color:var(--lilla);color:var(--lilla)}
+.historisk-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;display:flex;align-items:center;justify-content:center;padding:1rem;overflow-y:auto}
+.historisk-boks{background:var(--hvid);border-radius:0 0 8px 8px;border-top:4px solid var(--lilla);max-width:500px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.35)}
+.historisk-hoved{background:var(--lilla);padding:.9rem 1.25rem;display:flex;align-items:center;justify-content:space-between}
+.historisk-titel{font-family:'Playfair Display',serif;font-size:17px;color:#fff;font-weight:400}
+.historisk-luk-x{background:none;border:none;font-size:22px;color:rgba(255,255,255,.7);cursor:pointer;line-height:1;padding:0 4px;transition:color .2s}
+.historisk-luk-x:hover{color:#fff}
+.historisk-krop{padding:1.25rem}
+.historisk-krop .ef{margin-bottom:.7rem}
+.historisk-krop .ef label{display:block;font-size:11px;font-weight:600;color:var(--tekst-lys);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.historisk-krop .ef input,.historisk-krop .ef textarea{width:100%;border:1.5px solid var(--border);border-radius:4px;padding:.45rem .65rem;font-size:13.5px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:var(--hvid)}
+.historisk-krop .ef input:focus,.historisk-krop .ef textarea:focus{outline:none;border-color:var(--lilla)}
+.historisk-krop .ef-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem}
+.historisk-krop .ef-2{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.historisk-fod{padding:.9rem 1.25rem;border-top:1px solid var(--border);background:var(--lilla-pale);display:flex;gap:.65rem;align-items:center;border-radius:0 0 8px 8px;flex-wrap:wrap}
+.historisk-gem{background:var(--lilla);color:#fff;border:none;border-radius:4px;padding:.55rem 1.5rem;font-size:13px;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;transition:background .2s}
+.historisk-gem:hover:not(:disabled){background:#5a2a6e}
+.historisk-gem:disabled{opacity:.5;cursor:not-allowed}
+.historisk-annuller{background:none;color:var(--tekst-lys);border:1.5px solid var(--border);border-radius:4px;padding:.5rem 1rem;font-size:13px;cursor:pointer;font-family:'Source Sans 3',sans-serif;transition:all .2s}
+.historisk-annuller:hover{border-color:var(--lilla);color:var(--lilla)}
+.historisk-status-el{font-size:12px;margin-left:auto}
+.historisk-status-el.ok{color:var(--ok)}
+.historisk-status-el.fejl{color:var(--fare)}
+
 /* ── RESPONSIVE ── */
 @media(max-width:640px){
   .topbar-links{display:none}
@@ -394,6 +449,82 @@ body.familie-session .rediger-knap.egen-rediger{display:inline-block}
       <button class="edit-gem-knap" id="edit-gem-knap">💾 Gem ændringer</button>
       <button class="edit-annuller" id="edit-annuller">Annullér</button>
       <span class="edit-status" id="edit-status"></span>
+      <button class="edit-fjern" id="fjern-knap">🗑 Fjern medlem</button>
+    </div>
+  </div>
+</div>
+
+<!-- Fjern-dialog -->
+<div id="fjern-overlay" class="fjern-overlay" style="display:none">
+  <div class="fjern-boks">
+    <div class="fjern-hoved">
+      <div class="fjern-titel">Fjern fra aktive medlemmer</div>
+      <button class="fjern-luk-x" id="fjern-luk">×</button>
+    </div>
+    <div class="fjern-krop">
+      <p class="fjern-info-tekst" id="fjern-navn-info"></p>
+      <div class="fjern-aarsag-gruppe">
+        <div>
+          <label class="fjern-aarsag-valg">
+            <input type="radio" name="fjern-aarsag" value="dødsfald">
+            <span>Dødsfald</span>
+          </label>
+          <div id="fjern-doedsdato-gruppe" class="fjern-ekstra" style="display:none">
+            <label>Dødsdato (valgfri)</label>
+            <input type="date" id="fjern-doedsdato">
+          </div>
+        </div>
+        <label class="fjern-aarsag-valg">
+          <input type="radio" name="fjern-aarsag" value="udmeldt">
+          <span>Udmeldt af eget ønske</span>
+        </label>
+        <label class="fjern-aarsag-valg">
+          <input type="radio" name="fjern-aarsag" value="ikke-tilknyttet">
+          <span>Ikke længere tilknyttet OlsenKlanen</span>
+        </label>
+        <div>
+          <label class="fjern-aarsag-valg">
+            <input type="radio" name="fjern-aarsag" value="anden">
+            <span>Anden årsag</span>
+          </label>
+          <div id="fjern-anden-gruppe" class="fjern-ekstra" style="display:none">
+            <textarea id="fjern-anden-tekst" rows="2" placeholder="Beskriv årsagen…"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:.6rem">
+        <button class="fjern-bekraeft" id="fjern-bekraeft-knap" disabled>Bekræft fjernelse</button>
+        <button class="fjern-annuller-knap" id="fjern-annuller-knap">Annuller</button>
+      </div>
+      <div class="fjern-fejl-tekst" id="fjern-fejl"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Historisk person modal -->
+<div id="historisk-modal" class="historisk-overlay" style="display:none">
+  <div class="historisk-boks">
+    <div class="historisk-hoved">
+      <div class="historisk-titel">🕯️ Tilføj historisk person</div>
+      <button class="historisk-luk-x" id="historisk-luk">×</button>
+    </div>
+    <div class="historisk-krop">
+      <div class="ef-3">
+        <div class="ef"><label>Fornavn *</label><input type="text" id="hist-fornavn" placeholder="Fornavn"></div>
+        <div class="ef"><label>Mellemnavn</label><input type="text" id="hist-mellemnavn" placeholder="(valgfri)"></div>
+        <div class="ef"><label>Efternavn *</label><input type="text" id="hist-efternavn" placeholder="Efternavn"></div>
+      </div>
+      <div class="ef-2">
+        <div class="ef"><label>Fødselsdato</label><input type="date" id="hist-foedselsdato"></div>
+        <div class="ef"><label>Dødsdato</label><input type="date" id="hist-doedsdato"></div>
+      </div>
+      <div class="ef"><label>Tilknytning til OlsenKlanen</label><input type="text" id="hist-tilknytning" placeholder="F.eks. 'Morfar til Carsten Gram, nr. 8'"></div>
+      <div class="ef"><label>Bemærkninger</label><textarea id="hist-bemaerkning" rows="3" placeholder="Evt. livshistorie, stamtræsinfo m.m."></textarea></div>
+    </div>
+    <div class="historisk-fod">
+      <button class="historisk-gem" id="historisk-gem-knap">💾 Gem historisk person</button>
+      <button class="historisk-annuller" id="historisk-annuller">Annuller</button>
+      <span class="historisk-status-el" id="historisk-status"></span>
     </div>
   </div>
 </div>
@@ -410,6 +541,9 @@ body.familie-session .rediger-knap.egen-rediger{display:inline-block}
     <div class="antal-linje" id="antal-linje"></div>
   </div>
   <div class="grid" id="grid"></div>
+  <div class="historisk-btn-wrapper">
+    <button class="tilfoej-historisk-knap" id="tilfoej-historisk-knap">🕯️ Tilføj historisk person</button>
+  </div>
 </div>
 
 <script type="module">
@@ -417,7 +551,7 @@ import { initializeApp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc }
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, addDoc }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // Firestore-regler for 'membres': allow read, write: if true;
@@ -917,6 +1051,142 @@ editGemKnap.addEventListener('click', () => { clearTimeout(autoGemTimer); gemDat
     if (ALLE_EDIT_IDS.includes(id)) opdaterEtFelt(id);
     startAutoGem();
   });
+});
+
+// ── FJERN DIALOG ──────────────────────────────────────────────
+let fjernNr = null;
+
+document.getElementById('fjern-knap').addEventListener('click', () => {
+  const m = data.find(x => x.nr === aktivtNr);
+  if (!m) return;
+  fjernNr = aktivtNr;
+  const navnVis = [m.fornavn, m.mellemnavn, m.efternavn].filter(Boolean).join(' ') || m.navne || `nr. ${m.nr}`;
+  document.getElementById('fjern-navn-info').textContent =
+    `Du er ved at fjerne "${navnVis}" (Mdl. nr. ${m.nr}) fra aktive medlemmer og arkivere dem i Firestore.`;
+  document.querySelectorAll('input[name="fjern-aarsag"]').forEach(r => { r.checked = false; });
+  document.getElementById('fjern-doedsdato').value     = '';
+  document.getElementById('fjern-anden-tekst').value   = '';
+  document.getElementById('fjern-doedsdato-gruppe').style.display = 'none';
+  document.getElementById('fjern-anden-gruppe').style.display     = 'none';
+  document.getElementById('fjern-bekraeft-knap').disabled = true;
+  document.getElementById('fjern-fejl').style.display    = 'none';
+  document.getElementById('fjern-overlay').style.display = 'flex';
+});
+
+document.querySelectorAll('input[name="fjern-aarsag"]').forEach(r => {
+  r.addEventListener('change', () => {
+    document.getElementById('fjern-doedsdato-gruppe').style.display = r.value === 'dødsfald' ? 'block' : 'none';
+    document.getElementById('fjern-anden-gruppe').style.display     = r.value === 'anden'     ? 'block' : 'none';
+    document.getElementById('fjern-bekraeft-knap').disabled = false;
+  });
+});
+
+function lukFjernDialog() {
+  document.getElementById('fjern-overlay').style.display = 'none';
+}
+document.getElementById('fjern-luk').addEventListener('click', lukFjernDialog);
+document.getElementById('fjern-annuller-knap').addEventListener('click', lukFjernDialog);
+
+document.getElementById('fjern-bekraeft-knap').addEventListener('click', async () => {
+  const aarsag = document.querySelector('input[name="fjern-aarsag"]:checked')?.value;
+  if (!aarsag || !fjernNr) return;
+  const m = data.find(x => x.nr === fjernNr);
+  if (!m) return;
+
+  const btn = document.getElementById('fjern-bekraeft-knap');
+  btn.disabled = true;
+  btn.textContent = 'Arkiverer…';
+  document.getElementById('fjern-fejl').style.display = 'none';
+
+  const arkivData = {
+    ...m,
+    arkivInfo: {
+      aarsag,
+      andenAarsag: aarsag === 'anden'    ? document.getElementById('fjern-anden-tekst').value.trim() : '',
+      doedsdato:   aarsag === 'dødsfald' ? document.getElementById('fjern-doedsdato').value : '',
+      arkiveretDato: new Date().toISOString().split('T')[0],
+      arkiveretAf:   auth.currentUser?.email || 'ukendt',
+    }
+  };
+
+  try {
+    await setDoc(doc(db, 'arkiv', m.nr), arkivData);
+    await deleteDoc(doc(db, 'membres', m.nr));
+    data = data.filter(x => x.nr !== fjernNr);
+    fjernNr = null;
+    lukFjernDialog();
+    lukEditModal();
+    renderGrid();
+  } catch(e) {
+    const fejlEl = document.getElementById('fjern-fejl');
+    fejlEl.textContent = 'Fejl: Kunne ikke arkivere — tjek din forbindelse og prøv igen.';
+    fejlEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Bekræft fjernelse';
+  }
+});
+
+// ── HISTORISK PERSON ──────────────────────────────────────────
+function lukHistoriskModal() {
+  document.getElementById('historisk-modal').style.display = 'none';
+}
+
+document.getElementById('tilfoej-historisk-knap').addEventListener('click', () => {
+  ['hist-fornavn','hist-mellemnavn','hist-efternavn','hist-foedselsdato',
+   'hist-doedsdato','hist-tilknytning','hist-bemaerkning'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  const sEl = document.getElementById('historisk-status');
+  sEl.textContent = ''; sEl.className = 'historisk-status-el';
+  document.getElementById('historisk-gem-knap').disabled = false;
+  document.getElementById('historisk-gem-knap').textContent = '💾 Gem historisk person';
+  document.getElementById('historisk-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('hist-fornavn').focus(), 80);
+});
+
+document.getElementById('historisk-luk').addEventListener('click', lukHistoriskModal);
+document.getElementById('historisk-annuller').addEventListener('click', lukHistoriskModal);
+document.getElementById('historisk-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('historisk-modal')) lukHistoriskModal();
+});
+
+document.getElementById('historisk-gem-knap').addEventListener('click', async () => {
+  const fornavn   = document.getElementById('hist-fornavn').value.trim();
+  const efternavn = document.getElementById('hist-efternavn').value.trim();
+  if (!fornavn || !efternavn) {
+    document.getElementById(fornavn ? 'hist-efternavn' : 'hist-fornavn').focus();
+    return;
+  }
+  const btn    = document.getElementById('historisk-gem-knap');
+  const sEl    = document.getElementById('historisk-status');
+  btn.disabled = true;
+  btn.textContent = 'Gemmer…';
+  sEl.textContent = ''; sEl.className = 'historisk-status-el';
+
+  const historiskData = {
+    fornavn,
+    mellemnavn:   document.getElementById('hist-mellemnavn').value.trim(),
+    efternavn,
+    foedselsdato: document.getElementById('hist-foedselsdato').value,
+    doedsdato:    document.getElementById('hist-doedsdato').value,
+    tilknytning:  document.getElementById('hist-tilknytning').value.trim(),
+    bemaerkning:  document.getElementById('hist-bemaerkning').value.trim(),
+    arkivInfo: {
+      aarsag:        'historisk',
+      arkiveretDato: new Date().toISOString().split('T')[0],
+      arkiveretAf:   auth.currentUser?.email || 'ukendt',
+    }
+  };
+
+  try {
+    await addDoc(collection(db, 'arkiv'), historiskData);
+    sEl.textContent = '✓ Gemt'; sEl.className = 'historisk-status-el ok';
+    setTimeout(lukHistoriskModal, 1400);
+  } catch(e) {
+    sEl.textContent = 'Fejl — prøv igen'; sEl.className = 'historisk-status-el fejl';
+    btn.disabled = false;
+    btn.textContent = '💾 Gem historisk person';
+  }
 });
 
 function lukEditModal() {
