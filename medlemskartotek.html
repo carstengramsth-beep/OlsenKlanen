@@ -510,6 +510,7 @@ function rolleKlasse(rolle) {
 }
 
 const BEGI_TYPE = {
+  'konfirmation':  '🙏 Konfirmation',
   'sølvbryllup':  '🥂 Sølvbryllup (25 år)',
   'guldbryllup':  '💍 Guldbryllup (50 år)',
   'diamantbryllup':'💎 Diamantbryllup (60 år)',
@@ -765,7 +766,7 @@ document.getElementById('tilfoej-ven').addEventListener('click', () => {
   renderPersonEdit(); startAutoGem();
 });
 document.getElementById('tilfoej-begi').addEventListener('click', () => {
-  begiListe.push({ type:'sølvbryllup', dato:'', beskrivelse:'' });
+  begiListe.push({ type:'konfirmation', dato:'', beskrivelse:'' });
   renderBegiEdit(); startAutoGem();
 });
 
