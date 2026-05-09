@@ -1,16 +1,23 @@
 {
   "rules": {
+    // Presence – OlsenBanden admin-panel (ingen Firebase Auth påkrævet)
     "presence": {
-      // Kun autentificerede brugere må se presence-listen
-      ".read": "auth != null",
-      "$userKey": {
-        // Kun autentificerede brugere må skrive — nøglen er email med '.' erstattet af ','
-        // Firebase RTDB understøtter ikke string-replace i regler, så vi
-        // tillader enhver autentificeret bruger at skrive sin egen node.
-        // Adgangskontrol på kollektionsniveau sker i Firestore (brugere-samlingen).
-        ".write": "auth != null"
-      }
+      ".read": true,
+      ".write": true
     },
+
+    // Gruppechat – OlsenBanden admin-panel
+    "chat": {
+      ".read": true,
+      ".write": true
+    },
+
+    // Videomøde-invitationer – OlsenBanden admin-panel
+    "invites": {
+      ".read": true,
+      ".write": true
+    },
+
     // Hilsener – alle kan læse og oprette nye (kode-tjek sker i klienten)
     "hilsener": {
       "$tilKey": {
@@ -21,6 +28,7 @@
         }
       }
     },
+
     // Afvis al anden adgang
     "$other": {
       ".read": false,

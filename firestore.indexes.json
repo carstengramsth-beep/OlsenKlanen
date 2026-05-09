@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "godkendelser",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "anmodet", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
