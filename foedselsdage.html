@@ -175,10 +175,14 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 .mdlnr-ok{
   font-size:12px;color:var(--tekst-lys);
   background:none;border:none;padding:1px 5px;border-radius:4px;
-  font-family:'Source Sans 3',sans-serif;
+  font-family:'Source Sans 3',sans-serif;cursor:default;
 }
-body.er-redaktor .mdlnr-ok{cursor:pointer;transition:background .12s,color .12s;}
-body.er-redaktor .mdlnr-ok:hover{background:var(--guld-pale);color:var(--guld);}
+body.er-redaktor .mdlnr-ok{
+  cursor:pointer;
+  border-bottom:1px dashed var(--tekst-lys);
+  transition:background .12s,color .12s,border-color .12s;
+}
+body.er-redaktor .mdlnr-ok:hover{background:var(--guld-pale);color:var(--guld);border-color:var(--guld);}
 .mdlnr-mangler{
   font-size:10.5px;font-weight:700;color:var(--tl-roed);
   border:1px solid var(--tl-roed);border-radius:4px;
@@ -984,7 +988,7 @@ function byggKalender(FOEDSLER) {
         }).replace(/'/g, '&#39;');
 
         const mdlnrCell = p.familienr
-          ? `<button class="mdlnr-ok" data-navn="${esc(p.navn)}" data-doc="${esc(p.docId)}" data-idx="${p.personIndex}" data-nr="${esc(p.familienr)}">${esc(p.familienr)}</button>`
+          ? `<button class="mdlnr-ok" data-navn="${esc(p.navn)}" data-doc="${esc(p.docId)}" data-idx="${p.personIndex}" data-nr="${esc(p.familienr)}" title="Klik for at ændre familienummer">${esc(p.familienr)}</button>`
           : `<button class="mdlnr-mangler" data-navn="${esc(p.navn)}" data-doc="${esc(p.docId)}" data-idx="${p.personIndex}">MANGLER</button>`;
 
         tbody += `<tr>
@@ -1490,12 +1494,12 @@ document.getElementById('fnr-bekraeft-tilknyt').addEventListener('click', async 
   }
 });
 
-// Delegeret klik på MANGLER-knap (rød) og eksisterende mdl.nr. (redaktør)
+// Delegeret klik på MANGLER-knap (rød) og eksisterende mdl.nr. (logget-ind)
 document.addEventListener('click', e => {
   const m = e.target.closest('.mdlnr-mangler');
   if (m) { aabnefnrDialog(m.dataset.doc, parseInt(m.dataset.idx), m.dataset.navn, null); return; }
   const ok = e.target.closest('.mdlnr-ok');
-  if (ok && aktivRolle) aabnefnrDialog(ok.dataset.doc, parseInt(ok.dataset.idx), ok.dataset.navn, ok.dataset.nr);
+  if (ok && getAuth().currentUser) aabnefnrDialog(ok.dataset.doc, parseInt(ok.dataset.idx), ok.dataset.navn, ok.dataset.nr);
 });
 
 // ─── FILTER: VIS MANGLENDE DATA ─────────────────────────────────────────────
