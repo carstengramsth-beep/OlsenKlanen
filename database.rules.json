@@ -29,6 +29,18 @@
       }
     },
 
+    // Vil ikke forstyrres – OlsenBanden admin-panel
+    "dnd": {
+      ".read": true,
+      ".write": true
+    },
+
+    // Ubesvarede opkald – OlsenBanden admin-panel
+    "missedCall": {
+      ".read": true,
+      ".write": true
+    },
+
     // Afvis al anden adgang
     "$other": {
       ".read": false,

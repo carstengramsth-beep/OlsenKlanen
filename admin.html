@@ -200,6 +200,25 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
   animation:puls-online 1.4s ease-in-out infinite}
 @keyframes puls-online{0%,100%{opacity:1}50%{opacity:.3}}
 
+/* ── RINGEKLOKKE-KNAP (Brugerstyring) ───────────── */
+.ring-knap{width:32px;height:32px;border-radius:50%;background:#3daa59;color:#fff;
+  border:none;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;
+  justify-content:center;flex-shrink:0;transition:background .15s,transform .1s;
+  box-shadow:0 2px 6px rgba(61,170,89,.35)}
+.ring-knap:hover{background:#2e8a47;transform:scale(1.1)}
+.ring-knap:disabled{background:#bbb;cursor:not-allowed;box-shadow:none;transform:none}
+
+/* ── DND TOGGLE ─────────────────────────────────── */
+.dnd-toggle{padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;
+  cursor:pointer;border:2px solid var(--kant);color:var(--tekst-mid);background:#fff;
+  transition:all .2s;line-height:1.4}
+.dnd-toggle.aktiv{background:#d94f4f;border-color:#d94f4f;color:#fff}
+
+/* ── MISSED CALL STRIP ──────────────────────────── */
+.missed-call-strip{margin-top:.75rem;padding:.65rem 1rem;background:#fff8e1;
+  border:1px solid #f5c842;border-radius:8px;font-size:13px;color:#6b4f00;
+  display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+
 /* ── VIDEO-KNAP (Online nu) ─────────────────────── */
 .video-knap{width:32px;height:32px;border-radius:50%;background:#3daa59;color:#fff;
   border:none;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;
@@ -791,6 +810,23 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
           <div class="side-titel">Brugerstyring</div>
           <div class="side-sub">Administrer adgang til OlsenKlanen — kun for Carsten</div>
         </div>
+        <!-- DND-kort -->
+        <div class="kort">
+          <div class="kort-body" style="padding:.9rem 1.2rem">
+            <div style="display:flex;align-items:center;gap:1rem">
+              <div style="flex:1">
+                <div style="font-weight:600;font-size:14px;color:var(--mos-mork)">Vil ikke forstyrres</div>
+                <div style="font-size:12px;color:var(--tekst-mid);margin-top:2px">Skjuler din ringeklokke for andre — du er stadig online</div>
+              </div>
+              <button id="dnd-knap" class="dnd-toggle" onclick="toggleDnd()">Slå til</button>
+            </div>
+            <div id="missed-call-strip" class="missed-call-strip" style="display:none">
+              <span id="missed-call-tekst"></span>
+              <button class="btn btn-sm" onclick="fjernMissedCallVisning()" style="white-space:nowrap">OK</button>
+            </div>
+          </div>
+        </div>
+
         <div class="kort">
           <div class="kort-header">
             <div class="kort-titel">Aktive brugere</div>
@@ -1292,9 +1328,20 @@ window.fb = {
   fjernPresence: email => set(dbRef(rtdb, `presence/${email.replace(/\./g, ',')}`), null),
 
   // Videomøde-invitationer
-  sendInvite: (emailKey, data) => set(dbRef(rtdb, `invites/${emailKey}`), data),
-  lytInvite:  (emailKey, cb)  => onValue(dbRef(rtdb, `invites/${emailKey}`), snap => cb(snap.exists() ? snap.val() : null)),
-  fjernInvite: emailKey        => remove(dbRef(rtdb, `invites/${emailKey}`)),
+  sendInvite:  (emailKey, data) => set(dbRef(rtdb, `invites/${emailKey}`), data),
+  lytInvite:   (emailKey, cb)   => onValue(dbRef(rtdb, `invites/${emailKey}`), snap => cb(snap.exists() ? snap.val() : null)),
+  fjernInvite:  emailKey         => remove(dbRef(rtdb, `invites/${emailKey}`)),
+
+  // Vil ikke forstyrres (DND)
+  saetDnd:     (emailKey, aktiv) => aktiv
+    ? set(dbRef(rtdb, `dnd/${emailKey}`), { aktiv: true, tidspunkt: dbTimestamp() })
+    : remove(dbRef(rtdb, `dnd/${emailKey}`)),
+  lytAlleDnd:  cb => onValue(dbRef(rtdb, 'dnd'), snap => cb(snap.val() || {})),
+
+  // Ubesvaret opkald
+  sendMissedCall:  (emailKey, data) => set(dbRef(rtdb, `missedCall/${emailKey}`), data),
+  lytMissedCall:   (emailKey, cb)   => onValue(dbRef(rtdb, `missedCall/${emailKey}`), snap => cb(snap.exists() ? snap.val() : null)),
+  fjernMissedCall:  emailKey         => remove(dbRef(rtdb, `missedCall/${emailKey}`)),
 
   // Brugere
   hentBruger: email => getDoc(doc(db,'brugere',email)),
@@ -1368,9 +1415,11 @@ function opsætAdminPanel(user) {
   // Sæt dagens dato i nyheds-form
   document.getElementById('nyhed-dato').valueAsDate = new Date();
 
-  // Start presence + invite-lytter
+  // Start presence + alle lyttere
   startPresence(email, user.displayName || email);
   startInviteLytter();
+  startDndLytter();
+  startMissedCallLytter();
 
   // Marker eget brugerkort grønt med det samme (RTDB er asynkront)
   const egetKort = document.querySelector(`.bruger-kort[data-email="${email}"]`);
@@ -1414,7 +1463,11 @@ async function logInd() {
 }
 
 function logUd() {
-  if (aktivBruger) window.fb.fjernPresence(aktivBruger.email);
+  if (aktivBruger) {
+    window.fb.fjernPresence(aktivBruger.email);
+    window.fb.saetDnd(emailNoegle(aktivBruger.email), false);
+  }
+  dndAktiv = false;
   window.fb.logUd();
 }
 
@@ -1432,8 +1485,15 @@ const ALLE_BRUGERE = [
   { email: 'kld@inmobia.com',   navn: 'Karin Lund',           rolle: 'Redaktør' },
 ];
 
+let alleOnline = new Set();
+let alleDnd    = {};
+let dndAktiv   = false;
+let dndUnsub   = null;
+let missedCallUnsub = null;
+
 function opdaterOnlinePrikker(data) {
-  const onlineEmails = new Set(Object.values(data).map(b => b.email));
+  alleOnline = new Set(Object.values(data).map(b => b.email));
+  const onlineEmails = alleOnline;
 
   // Opdater avatar-prikker i brugerlisten
   document.querySelectorAll('.online-prik').forEach(p => p.classList.remove('aktiv'));
@@ -1441,6 +1501,8 @@ function opdaterOnlinePrikker(data) {
     const kort = document.querySelector(`.bruger-kort[data-email="${email}"]`);
     if (kort) kort.querySelector('.online-prik')?.classList.add('aktiv');
   });
+
+  opdaterBrugerKort();
 
   // Opdater topbar-tæller
   const antal = onlineEmails.size;
@@ -1480,14 +1542,123 @@ function opdaterOnlinePrikker(data) {
   }).join('');
 }
 
-// ── Videomøde (Daily.co) ─────────────────────────
+// ── Videomøde + DND + Ringeklokke ────────────────
 const DAILY_KEY = '30a8763becc5812a9ff6b8173839e9c7435258266cfec082c79879913c8a8e93';
 let pendingInviteUrl = null;
 let inviteUnsub = null;
 
 function emailNoegle(email) { return email.replace(/\./g, ','); }
 
-// Delegeret click på videoknapper i Online nu-listen
+// ── Brugerstyring: ring-knapper ───────────────────
+function opdaterBrugerKort() {
+  document.querySelectorAll('#bruger-liste .bruger-kort[data-email]').forEach(kort => {
+    const email  = kort.dataset.email;
+    const erMig  = aktivBruger && email === aktivBruger.email;
+    const erOnline = alleOnline.has(email);
+    const erDnd    = !!alleDnd[emailNoegle(email)];
+
+    kort.querySelector('.ring-knap')?.remove();
+
+    if (erOnline && !erMig && !erDnd) {
+      const b    = ALLE_BRUGERE.find(x => x.email === email);
+      const navn = b?.navn || email;
+      const btn  = document.createElement('button');
+      btn.className         = 'ring-knap';
+      btn.title             = `Ring op til ${navn}`;
+      btn.dataset.ringEmail = email;
+      btn.dataset.ringNavn  = navn;
+      btn.textContent       = '🔔';
+      kort.querySelector('.bruger-handlinger').prepend(btn);
+    }
+  });
+}
+
+document.getElementById('bruger-liste').addEventListener('click', e => {
+  const btn = e.target.closest('.ring-knap');
+  if (btn) ringOp(btn.dataset.ringEmail, btn.dataset.ringNavn, btn);
+});
+
+// ── DND toggle ────────────────────────────────────
+function toggleDnd() {
+  if (!aktivBruger) return;
+  dndAktiv = !dndAktiv;
+  const knap = document.getElementById('dnd-knap');
+  knap.textContent = dndAktiv ? 'Slå fra' : 'Slå til';
+  knap.classList.toggle('aktiv', dndAktiv);
+  window.fb.saetDnd(emailNoegle(aktivBruger.email), dndAktiv);
+}
+
+function startDndLytter() {
+  if (dndUnsub) return;
+  dndUnsub = window.fb.lytAlleDnd(data => {
+    alleDnd = data;
+    opdaterBrugerKort();
+  });
+}
+
+// ── Ubesvarede opkald ─────────────────────────────
+function startMissedCallLytter() {
+  if (!aktivBruger || missedCallUnsub) return;
+  missedCallUnsub = window.fb.lytMissedCall(emailNoegle(aktivBruger.email), mc => {
+    const strip = document.getElementById('missed-call-strip');
+    if (!strip) return;
+    if (!mc) { strip.style.display = 'none'; return; }
+    const tid = new Date(mc.tidspunkt).toLocaleTimeString('da-DK', {hour:'2-digit', minute:'2-digit'});
+    document.getElementById('missed-call-tekst').textContent =
+      `${mc.fra || 'Nogen'} forsøgte at ringe kl. ${tid}`;
+    strip.style.display = 'flex';
+  });
+}
+
+function fjernMissedCallVisning() {
+  const strip = document.getElementById('missed-call-strip');
+  if (strip) strip.style.display = 'none';
+  if (aktivBruger) window.fb.fjernMissedCall(emailNoegle(aktivBruger.email));
+}
+
+// ── Ringeklokke: ring op ──────────────────────────
+async function ringOp(invEmail, invNavn, btn) {
+  if (!aktivBruger) return;
+
+  // Er target i DND? Skriv missed call og stop
+  if (alleDnd[emailNoegle(invEmail)]) {
+    await window.fb.sendMissedCall(emailNoegle(invEmail), {
+      fra: aktivBruger.displayName || aktivBruger.email,
+      fraEmail: aktivBruger.email, tidspunkt: Date.now()
+    });
+    alert(`${invNavn} er i øjeblikket utilgængelig (Vil ikke forstyrres). Et besked er efterladt.`);
+    return;
+  }
+
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = '…';
+  try {
+    const rumNavn = 'olsen-' + Date.now().toString(36);
+    const res = await fetch('https://api.daily.co/v1/rooms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + DAILY_KEY },
+      body: JSON.stringify({ name: rumNavn, properties: {
+        exp: Math.floor(Date.now() / 1000) + 3600, max_participants: 10, enable_chat: true
+      }})
+    });
+    if (!res.ok) throw new Error('Daily.co ' + res.status);
+    const { url } = await res.json();
+    await window.fb.sendInvite(emailNoegle(invEmail), {
+      fra: aktivBruger.displayName || aktivBruger.email,
+      fraEmail: aktivBruger.email, rumUrl: url, tidspunkt: Date.now()
+    });
+    document.getElementById('moede-til-tekst').textContent = 'Ring op til ' + invNavn;
+    document.getElementById('moede-url-felt').textContent  = url;
+    document.getElementById('moede-join-link').href        = url;
+    document.getElementById('moede-overlay').style.display = 'flex';
+  } catch(err) {
+    alert('Fejl: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = orig;
+  }
+}
+
+// ── Online nu: 📹-knapper (eksisterende flow) ─────
 document.getElementById('online-liste').addEventListener('click', e => {
   const btn = e.target.closest('[data-invite-email]');
   if (btn) inviterTilMoede(btn.dataset.inviteEmail, btn.dataset.inviteNavn, btn);
@@ -1513,8 +1684,8 @@ async function inviterTilMoede(invEmail, invNavn, btn) {
       fraEmail: aktivBruger.email, rumUrl: url, tidspunkt: Date.now()
     });
     document.getElementById('moede-til-tekst').textContent = 'Invitation sendt til ' + invNavn;
-    document.getElementById('moede-url-felt').textContent = url;
-    document.getElementById('moede-join-link').href = url;
+    document.getElementById('moede-url-felt').textContent  = url;
+    document.getElementById('moede-join-link').href        = url;
     document.getElementById('moede-overlay').style.display = 'flex';
   } catch(err) {
     alert('Fejl: ' + err.message);
@@ -1527,6 +1698,7 @@ function lukkMoedeModal() {
   document.getElementById('moede-overlay').style.display = 'none';
 }
 
+// ── Indgående invitationer (invite-notif) ─────────
 function startInviteLytter() {
   if (!aktivBruger || inviteUnsub) return;
   inviteUnsub = window.fb.lytInvite(emailNoegle(aktivBruger.email), inv => {
