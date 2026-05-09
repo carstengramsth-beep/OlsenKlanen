@@ -596,17 +596,17 @@ body{font-family:'Source Sans 3',sans-serif;background:#f0ece0;color:var(--tekst
     </div>
   </div>
 
-  <!-- Mødelink-modal (afsender) -->
-  <div id="moede-overlay" class="moede-overlay" style="display:none" onclick="if(event.target===this)lukkMoedeModal()">
-    <div class="moede-boks">
-      <div style="font-size:36px;margin-bottom:.75rem">📹</div>
-      <div style="font-family:'Playfair Display',serif;font-size:20px;margin-bottom:.3rem">Videomøde oprettet</div>
-      <div style="font-size:13px;color:var(--tekst-lys);margin-bottom:.25rem" id="moede-til-tekst">Invitationen er sendt</div>
-      <div class="moede-url" id="moede-url" title="Klik for at markere og kopiere"></div>
-      <div style="display:flex;gap:.75rem;justify-content:center;margin-top:.75rem">
-        <a id="moede-join-link" href="#" target="_blank" class="btn btn-gron">Deltag nu</a>
-        <button class="btn btn-lys" onclick="lukkMoedeModal()">Luk</button>
+  <!-- Daily.co Prebuilt video-modal -->
+  <div id="video-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:700;flex-direction:column;align-items:center;justify-content:center" onclick="if(event.target===this)lukkMoedeModal()">
+    <div style="width:min(92vw,960px);height:min(82vh,620px);background:#111;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.6)">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:.55rem 1rem;background:#1a2e1a;color:#fff;font-size:13px;font-weight:600">
+        <span id="moede-til-tekst">📹 Videomøde</span>
+        <button style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer;opacity:.7;padding:0 4px;line-height:1" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7" onclick="lukkMoedeModal()">✕</button>
       </div>
+      <iframe id="video-iframe" src=""
+        style="flex:1;border:none;width:100%"
+        allow="camera; microphone; fullscreen; display-capture; autoplay"
+        allowfullscreen></iframe>
     </div>
   </div>
 </div>
@@ -799,45 +799,32 @@ document.getElementById('brugerstyring-liste').addEventListener('click', e => {
 });
 
 // ── Daily.co videomøde ────────────────────────────────────────────────────────
-async function opretVideoRum() {
-  const rumNavn = 'olsen-' + Date.now().toString(36);
-  const res = await fetch('https://api.daily.co/v1/rooms', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + DAILY_KEY },
-    body: JSON.stringify({ name: rumNavn, properties: {
-      exp: Math.floor(Date.now() / 1000) + 3600,
-      max_participants: 10,
-      enable_chat: true
-    }})
-  });
-  if (!res.ok) throw new Error('Daily.co svar ' + res.status + ': ' + await res.text());
-  return (await res.json()).url;
+function genererMoedeUrl() {
+  return `https://olsenklanen.daily.co/olsen-${Date.now().toString(36)}`;
 }
 
 async function inviterTilMoede(inviteretEmail, inviteretNavn, btn) {
   if (!aktivBruger) return;
+  const url = genererMoedeUrl();
   const gammelTekst = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Opretter rum…';
+  btn.disabled = true; btn.textContent = 'Ringer op…';
   try {
-    const rumUrl = await opretVideoRum();
-    // Send invite til den anden via RTDB
     await set(ref(rtdb, 'invites/' + emailNoegle(inviteretEmail)), {
-      fra: aktivBruger.navn, fraEmail: aktivBruger.email, rumUrl, tidspunkt: Date.now()
+      fra: aktivBruger.navn, fraEmail: aktivBruger.email, rumUrl: url, tidspunkt: Date.now()
     });
-    // Vis mødelinket til afsender
-    document.getElementById('moede-til-tekst').textContent = 'Invitation sendt til ' + inviteretNavn;
-    document.getElementById('moede-url').textContent = rumUrl;
-    document.getElementById('moede-join-link').href = rumUrl;
-    document.getElementById('moede-overlay').style.display = 'flex';
+    document.getElementById('moede-til-tekst').textContent = '📹 Ring op til ' + inviteretNavn;
+    document.getElementById('video-iframe').src = url;
+    document.getElementById('video-modal').style.display = 'flex';
   } catch(e) {
-    alert('Fejl ved oprettelse af møderum:\n' + e.message);
+    alert('Fejl:\n' + e.message);
   } finally {
     btn.disabled = false; btn.textContent = gammelTekst;
   }
 }
 
 window.lukkMoedeModal = function() {
-  document.getElementById('moede-overlay').style.display = 'none';
+  document.getElementById('video-modal').style.display = 'none';
+  document.getElementById('video-iframe').src = '';
 };
 
 // ── Indgående invitationer ────────────────────────────────────────────────────

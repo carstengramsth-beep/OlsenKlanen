@@ -233,15 +233,18 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
   z-index:900;padding:1.1rem;animation:inv-pop .25s ease}
 @keyframes inv-pop{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
 
-/* ── MØDE-OVERLAY ───────────────────────────────── */
-.moede-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:950;
-  display:flex;align-items:center;justify-content:center}
-.moede-boks{background:#fff;border-radius:14px;padding:1.6rem 2rem;width:420px;
-  max-width:92vw;box-shadow:0 12px 40px rgba(0,0,0,.25)}
-.moede-boks h3{margin:0 0 .5rem;font-size:16px;color:var(--mos-mork)}
-.moede-url-felt{background:#f0f4ee;border:1px solid #c2d4ba;border-radius:6px;
-  padding:.65rem .9rem;font-size:12px;color:#2c6e2f;word-break:break-all;
-  margin:.75rem 0;font-family:monospace;user-select:all}
+/* ── VIDEO-MODAL (Daily.co Prebuilt embed) ──────── */
+.video-modal{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:950;
+  display:flex;flex-direction:column;align-items:center;justify-content:center}
+.video-modal-boks{width:min(92vw,1000px);height:min(82vh,640px);
+  background:#111;border-radius:14px;overflow:hidden;
+  display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.video-modal-header{display:flex;align-items:center;justify-content:space-between;
+  padding:.55rem 1rem;background:#1c2a1c;color:#fff;font-size:13px;font-weight:600;gap:1rem}
+.video-modal-luk{background:none;border:none;color:#fff;font-size:22px;
+  cursor:pointer;padding:0 4px;line-height:1;opacity:.7;flex-shrink:0}
+.video-modal-luk:hover{opacity:1}
+#video-iframe{flex:1;border:none;width:100%}
 
 /* ── KNAPPER ────────────────────────────────────── */
 .btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;
@@ -1616,6 +1619,22 @@ function fjernMissedCallVisning() {
   if (aktivBruger) window.fb.fjernMissedCall(emailNoegle(aktivBruger.email));
 }
 
+// ── Daily.co Prebuilt: URL-generator (ingen API-kald) ──
+function genererMoedeUrl() {
+  return `https://olsenklanen.daily.co/olsen-${Date.now().toString(36)}`;
+}
+
+function aabneVideoModal(url, titel) {
+  document.getElementById('video-modal-titel').textContent = titel || 'Videomøde';
+  document.getElementById('video-iframe').src = url;
+  document.getElementById('video-modal').style.display = 'flex';
+}
+
+function lukkMoedeModal() {
+  document.getElementById('video-modal').style.display = 'none';
+  document.getElementById('video-iframe').src = '';
+}
+
 // ── Ringeklokke: ring op ──────────────────────────
 async function ringOp(invEmail, invNavn, btn) {
   if (!aktivBruger) return;
@@ -1630,27 +1649,15 @@ async function ringOp(invEmail, invNavn, btn) {
     return;
   }
 
+  const url  = genererMoedeUrl();
   const orig = btn.textContent;
   btn.disabled = true; btn.textContent = '…';
   try {
-    const rumNavn = 'olsen-' + Date.now().toString(36);
-    const res = await fetch('https://api.daily.co/v1/rooms', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + DAILY_KEY },
-      body: JSON.stringify({ name: rumNavn, properties: {
-        exp: Math.floor(Date.now() / 1000) + 3600, max_participants: 10, enable_chat: true
-      }})
-    });
-    if (!res.ok) throw new Error('Daily.co ' + res.status);
-    const { url } = await res.json();
     await window.fb.sendInvite(emailNoegle(invEmail), {
       fra: aktivBruger.displayName || aktivBruger.email,
       fraEmail: aktivBruger.email, rumUrl: url, tidspunkt: Date.now()
     });
-    document.getElementById('moede-til-tekst').textContent = 'Ring op til ' + invNavn;
-    document.getElementById('moede-url-felt').textContent  = url;
-    document.getElementById('moede-join-link').href        = url;
-    document.getElementById('moede-overlay').style.display = 'flex';
+    aabneVideoModal(url, `Ring op til ${invNavn}`);
   } catch(err) {
     alert('Fejl: ' + err.message);
   } finally {
@@ -1658,7 +1665,7 @@ async function ringOp(invEmail, invNavn, btn) {
   }
 }
 
-// ── Online nu: 📹-knapper (eksisterende flow) ─────
+// ── Online nu: 📹-knapper ─────────────────────────
 document.getElementById('online-liste').addEventListener('click', e => {
   const btn = e.target.closest('[data-invite-email]');
   if (btn) inviterTilMoede(btn.dataset.inviteEmail, btn.dataset.inviteNavn, btn);
@@ -1666,36 +1673,20 @@ document.getElementById('online-liste').addEventListener('click', e => {
 
 async function inviterTilMoede(invEmail, invNavn, btn) {
   if (!aktivBruger) return;
+  const url  = genererMoedeUrl();
   const orig = btn.textContent;
   btn.disabled = true; btn.textContent = '…';
   try {
-    const rumNavn = 'olsen-' + Date.now().toString(36);
-    const res = await fetch('https://api.daily.co/v1/rooms', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + DAILY_KEY },
-      body: JSON.stringify({ name: rumNavn, properties: {
-        exp: Math.floor(Date.now() / 1000) + 3600, max_participants: 10, enable_chat: true
-      }})
-    });
-    if (!res.ok) throw new Error('Daily.co ' + res.status);
-    const { url } = await res.json();
     await window.fb.sendInvite(emailNoegle(invEmail), {
       fra: aktivBruger.displayName || aktivBruger.email,
       fraEmail: aktivBruger.email, rumUrl: url, tidspunkt: Date.now()
     });
-    document.getElementById('moede-til-tekst').textContent = 'Invitation sendt til ' + invNavn;
-    document.getElementById('moede-url-felt').textContent  = url;
-    document.getElementById('moede-join-link').href        = url;
-    document.getElementById('moede-overlay').style.display = 'flex';
+    aabneVideoModal(url, `Invitation sendt til ${invNavn}`);
   } catch(err) {
     alert('Fejl: ' + err.message);
   } finally {
     btn.disabled = false; btn.textContent = orig;
   }
-}
-
-function lukkMoedeModal() {
-  document.getElementById('moede-overlay').style.display = 'none';
 }
 
 // ── Indgående invitationer (invite-notif) ─────────
@@ -2476,16 +2467,16 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   </div>
 </div>
 
-<!-- Mødelink-overlay -->
-<div id="moede-overlay" class="moede-overlay" style="display:none" onclick="if(event.target===this)lukkMoedeModal()">
-  <div class="moede-boks">
-    <h3>📹 Videomøde oprettet</h3>
-    <div id="moede-til-tekst" style="font-size:13px;color:#666;margin-bottom:.5rem">Invitation sendt</div>
-    <div class="moede-url-felt" id="moede-url-felt"></div>
-    <div style="display:flex;gap:.8rem;margin-top:.5rem">
-      <a id="moede-join-link" href="#" target="_blank" class="btn btn-mos" style="flex:1;text-align:center">Deltag nu</a>
-      <button class="btn btn-sekundaer" style="flex:1" onclick="lukkMoedeModal()">Luk</button>
+<!-- Daily.co Prebuilt video-modal -->
+<div id="video-modal" class="video-modal" style="display:none" onclick="if(event.target===this)lukkMoedeModal()">
+  <div class="video-modal-boks">
+    <div class="video-modal-header">
+      <span id="video-modal-titel">📹 Videomøde</span>
+      <button class="video-modal-luk" onclick="lukkMoedeModal()">✕</button>
     </div>
+    <iframe id="video-iframe" src=""
+      allow="camera; microphone; fullscreen; display-capture; autoplay"
+      allowfullscreen></iframe>
   </div>
 </div>
 </body>
