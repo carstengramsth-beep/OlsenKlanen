@@ -206,6 +206,9 @@ body.familie-session .rediger-knap.egen-rediger{display:inline-block}
 .edit-gem-knap{background:var(--gron);color:var(--hvid);border:none;padding:9px 24px;font-size:13px;letter-spacing:.5px;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:background .2s}
 .edit-gem-knap:hover{background:var(--gron-lys)}
 .edit-gem-knap:disabled{opacity:.6;cursor:default}
+.edit-kladde-knap{background:none;color:var(--gron);border:1.5px solid var(--gron);padding:9px 20px;font-size:13px;letter-spacing:.5px;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:all .2s}
+.edit-kladde-knap:hover{background:var(--gron);color:var(--hvid)}
+.edit-kladde-knap:disabled{opacity:.6;cursor:default}
 .edit-annuller{background:none;border:1px solid var(--border);color:var(--tekst-lys);padding:9px 18px;font-size:13px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:all .2s}
 .edit-annuller:hover{border-color:var(--tekst);color:var(--tekst)}
 .edit-status{font-size:12px;margin-left:auto}
@@ -446,7 +449,8 @@ body.kan-redigere .historisk-btn-wrapper{display:block}
 
     </div>
     <div class="edit-fod">
-      <button class="edit-gem-knap" id="edit-gem-knap">💾 Gem ændringer</button>
+      <button class="edit-gem-knap"    id="edit-godkend-knap">✓ Godkend og gem</button>
+      <button class="edit-kladde-knap" id="edit-gem-knap">💾 Gem kladde</button>
       <button class="edit-annuller" id="edit-annuller">Annullér</button>
       <span class="edit-status" id="edit-status"></span>
       <button class="edit-fjern" id="fjern-knap">🗑 Fjern medlem</button>
@@ -614,6 +618,7 @@ let aktivtNr = null;
 let personListe = [];    // arbejdskopi i edit-modal
 let begiListe   = [];    // arbejdskopi i edit-modal
 let familieSession = null; // {nr, navne} — familie logget ind via PIN
+let editDirty = false;   // ugemte ændringer i edit-modal
 
 // ── HJÆLPEFUNKTIONER ─────────────────────────────────────────
 const MAANEDER = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december'];
@@ -795,9 +800,10 @@ document.getElementById('soege').addEventListener('input', e => {
 });
 
 // ── EDIT-MODAL ────────────────────────────────────────────────
-const editModal    = document.getElementById('edit-modal');
-const editStatusEl = document.getElementById('edit-status');
-const editGemKnap  = document.getElementById('edit-gem-knap');
+const editModal      = document.getElementById('edit-modal');
+const editStatusEl   = document.getElementById('edit-status');
+const editGemKnap    = document.getElementById('edit-gem-knap');
+const editGodkendKnap = document.getElementById('edit-godkend-knap');
 
 function renderPersonEdit() {
   const el = document.getElementById('person-liste-edit');
@@ -911,6 +917,7 @@ function aabneEditModal(nr) {
   const m = data.find(x => x.nr === nr);
   if (!m) return;
   clearTimeout(autoGemTimer);
+  editDirty   = false;
   aktivtNr    = nr;
   personListe = (m.familiemedlemmer || []).map(p => ({...p}));
   begiListe   = (m.begivenheder    || []).map(b => ({...b}));
@@ -983,13 +990,14 @@ function nulstilFeltFarver() {
 let autoGemTimer = null;
 
 function startAutoGem() {
+  editDirty = true;
   clearTimeout(autoGemTimer);
   editStatusEl.textContent = '…';
   editStatusEl.className = 'edit-status';
-  autoGemTimer = setTimeout(() => gemData(), 1800);
+  autoGemTimer = setTimeout(() => gemData(false), 1800);
 }
 
-async function gemData() {
+async function gemData(godkendt = false) {
   const gammelNr = aktivtNr;
   const nytNr    = document.getElementById('ef-nr').value.trim();
   if (!nytNr || !gammelNr) return;
@@ -1002,9 +1010,10 @@ async function gemData() {
   const postnummer = document.getElementById('ef-postnummer').value.trim();
   const by         = document.getElementById('ef-by').value.trim();
 
-  const navne  = [fornavn, mellemnavn, efternavn].filter(Boolean).join(' ');
-  const linje2 = [postnummer, by].filter(Boolean).join(' ');
+  const navne   = [fornavn, mellemnavn, efternavn].filter(Boolean).join(' ');
+  const linje2  = [postnummer, by].filter(Boolean).join(' ');
   const adresse = [vej, linje2].filter(Boolean).join('\n');
+  const tidl    = data.find(x => x.nr === gammelNr) || {};
 
   const opdateret = {
     nr: nytNr,
@@ -1012,12 +1021,18 @@ async function gemData() {
     vej, postnummer, by, adresse,
     tlf:   document.getElementById('ef-tlf').value.trim(),
     email: document.getElementById('ef-email').value.trim(),
-    kode:  erAdmin ? document.getElementById('ef-kode').value.trim() : (data.find(x=>x.nr===gammelNr)||{}).kode || '',
+    kode:  erAdmin ? document.getElementById('ef-kode').value.trim() : tidl.kode || '',
     familiemedlemmer: personListe.filter(p => p.navn.trim()),
     begivenheder:     begiListe.filter(b => b.dato || b.beskrivelse),
+    godkendt: godkendt ? true : (tidl.godkendt || false),
+    ...(godkendt ? {
+      godkendtAf:  auth.currentUser?.email || '?',
+      godkendtTid: new Date().toISOString()
+    } : {})
   };
 
   editGemKnap.disabled = true;
+  editGodkendKnap.disabled = true;
   editStatusEl.textContent = 'Gemmer…';
   editStatusEl.className = 'edit-status';
 
@@ -1028,20 +1043,24 @@ async function gemData() {
     const idx = data.findIndex(x => x.nr === gammelNr);
     if (idx >= 0) data[idx] = opdateret; else data.push(opdateret);
     aktivtNr = nytNr;
+    editDirty = false;
 
     saetGroenneEfterGem();
-    editStatusEl.textContent = '✓ Gemt';
+    editStatusEl.textContent = godkendt ? '✓ Godkendt og gemt!' : '✓ Kladde gemt';
     editStatusEl.className = 'edit-status ok';
     editGemKnap.disabled = false;
+    editGodkendKnap.disabled = false;
     renderGrid();
   } catch (err) {
     editGemKnap.disabled = false;
+    editGodkendKnap.disabled = false;
     editStatusEl.className = 'edit-status fejl';
     editStatusEl.textContent = 'Fejl: ' + (err.message || 'Kunne ikke gemme');
   }
 }
 
-editGemKnap.addEventListener('click', () => { clearTimeout(autoGemTimer); gemData(); });
+editGemKnap.addEventListener('click',     () => { clearTimeout(autoGemTimer); gemData(false); });
+editGodkendKnap.addEventListener('click', () => { clearTimeout(autoGemTimer); gemData(true);  });
 
 // Auto-gem-lyttere på alle tekstfelter
 ['ef-fornavn','ef-mellemnavn','ef-efternavn','ef-nr','ef-vej','ef-postnummer','ef-by','ef-tlf','ef-email','ef-kode'].forEach(id => {
@@ -1190,15 +1209,21 @@ document.getElementById('historisk-gem-knap').addEventListener('click', async ()
 });
 
 function lukEditModal() {
+  if (editDirty && !confirm('Du har ugemte ændringer. Vil du lukke uden at gemme?')) return;
   clearTimeout(autoGemTimer);
   nulstilFeltFarver();
   editModal.classList.remove('vis');
   aktivtNr = null;
+  editDirty = false;
 }
 
 document.getElementById('edit-annuller').addEventListener('click', lukEditModal);
 document.getElementById('edit-modal-luk').addEventListener('click', lukEditModal);
 editModal.addEventListener('click', e => { if (e.target === editModal) lukEditModal(); });
+
+window.addEventListener('beforeunload', e => {
+  if (editDirty) { e.preventDefault(); e.returnValue = ''; }
+});
 
 // ── LOGIN MODAL (faner) ───────────────────────────────────────
 const loginModal = document.getElementById('login-modal');

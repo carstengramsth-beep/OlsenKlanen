@@ -348,7 +348,16 @@ body.er-redaktor .ret-knap{display:inline-block;}
   font-family:'Source Sans 3',sans-serif;
 }
 .btn-sek:hover{border-color:var(--gron);color:var(--gron);}
-.btn-row{display:flex;gap:.5rem;align-items:center;}
+.btn-kladde{
+  background:none;color:var(--gron);
+  border:1.5px solid var(--gron);border-radius:6px;cursor:pointer;
+  padding:.45rem 1rem;font-size:13px;
+  font-family:'Source Sans 3',sans-serif;
+  transition:background .12s,color .12s;
+}
+.btn-kladde:hover{background:var(--gron);color:var(--hvid);}
+.btn-kladde:disabled{opacity:.55;cursor:not-allowed;}
+.btn-row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;}
 
 /* ─── REDIGÉR PERSON MODAL ─── */
 .ret-overlay{
@@ -693,19 +702,12 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
         </div>
       </div>
 
-      <!-- Godkend -->
-      <div class="godkend-boks">
-        <input type="checkbox" id="ret-godkend">
-        <label for="ret-godkend" style="cursor:pointer;flex:1;">
-          Markér som godkendt — data er verificeret korrekt
-        </label>
-      </div>
-
       <div class="btn-row" style="margin-top:.5rem;">
-        <button class="btn-prim" id="ret-gem-btn">Gem og godkend ✓</button>
-        <button class="btn-sek"  id="ret-annuller-btn">Annuller</button>
+        <button class="btn-prim"   id="ret-godkend-btn">Godkend og gem ✓</button>
+        <button class="btn-kladde" id="ret-kladde-btn">Gem kladde 💾</button>
+        <button class="btn-sek"    id="ret-annuller-btn">Annuller</button>
       </div>
-      <div class="gem-succes" id="ret-succes">✓ Data gemt og godkendt!</div>
+      <div class="gem-succes" id="ret-succes"></div>
       <div class="gem-fejl"   id="ret-fejl"></div>
     </div>
   </div>
@@ -1084,8 +1086,10 @@ document.getElementById('login-overlay').addEventListener('click', e => {
 
 // ─── REDIGÉR PERSON MODAL ────────────────────────────────────────────────────
 let aktivRet = null; // { docId, idx, familienr }
+let retDirty = false;
 
 function aabneRetModal(data) {
+  retDirty = false;
   aktivRet = { docId: data.docId, idx: data.idx, familienr: data.familienr };
   document.getElementById('ret-modal-titel').textContent = `Rediger: ${data.navn}`;
   document.getElementById('ret-familienr').textContent = data.familienr || '—';
@@ -1096,7 +1100,6 @@ function aabneRetModal(data) {
   document.getElementById('ret-rolle').value         = data.rolle || 'forælder';
   document.getElementById('ret-email').value         = data.email || '';
   document.getElementById('ret-mobil').value         = data.mobil || '';
-  document.getElementById('ret-godkend').checked     = data.godkendt || false;
 
   // Fødselsdato → YYYY-MM-DD
   const dato = `${data.aar}-${String(data.mdr).padStart(2,'0')}-${String(data.dag).padStart(2,'0')}`;
@@ -1118,7 +1121,11 @@ function aabneRetModal(data) {
   setTimeout(() => document.getElementById('ret-fornavn').focus(), 80);
 }
 
-function lukRetModal() { document.getElementById('ret-overlay').style.display = 'none'; }
+function lukRetModal() {
+  if (retDirty && !confirm('Du har ugemte ændringer. Vil du lukke uden at gemme?')) return;
+  retDirty = false;
+  document.getElementById('ret-overlay').style.display = 'none';
+}
 
 document.getElementById('ret-luk-x').addEventListener('click', lukRetModal);
 document.getElementById('ret-annuller-btn').addEventListener('click', lukRetModal);
@@ -1126,54 +1133,74 @@ document.getElementById('ret-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('ret-overlay')) lukRetModal();
 });
 
-document.getElementById('ret-gem-btn').addEventListener('click', async () => {
+// Registrér brugerinput som "dirty" (ugemte ændringer)
+['ret-fornavn','ret-efternavn','ret-foedselsdato','ret-rolle','ret-email','ret-mobil'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('input',  () => { retDirty = true; });
+    el.addEventListener('change', () => { retDirty = true; });
+  }
+});
+
+window.addEventListener('beforeunload', e => {
+  if (retDirty) { e.preventDefault(); e.returnValue = ''; }
+});
+
+async function gemPerson(skalGodkendes) {
   if (!aktivRet) return;
-  const btn = document.getElementById('ret-gem-btn');
-  btn.disabled = true; btn.textContent = 'Gemmer…';
+  const godkendBtn = document.getElementById('ret-godkend-btn');
+  const kladdeBtn  = document.getElementById('ret-kladde-btn');
+  godkendBtn.disabled = true; kladdeBtn.disabled = true;
+  (skalGodkendes ? godkendBtn : kladdeBtn).textContent = 'Gemmer…';
   document.getElementById('ret-succes').style.display = 'none';
   document.getElementById('ret-fejl').style.display   = 'none';
 
   try {
-    const fornavn   = document.getElementById('ret-fornavn').value.trim();
-    const efternavn = document.getElementById('ret-efternavn').value.trim();
-    const datoRaw   = document.getElementById('ret-foedselsdato').value;
-    const rolle     = document.getElementById('ret-rolle').value;
-    const email     = document.getElementById('ret-email').value.trim();
-    const mobil     = document.getElementById('ret-mobil').value.trim();
-    const godkendt  = document.getElementById('ret-godkend').checked;
-
-    const navn       = [fornavn, efternavn].filter(Boolean).join(' ');
+    const fornavn      = document.getElementById('ret-fornavn').value.trim();
+    const efternavn    = document.getElementById('ret-efternavn').value.trim();
+    const datoRaw      = document.getElementById('ret-foedselsdato').value;
+    const rolle        = document.getElementById('ret-rolle').value;
+    const email        = document.getElementById('ret-email').value.trim();
+    const mobil        = document.getElementById('ret-mobil').value.trim();
+    const navn         = [fornavn, efternavn].filter(Boolean).join(' ');
     const foedselsdato = datoRaw || '2026-01-01';
 
-    // Hent nuværende dokument og opdatér den specifikke person i arrayet
     const docRef  = doc(db, 'membres', aktivRet.docId);
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) throw new Error('Dokument ikke fundet');
 
-    const fam   = docSnap.data();
-    const medl  = [...(fam.familiemedlemmer || [])];
+    const fam  = docSnap.data();
+    const medl = [...(fam.familiemedlemmer || [])];
     medl[aktivRet.idx] = {
       ...medl[aktivRet.idx],
       navn, foedselsdato, rolle, email, mobil,
-      godkendt,
-      ...(godkendt ? {
-        godkendtAf:   getAuth().currentUser?.email || '?',
-        godkendtTid:  new Date().toISOString()
+      godkendt: skalGodkendes,
+      ...(skalGodkendes ? {
+        godkendtAf:  getAuth().currentUser?.email || '?',
+        godkendtTid: new Date().toISOString()
       } : {})
     };
 
     await updateDoc(docRef, { familiemedlemmer: medl });
+    retDirty = false;
 
-    document.getElementById('ret-succes').style.display = 'block';
-    setTimeout(lukRetModal, 1400);
+    const succesEl = document.getElementById('ret-succes');
+    succesEl.textContent = skalGodkendes ? '✓ Data gemt og godkendt!' : '✓ Kladde gemt — status forbliver gul';
+    succesEl.style.display = 'block';
+    setTimeout(lukRetModal, 1600);
   } catch(e) {
     const fejlEl = document.getElementById('ret-fejl');
     fejlEl.textContent = 'Fejl: ' + e.message;
     fejlEl.style.display = 'block';
   } finally {
-    btn.disabled = false; btn.textContent = 'Gem og godkend ✓';
+    godkendBtn.disabled = false; kladdeBtn.disabled = false;
+    godkendBtn.textContent = 'Godkend og gem ✓';
+    kladdeBtn.textContent  = 'Gem kladde 💾';
   }
-});
+}
+
+document.getElementById('ret-godkend-btn').addEventListener('click', () => gemPerson(true));
+document.getElementById('ret-kladde-btn').addEventListener('click',  () => gemPerson(false));
 
 // Delegeret klik på "Ret"-knapper
 document.addEventListener('click', e => {
