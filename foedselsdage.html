@@ -16,6 +16,7 @@
   --lilla:#6b3580;--lilla-pale:#f3eaff;
   --hvid:#fefcf8;--tekst:#1a1a0e;--tekst-lys:#5a5a40;--border:#d4c9a0;
   --baggrund:#fffde0;
+  --tl-groen:#22c55e;--tl-gul:#f59e0b;--tl-roed:#ef4444;
 }
 
 body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var(--tekst);min-height:100vh;}
@@ -39,9 +40,18 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
   box-shadow:0 2px 8px rgba(0,0,0,0.2);
 }
 .topbar-logo{font-family:'Playfair Display',serif;font-size:19px;font-weight:500;color:var(--hvid);text-decoration:none;}
-.topbar-links{display:flex;gap:1.25rem;}
+.topbar-links{display:flex;gap:1.25rem;align-items:center;}
 .topbar-links a{font-size:12px;color:rgba(255,255,255,0.6);text-decoration:none;}
 .topbar-links a:hover,.topbar-links a.aktiv{color:var(--guld-lys);}
+.topbar-red-knap{
+  font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;
+  border:1px solid rgba(255,255,255,0.3);
+  color:rgba(255,255,255,0.7);background:none;cursor:pointer;
+  font-family:'Source Sans 3',sans-serif;
+  transition:all .15s;
+}
+.topbar-red-knap:hover{border-color:var(--guld-lys);color:var(--guld-lys);}
+.topbar-red-knap.logget-ind{border-color:var(--tl-groen);color:var(--tl-groen);}
 
 /* ─── SIDE-HEADER ─── */
 .side-header{
@@ -56,6 +66,18 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 
 /* ─── WRAPPER ─── */
 .wrapper{max-width:960px;margin:0 auto;padding:1.5rem 1rem 2.5rem;}
+
+/* ─── LOADING ─── */
+.loading-boks{
+  text-align:center;padding:3rem 1rem;color:var(--tekst-lys);
+  font-size:14px;letter-spacing:.5px;
+}
+.loading-spinner{
+  display:inline-block;width:28px;height:28px;border:3px solid var(--border);
+  border-top-color:var(--gron);border-radius:50%;
+  animation:spin .8s linear infinite;margin-bottom:.75rem;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* ─── FESTLIG MÆRKEDAGE-BOKS ─── */
 .fest-boks{
@@ -88,14 +110,11 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
   display:flex;align-items:center;gap:.85rem;
   box-shadow:0 1px 4px rgba(0,0,0,0.05);
 }
-.fest-kort.idag{
-  border-left-color:#c0392b;
-  background:linear-gradient(90deg,#fff5f5,var(--hvid));
-}
-.fest-kort.rund{ border-left-color:#2d7a1f; }
-.fest-kort.konf{ border-left-color:var(--lilla); }
-.fest-kort.bryl-sølv{ border-left-color:var(--sølv); }
-.fest-kort.bryl-guld{ border-left-color:var(--guld); }
+.fest-kort.idag{border-left-color:#c0392b;background:linear-gradient(90deg,#fff5f5,var(--hvid));}
+.fest-kort.rund{border-left-color:#2d7a1f;}
+.fest-kort.konf{border-left-color:var(--lilla);}
+.fest-kort.bryl-sølv{border-left-color:var(--sølv);}
+.fest-kort.bryl-guld{border-left-color:var(--guld);}
 .fest-ikon{font-size:26px;flex-shrink:0;line-height:1;}
 .fest-info{flex:1;min-width:0;}
 .fest-navn{font-size:14px;font-weight:600;color:var(--tekst);}
@@ -123,6 +142,16 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
   margin-bottom:1.75rem;font-size:12px;color:var(--tekst-lys);
 }
 .leg{display:flex;align-items:center;gap:.35rem;}
+
+/* ─── TRAFIKLYS ─── */
+.tl{
+  display:inline-block;width:9px;height:9px;border-radius:50%;
+  vertical-align:middle;margin-right:4px;flex-shrink:0;
+  box-shadow:0 0 0 1.5px rgba(0,0,0,.12);
+}
+.tl-groen{background:var(--tl-groen);}
+.tl-gul  {background:var(--tl-gul);}
+.tl-roed {background:var(--tl-roed);}
 
 /* ─── MÅNEDS-BLOK ─── */
 .maaned-blok{margin-bottom:2rem;}
@@ -156,7 +185,6 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 .tabel tbody tr:hover{background:rgba(0,0,0,0.02);}
 .tabel tr:last-child td{border-bottom:none;}
 
-/* kolonnebredder */
 .col-dato       {width:110px;font-weight:600;color:var(--gron);white-space:nowrap;}
 .col-navn       {min-width:140px;}
 .col-alder      {width:55px;text-align:center;}
@@ -165,7 +193,6 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 .col-naeste     {width:145px;text-align:center;}
 .col-dato-naeste{width:80px;text-align:center;font-size:12px;color:var(--tekst-lys);white-space:nowrap;}
 
-/* alder-celle: grøn baggrund ved fødselsdag i dag */
 td.alder-idag{background:var(--gron-pale);color:var(--gron);font-weight:700;border-radius:4px;}
 
 /* ─── BADGES ─── */
@@ -179,32 +206,109 @@ td.alder-idag{background:var(--gron-pale);color:var(--gron);font-weight:700;bord
 .b-sølv {background:var(--sølv);color:#fff;}
 .b-guld {background:var(--guld);color:#fff;}
 
-/* ─── FLAG-FOOTER ─── */
-.flag-footer{
-  background:var(--gron);
-  border-top:3px solid var(--guld);
-  text-align:center;padding:.9rem 0 .6rem;
-}
-.flag-footer-flag{font-size:26px;letter-spacing:6px;}
-.flag-footer-tekst{font-size:11px;color:rgba(255,255,255,0.35);margin-top:.4rem;letter-spacing:.5px;}
-
-/* ─── KNAPPER PÅ FEST-KORT ─── */
-.fest-kort-hojre{
-  display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;
-  flex-shrink:0;
-}
-.hilsen-knap,.hilsen-knap-laes{
-  border:none;border-radius:20px;cursor:pointer;
-  padding:3px 10px;font-size:11px;font-weight:600;
+/* ─── RET-KNAP (kun synlig for redaktører) ─── */
+.ret-knap{
+  display:none;
+  margin-left:6px;padding:1px 7px;font-size:10px;font-weight:600;
+  border:1px solid var(--guld);border-radius:10px;
+  color:var(--guld);background:none;cursor:pointer;
   font-family:'Source Sans 3',sans-serif;
-  white-space:nowrap;color:var(--hvid);
+  transition:all .12s;vertical-align:middle;
 }
-.hilsen-knap     {background:var(--guld);}
-.hilsen-knap:hover{background:#b07820;}
-.hilsen-knap-laes     {background:var(--gron);}
-.hilsen-knap-laes:hover{background:var(--gron-lys);}
+.ret-knap:hover{background:var(--guld);color:var(--hvid);}
+body.er-redaktor .ret-knap{display:inline-block;}
 
-/* ─── HILSEN MODAL ─── */
+/* ─── LOGIN MODAL (redaktør) ─── */
+.login-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.55);
+  z-index:2000;display:flex;align-items:center;justify-content:center;
+  padding:1rem;
+}
+.login-modal{
+  background:var(--baggrund);border:2px solid var(--guld);border-radius:12px;
+  max-width:360px;width:100%;
+  box-shadow:0 8px 40px rgba(0,0,0,0.35);
+}
+.login-modal-header{
+  background:var(--gron);padding:.8rem 1.25rem;border-radius:10px 10px 0 0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.login-modal-titel{font-family:'Playfair Display',serif;font-size:16px;color:var(--hvid);font-weight:400;}
+.modal-luk{background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.6);font-size:22px;line-height:1;padding:0;}
+.modal-luk:hover{color:var(--hvid);}
+.login-body{padding:1.25rem;}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--tekst-lys);margin-bottom:4px;}
+.form-input{
+  width:100%;padding:.55rem .75rem;margin-bottom:.75rem;
+  border:1.5px solid var(--border);border-radius:6px;
+  font-family:'Source Sans 3',sans-serif;font-size:14px;
+  background:var(--hvid);color:var(--tekst);
+}
+.form-input:focus{outline:none;border-color:var(--gron);}
+.form-fejl{color:#c0392b;font-size:12.5px;margin:.25rem 0 .5rem;display:none;}
+.btn-prim{
+  background:var(--gron);color:var(--hvid);
+  border:none;border-radius:6px;cursor:pointer;
+  padding:.5rem 1.25rem;font-size:13.5px;font-weight:600;
+  font-family:'Source Sans 3',sans-serif;
+}
+.btn-prim:hover{background:var(--gron-lys);}
+.btn-prim:disabled{opacity:.55;cursor:not-allowed;}
+.btn-sek{
+  background:none;color:var(--tekst-lys);
+  border:1.5px solid var(--border);border-radius:6px;cursor:pointer;
+  padding:.45rem 1rem;font-size:13px;
+  font-family:'Source Sans 3',sans-serif;
+}
+.btn-sek:hover{border-color:var(--gron);color:var(--gron);}
+.btn-row{display:flex;gap:.5rem;align-items:center;}
+
+/* ─── REDIGÉR PERSON MODAL ─── */
+.ret-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.55);
+  z-index:2000;display:flex;align-items:center;justify-content:center;
+  padding:1rem;
+}
+.ret-modal{
+  background:var(--baggrund);border:2px solid var(--guld);border-radius:12px;
+  max-width:480px;width:100%;max-height:90vh;overflow-y:auto;
+  box-shadow:0 8px 40px rgba(0,0,0,0.35);
+}
+.ret-modal-header{
+  background:var(--gron);padding:.8rem 1.25rem;border-radius:10px 10px 0 0;
+  display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;
+}
+.ret-modal-titel{font-family:'Playfair Display',serif;font-size:16px;color:var(--hvid);font-weight:400;}
+.ret-body{padding:1.25rem;}
+.ret-sektion{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--tekst-lys);border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:.75rem;margin-top:1rem;}
+.ret-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem .75rem;}
+.ret-grid .full{grid-column:1/-1;}
+.ret-disabled{opacity:.6;background:var(--sølv-lys) !important;cursor:not-allowed !important;}
+.godkend-boks{
+  background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;
+  padding:.75rem 1rem;margin:.75rem 0;
+  display:flex;align-items:center;gap:.6rem;font-size:13px;color:#166534;
+}
+.godkend-boks input[type=checkbox]{width:16px;height:16px;accent-color:#22c55e;cursor:pointer;}
+.gem-succes{
+  background:#e8f5e9;border:1.5px solid #4caf50;border-radius:8px;
+  color:#2d7a1f;font-size:14px;font-weight:700;text-align:center;
+  padding:.75rem 1rem;margin-top:.75rem;display:none;
+}
+.gem-fejl{
+  background:#fde8e8;border:1.5px solid #e74c3c;border-radius:8px;
+  color:#c0392b;font-size:13px;padding:.6rem 1rem;margin-top:.5rem;display:none;
+}
+.tl-status{
+  display:inline-flex;align-items:center;gap:5px;font-size:12px;
+  padding:2px 8px;border-radius:10px;font-weight:600;
+}
+.tl-status.groen{background:#dcfce7;color:#166534;}
+.tl-status.gul{background:#fef9c3;color:#854d0e;}
+.tl-status.roed{background:#fee2e2;color:#991b1b;}
+
+/* ─── HILSEN MODAL (uændret) ─── */
 .hilsen-overlay{
   position:fixed;inset:0;background:rgba(0,0,0,0.55);
   z-index:1000;display:flex;align-items:center;justify-content:flex-end;
@@ -221,20 +325,11 @@ td.alder-idag{background:var(--gron-pale);color:var(--gron);font-weight:700;bord
   padding:.8rem 1.25rem;border-radius:10px 10px 0 0;
   display:flex;align-items:center;justify-content:space-between;
 }
-.hilsen-modal-titel{
-  font-family:'Playfair Display',serif;
-  font-size:16px;color:var(--hvid);font-weight:400;
-}
-.hilsen-luk{
-  background:none;border:none;cursor:pointer;
-  color:rgba(255,255,255,0.6);font-size:22px;line-height:1;padding:0;
-}
+.hilsen-modal-titel{font-family:'Playfair Display',serif;font-size:16px;color:var(--hvid);font-weight:400;}
+.hilsen-luk{background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.6);font-size:22px;line-height:1;padding:0;}
 .hilsen-luk:hover{color:var(--hvid);}
 .hilsen-body{padding:1.25rem;}
-.hilsen-label{
-  display:block;font-size:12px;font-weight:600;
-  color:var(--tekst-lys);margin-bottom:4px;
-}
+.hilsen-label{display:block;font-size:12px;font-weight:600;color:var(--tekst-lys);margin-bottom:4px;}
 .hilsen-input{
   width:100%;padding:.55rem .75rem;margin-bottom:.75rem;
   border:1.5px solid var(--border);border-radius:6px;
@@ -245,60 +340,46 @@ td.alder-idag{background:var(--gron-pale);color:var(--gron);font-weight:700;bord
 textarea.hilsen-input{resize:vertical;min-height:80px;}
 .hilsen-fejl-tekst{color:#c0392b;font-size:12.5px;margin:.25rem 0 .5rem;}
 .hilsen-btn-row{display:flex;gap:.5rem;align-items:center;}
-.hilsen-btn-prim{
-  background:var(--gron);color:var(--hvid);
-  border:none;border-radius:6px;cursor:pointer;
-  padding:.5rem 1.25rem;font-size:13.5px;font-weight:600;
-  font-family:'Source Sans 3',sans-serif;
-}
+.hilsen-btn-prim{background:var(--gron);color:var(--hvid);border:none;border-radius:6px;cursor:pointer;padding:.5rem 1.25rem;font-size:13.5px;font-weight:600;font-family:'Source Sans 3',sans-serif;}
 .hilsen-btn-prim:hover{background:var(--gron-lys);}
 .hilsen-btn-prim:disabled{opacity:.55;cursor:not-allowed;}
-.hilsen-btn-sek{
-  background:none;color:var(--tekst-lys);
-  border:1.5px solid var(--border);border-radius:6px;cursor:pointer;
-  padding:.45rem 1rem;font-size:13px;
-  font-family:'Source Sans 3',sans-serif;
-}
+.hilsen-btn-sek{background:none;color:var(--tekst-lys);border:1.5px solid var(--border);border-radius:6px;cursor:pointer;padding:.45rem 1rem;font-size:13px;font-family:'Source Sans 3',sans-serif;}
 .hilsen-btn-sek:hover{border-color:var(--gron);color:var(--gron);}
-/* Eksisterende hilsener */
-.hilsener-overskrift{
-  font-size:12px;font-weight:600;color:var(--tekst-lys);
-  text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem;
-}
-.hilsen-kort{
-  background:var(--hvid);
-  border:1px solid rgba(212,201,160,0.5);
-  border-left:4px solid var(--guld);
-  border-radius:6px;padding:.55rem .9rem;margin-bottom:.45rem;
-}
+.hilsener-overskrift{font-size:12px;font-weight:600;color:var(--tekst-lys);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem;}
+.hilsen-kort{background:var(--hvid);border:1px solid rgba(212,201,160,0.5);border-left:4px solid var(--guld);border-radius:6px;padding:.55rem .9rem;margin-bottom:.45rem;}
 .hilsen-kort-fra{font-size:12px;font-weight:700;color:var(--gron);}
 .hilsen-kort-besked{font-size:13.5px;color:var(--tekst);margin-top:2px;white-space:pre-wrap;}
 .hilsen-kort-tid{font-size:11px;color:var(--tekst-lys);margin-top:3px;}
-.hilsen-ingen{
-  text-align:center;color:var(--tekst-lys);font-size:13px;
-  padding:.6rem;font-style:italic;
-}
+.hilsen-ingen{text-align:center;color:var(--tekst-lys);font-size:13px;padding:.6rem;font-style:italic;}
 .hilsen-divider{border:none;border-top:1.5px solid var(--border);margin:.9rem 0;}
-.hilsen-succes{
-  background:#e8f5e9;border:1.5px solid #4caf50;border-radius:8px;
-  color:#2d7a1f;font-size:15px;font-weight:700;
-  text-align:center;padding:.8rem 1rem;margin-top:.75rem;
-  letter-spacing:.2px;
-}
-.hilsen-send-fejl{
-  background:#fde8e8;border:1.5px solid #e74c3c;border-radius:8px;
-  color:#c0392b;font-size:13px;
-  padding:.6rem 1rem;margin-top:.5rem;
-}
-
-/* ─── NAVN UNDER BADGE I MÆRKEDAG-CELLE ─── */
+.hilsen-succes{background:#e8f5e9;border:1.5px solid #4caf50;border-radius:8px;color:#2d7a1f;font-size:15px;font-weight:700;text-align:center;padding:.8rem 1rem;margin-top:.75rem;letter-spacing:.2px;}
+.hilsen-send-fejl{background:#fde8e8;border:1.5px solid #e74c3c;border-radius:8px;color:#c0392b;font-size:13px;padding:.6rem 1rem;margin-top:.5rem;}
 .maerkedag-navn{font-size:10.5px;color:var(--tekst-lys);margin-top:3px;text-align:center;font-style:italic;}
+
+/* ─── KNAPPER PÅ FEST-KORT ─── */
+.fest-kort-hojre{display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;flex-shrink:0;}
+.hilsen-knap,.hilsen-knap-laes{
+  border:none;border-radius:20px;cursor:pointer;
+  padding:3px 10px;font-size:11px;font-weight:600;
+  font-family:'Source Sans 3',sans-serif;
+  white-space:nowrap;color:var(--hvid);
+}
+.hilsen-knap     {background:var(--guld);}
+.hilsen-knap:hover{background:#b07820;}
+.hilsen-knap-laes     {background:var(--gron);}
+.hilsen-knap-laes:hover{background:var(--gron-lys);}
+
+/* ─── FLAG-FOOTER ─── */
+.flag-footer{background:var(--gron);border-top:3px solid var(--guld);text-align:center;padding:.9rem 0 .6rem;}
+.flag-footer-flag{font-size:26px;letter-spacing:6px;}
+.flag-footer-tekst{font-size:11px;color:rgba(255,255,255,0.35);margin-top:.4rem;letter-spacing:.5px;}
 
 /* ─── MOBIL ─── */
 @media(max-width:640px){
-  .topbar-links{display:none;}
+  .topbar-links a:not(.aktiv):not(:last-child){display:none;}
   .col-naeste,.col-dato-naeste,.col-dato-iaar{display:none;}
   .flag-banner{font-size:20px;letter-spacing:3px;}
+  .ret-grid{grid-template-columns:1fr;}
 }
 </style>
 </head>
@@ -314,19 +395,25 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
     <a href="index.html">Forside</a>
     <a href="skovtur2025.html">Skovtur 2025</a>
     <a href="foedselsdage.html" class="aktiv">Begivenheder</a>
+    <button class="topbar-red-knap" id="topbar-red-knap" title="Redaktør-login">Redaktør</button>
   </div>
 </div>
 
 <!-- SIDE-HEADER -->
 <div class="side-header">
   <h1>Årets begivenheder og mærkedage</h1>
-  <p id="header-sub"></p>
+  <p id="header-sub">Henter data…</p>
   <div class="guld-streg"></div>
 </div>
 
 <div class="wrapper">
 
-  <!-- FESTLIG MÆRKEDAGE-BOKS (vises kun hvis mærkedage inden for 10 dage) -->
+  <!-- LOADING -->
+  <div id="loading-boks" class="loading-boks">
+    <div class="loading-spinner"></div><br>Henter familiemedlemmer fra database…
+  </div>
+
+  <!-- FESTLIG MÆRKEDAGE-BOKS -->
   <div class="fest-boks" id="fest-boks" style="display:none">
     <div class="fest-header">
       <div class="fest-header-titel">🎊 Mærkedage de næste 10 dage 🎊</div>
@@ -337,11 +424,15 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
   </div>
 
   <!-- LEGENDE -->
-  <div class="legende">
-    <div class="leg">🎂 <span class="badge b-rund">Rund fødselsdag</span> 50, 60, 70, 75, 80, 85 eller 90 år</div>
-    <div class="leg">🙏 <span class="badge b-konf">Konfirmation i år!</span> eller <span class="badge b-konf">Konfirmation næste år!</span> 15–16 år</div>
-    <div class="leg">💍 <span class="badge b-sølv">Sølvbryllup</span> 25 år gift</div>
-    <div class="leg">💍 <span class="badge b-guld">Guldbryllup</span> 50 år gift</div>
+  <div class="legende" id="legende" style="display:none">
+    <div class="leg"><span class="tl tl-groen"></span> Komplet data</div>
+    <div class="leg"><span class="tl tl-gul"></span> Fødselsdato mangler</div>
+    <div class="leg"><span class="tl tl-roed"></span> Medlemsnummer mangler</div>
+    <div class="leg" style="border-left:2px solid var(--border);padding-left:.75rem;margin-left:.25rem;">
+      🎂 <span class="badge b-rund">Rund fødselsdag</span> 50, 60, 70, 75, 80, 85, 90 år
+    </div>
+    <div class="leg">🙏 <span class="badge b-konf">Konfirmation</span> 15–16 år</div>
+    <div class="leg">💍 <span class="badge b-sølv">Sølvbryllup</span> &nbsp;💍 <span class="badge b-guld">Guldbryllup</span></div>
     <div class="leg" style="background:#c8e6b0;padding:1px 6px;border-radius:4px;">Grøn alder = fødselsdag i dag</div>
   </div>
 
@@ -356,358 +447,103 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
   <div class="flag-footer-tekst" id="footer-tekst"></div>
 </div>
 
-<script>
-const MAANEDER      = ['Januar','Februar','Marts','April','Maj','Juni','Juli','August','September','Oktober','November','December'];
-const MAANEDER_KORT = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
-const RUNDE_ALDRE   = [50,60,70,75,80,85,90];
-const KONF_ALDRE    = [15,16];
+<!-- ─── REDAKTØR-LOGIN MODAL ─────────────────────────────────────────────── -->
+<div id="login-overlay" class="login-overlay" style="display:none">
+  <div class="login-modal">
+    <div class="login-modal-header">
+      <div class="login-modal-titel" id="login-modal-titel">Redaktør-login</div>
+      <button class="modal-luk" id="login-luk-x">×</button>
+    </div>
+    <div class="login-body" id="login-body">
+      <label class="form-label" for="login-email">E-mail</label>
+      <input class="form-input" id="login-email" type="email" placeholder="din@email.dk" autocomplete="email">
+      <label class="form-label" for="login-kodeord">Kodeord</label>
+      <input class="form-input" id="login-kodeord" type="password" placeholder="••••••••" autocomplete="current-password">
+      <div class="form-fejl" id="login-fejl">Forkert e-mail eller kodeord.</div>
+      <div class="btn-row">
+        <button class="btn-prim" id="login-btn">Log ind</button>
+        <button class="btn-sek"  id="login-annuller">Annuller</button>
+      </div>
+    </div>
+    <div class="login-body" id="logud-body" style="display:none">
+      <p style="font-size:13.5px;color:var(--tekst-lys);margin-bottom:.85rem;">
+        Logget ind som <strong id="logget-ind-som"></strong>.<br>
+        <span style="color:var(--tl-groen);font-size:12px;" id="logget-ind-rolle"></span>
+      </p>
+      <div class="btn-row">
+        <button class="btn-prim" id="logud-btn">Log ud</button>
+        <button class="btn-sek"  id="logud-luk">Luk</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-// ─── FØDSELSDAGE ────────────────────────────────────────────────────────────
-const FOEDSLER = [
-  // JANUAR
-  {navn:"Trine Gram",                        dag:6,  mdr:1,  aar:1980},
-  {navn:"Elisabeth Helene Gram",             dag:11, mdr:1,  aar:1948},
-  {navn:"Kasper Vormslev Olsen",             dag:12, mdr:1,  aar:1972},
-  {navn:"Emeli Vormslev Frøling Pedersen",   dag:18, mdr:1,  aar:2009},
-  {navn:"Sigurd Præstegaard Olsen",          dag:20, mdr:1,  aar:2016},
-  {navn:"Jette Carlberg Olsen",              dag:21, mdr:1,  aar:1963},
-  {navn:"Michael Vormslev Baldersø",         dag:23, mdr:1,  aar:1985},
-  {navn:"Matilde Amalie Nonboe Nielsen",     dag:26, mdr:1,  aar:1991},
-  {navn:"Paulina Schmidt",                   dag:28, mdr:1,  aar:1993},
-  // FEBRUAR
-  {navn:"Filip Lund",                        dag:1,  mdr:2,  aar:2016},
-  {navn:"Flemming Lund",                     dag:1,  mdr:2,  aar:1972},
-  {navn:"Jannik Vormslev Rümenapp",          dag:4,  mdr:2,  aar:2003},
-  {navn:"Noelia Vormslev Buch",              dag:6,  mdr:2,  aar:2021},
-  {navn:"Kim Kanstrup",                      dag:6,  mdr:2,  aar:1974},
-  {navn:"Bettina Beknow",                    dag:7,  mdr:2,  aar:1964},
-  {navn:"Ria Østerlund Lund",                dag:7,  mdr:2,  aar:1980},
-  {navn:"Louise Majgaard Olsen",             dag:8,  mdr:2,  aar:1995},
-  {navn:"Jens Gram Pedersen",                dag:8,  mdr:2,  aar:1984},
-  {navn:"Rikke Vormslev Tingberg",           dag:9,  mdr:2,  aar:1979},
-  {navn:"Elliot Schmidt Baldersø",           dag:12, mdr:2,  aar:2022},
-  {navn:"Noa Bierbaum Mikkelsen",            dag:13, mdr:2,  aar:2012},
-  {navn:"Bent Rasmussen",                    dag:15, mdr:2,  aar:1945},
-  {navn:"Elsebeth Rasmussen",                dag:18, mdr:2,  aar:1948},
-  {navn:"Simon Peter Hansen",                dag:23, mdr:2,  aar:1984},
-  {navn:"Lyda Vormslev Bidstrup",            dag:27, mdr:2,  aar:2010},
-  // MARTS
-  {navn:"Jytte Vormslev Tingberg",           dag:1,  mdr:3,  aar:1951},
-  {navn:"Nina Vormslev Lennert",             dag:4,  mdr:3,  aar:1958},
-  {navn:"Nano Fadel",                        dag:6,  mdr:3,  aar:1974},
-  {navn:"Dicte Vormslev Kanstrup",           dag:12, mdr:3,  aar:2001},
-  {navn:"Emma Gram Fadel",                   dag:15, mdr:3,  aar:2012},
-  {navn:"Mikkel Engelmand Olsen",            dag:17, mdr:3,  aar:2010},
-  {navn:"Lina Edel Engelmand Olsen",         dag:21, mdr:3,  aar:2013},
-  {navn:"Rasmus Billstrøm",                  dag:27, mdr:3,  aar:1995},
-  {navn:"Milla Vormslev Brendstrup",         dag:27, mdr:3,  aar:2013},
-  {navn:"Bent Vormslev Westergaard-Hansen",  dag:30, mdr:3,  aar:1955},
-  // APRIL
-  {navn:"Jesper Olesen",                     dag:1,  mdr:4,  aar:1985},
-  {navn:"Norr Lund Olsen",                   dag:1,  mdr:4,  aar:2018},
-  {navn:"Carl-Kristian Blankenberg Gram",    dag:2,  mdr:4,  aar:2007},
-  {navn:"Oscar Carlo Lund",                  dag:2,  mdr:4,  aar:2008},
-  {navn:"Jesper Hedegaard Petersen",         dag:8,  mdr:4,  aar:1975},
-  {navn:"Jannie Vormslev Rumenapp",          dag:11, mdr:4,  aar:1995},
-  {navn:"Alexandra Sofia Lund",              dag:12, mdr:4,  aar:2014},
-  {navn:"Martin Majgaard Olsen",             dag:12, mdr:4,  aar:1989},
-  {navn:"Jacob Præstegård Olsen",            dag:13, mdr:4,  aar:1982},
-  {navn:"Frederik Lund",                     dag:14, mdr:4,  aar:2007},
-  {navn:"Asta-Elisabeth Blankenberg Gram",   dag:14, mdr:4,  aar:2010},
-  {navn:"Lars Albjerg Olsen",                dag:17, mdr:4,  aar:1966},
-  {navn:"Iben Carlberg Olsen",               dag:20, mdr:4,  aar:1985},
-  {navn:"Anne Marie Lund",                   dag:21, mdr:4,  aar:1993},
-  {navn:"Astrid Vormslev Kanstrup",          dag:23, mdr:4,  aar:2007},
-  {navn:"Steen Vormslev Olsen",              dag:26, mdr:4,  aar:1961},
-  {navn:"Vigga Vormslev Bidstrup",           dag:28, mdr:4,  aar:2007},
-  // MAJ
-  {navn:"Diana Lund",                        dag:1,  mdr:5,  aar:1992},
-  {navn:"Katja Vormslev Kanstrup",           dag:6,  mdr:5,  aar:1975},
-  {navn:"Morten Præstegård Olsen",           dag:7,  mdr:5,  aar:1991},
-  {navn:"Birthe Schøne",                     dag:11, mdr:5,  aar:1941},
-  {navn:"Line Bekow",                        dag:14, mdr:5,  aar:1992},
-  {navn:"Tina Ki Bok Blankenberg Gram",      dag:16, mdr:5,  aar:1972},
-  {navn:"Lærke Aarup Pedersen",              dag:22, mdr:5,  aar:1982},
-  {navn:"Svend Vormslev Olsen",              dag:23, mdr:5,  aar:1963},
-  {navn:"Lotte Vormslev Lennert",            dag:24, mdr:5,  aar:1987},
-  {navn:"Kristine Vormslev Hernvig",         dag:26, mdr:5,  aar:1981},
-  {navn:"Nicki Benjamin Buch",               dag:27, mdr:5,  aar:1993},
-  {navn:"Stefan Vormslev Olsen",             dag:27, mdr:5,  aar:1973},
-  {navn:"Morten Erik Vormslev Baldersø",     dag:29, mdr:5,  aar:1991},
-  // JUNI
-  {navn:"Anne Mette Jensen",                 dag:1,  mdr:6,  aar:1979},
-  {navn:"Gitte Vormslev Baldersø",           dag:2,  mdr:6,  aar:1962},
-  {navn:"Mette Westergaard-Hansen",          dag:5,  mdr:6,  aar:1989},
-  {navn:"Axel Ebbe Carlberg Hansen",         dag:6,  mdr:6,  aar:2022},
-  {navn:"Birgit Westergaard-Hansen",         dag:9,  mdr:6,  aar:1958},
-  {navn:"Bertram Vormslev Kanstrup",         dag:11, mdr:6,  aar:2003},
-  {navn:"Thera Gram Ottesen",                dag:12, mdr:6,  aar:1998},
-  {navn:"Eline My Nonboe Baldersø",          dag:22, mdr:6,  aar:2017},
-  {navn:"Mille Olesen",                      dag:24, mdr:6,  aar:2013},
-  {navn:"Jytte Olsen",                       dag:26, mdr:6,  aar:1948},
-  {navn:"Benjamin Bidstrup",                 dag:27, mdr:6,  aar:1973},
-  {navn:"Kurt Vormslev Olsen",               dag:28, mdr:6,  aar:1948},
-  // JULI
-  {navn:"Esther Betty Gram",                 dag:5,  mdr:7,  aar:2018},
-  {navn:"Fria Lund Olsen",                   dag:12, mdr:7,  aar:2019},
-  {navn:"Luna Marie Bierbaum",               dag:12, mdr:7,  aar:2019},
-  {navn:"Laura Albjerg Beknow",              dag:13, mdr:7,  aar:2000},
-  {navn:"Jesper Majgaard Olsen",             dag:14, mdr:7,  aar:1991},
-  {navn:"Milia Vormslev Hernvig",            dag:14, mdr:7,  aar:2009},
-  {navn:"Rene Gram",                         dag:21, mdr:7,  aar:1972},
-  {navn:"Gunner Carlberg",                   dag:24, mdr:7,  aar:1941},
-  // AUGUST
-  {navn:"Martin Vormslev Baldersø",          dag:13, mdr:8,  aar:1987},
-  {navn:"Malte Christian Bierbaum",          dag:14, mdr:8,  aar:2014},
-  {navn:"Christian Vormslev Olsen",          dag:16, mdr:8,  aar:1941},
-  {navn:"Lise Majgaard Olsen",               dag:22, mdr:8,  aar:1964},
-  {navn:"Mads Olesen",                       dag:25, mdr:8,  aar:2016},
-  // SEPTEMBER
-  {navn:"Tine Carlberg Olsen",               dag:2,  mdr:9,  aar:1988},
-  {navn:"Tricia V. Hernvig",                 dag:2,  mdr:9,  aar:2005},
-  {navn:"Svend August Lund",                 dag:3,  mdr:9,  aar:2016},
-  {navn:"Marie Olesen",                      dag:9,  mdr:9,  aar:2019},
-  {navn:"Per Albjerg Beknow",                dag:10, mdr:9,  aar:1963},
-  {navn:"Karin Gram Lund",                   dag:11, mdr:9,  aar:1946},
-  {navn:"Mette Holmgaard",                   dag:12, mdr:9,  aar:1971},
-  {navn:"Carsten Gram",                      dag:15, mdr:9,  aar:1952},
-  {navn:"Jan Nielsen",                       dag:21, mdr:9,  aar:1956},
-  {navn:"Charles Aarup Pedersen",            dag:25, mdr:9,  aar:1946},
-  {navn:"Lise Vormslev Olsen",               dag:30, mdr:9,  aar:1937},
-  // OKTOBER
-  {navn:"Sanne Gram Fadel",                  dag:2,  mdr:10, aar:1975},
-  {navn:"Lene Vormslev Hansen",              dag:6,  mdr:10, aar:1964},
-  {navn:"Anders Bierbaum",                   dag:12, mdr:10, aar:1982},
-  {navn:"Lili Carlberg",                     dag:14, mdr:10, aar:1942},
-  {navn:"Alba Hernandez Lund",               dag:18, mdr:10, aar:1979},
-  {navn:"Jens Vormslev Lennert",             dag:19, mdr:10, aar:1995},
-  // NOVEMBER
-  {navn:"Kenneth Lund",                      dag:5,  mdr:11, aar:1974},
-  {navn:"Elinor Luna Nonboe Baldersø",       dag:8,  mdr:11, aar:2022},
-  {navn:"Christina Olesen",                  dag:18, mdr:11, aar:1986},
-  {navn:"Amalia Sofia Lund",                 dag:23, mdr:11, aar:2004},
-  {navn:"Tom Petersen",                      dag:25, mdr:11, aar:1963},
-  {navn:"Richard Lund",                      dag:26, mdr:11, aar:1943},
-  {navn:"Mads Emil Lund",                    dag:26, mdr:11, aar:2010},
-  // DECEMBER
-  {navn:"Anja Vormslev Olsen",               dag:8,  mdr:12, aar:1987},
-  {navn:"Tommy Vormslev Olsen",              dag:8,  mdr:12, aar:1960},
-  {navn:"Alberte Ebba Carlberg Hansen",      dag:9,  mdr:12, aar:2018},
-  {navn:"Solvejg Præstegaard Olsen",         dag:10, mdr:12, aar:1958},
-  {navn:"Vibeke Gram Pedersen",              dag:16, mdr:12, aar:1948},
-  {navn:"Jan Vormslev Olsen",                dag:21, mdr:12, aar:1957},
-  {navn:"Mie Bierbaum",                      dag:22, mdr:12, aar:1985},
-  {navn:"Max Vormslev Frøling Pedersen",     dag:22, mdr:12, aar:2013},
-  {navn:"Valde Præstegaard Olsen",           dag:25, mdr:12, aar:2014},
-  {navn:"Luna Gram Fadel",                   dag:25, mdr:12, aar:2015},
-  {navn:"Ida Holmgaard",                     dag:31, mdr:12, aar:2007},
-];
+<!-- ─── REDIGÉR PERSON MODAL ─────────────────────────────────────────────── -->
+<div id="ret-overlay" class="ret-overlay" style="display:none">
+  <div class="ret-modal">
+    <div class="ret-modal-header">
+      <div class="ret-modal-titel" id="ret-modal-titel">Rediger person</div>
+      <button class="modal-luk" id="ret-luk-x">×</button>
+    </div>
+    <div class="ret-body">
 
-// Bryllupper: {navne, dag, mdr, aar (vielsesår)}
-const BRYLLUPPER = [
-  // Tilføj vielsesdatoer her, fx:
-  // {navne:"Carsten Gram & Karin Gram Lund", dag:19, mdr:4, aar:1976},
-];
+      <!-- Status -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
+        <span id="ret-status-chip" class="tl-status groen">● Komplet</span>
+        <span style="font-size:11px;color:var(--tekst-lys);">Familie nr. <strong id="ret-familienr"></strong></span>
+      </div>
 
-// ─── HJÆLPEFUNKTIONER ────────────────────────────────────────────────────────
+      <div class="ret-sektion">Personoplysninger</div>
+      <div class="ret-grid">
+        <div>
+          <label class="form-label" for="ret-fornavn">Fornavn</label>
+          <input class="form-input" id="ret-fornavn" type="text" placeholder="Fornavn">
+        </div>
+        <div>
+          <label class="form-label" for="ret-efternavn">Efternavn</label>
+          <input class="form-input" id="ret-efternavn" type="text" placeholder="Efternavn">
+        </div>
+        <div>
+          <label class="form-label" for="ret-foedselsdato">Fødselsdato</label>
+          <input class="form-input" id="ret-foedselsdato" type="date">
+        </div>
+        <div>
+          <label class="form-label" for="ret-rolle">Rolle</label>
+          <select class="form-input" id="ret-rolle">
+            <option value="forælder">Forælder</option>
+            <option value="barn">Barn</option>
+            <option value="ægtefælle">Ægtefælle</option>
+            <option value="partner">Partner</option>
+            <option value="andet">Andet</option>
+          </select>
+        </div>
+        <div class="full">
+          <label class="form-label" for="ret-email">E-mail</label>
+          <input class="form-input" id="ret-email" type="email" placeholder="person@email.dk">
+        </div>
+        <div class="full">
+          <label class="form-label" for="ret-mobil">Mobil</label>
+          <input class="form-input" id="ret-mobil" type="text" placeholder="12345678">
+        </div>
+      </div>
 
-const IDAG = new Date(); IDAG.setHours(0,0,0,0);
-const I_AAR  = IDAG.getFullYear();  // 2026
-const NAESTE = I_AAR + 1;           // 2027
+      <!-- Godkend -->
+      <div class="godkend-boks">
+        <input type="checkbox" id="ret-godkend">
+        <label for="ret-godkend" style="cursor:pointer;flex:1;">
+          Markér som godkendt — data er verificeret korrekt
+        </label>
+      </div>
 
-function erFodselsdagIdag(dag, mdr) {
-  return IDAG.getDate() === dag && (IDAG.getMonth()+1) === mdr;
-}
-
-function alderPrIdag(dag, mdr, fodselsaar) {
-  // Nuværende år minus fødselsår, minus 1 hvis fødselsdagen endnu ikke er nået i år
-  const fødselsdagNået = (IDAG.getMonth()+1) > mdr ||
-    ((IDAG.getMonth()+1) === mdr && IDAG.getDate() >= dag);
-  return I_AAR - fodselsaar - (fødselsdagNået ? 0 : 1);
-}
-
-function dageHenTil(dag, mdr) {
-  let d = new Date(I_AAR, mdr-1, dag); d.setHours(0,0,0,0);
-  if (d < IDAG) d.setFullYear(I_AAR+1);
-  return Math.round((d - IDAG)/86400000);
-}
-
-function maerkeDato(dag, mdr, aar) {
-  return `${dag}. ${MAANEDER_KORT[mdr-1]} ${aar}`;
-}
-
-function foedselsBadge(dag, mdr, fodselsaar, navn, checkAar) {
-  const alder = checkAar - fodselsaar;
-  if (RUNDE_ALDRE.includes(alder))
-    return `<span class="badge b-rund">🎂 ${alder} år</span><div class="maerkedag-navn">${navn}</div>`;
-  if (KONF_ALDRE.includes(alder))
-    return `<span class="badge b-konf">🙏 ${checkAar === I_AAR ? 'Konfirmation i år!' : 'Konfirmation næste år!'}</span><div class="maerkedag-navn">${navn}</div>`;
-  return '';
-}
-
-function brylBadge(dag, mdr, vielsesaar, navne, checkAar) {
-  const gifteAar = checkAar - vielsesaar;
-  if (gifteAar === 50) return `<span class="badge b-guld">💍 Guldbryllup</span><div class="maerkedag-navn">${navne}</div>`;
-  if (gifteAar === 25) return `<span class="badge b-sølv">💍 Sølvbryllup</span><div class="maerkedag-navn">${navne}</div>`;
-  return '';
-}
-
-// ─── HEADER / FOOTER ─────────────────────────────────────────────────────────
-document.getElementById('header-sub').textContent =
-  `${FOEDSLER.length} familiemedlemmer · ${I_AAR} og ${NAESTE}`;
-document.getElementById('footer-tekst').textContent =
-  `OlsenKlanen · Begivenheder & Mærkedage · ${I_AAR}–${NAESTE}`;
-
-// ─── FESTLIG MÆRKEDAGE-BOKS (kun runde fødselsdage, konfirmationer og bryllupper inden for 10 dage) ───
-(function() {
-  const liste = [];
-
-  FOEDSLER.forEach(p => {
-    const d = dageHenTil(p.dag, p.mdr);
-    if (d > 10) return;
-    const nextYear = new Date(I_AAR, p.mdr-1, p.dag) < IDAG ? I_AAR+1 : I_AAR;
-    const alderIAar = nextYear - p.aar;
-    const erRund = RUNDE_ALDRE.includes(alderIAar);
-    const erKonf = KONF_ALDRE.includes(alderIAar);
-    if (!erRund && !erKonf) return; // Kun mærkedage — ikke almindelige fødselsdage
-
-    let ikon, kortKlasse, beskrivelse;
-    if (erRund && d === 0) {
-      ikon = '🎂'; kortKlasse = 'rund idag'; beskrivelse = `Fylder ${alderIAar} år — I dag! 🎉`;
-    } else if (erRund) {
-      ikon = '🎂'; kortKlasse = 'rund'; beskrivelse = `Fylder ${alderIAar} år`;
-    } else if (erKonf && d === 0) {
-      ikon = '✝️'; kortKlasse = 'konf idag'; beskrivelse = `Konfirmationsalder — I dag!`;
-    } else {
-      ikon = '✝️'; kortKlasse = 'konf'; beskrivelse = `Konfirmationsalder (${alderIAar} år)`;
-    }
-    liste.push({navn: p.navn, ikon, kortKlasse, beskrivelse, dage: d,
-      dato: `${p.dag}. ${MAANEDER_KORT[p.mdr-1]}`, noegle: p.navn});
-  });
-
-  BRYLLUPPER.forEach(b => {
-    const d = dageHenTil(b.dag, b.mdr);
-    if (d > 10) return;
-    const nextYear = new Date(I_AAR, b.mdr-1, b.dag) < IDAG ? I_AAR+1 : I_AAR;
-    const gifteAar = nextYear - b.aar;
-    let ikon, kortKlasse, beskrivelse;
-    if (gifteAar === 50) {
-      ikon = '💍'; kortKlasse = 'bryl-guld' + (d===0 ? ' idag' : '');
-      beskrivelse = `Guldbryllup — ${gifteAar} år gift${d===0?' 🎉':''}`;
-    } else if (gifteAar === 25) {
-      ikon = '💍'; kortKlasse = 'bryl-sølv' + (d===0 ? ' idag' : '');
-      beskrivelse = `Sølvbryllup — ${gifteAar} år gift${d===0?' 🎉':''}`;
-    } else return;
-    liste.push({navn: b.navne, ikon, kortKlasse, beskrivelse, dage: d,
-      dato: `${b.dag}. ${MAANEDER_KORT[b.mdr-1]}`, noegle: b.navne});
-  });
-
-  if (!liste.length) return; // Intet at vise — boksen forbliver skjult
-
-  liste.sort((a, b) => a.dage - b.dage);
-
-  const boks = document.getElementById('fest-boks');
-  const fl   = document.getElementById('fest-liste');
-
-  liste.forEach(k => {
-    const dagChip = k.dage === 0 ? 'I dag! 🎊'
-                  : k.dage === 1 ? 'I morgen'
-                  : `Om ${k.dage} dage`;
-    const chipKlasse = k.dage === 0 ? 'fest-dage idag-chip' : 'fest-dage';
-
-    const kort = document.createElement('div');
-    kort.className = 'fest-kort ' + k.kortKlasse;
-    const safeNavn = k.noegle.replace(/"/g, '&quot;');
-    kort.innerHTML =
-      `<div class="fest-ikon">${k.ikon}</div>` +
-      `<div class="fest-info">` +
-        `<div class="fest-navn">${k.navn}</div>` +
-        `<div class="fest-beskrivelse">${k.dato} · ${k.beskrivelse}</div>` +
-      `</div>` +
-      `<div class="fest-kort-hojre">` +
-        `<div class="${chipKlasse}">${dagChip}</div>` +
-        `<button class="hilsen-knap"      data-noegle="${safeNavn}" data-mode="send">💌 Send hilsen</button>` +
-        `<button class="hilsen-knap-laes" data-noegle="${safeNavn}" data-mode="laes">📬 Læs hilsener</button>` +
-      `</div>`;
-    fl.appendChild(kort);
-  });
-
-  boks.style.display = 'block';
-})();
-
-// ─── KALENDER MÅNEDER ────────────────────────────────────────────────────────
-// Fordel i 12 måneds-spande (indeks 0 = januar, 11 = december)
-const maanedSpande = Array.from({length: 12}, () => []);
-FOEDSLER.forEach(p => maanedSpande[p.mdr - 1].push({type:'f', p}));
-BRYLLUPPER.forEach(b => maanedSpande[b.mdr - 1].push({type:'b', b}));
-
-// Sortér inden for hver spand efter dag
-maanedSpande.forEach(spand => spand.sort((a, b) => {
-  const dagA = a.type === 'f' ? a.p.dag : a.b.dag;
-  const dagB = b.type === 'f' ? b.p.dag : b.b.dag;
-  return dagA - dagB;
-}));
-
-const kal = document.getElementById('kalender');
-
-// Byg én div per måned og tilføj med appendChild — garanterer januar→december rækkefølge
-for (let mi = 0; mi < 12; mi++) {
-  const spand = maanedSpande[mi];
-  if (!spand.length) continue;
-
-  // Byg tabel-rækker
-  let tbody = '';
-  spand.forEach(item => {
-    if (item.type === 'f') {
-      const p   = item.p;
-      const erI = erFodselsdagIdag(p.dag, p.mdr);
-      const al  = alderPrIdag(p.dag, p.mdr, p.aar);
-      const ib  = foedselsBadge(p.dag, p.mdr, p.aar, p.navn, I_AAR);
-      const nb  = foedselsBadge(p.dag, p.mdr, p.aar, p.navn, NAESTE);
-      tbody += `<tr>
-        <td class="col-dato">${p.dag}. ${MAANEDER_KORT[mi]} ${p.aar}</td>
-        <td class="col-navn">${p.navn}</td>
-        <td class="${erI ? 'col-alder alder-idag' : 'col-alder'}">${al >= 0 ? al : '—'}</td>
-        <td class="col-iaar">${ib}</td>
-        <td class="col-dato-iaar">${ib ? maerkeDato(p.dag, p.mdr, I_AAR) : ''}</td>
-        <td class="col-naeste">${nb}</td>
-        <td class="col-dato-naeste">${nb ? maerkeDato(p.dag, p.mdr, NAESTE) : ''}</td>
-      </tr>`;
-    } else {
-      const b  = item.b;
-      const ib = brylBadge(b.dag, b.mdr, b.aar, b.navne, I_AAR);
-      const nb = brylBadge(b.dag, b.mdr, b.aar, b.navne, NAESTE);
-      if (!ib && !nb) return;
-      tbody += `<tr>
-        <td class="col-dato">${b.dag}. ${MAANEDER_KORT[mi]}</td>
-        <td class="col-navn">${b.navne}</td>
-        <td class="col-alder">—</td>
-        <td class="col-iaar">${ib}</td>
-        <td class="col-dato-iaar">${ib ? maerkeDato(b.dag, b.mdr, I_AAR) : ''}</td>
-        <td class="col-naeste">${nb}</td>
-        <td class="col-dato-naeste">${nb ? maerkeDato(b.dag, b.mdr, NAESTE) : ''}</td>
-      </tr>`;
-    }
-  });
-
-  const folkAntal = spand.filter(x => x.type === 'f').length;
-
-  // Opret et nyt DOM-element for måneden og tilføj det — ingen innerHTML-parsing af hele listen
-  const blok = document.createElement('div');
-  blok.className = 'maaned-blok';
-  blok.innerHTML =
-    `<div class="maaned-header">${MAANEDER[mi]}<span class="maaned-antal">${folkAntal} person${folkAntal === 1 ? '' : 'er'}</span></div>` +
-    `<table class="tabel"><thead><tr>` +
-    `<th class="col-dato">Fødselsdato</th><th>Navn</th>` +
-    `<th class="col-alder center">Alder</th>` +
-    `<th class="col-iaar center">Mærkedag ${I_AAR}</th>` +
-    `<th class="col-dato-iaar center">Dato</th>` +
-    `<th class="col-naeste center">Mærkedag ${NAESTE}</th>` +
-    `<th class="col-dato-naeste center">Dato</th>` +
-    `</tr></thead><tbody>${tbody}</tbody></table>`;
-  kal.appendChild(blok);
-}
-</script>
+      <div class="btn-row" style="margin-top:.5rem;">
+        <button class="btn-prim" id="ret-gem-btn">Gem og godkend ✓</button>
+        <button class="btn-sek"  id="ret-annuller-btn">Annuller</button>
+      </div>
+      <div class="gem-succes" id="ret-succes">✓ Data gemt og godkendt!</div>
+      <div class="gem-fejl"   id="ret-fejl"></div>
+    </div>
+  </div>
+</div>
 
 <!-- ─── HILSEN MODAL ─────────────────────────────────────────────────────── -->
 <div id="hilsen-overlay" class="hilsen-overlay" style="display:none">
@@ -716,8 +552,6 @@ for (let mi = 0; mi < 12; mi++) {
       <div class="hilsen-modal-titel" id="hilsen-modal-titel">Send en hilsen</div>
       <button class="hilsen-luk" id="hilsen-luk-x" title="Luk">×</button>
     </div>
-
-    <!-- TRIN 1: Kodetjek -->
     <div class="hilsen-body" id="hilsen-step1">
       <p style="font-size:13.5px;color:var(--tekst-lys);margin-bottom:.85rem;">
         Indtast koden for at se og sende hilsener.
@@ -728,11 +562,9 @@ for (let mi = 0; mi < 12; mi++) {
       <div class="hilsen-fejl-tekst" id="hilsen-kode-fejl" style="display:none">Forkert kode — prøv igen.</div>
       <div class="hilsen-btn-row">
         <button class="hilsen-btn-prim" id="hilsen-kode-btn">Fortsæt →</button>
-        <button class="hilsen-btn-sek" id="hilsen-annuller-btn">Annuller</button>
+        <button class="hilsen-btn-sek"  id="hilsen-annuller-btn">Annuller</button>
       </div>
     </div>
-
-    <!-- TRIN 2A: Kun skriveformular -->
     <div class="hilsen-body" id="hilsen-step-send" style="display:none">
       <label class="hilsen-label" for="hilsen-fra-input">Dit navn</label>
       <input class="hilsen-input" id="hilsen-fra-input" type="text" placeholder="Skriv dit navn…" maxlength="60">
@@ -745,8 +577,6 @@ for (let mi = 0; mi < 12; mi++) {
       <div class="hilsen-send-fejl" id="hilsen-send-fejl" style="display:none"></div>
       <div class="hilsen-succes"    id="hilsen-succes"    style="display:none">✓ Din hilsen er sendt! 🎉</div>
     </div>
-
-    <!-- TRIN 2B: Kun hilsener-liste -->
     <div class="hilsen-body" id="hilsen-step-laes" style="display:none">
       <div class="hilsener-overskrift">Hilsener til <span id="hilsen-til-navn"></span></div>
       <div id="hilsen-liste"></div>
@@ -757,14 +587,18 @@ for (let mi = 0; mi < 12; mi++) {
   </div>
 </div>
 
-<!-- ─── FIREBASE + HILSEN-LOGIK (Realtime Database) ──────────────────────── -->
+<!-- ─── FIREBASE + AL LOGIK ───────────────────────────────────────────────── -->
 <script type="module">
 import { initializeApp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, getDoc, updateDoc }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getDatabase, ref, push, get }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-const firebaseConfig = {
+const CFG = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
   authDomain: "olsenklanen-familieside.firebaseapp.com",
   projectId: "olsenklanen-familieside",
@@ -774,46 +608,414 @@ const firebaseConfig = {
   databaseURL: "https://olsenklanen-familieside-default-rtdb.europe-west1.firebasedatabase.app"
 };
 
-const app  = initializeApp(firebaseConfig);
+const app  = initializeApp(CFG);
+const auth = getAuth(app);
+const db   = getFirestore(app);
 const rtdb = getDatabase(app);
 
-let aktivNoegle = '';
-let aktivMode   = 'send'; // 'send' eller 'laes'
+// ─── KONSTANTER ──────────────────────────────────────────────────────────────
+const MAANEDER      = ['Januar','Februar','Marts','April','Maj','Juni','Juli','August','September','Oktober','November','December'];
+const MAANEDER_KORT = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+const RUNDE_ALDRE   = [50,60,70,75,80,85,90];
+const KONF_ALDRE    = [15,16];
+const IDAG = new Date(); IDAG.setHours(0,0,0,0);
+const I_AAR  = IDAG.getFullYear();
+const NAESTE = I_AAR + 1;
 
-function tilKey(s) {
-  return s.replace(/[.#$\/\[\] ]/g, '_');
-}
+// ─── HJÆLPEFUNKTIONER ────────────────────────────────────────────────────────
 function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+function erFodselsdagIdag(dag, mdr) {
+  return IDAG.getDate() === dag && (IDAG.getMonth()+1) === mdr;
+}
+function alderPrIdag(dag, mdr, aar) {
+  const naaet = (IDAG.getMonth()+1) > mdr || ((IDAG.getMonth()+1)===mdr && IDAG.getDate()>=dag);
+  return I_AAR - aar - (naaet ? 0 : 1);
+}
+function dageHenTil(dag, mdr) {
+  let d = new Date(I_AAR, mdr-1, dag); d.setHours(0,0,0,0);
+  if (d < IDAG) d.setFullYear(I_AAR+1);
+  return Math.round((d - IDAG)/86400000);
+}
+function maerkeDato(dag, mdr, aar) {
+  return `${dag}. ${MAANEDER_KORT[mdr-1]} ${aar}`;
+}
+function foedselsBadge(dag, mdr, aar, navn, checkAar) {
+  const alder = checkAar - aar;
+  if (RUNDE_ALDRE.includes(alder))
+    return `<span class="badge b-rund">🎂 ${alder} år</span><div class="maerkedag-navn">${esc(navn)}</div>`;
+  if (KONF_ALDRE.includes(alder))
+    return `<span class="badge b-konf">🙏 ${checkAar===I_AAR?'Konfirmation i år!':'Konfirmation næste år!'}</span><div class="maerkedag-navn">${esc(navn)}</div>`;
+  return '';
+}
+function tlKlasse(p) {
+  if (!p.familienr) return 'roed';
+  if (p.manglendeDato) return 'gul';
+  return 'groen';
+}
+function navnDel(fuldt) {
+  const del = (fuldt||'').trim().split(' ');
+  if (del.length <= 1) return { fornavn: del[0]||'', efternavn: '' };
+  return { fornavn: del.slice(0,-1).join(' '), efternavn: del[del.length-1] };
+}
+function tilKey(s) { return s.replace(/[.#$\/\[\] ]/g,'_'); }
 function formatDato(d) {
   return d.toLocaleString('da-DK',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 
-// ─── Modal helpers ────────────────────────────────────────────────────────────
-function lukModal() {
-  document.getElementById('hilsen-overlay').style.display = 'none';
+// ─── FIRESTORE: HENT MEMBRES ─────────────────────────────────────────────────
+async function hentFoedsler() {
+  const snap = await getDocs(collection(db, 'membres'));
+  const liste = [];
+  snap.forEach(docSnap => {
+    const fam = docSnap.data();
+    const docId = docSnap.id;
+    const familienr = fam.nr || '';
+    const medl = fam.familiemedlemmer || [];
+    medl.forEach((m, idx) => {
+      const dato = m.foedselsdato || '2026-01-01';
+      const manglendeDato = dato === '2026-01-01';
+      const [y, mo, d] = dato.split('-').map(Number);
+      if (!y || !mo || !d) return;
+      liste.push({
+        navn: m.navn || '?',
+        dag: d, mdr: mo, aar: y,
+        familienr,
+        docId,
+        personIndex: idx,
+        manglendeDato,
+        rolle: m.rolle || 'forælder',
+        email: m.email || '',
+        mobil: m.mobil || '',
+        godkendt: m.godkendt || false,
+      });
+    });
+  });
+  return liste;
 }
 
+// ─── BYGG KALENDER ───────────────────────────────────────────────────────────
+function byggKalender(FOEDSLER) {
+  document.getElementById('loading-boks').style.display = 'none';
+  document.getElementById('legende').style.display = 'flex';
+
+  const BRYLLUPPER = [];
+
+  document.getElementById('header-sub').textContent =
+    `${FOEDSLER.length} familiemedlemmer · ${I_AAR} og ${NAESTE}`;
+  document.getElementById('footer-tekst').textContent =
+    `OlsenKlanen · Begivenheder & Mærkedage · ${I_AAR}–${NAESTE}`;
+
+  // ── Festlig boks ──────────────────────────────────────────────────────────
+  const festListe = [];
+  FOEDSLER.forEach(p => {
+    const d = dageHenTil(p.dag, p.mdr);
+    if (d > 10) return;
+    const nextYear = new Date(I_AAR, p.mdr-1, p.dag) < IDAG ? I_AAR+1 : I_AAR;
+    const alderIAar = nextYear - p.aar;
+    const erRund = RUNDE_ALDRE.includes(alderIAar);
+    const erKonf = KONF_ALDRE.includes(alderIAar);
+    if (!erRund && !erKonf) return;
+    let ikon, kortKlasse, beskrivelse;
+    if (erRund && d===0) { ikon='🎂'; kortKlasse='rund idag'; beskrivelse=`Fylder ${alderIAar} år — I dag! 🎉`; }
+    else if (erRund)     { ikon='🎂'; kortKlasse='rund';      beskrivelse=`Fylder ${alderIAar} år`; }
+    else if (erKonf && d===0) { ikon='✝️'; kortKlasse='konf idag'; beskrivelse='Konfirmationsalder — I dag!'; }
+    else                      { ikon='✝️'; kortKlasse='konf';      beskrivelse=`Konfirmationsalder (${alderIAar} år)`; }
+    festListe.push({navn:p.navn, ikon, kortKlasse, beskrivelse, dage:d,
+      dato:`${p.dag}. ${MAANEDER_KORT[p.mdr-1]}`, noegle:p.navn});
+  });
+
+  if (festListe.length) {
+    festListe.sort((a,b) => a.dage-b.dage);
+    const fl = document.getElementById('fest-liste');
+    festListe.forEach(k => {
+      const dagChip  = k.dage===0?'I dag! 🎊':k.dage===1?'I morgen':`Om ${k.dage} dage`;
+      const chipKlasse = k.dage===0?'fest-dage idag-chip':'fest-dage';
+      const kort = document.createElement('div');
+      kort.className = 'fest-kort ' + k.kortKlasse;
+      const sn = esc(k.noegle);
+      kort.innerHTML =
+        `<div class="fest-ikon">${k.ikon}</div>` +
+        `<div class="fest-info"><div class="fest-navn">${esc(k.navn)}</div>` +
+        `<div class="fest-beskrivelse">${k.dato} · ${k.beskrivelse}</div></div>` +
+        `<div class="fest-kort-hojre">` +
+        `<div class="${chipKlasse}">${dagChip}</div>` +
+        `<button class="hilsen-knap"      data-noegle="${sn}" data-mode="send">💌 Send hilsen</button>` +
+        `<button class="hilsen-knap-laes" data-noegle="${sn}" data-mode="laes">📬 Læs hilsener</button>` +
+        `</div>`;
+      fl.appendChild(kort);
+    });
+    document.getElementById('fest-boks').style.display = 'block';
+  }
+
+  // ── Måneds-gruppering ─────────────────────────────────────────────────────
+  const maanedSpande = Array.from({length:12}, () => []);
+  FOEDSLER.forEach(p => maanedSpande[p.mdr-1].push({type:'f', p}));
+  BRYLLUPPER.forEach(b => maanedSpande[b.mdr-1].push({type:'b', b}));
+  maanedSpande.forEach(sp => sp.sort((a,b) => {
+    return (a.type==='f'?a.p.dag:a.b.dag) - (b.type==='f'?b.p.dag:b.b.dag);
+  }));
+
+  const kal = document.getElementById('kalender');
+
+  for (let mi = 0; mi < 12; mi++) {
+    const sp = maanedSpande[mi];
+    if (!sp.length) continue;
+
+    let tbody = '';
+    sp.forEach(item => {
+      if (item.type === 'f') {
+        const p   = item.p;
+        const erI = erFodselsdagIdag(p.dag, p.mdr);
+        const al  = alderPrIdag(p.dag, p.mdr, p.aar);
+        const ib  = foedselsBadge(p.dag, p.mdr, p.aar, p.navn, I_AAR);
+        const nb  = foedselsBadge(p.dag, p.mdr, p.aar, p.navn, NAESTE);
+        const tl  = tlKlasse(p);
+        const retData = JSON.stringify({
+          docId: p.docId, idx: p.personIndex,
+          navn: p.navn, dag: p.dag, mdr: p.mdr, aar: p.aar,
+          rolle: p.rolle, email: p.email, mobil: p.mobil,
+          familienr: p.familienr, godkendt: p.godkendt
+        }).replace(/'/g, '&#39;');
+
+        tbody += `<tr>
+          <td class="col-dato">${p.dag}. ${MAANEDER_KORT[mi]} ${p.aar}</td>
+          <td class="col-navn">
+            <span class="tl tl-${tl}" title="${tl==='groen'?'Komplet':tl==='gul'?'Fødselsdato mangler':'Medlemsnummer mangler'}"></span>${esc(p.navn)}
+            <button class="ret-knap" data-ret='${retData}'>Ret</button>
+          </td>
+          <td class="${erI?'col-alder alder-idag':'col-alder'}">${al>=0?al:'—'}</td>
+          <td class="col-iaar">${ib}</td>
+          <td class="col-dato-iaar">${ib?maerkeDato(p.dag,p.mdr,I_AAR):''}</td>
+          <td class="col-naeste">${nb}</td>
+          <td class="col-dato-naeste">${nb?maerkeDato(p.dag,p.mdr,NAESTE):''}</td>
+        </tr>`;
+      }
+    });
+
+    const folkAntal = sp.filter(x => x.type==='f').length;
+    const blok = document.createElement('div');
+    blok.className = 'maaned-blok';
+    blok.innerHTML =
+      `<div class="maaned-header">${MAANEDER[mi]}<span class="maaned-antal">${folkAntal} person${folkAntal===1?'':'er'}</span></div>` +
+      `<table class="tabel"><thead><tr>` +
+      `<th class="col-dato">Fødselsdato</th><th>Navn</th>` +
+      `<th class="col-alder center">Alder</th>` +
+      `<th class="col-iaar center">Mærkedag ${I_AAR}</th>` +
+      `<th class="col-dato-iaar center">Dato</th>` +
+      `<th class="col-naeste center">Mærkedag ${NAESTE}</th>` +
+      `<th class="col-dato-naeste center">Dato</th>` +
+      `</tr></thead><tbody>${tbody}</tbody></table>`;
+    kal.appendChild(blok);
+  }
+}
+
+// ─── AUTH / REDAKTØR ─────────────────────────────────────────────────────────
+let aktivRolle = null;
+
+onAuthStateChanged(auth, async user => {
+  const knap = document.getElementById('topbar-red-knap');
+  if (!user) {
+    aktivRolle = null;
+    document.body.classList.remove('er-redaktor');
+    knap.textContent = 'Redaktør';
+    knap.classList.remove('logget-ind');
+    return;
+  }
+  try {
+    const brugerDoc = await getDoc(doc(db,'brugere',user.email));
+    if (brugerDoc.exists()) {
+      const rolle = brugerDoc.data().rolle || '';
+      if (rolle === 'redaktør' || rolle === 'administrator') {
+        aktivRolle = rolle;
+        document.body.classList.add('er-redaktor');
+        knap.textContent = '✓ ' + (brugerDoc.data().navn || user.email).split(' ')[0];
+        knap.classList.add('logget-ind');
+        document.getElementById('logget-ind-som').textContent = brugerDoc.data().navn || user.email;
+        document.getElementById('logget-ind-rolle').textContent =
+          rolle === 'administrator' ? 'Administrator' : 'Redaktør';
+      }
+    }
+  } catch(e) { /* ingen adgang til brugere */ }
+});
+
+// ─── LOGIN MODAL ─────────────────────────────────────────────────────────────
+function aabneLoginModal() {
+  const auth2 = getAuth();
+  const loginBody = document.getElementById('login-body');
+  const logudBody = document.getElementById('logud-body');
+  if (auth2.currentUser) {
+    loginBody.style.display = 'none';
+    logudBody.style.display = 'block';
+  } else {
+    loginBody.style.display = 'block';
+    logudBody.style.display = 'none';
+  }
+  document.getElementById('login-fejl').style.display = 'none';
+  document.getElementById('login-overlay').style.display = 'flex';
+  if (!auth2.currentUser) setTimeout(() => document.getElementById('login-email').focus(), 80);
+}
+function lukLoginModal() { document.getElementById('login-overlay').style.display = 'none'; }
+
+document.getElementById('topbar-red-knap').addEventListener('click', aabneLoginModal);
+document.getElementById('login-luk-x').addEventListener('click', lukLoginModal);
+document.getElementById('login-annuller').addEventListener('click', lukLoginModal);
+document.getElementById('logud-luk').addEventListener('click', lukLoginModal);
+
+document.getElementById('login-btn').addEventListener('click', async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const kode  = document.getElementById('login-kodeord').value;
+  const fejl  = document.getElementById('login-fejl');
+  const btn   = document.getElementById('login-btn');
+  fejl.style.display = 'none';
+  btn.disabled = true; btn.textContent = 'Logger ind…';
+  try {
+    await signInWithEmailAndPassword(auth, email, kode);
+    lukLoginModal();
+  } catch(e) {
+    fejl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Log ind';
+  }
+});
+
+document.getElementById('login-kodeord').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('login-btn').click();
+});
+
+document.getElementById('logud-btn').addEventListener('click', async () => {
+  await signOut(auth);
+  lukLoginModal();
+});
+
+document.getElementById('login-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('login-overlay')) lukLoginModal();
+});
+
+// ─── REDIGÉR PERSON MODAL ────────────────────────────────────────────────────
+let aktivRet = null; // { docId, idx, familienr }
+
+function aabneRetModal(data) {
+  aktivRet = { docId: data.docId, idx: data.idx, familienr: data.familienr };
+  document.getElementById('ret-modal-titel').textContent = `Rediger: ${data.navn}`;
+  document.getElementById('ret-familienr').textContent = data.familienr || '—';
+
+  const navnDele = navnDel(data.navn);
+  document.getElementById('ret-fornavn').value       = navnDele.fornavn;
+  document.getElementById('ret-efternavn').value     = navnDele.efternavn;
+  document.getElementById('ret-rolle').value         = data.rolle || 'forælder';
+  document.getElementById('ret-email').value         = data.email || '';
+  document.getElementById('ret-mobil').value         = data.mobil || '';
+  document.getElementById('ret-godkend').checked     = data.godkendt || false;
+
+  // Fødselsdato → YYYY-MM-DD
+  const dato = `${data.aar}-${String(data.mdr).padStart(2,'0')}-${String(data.dag).padStart(2,'0')}`;
+  document.getElementById('ret-foedselsdato').value = dato === '2026-01-01' ? '' : dato;
+
+  // Status chip
+  const chip = document.getElementById('ret-status-chip');
+  if (!data.familienr) {
+    chip.className = 'tl-status roed'; chip.textContent = '● Mangler nr.';
+  } else if (dato === '2026-01-01') {
+    chip.className = 'tl-status gul'; chip.textContent = '● Fødselsdato mangler';
+  } else {
+    chip.className = 'tl-status groen'; chip.textContent = '● Komplet';
+  }
+
+  document.getElementById('ret-succes').style.display = 'none';
+  document.getElementById('ret-fejl').style.display   = 'none';
+  document.getElementById('ret-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('ret-fornavn').focus(), 80);
+}
+
+function lukRetModal() { document.getElementById('ret-overlay').style.display = 'none'; }
+
+document.getElementById('ret-luk-x').addEventListener('click', lukRetModal);
+document.getElementById('ret-annuller-btn').addEventListener('click', lukRetModal);
+document.getElementById('ret-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('ret-overlay')) lukRetModal();
+});
+
+document.getElementById('ret-gem-btn').addEventListener('click', async () => {
+  if (!aktivRet) return;
+  const btn = document.getElementById('ret-gem-btn');
+  btn.disabled = true; btn.textContent = 'Gemmer…';
+  document.getElementById('ret-succes').style.display = 'none';
+  document.getElementById('ret-fejl').style.display   = 'none';
+
+  try {
+    const fornavn   = document.getElementById('ret-fornavn').value.trim();
+    const efternavn = document.getElementById('ret-efternavn').value.trim();
+    const datoRaw   = document.getElementById('ret-foedselsdato').value;
+    const rolle     = document.getElementById('ret-rolle').value;
+    const email     = document.getElementById('ret-email').value.trim();
+    const mobil     = document.getElementById('ret-mobil').value.trim();
+    const godkendt  = document.getElementById('ret-godkend').checked;
+
+    const navn       = [fornavn, efternavn].filter(Boolean).join(' ');
+    const foedselsdato = datoRaw || '2026-01-01';
+
+    // Hent nuværende dokument og opdatér den specifikke person i arrayet
+    const docRef  = doc(db, 'membres', aktivRet.docId);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) throw new Error('Dokument ikke fundet');
+
+    const fam   = docSnap.data();
+    const medl  = [...(fam.familiemedlemmer || [])];
+    medl[aktivRet.idx] = {
+      ...medl[aktivRet.idx],
+      navn, foedselsdato, rolle, email, mobil,
+      godkendt,
+      ...(godkendt ? {
+        godkendtAf:   getAuth().currentUser?.email || '?',
+        godkendtTid:  new Date().toISOString()
+      } : {})
+    };
+
+    await updateDoc(docRef, { familiemedlemmer: medl });
+
+    document.getElementById('ret-succes').style.display = 'block';
+    setTimeout(lukRetModal, 1400);
+  } catch(e) {
+    const fejlEl = document.getElementById('ret-fejl');
+    fejlEl.textContent = 'Fejl: ' + e.message;
+    fejlEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Gem og godkend ✓';
+  }
+});
+
+// Delegeret klik på "Ret"-knapper
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.ret-knap');
+  if (btn && aktivRolle) {
+    try { aabneRetModal(JSON.parse(btn.dataset.ret)); } catch(_) {}
+  }
+});
+
+// ─── HILSEN MODAL ────────────────────────────────────────────────────────────
+let aktivNoegle = '', aktivMode = 'send';
+
+function lukHilsenModal() { document.getElementById('hilsen-overlay').style.display = 'none'; }
+
 function aabneHilsenModal(noegle, mode) {
-  aktivNoegle = noegle;
-  aktivMode   = mode;
+  aktivNoegle = noegle; aktivMode = mode;
   document.getElementById('hilsen-modal-titel').textContent =
-    mode === 'laes' ? `Hilsener til ${noegle}` : `Send en hilsen til ${noegle}`;
-  document.getElementById('hilsen-kode-input').value        = '';
-  document.getElementById('hilsen-kode-fejl').style.display = 'none';
-  document.getElementById('hilsen-step1').style.display     = 'block';
-  document.getElementById('hilsen-step-send').style.display = 'none';
-  document.getElementById('hilsen-step-laes').style.display = 'none';
-  document.getElementById('hilsen-succes').style.display    = 'none';
-  document.getElementById('hilsen-send-fejl').style.display = 'none';
-  document.getElementById('hilsen-fra-input').value         = '';
-  document.getElementById('hilsen-besked-input').value      = '';
-  document.getElementById('hilsen-overlay').style.display   = 'flex';
+    mode==='laes' ? `Hilsener til ${noegle}` : `Send en hilsen til ${noegle}`;
+  ['hilsen-kode-input','hilsen-fra-input','hilsen-besked-input'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('hilsen-kode-fejl').style.display   = 'none';
+  document.getElementById('hilsen-succes').style.display      = 'none';
+  document.getElementById('hilsen-send-fejl').style.display   = 'none';
+  document.getElementById('hilsen-step1').style.display       = 'block';
+  document.getElementById('hilsen-step-send').style.display   = 'none';
+  document.getElementById('hilsen-step-laes').style.display   = 'none';
+  document.getElementById('hilsen-overlay').style.display     = 'flex';
   setTimeout(() => document.getElementById('hilsen-kode-input').focus(), 80);
 }
 
-// ─── Kodetjek ─────────────────────────────────────────────────────────────────
 function tjekKode() {
   const kode = document.getElementById('hilsen-kode-input').value.trim();
   if (kode.toLowerCase() !== 'vormslev') {
@@ -833,7 +1035,6 @@ function tjekKode() {
   }
 }
 
-// ─── Hent hilsener ───────────────────────────────────────────────────────────
 async function indlaesHilsener(noegle) {
   const liste = document.getElementById('hilsen-liste');
   liste.innerHTML = '<div class="hilsen-ingen">Henter hilsener…</div>';
@@ -845,8 +1046,8 @@ async function indlaesHilsener(noegle) {
       return;
     }
     const entries = [];
-    snap.forEach(child => entries.push(child.val()));
-    entries.sort((a, b) => (b.tidspunkt || 0) - (a.tidspunkt || 0));
+    snap.forEach(c => entries.push(c.val()));
+    entries.sort((a,b) => (b.tidspunkt||0)-(a.tidspunkt||0));
     entries.forEach(h => {
       const el = document.createElement('div');
       el.className = 'hilsen-kort';
@@ -861,55 +1062,58 @@ async function indlaesHilsener(noegle) {
   }
 }
 
-// ─── Send hilsen ─────────────────────────────────────────────────────────────
 async function sendHilsen() {
   const fra    = document.getElementById('hilsen-fra-input').value.trim();
   const besked = document.getElementById('hilsen-besked-input').value.trim();
   document.getElementById('hilsen-send-fejl').style.display = 'none';
-
   if (!fra)    { document.getElementById('hilsen-fra-input').focus();    return; }
   if (!besked) { document.getElementById('hilsen-besked-input').focus(); return; }
-
   const btn = document.getElementById('hilsen-send-btn');
-  btn.disabled    = true;
-  btn.textContent = 'Sender…';
-
+  btn.disabled = true; btn.textContent = 'Sender…';
   try {
-    await push(ref(rtdb, `hilsener/${tilKey(aktivNoegle)}`), {
-      fra, besked, tidspunkt: Date.now()
-    });
+    await push(ref(rtdb, `hilsener/${tilKey(aktivNoegle)}`), { fra, besked, tidspunkt: Date.now() });
     document.getElementById('hilsen-fra-input').value    = '';
     document.getElementById('hilsen-besked-input').value = '';
-    const succes = document.getElementById('hilsen-succes');
-    succes.style.display = 'block';
+    document.getElementById('hilsen-succes').style.display = 'block';
     await indlaesHilsener(aktivNoegle);
   } catch(e) {
     const fejl = document.getElementById('hilsen-send-fejl');
-    fejl.textContent = 'Hilsenen kunne ikke sendes. Tjek at du er online og prøv igen.';
+    fejl.textContent = 'Hilsenen kunne ikke sendes. Prøv igen.';
     fejl.style.display = 'block';
   } finally {
-    btn.disabled    = false;
-    btn.textContent = 'Send hilsen 💌';
+    btn.disabled = false; btn.textContent = 'Send hilsen 💌';
   }
 }
 
-// ─── Event listeners (modul kører efter DOM er klar) ─────────────────────────
-document.getElementById('hilsen-kode-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') tjekKode();
-});
-document.getElementById('hilsen-kode-btn').addEventListener('click',      tjekKode);
-document.getElementById('hilsen-annuller-btn').addEventListener('click',  lukModal);
-document.getElementById('hilsen-send-btn').addEventListener('click',      sendHilsen);
-document.getElementById('hilsen-luk-send-btn').addEventListener('click',  lukModal);
-document.getElementById('hilsen-luk-laes-btn').addEventListener('click',  lukModal);
-document.getElementById('hilsen-luk-x').addEventListener('click',         lukModal);
+document.getElementById('hilsen-kode-input').addEventListener('keydown', e => { if(e.key==='Enter') tjekKode(); });
+document.getElementById('hilsen-kode-btn').addEventListener('click', tjekKode);
+document.getElementById('hilsen-annuller-btn').addEventListener('click', lukHilsenModal);
+document.getElementById('hilsen-send-btn').addEventListener('click', sendHilsen);
+document.getElementById('hilsen-luk-send-btn').addEventListener('click', lukHilsenModal);
+document.getElementById('hilsen-luk-laes-btn').addEventListener('click', lukHilsenModal);
+document.getElementById('hilsen-luk-x').addEventListener('click', lukHilsenModal);
 document.getElementById('hilsen-overlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('hilsen-overlay')) lukModal();
+  if (e.target === document.getElementById('hilsen-overlay')) lukHilsenModal();
 });
 document.addEventListener('click', e => {
   const btn = e.target.closest('.hilsen-knap, .hilsen-knap-laes');
   if (btn) aabneHilsenModal(btn.dataset.noegle, btn.dataset.mode);
 });
+
+// ─── START ───────────────────────────────────────────────────────────────────
+try {
+  const foedsler = await hentFoedsler();
+  if (foedsler.length > 0) {
+    byggKalender(foedsler);
+  } else {
+    document.getElementById('loading-boks').innerHTML =
+      '<p style="color:var(--tekst-lys)">Ingen data fundet i databasen.</p>';
+  }
+} catch(e) {
+  document.getElementById('loading-boks').innerHTML =
+    `<p style="color:#c0392b">Fejl ved indlæsning: ${esc(e.message)}</p>`;
+  console.error(e);
+}
 </script>
 </body>
 </html>
