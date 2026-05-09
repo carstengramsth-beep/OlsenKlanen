@@ -143,6 +143,23 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 }
 .leg{display:flex;align-items:center;gap:.35rem;}
 
+/* ─── STATS-BOKS ─── */
+.stats-boks{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:.75rem;margin-bottom:1.5rem;
+}
+.stats-kort{
+  background:var(--hvid);border:1px solid var(--border);border-radius:8px;
+  padding:.8rem 1rem;display:flex;align-items:center;gap:.75rem;
+  box-shadow:0 1px 4px rgba(0,0,0,.04);
+}
+.stats-tal{font-size:28px;font-weight:700;line-height:1;}
+.stats-label{font-size:11px;color:var(--tekst-lys);margin-top:2px;}
+.stats-kort.groen .stats-tal{color:var(--tl-groen);}
+.stats-kort.gul   .stats-tal{color:var(--tl-gul);}
+.stats-kort.roed  .stats-tal{color:var(--tl-roed);}
+@media(max-width:480px){.stats-boks{grid-template-columns:1fr;}}
+
 /* ─── TRAFIKLYS ─── */
 .tl{
   display:inline-block;width:9px;height:9px;border-radius:50%;
@@ -152,6 +169,76 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 .tl-groen{background:var(--tl-groen);}
 .tl-gul  {background:var(--tl-gul);}
 .tl-roed {background:var(--tl-roed);}
+
+/* ─── MDL.NR. KOLONNE ─── */
+.col-mdlnr{width:68px;text-align:center;white-space:nowrap;}
+.mdlnr-ok{font-size:12px;color:var(--tekst-lys);}
+.mdlnr-mangler{
+  font-size:10.5px;font-weight:700;color:var(--tl-roed);
+  border:1px solid var(--tl-roed);border-radius:4px;
+  padding:1px 5px;background:none;cursor:pointer;
+  font-family:'Source Sans 3',sans-serif;
+  transition:background .12s,color .12s;
+}
+.mdlnr-mangler:hover{background:var(--tl-roed);color:#fff;}
+
+/* ─── FAMILIENR DIALOG ─── */
+.fnr-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.55);
+  z-index:3000;display:flex;align-items:center;justify-content:center;padding:1rem;
+}
+.fnr-modal{
+  background:var(--baggrund);border:2px solid var(--tl-roed);border-radius:12px;
+  max-width:440px;width:100%;
+  box-shadow:0 8px 40px rgba(0,0,0,.35);
+}
+.fnr-header{
+  background:#dc2626;padding:.8rem 1.25rem;border-radius:10px 10px 0 0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.fnr-titel{font-family:'Playfair Display',serif;font-size:15px;color:#fff;font-weight:400;}
+.fnr-body{padding:1.25rem;}
+.fnr-info{font-size:13px;color:var(--tekst-lys);margin-bottom:1rem;line-height:1.55;}
+.fnr-valg{display:flex;flex-direction:column;gap:.6rem;margin-bottom:.85rem;}
+.fnr-valg-knap{
+  display:flex;align-items:flex-start;gap:.75rem;
+  padding:.8rem 1rem;border-radius:8px;border:2px solid var(--border);
+  background:var(--hvid);cursor:pointer;text-align:left;width:100%;
+  font-family:'Source Sans 3',sans-serif;transition:border-color .12s,background .12s;
+}
+.fnr-valg-knap:hover{border-color:var(--gron);background:#f0fdf4;}
+.fnr-valg-ikon{font-size:22px;flex-shrink:0;line-height:1;margin-top:1px;}
+.fnr-valg-tekst strong{display:block;font-size:13.5px;color:var(--tekst);margin-bottom:2px;}
+.fnr-valg-tekst span{font-size:12px;color:var(--tekst-lys);}
+/* Trin 2: opret nyt / tilknyt */
+.fnr-steg{display:none;}
+.fnr-steg.aktiv{display:block;}
+.fnr-ny-nr{
+  font-size:32px;font-weight:700;color:var(--gron);text-align:center;
+  padding:.75rem;background:#f0fdf4;border-radius:8px;margin:.75rem 0;
+}
+.fnr-familie-liste{
+  max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;
+  margin:.5rem 0 .85rem;
+}
+.fnr-familie-item{
+  padding:.55rem .85rem;font-size:13px;cursor:pointer;
+  border-bottom:1px solid rgba(212,201,160,.3);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.fnr-familie-item:last-child{border-bottom:none;}
+.fnr-familie-item:hover{background:rgba(45,80,22,.06);}
+.fnr-familie-item.valgt{background:var(--gron-pale);}
+.fnr-familie-nr{font-size:11px;color:var(--tekst-lys);}
+.fnr-succes{
+  background:#e8f5e9;border:1.5px solid #4caf50;border-radius:8px;
+  color:#2d7a1f;font-size:14px;font-weight:700;text-align:center;
+  padding:.75rem 1rem;display:none;margin-top:.5rem;
+}
+.fnr-fejl{
+  background:#fde8e8;border:1.5px solid #e74c3c;border-radius:8px;
+  color:#c0392b;font-size:13px;padding:.6rem 1rem;display:none;margin-top:.5rem;
+}
 
 /* ─── MÅNEDS-BLOK ─── */
 .maaned-blok{margin-bottom:2rem;}
@@ -413,6 +500,22 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
     <div class="loading-spinner"></div><br>Henter familiemedlemmer fra database…
   </div>
 
+  <!-- STATISTIK -->
+  <div class="stats-boks" id="stats-boks" style="display:none">
+    <div class="stats-kort groen">
+      <span class="tl tl-groen" style="width:14px;height:14px;flex-shrink:0;"></span>
+      <div><div class="stats-tal" id="stats-groen">0</div><div class="stats-label">Komplet</div></div>
+    </div>
+    <div class="stats-kort gul">
+      <span class="tl tl-gul" style="width:14px;height:14px;flex-shrink:0;"></span>
+      <div><div class="stats-tal" id="stats-gul">0</div><div class="stats-label">Fødselsdato mangler</div></div>
+    </div>
+    <div class="stats-kort roed">
+      <span class="tl tl-roed" style="width:14px;height:14px;flex-shrink:0;"></span>
+      <div><div class="stats-tal" id="stats-roed">0</div><div class="stats-label">Mdl.nr. mangler</div></div>
+    </div>
+  </div>
+
   <!-- FESTLIG MÆRKEDAGE-BOKS -->
   <div class="fest-boks" id="fest-boks" style="display:none">
     <div class="fest-header">
@@ -445,6 +548,69 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
 <div class="flag-footer">
   <div class="flag-footer-flag">🇩🇰 🇩🇰 🇩🇰 🇩🇰 🇩🇰</div>
   <div class="flag-footer-tekst" id="footer-tekst"></div>
+</div>
+
+<!-- ─── FAMILIENR DIALOG ──────────────────────────────────────────────────── -->
+<div id="fnr-overlay" class="fnr-overlay" style="display:none">
+  <div class="fnr-modal">
+    <div class="fnr-header">
+      <div class="fnr-titel">Medlemsnummer mangler</div>
+      <button class="modal-luk" id="fnr-luk-x" style="color:rgba(255,255,255,.7)">×</button>
+    </div>
+    <div class="fnr-body">
+      <!-- Trin 0: vælg handling -->
+      <div class="fnr-steg aktiv" id="fnr-steg0">
+        <p class="fnr-info">
+          <strong id="fnr-person-navn"></strong> har intet familienummer.
+          Hvad ønsker du at gøre?
+        </p>
+        <div class="fnr-valg">
+          <button class="fnr-valg-knap" id="fnr-opret-btn">
+            <span class="fnr-valg-ikon">➕</span>
+            <div class="fnr-valg-tekst">
+              <strong>Opret nyt familienummer</strong>
+              <span>Tildel et nyt nummer og registrér personen som ny familie</span>
+            </div>
+          </button>
+          <button class="fnr-valg-knap" id="fnr-tilknyt-btn">
+            <span class="fnr-valg-ikon">🔗</span>
+            <div class="fnr-valg-tekst">
+              <strong>Tilknyt til eksisterende familie</strong>
+              <span>Vælg hvilken familie personen tilhører</span>
+            </div>
+          </button>
+        </div>
+        <div style="text-align:right"><button class="btn-sek" id="fnr-annuller0">Annuller</button></div>
+      </div>
+
+      <!-- Trin 1a: opret nyt -->
+      <div class="fnr-steg" id="fnr-steg-opret">
+        <p class="fnr-info">Næste ledige familienummer:</p>
+        <div class="fnr-ny-nr" id="fnr-nyt-nr">—</div>
+        <p class="fnr-info" style="margin-bottom:.75rem;">
+          Klik <strong>Opret</strong> for at tildele dette nummer og gemme familiedokumentet.
+        </p>
+        <div class="btn-row">
+          <button class="btn-prim" id="fnr-bekraeft-opret">Opret familie ➕</button>
+          <button class="btn-sek"  id="fnr-tilbage-opret">← Tilbage</button>
+        </div>
+        <div class="fnr-succes" id="fnr-opret-succes">✓ Familienummer oprettet!</div>
+        <div class="fnr-fejl"   id="fnr-opret-fejl"></div>
+      </div>
+
+      <!-- Trin 1b: tilknyt til eksisterende -->
+      <div class="fnr-steg" id="fnr-steg-tilknyt">
+        <p class="fnr-info">Vælg hvilken familie personen skal tilknyttes:</p>
+        <div class="fnr-familie-liste" id="fnr-familie-liste"></div>
+        <div class="btn-row">
+          <button class="btn-prim" id="fnr-bekraeft-tilknyt" disabled>Tilknyt 🔗</button>
+          <button class="btn-sek"  id="fnr-tilbage-tilknyt">← Tilbage</button>
+        </div>
+        <div class="fnr-succes" id="fnr-tilknyt-succes">✓ Person tilknyttet familie!</div>
+        <div class="fnr-fejl"   id="fnr-tilknyt-fejl"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ─── REDAKTØR-LOGIN MODAL ─────────────────────────────────────────────── -->
@@ -665,13 +831,17 @@ function formatDato(d) {
 }
 
 // ─── FIRESTORE: HENT MEMBRES ─────────────────────────────────────────────────
+let ALLE_FAMILIER = []; // {docId, nr, navne, familiemedlemmer}
+
 async function hentFoedsler() {
   const snap = await getDocs(collection(db, 'membres'));
   const liste = [];
+  ALLE_FAMILIER = [];
   snap.forEach(docSnap => {
     const fam = docSnap.data();
     const docId = docSnap.id;
     const familienr = fam.nr || '';
+    ALLE_FAMILIER.push({ docId, nr: familienr, navne: fam.navne || fam.fornavn || '', familiemedlemmer: fam.familiemedlemmer || [] });
     const medl = fam.familiemedlemmer || [];
     medl.forEach((m, idx) => {
       const dato = m.foedselsdato || '2026-01-01';
@@ -701,6 +871,19 @@ function byggKalender(FOEDSLER) {
   document.getElementById('legende').style.display = 'flex';
 
   const BRYLLUPPER = [];
+
+  // ── Statistik ──────────────────────────────────────────────────────────────
+  let tGroen = 0, tGul = 0, tRoed = 0;
+  FOEDSLER.forEach(p => {
+    const k = tlKlasse(p);
+    if (k === 'groen') tGroen++;
+    else if (k === 'gul') tGul++;
+    else tRoed++;
+  });
+  document.getElementById('stats-groen').textContent = tGroen;
+  document.getElementById('stats-gul').textContent   = tGul;
+  document.getElementById('stats-roed').textContent  = tRoed;
+  document.getElementById('stats-boks').style.display = 'grid';
 
   document.getElementById('header-sub').textContent =
     `${FOEDSLER.length} familiemedlemmer · ${I_AAR} og ${NAESTE}`;
@@ -779,7 +962,12 @@ function byggKalender(FOEDSLER) {
           familienr: p.familienr, godkendt: p.godkendt
         }).replace(/'/g, '&#39;');
 
+        const mdlnrCell = p.familienr
+          ? `<span class="mdlnr-ok">${esc(p.familienr)}</span>`
+          : `<button class="mdlnr-mangler" data-navn="${esc(p.navn)}" data-doc="${esc(p.docId)}" data-idx="${p.personIndex}">MANGLER</button>`;
+
         tbody += `<tr>
+          <td class="col-mdlnr" style="text-align:center">${mdlnrCell}</td>
           <td class="col-dato">${p.dag}. ${MAANEDER_KORT[mi]} ${p.aar}</td>
           <td class="col-navn">
             <span class="tl tl-${tl}" title="${tl==='groen'?'Komplet':tl==='gul'?'Fødselsdato mangler':'Medlemsnummer mangler'}"></span>${esc(p.navn)}
@@ -800,6 +988,7 @@ function byggKalender(FOEDSLER) {
     blok.innerHTML =
       `<div class="maaned-header">${MAANEDER[mi]}<span class="maaned-antal">${folkAntal} person${folkAntal===1?'':'er'}</span></div>` +
       `<table class="tabel"><thead><tr>` +
+      `<th class="col-mdlnr center">Mdl.nr.</th>` +
       `<th class="col-dato">Fødselsdato</th><th>Navn</th>` +
       `<th class="col-alder center">Alder</th>` +
       `<th class="col-iaar center">Mærkedag ${I_AAR}</th>` +
@@ -1098,6 +1287,161 @@ document.getElementById('hilsen-overlay').addEventListener('click', e => {
 document.addEventListener('click', e => {
   const btn = e.target.closest('.hilsen-knap, .hilsen-knap-laes');
   if (btn) aabneHilsenModal(btn.dataset.noegle, btn.dataset.mode);
+});
+
+// ─── FAMILIENR DIALOG ────────────────────────────────────────────────────────
+let fnrAktiv = null; // { docId, idx, navn }
+let fnrValgtFamilie = null; // { docId, nr }
+
+function visFnrSteg(id) {
+  ['fnr-steg0','fnr-steg-opret','fnr-steg-tilknyt'].forEach(s => {
+    document.getElementById(s).classList.toggle('aktiv', s === id);
+  });
+}
+
+function lukFnrModal() {
+  document.getElementById('fnr-overlay').style.display = 'none';
+  fnrAktiv = null; fnrValgtFamilie = null;
+}
+
+function naesteLedigNr() {
+  const numre = ALLE_FAMILIER.map(f => parseInt(f.nr)).filter(n => !isNaN(n));
+  return numre.length ? Math.max(...numre) + 1 : 1;
+}
+
+function aabnefnrDialog(docId, idx, navn) {
+  fnrAktiv = { docId, idx, navn };
+  fnrValgtFamilie = null;
+  document.getElementById('fnr-person-navn').textContent = navn;
+  ['fnr-opret-succes','fnr-opret-fejl','fnr-tilknyt-succes','fnr-tilknyt-fejl'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('fnr-bekraeft-tilknyt').disabled = true;
+  visFnrSteg('fnr-steg0');
+  document.getElementById('fnr-overlay').style.display = 'flex';
+}
+
+// Vælg handling
+document.getElementById('fnr-opret-btn').addEventListener('click', () => {
+  const nytNr = naesteLedigNr();
+  document.getElementById('fnr-nyt-nr').textContent = nytNr;
+  document.getElementById('fnr-opret-succes').style.display = 'none';
+  document.getElementById('fnr-opret-fejl').style.display   = 'none';
+  visFnrSteg('fnr-steg-opret');
+});
+
+document.getElementById('fnr-tilknyt-btn').addEventListener('click', () => {
+  const liste = document.getElementById('fnr-familie-liste');
+  liste.innerHTML = '';
+  const sorteret = [...ALLE_FAMILIER].filter(f => f.nr).sort((a,b) => parseInt(a.nr)-parseInt(b.nr));
+  sorteret.forEach(fam => {
+    const el = document.createElement('div');
+    el.className = 'fnr-familie-item';
+    el.innerHTML = `<span>${esc(fam.navne || fam.docId)}</span><span class="fnr-familie-nr">Nr. ${esc(fam.nr)}</span>`;
+    el.addEventListener('click', () => {
+      liste.querySelectorAll('.fnr-familie-item').forEach(i => i.classList.remove('valgt'));
+      el.classList.add('valgt');
+      fnrValgtFamilie = fam;
+      document.getElementById('fnr-bekraeft-tilknyt').disabled = false;
+    });
+    liste.appendChild(el);
+  });
+  document.getElementById('fnr-tilknyt-succes').style.display = 'none';
+  document.getElementById('fnr-tilknyt-fejl').style.display   = 'none';
+  visFnrSteg('fnr-steg-tilknyt');
+});
+
+// Tilbage-knapper
+document.getElementById('fnr-tilbage-opret').addEventListener('click',   () => visFnrSteg('fnr-steg0'));
+document.getElementById('fnr-tilbage-tilknyt').addEventListener('click',  () => visFnrSteg('fnr-steg0'));
+document.getElementById('fnr-annuller0').addEventListener('click',        lukFnrModal);
+document.getElementById('fnr-luk-x').addEventListener('click',            lukFnrModal);
+document.getElementById('fnr-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('fnr-overlay')) lukFnrModal();
+});
+
+// Opret nyt familienummer
+document.getElementById('fnr-bekraeft-opret').addEventListener('click', async () => {
+  if (!fnrAktiv) return;
+  const btn = document.getElementById('fnr-bekraeft-opret');
+  btn.disabled = true; btn.textContent = 'Opretter…';
+  document.getElementById('fnr-opret-fejl').style.display = 'none';
+  try {
+    const nytNr = String(naesteLedigNr());
+    const docRef = doc(db, 'membres', fnrAktiv.docId);
+    const snap   = await getDoc(docRef);
+    if (!snap.exists()) throw new Error('Dokument ikke fundet');
+    await updateDoc(docRef, { nr: nytNr });
+    // Opdatér lokalt cache
+    const famIdx = ALLE_FAMILIER.findIndex(f => f.docId === fnrAktiv.docId);
+    if (famIdx >= 0) ALLE_FAMILIER[famIdx].nr = nytNr;
+    document.getElementById('fnr-opret-succes').style.display = 'block';
+    // Opdatér celle i tabellen
+    document.querySelectorAll(`.mdlnr-mangler[data-doc="${CSS.escape(fnrAktiv.docId)}"]`).forEach(el => {
+      const span = document.createElement('span');
+      span.className = 'mdlnr-ok'; span.textContent = nytNr;
+      el.replaceWith(span);
+    });
+    // Opdatér statistik
+    const roed = document.getElementById('stats-roed');
+    roed.textContent = Math.max(0, parseInt(roed.textContent) - 1);
+    const groen = document.getElementById('stats-groen');
+    groen.textContent = parseInt(groen.textContent) + 1;
+    setTimeout(lukFnrModal, 1400);
+  } catch(e) {
+    const fejl = document.getElementById('fnr-opret-fejl');
+    fejl.textContent = 'Fejl: ' + e.message; fejl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Opret familie ➕';
+  }
+});
+
+// Tilknyt til eksisterende familie
+document.getElementById('fnr-bekraeft-tilknyt').addEventListener('click', async () => {
+  if (!fnrAktiv || !fnrValgtFamilie) return;
+  const btn = document.getElementById('fnr-bekraeft-tilknyt');
+  btn.disabled = true; btn.textContent = 'Tilknytter…';
+  document.getElementById('fnr-tilknyt-fejl').style.display = 'none';
+  try {
+    // Hent kildedokument
+    const kildRef  = doc(db, 'membres', fnrAktiv.docId);
+    const kildSnap = await getDoc(kildRef);
+    if (!kildSnap.exists()) throw new Error('Kildedokument ikke fundet');
+    const kildData = kildSnap.data();
+    const person   = (kildData.familiemedlemmer || [])[fnrAktiv.idx];
+    if (!person) throw new Error('Person ikke fundet i dokument');
+
+    // Tilføj person til målfamilien
+    const maalRef  = doc(db, 'membres', fnrValgtFamilie.docId);
+    const maalSnap = await getDoc(maalRef);
+    if (!maalSnap.exists()) throw new Error('Målfamilie ikke fundet');
+    const maalMedl = [...(maalSnap.data().familiemedlemmer || []), person];
+    await updateDoc(maalRef, { familiemedlemmer: maalMedl });
+
+    // Fjern person fra kildedokumentet
+    const kildMedl = [...(kildData.familiemedlemmer || [])];
+    kildMedl.splice(fnrAktiv.idx, 1);
+    await updateDoc(kildRef, { familiemedlemmer: kildMedl });
+
+    document.getElementById('fnr-tilknyt-succes').style.display = 'block';
+    // Fjern rækken fra tabellen
+    document.querySelectorAll(`.mdlnr-mangler[data-doc="${CSS.escape(fnrAktiv.docId)}"][data-idx="${fnrAktiv.idx}"]`).forEach(el => {
+      el.closest('tr')?.remove();
+    });
+    const roed = document.getElementById('stats-roed');
+    roed.textContent = Math.max(0, parseInt(roed.textContent) - 1);
+    setTimeout(lukFnrModal, 1400);
+  } catch(e) {
+    const fejl = document.getElementById('fnr-tilknyt-fejl');
+    fejl.textContent = 'Fejl: ' + e.message; fejl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Tilknyt 🔗';
+  }
+});
+
+// Delegeret klik på MANGLER-knap
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.mdlnr-mangler');
+  if (btn) aabnefnrDialog(btn.dataset.doc, parseInt(btn.dataset.idx), btn.dataset.navn);
 });
 
 // ─── START ───────────────────────────────────────────────────────────────────
