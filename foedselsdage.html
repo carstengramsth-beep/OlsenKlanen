@@ -512,6 +512,14 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
 .fam-person-navn{font-size:14px;font-weight:600;color:var(--tekst);display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
 .fam-person-nr{font-size:11px;color:var(--tekst-lys);font-style:italic;}
 .fam-person-detalje{font-size:12px;color:var(--tekst-lys);margin-top:3px;}
+.fam-alder-chip{
+  font-size:12px;font-weight:700;
+  padding:2px 9px;border-radius:20px;
+  background:var(--guld-pale);color:var(--guld);
+  border:1px solid rgba(200,149,42,0.3);
+  white-space:nowrap;flex-shrink:0;align-self:center;
+  margin-left:auto;
+}
 
 /* ─── FLAG-FOOTER ─── */
 .flag-footer{background:var(--gron);border-top:3px solid var(--guld);text-align:center;padding:.9rem 0 .6rem;}
@@ -1421,14 +1429,14 @@ function lukFamDialog() {
   document.getElementById('fam-overlay').style.display = 'none';
 }
 
-async function aabneFamiliedialog(docId, familienr) {
+async function aabneFamiliedialog(familienr) {
   document.getElementById('fam-titel').textContent = `Familie Nr. ${familienr}`;
   const body = document.getElementById('fam-body');
   body.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--tekst-lys)">Henter familiedata…</div>';
   document.getElementById('fam-overlay').style.display = 'flex';
 
   try {
-    const docRef = doc(db, 'membres', docId);
+    const docRef = doc(db, 'membres', familienr);
     const snap   = await getDoc(docRef);
     if (!snap.exists()) throw new Error('Familie ikke fundet');
 
@@ -1446,9 +1454,9 @@ async function aabneFamiliedialog(docId, familienr) {
       const rolle = m.rolle || 'forælder';
       if (rolle === 'barn') barnTaeller++;
 
-      const dato         = m.foedselsdato || '2026-01-01';
+      const dato          = m.foedselsdato || '2026-01-01';
       const manglendeDato = dato === '2026-01-01';
-      const [y, mo, d]   = dato.split('-').map(Number);
+      const [y, mo, d]    = dato.split('-').map(Number);
 
       let undernummer;
       if (m.undernummer) {
@@ -1459,12 +1467,13 @@ async function aabneFamiliedialog(docId, familienr) {
         undernummer = familienr;
       }
 
-      const tl      = !familienr ? 'roed' : manglendeDato ? 'gul' : 'groen';
-      const datoVis = manglendeDato ? '—' : `${d}. ${MAANEDER_KORT[mo - 1]} ${y}`;
-      const alderVis = (!manglendeDato && y && d && mo) ? alderPrIdag(d, mo, y) + ' år' : '';
+      const tl        = !familienr ? 'roed' : manglendeDato ? 'gul' : 'groen';
+      const datoVis   = manglendeDato ? '—' : `${d}. ${MAANEDER_KORT[mo - 1]} ${y}`;
+      const alder     = (!manglendeDato && y && d && mo) ? alderPrIdag(d, mo, y) : null;
+      const alderVis  = alder !== null ? `${alder} år` : '';
 
       const retJson = JSON.stringify({
-        docId, idx,
+        docId: familienr, idx,
         navn: m.navn || '?', dag: d || 1, mdr: mo || 1, aar: y || 2026,
         rolle: m.rolle || 'forælder',
         email: m.email || '', mobil: m.mobil || '',
@@ -1482,13 +1491,12 @@ async function aabneFamiliedialog(docId, familienr) {
             `<button class="ret-knap" data-ret='${retJson}'>Ret</button>` +
           `</div>` +
           `<div class="fam-person-detalje">` +
-            `${esc(rolle.charAt(0).toUpperCase() + rolle.slice(1))}` +
-            ` · ${datoVis}` +
-            (alderVis ? ` · ${alderVis}` : '') +
+            `${esc(rolle.charAt(0).toUpperCase() + rolle.slice(1))} · ${datoVis}` +
           `</div>` +
           (m.email ? `<div class="fam-person-detalje">${esc(m.email)}</div>` : '') +
           (m.mobil ? `<div class="fam-person-detalje">${esc(m.mobil)}</div>` : '') +
-        `</div>`;
+        `</div>` +
+        (alderVis ? `<div class="fam-alder-chip">${alderVis}</div>` : '');
       body.appendChild(el);
     });
   } catch(e) {
@@ -1652,7 +1660,7 @@ document.addEventListener('click', e => {
   const m = e.target.closest('.mdlnr-mangler');
   if (m) { aabnefnrDialog(m.dataset.doc, parseInt(m.dataset.idx), m.dataset.navn, null); return; }
   const ok = e.target.closest('.mdlnr-ok');
-  if (ok) aabneFamiliedialog(ok.dataset.doc, ok.dataset.nr);
+  if (ok) aabneFamiliedialog(ok.dataset.nr);
 });
 
 // ─── FILTER: VIS MANGLENDE DATA ─────────────────────────────────────────────
