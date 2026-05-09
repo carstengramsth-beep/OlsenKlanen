@@ -153,6 +153,11 @@ body{font-family:'Source Sans 3',sans-serif;background:#f0ece0;color:var(--tekst
 @keyframes inv-ind{from{transform:translateY(-8px);opacity:0}to{transform:none;opacity:1}}
 .invite-fra-tekst{font-size:13px;font-weight:600;color:var(--tekst);margin-bottom:.85rem;line-height:1.4}
 
+/* Videoknap — cirkulær ikon-knap */
+.video-knap{width:36px;height:36px;border-radius:50%;background:var(--gron);color:#fff;border:none;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .1s;flex-shrink:0;box-shadow:0 2px 6px rgba(45,80,22,.3)}
+.video-knap:hover{background:var(--gron-lys);transform:scale(1.08)}
+.video-knap:disabled{background:#bbb;cursor:not-allowed;box-shadow:none;transform:none}
+
 /* Mødelink overlay */
 .moede-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:700;display:flex;align-items:center;justify-content:center}
 .moede-boks{background:var(--hvid);border-radius:14px;padding:2.25rem 2rem;max-width:440px;width:100%;border:2px solid var(--gron);box-shadow:0 12px 40px rgba(0,0,0,.25);text-align:center}
@@ -269,6 +274,7 @@ body{font-family:'Source Sans 3',sans-serif;background:#f0ece0;color:var(--tekst
     <div class="nav-gruppe">
       <div class="nav-gruppe-label">Kommunikation</div>
       <div class="nav-item" onclick="visPanel('online-nu',this)"><span class="nav-ikon">🟢</span>Online nu</div>
+      <div class="nav-item" onclick="visPanel('brugerstyring',this)"><span class="nav-ikon">👥</span>Brugerstyring</div>
     </div>
     <div class="nav-gruppe">
       <div class="nav-gruppe-label">System</div>
@@ -509,6 +515,23 @@ body{font-family:'Source Sans 3',sans-serif;background:#f0ece0;color:var(--tekst
         </div>
       </div>
 
+      <!-- BRUGERSTYRING -->
+      <div class="panel" id="panel-brugerstyring">
+        <div class="side-titel">Brugerstyring</div>
+        <div class="side-sub">Administratorer og redaktører — klik 📹 for at starte et videomøde</div>
+        <div class="kort">
+          <div class="kort-header">
+            <div class="kort-titel">Brugere med systemadgang</div>
+            <div id="brugerstyring-status" style="font-size:12px;color:var(--tekst-lys)"></div>
+          </div>
+          <div class="kort-body" id="brugerstyring-liste">
+            <div style="text-align:center;color:var(--tekst-lys);font-size:13px;padding:1.5rem">
+              Log ind via <strong>Online nu</strong> for at se live-status og invitere til møde.
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ONLINE NU -->
       <div class="panel" id="panel-online-nu">
         <div class="side-titel">Online nu</div>
@@ -719,6 +742,7 @@ function startPresenceLytter() {
     const online = snap.exists() ? snap.val() : {};
     const onlineEmails = new Set(Object.values(online).map(v => v.email));
     renderMedlemListe(onlineEmails);
+    renderBrugerstyring(onlineEmails);
   });
 }
 
@@ -742,9 +766,7 @@ function renderMedlemListe(onlineEmails) {
     const initial  = mdl.navn.trim()[0].toUpperCase();
     let knapper = '';
     if (erOnline && !erMig) {
-      knapper =
-        `<button class="btn btn-gron btn-sm" data-chat-til="${esc(mdl.email)}">Chat</button>` +
-        `<button class="btn btn-lys btn-sm" style="white-space:nowrap" data-invite-til="${esc(mdl.email)}" data-invite-navn="${esc(mdl.navn)}">📹 Inviter</button>`;
+      knapper = `<button class="btn btn-gron btn-sm" data-chat-til="${esc(mdl.email)}">Chat</button>`;
     } else if (erOnline && erMig) {
       knapper = `<span style="font-size:11px;color:var(--tekst-lys);font-style:italic">Det er dig</span>`;
     }
@@ -767,12 +789,56 @@ function renderMedlemListe(onlineEmails) {
   });
 }
 
-// Delegeret click på knapper i listen
+// Delegeret click på knapper i Online nu-listen
 document.getElementById('online-liste').addEventListener('click', e => {
-  const chatBtn   = e.target.closest('[data-chat-til]');
-  if (chatBtn) { aabnChatModal(); return; }
-  const inviteBtn = e.target.closest('[data-invite-til]');
-  if (inviteBtn) inviterTilMoede(inviteBtn.dataset.inviteTil, inviteBtn.dataset.inviteNavn, inviteBtn);
+  const chatBtn = e.target.closest('[data-chat-til]');
+  if (chatBtn) aabnChatModal();
+});
+
+// ── Brugerstyring-panel ───────────────────────────────────────────────────────
+function renderBrugerstyring(onlineEmails) {
+  const liste  = document.getElementById('brugerstyring-liste');
+  const status = document.getElementById('brugerstyring-status');
+  if (!liste) return;
+  if (!allemedlemmer.length) return; // Ikke indlæst endnu — onValue vil kalde igen
+  const onlineAntal = [...allemedlemmer].filter(m => onlineEmails.has(m.email)).length;
+  if (status) status.textContent = `${onlineAntal} online`;
+  const sorted = [...allemedlemmer].sort((a, b) => {
+    const ao = onlineEmails.has(a.email) ? 0 : 1;
+    const bo = onlineEmails.has(b.email) ? 0 : 1;
+    return ao - bo || a.navn.localeCompare(b.navn, 'da');
+  });
+  liste.innerHTML = '';
+  sorted.forEach(mdl => {
+    const erOnline = onlineEmails.has(mdl.email);
+    const erMig    = aktivBruger && mdl.email === aktivBruger.email;
+    const initial  = mdl.navn.trim()[0].toUpperCase();
+    const el = document.createElement('div');
+    el.className = 'online-mdl';
+    el.innerHTML =
+      `<div class="online-avatar">${esc(initial)}</div>` +
+      `<div class="online-info">` +
+        `<div class="online-navn">${esc(mdl.navn)}</div>` +
+        `<div class="online-rolle">${esc(mdl.rolle)}</div>` +
+        `<div style="font-size:11px;color:var(--tekst-lys)">${esc(mdl.email)}</div>` +
+      `</div>` +
+      `<div style="display:flex;align-items:center;gap:.65rem">` +
+        `<div style="display:flex;align-items:center;gap:.4rem">` +
+          `<div class="online-dot ${erOnline ? 'er-online' : 'er-offline'}"></div>` +
+          `<span class="online-status ${erOnline ? 'er-online' : ''}">${erOnline ? 'Online' : 'Offline'}</span>` +
+        `</div>` +
+        (erOnline && !erMig
+          ? `<button class="video-knap" data-invite-til="${esc(mdl.email)}" data-invite-navn="${esc(mdl.navn)}" title="Inviter ${esc(mdl.navn)} til videomøde">📹</button>`
+          : '') +
+      `</div>`;
+    liste.appendChild(el);
+  });
+}
+
+// Delegeret click på videoknapper i Brugerstyring
+document.getElementById('brugerstyring-liste').addEventListener('click', e => {
+  const btn = e.target.closest('[data-invite-til]');
+  if (btn) inviterTilMoede(btn.dataset.inviteTil, btn.dataset.inviteNavn, btn);
 });
 
 // ── Daily.co videomøde ────────────────────────────────────────────────────────
