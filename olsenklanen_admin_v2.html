@@ -148,6 +148,16 @@ body{font-family:'Source Sans 3',sans-serif;background:#f0ece0;color:var(--tekst
 .chat-login-boks{max-width:340px;margin:2rem auto}
 .chat-ingen-adgang{text-align:center;padding:3rem;color:var(--tekst-lys)}
 
+/* Videoindkaldelse-notifikation */
+.invite-notif{position:fixed;top:72px;right:1.5rem;width:310px;background:var(--hvid);border:2px solid var(--guld);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.22);z-index:600;padding:1.2rem;animation:inv-ind .25s ease}
+@keyframes inv-ind{from{transform:translateY(-8px);opacity:0}to{transform:none;opacity:1}}
+.invite-fra-tekst{font-size:13px;font-weight:600;color:var(--tekst);margin-bottom:.85rem;line-height:1.4}
+
+/* Mødelink overlay */
+.moede-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:700;display:flex;align-items:center;justify-content:center}
+.moede-boks{background:var(--hvid);border-radius:14px;padding:2.25rem 2rem;max-width:440px;width:100%;border:2px solid var(--gron);box-shadow:0 12px 40px rgba(0,0,0,.25);text-align:center}
+.moede-url{background:var(--gron-pale);border:1px solid var(--gron-lys);border-radius:6px;padding:.75rem 1rem;font-size:12px;color:var(--gron);word-break:break-all;margin:1rem 0;font-family:monospace;text-align:left;user-select:all}
+
 /* Memberliste */
 .online-mdl{display:flex;align-items:center;gap:1rem;padding:.9rem 0;border-bottom:1px solid var(--border)}
 .online-mdl:last-child{border-bottom:none}
@@ -588,14 +598,38 @@ body{font-family:'Source Sans 3',sans-serif;background:#f0ece0;color:var(--tekst
       <button class="chat-modal-send" id="chat-modal-send">Send</button>
     </div>
   </div>
+
+  <!-- Indgående videoindkaldelse -->
+  <div id="invite-notif" class="invite-notif" style="display:none">
+    <div style="font-size:26px;margin-bottom:.4rem">📹</div>
+    <div class="invite-fra-tekst" id="invite-fra">— inviterer dig til et videomøde</div>
+    <div style="display:flex;gap:.5rem">
+      <button class="btn btn-gron" style="flex:1" id="invite-deltag">Deltag nu</button>
+      <button class="btn btn-lys" style="flex:1" id="invite-afvis">Afvis</button>
+    </div>
+  </div>
+
+  <!-- Mødelink-modal (afsender) -->
+  <div id="moede-overlay" class="moede-overlay" style="display:none" onclick="if(event.target===this)lukkMoedeModal()">
+    <div class="moede-boks">
+      <div style="font-size:36px;margin-bottom:.75rem">📹</div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;margin-bottom:.3rem">Videomøde oprettet</div>
+      <div style="font-size:13px;color:var(--tekst-lys);margin-bottom:.25rem" id="moede-til-tekst">Invitationen er sendt</div>
+      <div class="moede-url" id="moede-url" title="Klik for at markere og kopiere"></div>
+      <div style="display:flex;gap:.75rem;justify-content:center;margin-top:.75rem">
+        <a id="moede-join-link" href="#" target="_blank" class="btn btn-gron">Deltag nu</a>
+        <button class="btn btn-lys" onclick="lukkMoedeModal()">Luk</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script type="module">
-import { initializeApp }                                              from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { initializeApp }                                                  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged,
-         signInWithEmailAndPassword, signOut }                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, doc, getDoc, getDocs, collection }            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { getDatabase, ref, push, onValue, set, onDisconnect }        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+         signInWithEmailAndPassword, signOut }                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, getDocs, collection }                from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getDatabase, ref, push, onValue, set, onDisconnect, remove }    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
 const CFG = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -607,15 +641,19 @@ const CFG = {
   databaseURL: "https://olsenklanen-familieside-default-rtdb.europe-west1.firebasedatabase.app"
 };
 
+const DAILY_KEY = '30a8763becc5812a9ff6b8173839e9c7435258266cfec082c79879913c8a8e93';
+
 const fbApp = initializeApp(CFG);
 const auth  = getAuth(fbApp);
 const fsdb  = getFirestore(fbApp);
 const rtdb  = getDatabase(fbApp);
 
-let aktivBruger      = null;
-let presUnsubscribe  = null;
-let chatUnsubscribe  = null;
-let allemedlemmer    = [];  // cache fra Firestore
+let aktivBruger       = null;
+let presUnsubscribe   = null;
+let chatUnsubscribe   = null;
+let inviteUnsubscribe = null;
+let allemedlemmer     = [];
+let pendingInviteUrl  = null;
 
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
 function emailNoegle(e){ return e.replace(/\./g,',').replace(/@/g,'_at_') }
@@ -643,6 +681,7 @@ onAuthStateChanged(auth, async bruger => {
     // Indlæs medlemsliste + lyt til presence
     await indlaesmedlemmer();
     startPresenceLytter();
+    startInviteLytter();
   } else {
     aktivBruger = null;
     visView('chat-ingen-adgang-view');
@@ -650,9 +689,12 @@ onAuthStateChanged(auth, async bruger => {
 });
 
 function stopAlt() {
-  if (presUnsubscribe) { presUnsubscribe(); presUnsubscribe = null; }
-  if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+  if (presUnsubscribe)   { presUnsubscribe(); presUnsubscribe = null; }
+  if (chatUnsubscribe)   { chatUnsubscribe(); chatUnsubscribe = null; }
+  if (inviteUnsubscribe) { inviteUnsubscribe(); inviteUnsubscribe = null; }
   lukkChatModal();
+  lukkMoedeModal();
+  document.getElementById('invite-notif').style.display = 'none';
 }
 
 async function doLogud() {
@@ -696,7 +738,16 @@ function renderMedlemListe(onlineEmails) {
   }
   sorted.forEach(mdl => {
     const erOnline = onlineEmails.has(mdl.email);
+    const erMig    = aktivBruger && mdl.email === aktivBruger.email;
     const initial  = mdl.navn.trim()[0].toUpperCase();
+    let knapper = '';
+    if (erOnline && !erMig) {
+      knapper =
+        `<button class="btn btn-gron btn-sm" data-chat-til="${esc(mdl.email)}">Chat</button>` +
+        `<button class="btn btn-lys btn-sm" style="white-space:nowrap" data-invite-til="${esc(mdl.email)}" data-invite-navn="${esc(mdl.navn)}">📹 Inviter</button>`;
+    } else if (erOnline && erMig) {
+      knapper = `<span style="font-size:11px;color:var(--tekst-lys);font-style:italic">Det er dig</span>`;
+    }
     const el = document.createElement('div');
     el.className = 'online-mdl';
     el.innerHTML =
@@ -705,22 +756,97 @@ function renderMedlemListe(onlineEmails) {
         `<div class="online-navn">${esc(mdl.navn)}</div>` +
         `<div class="online-rolle">${esc(mdl.rolle)}</div>` +
       `</div>` +
-      `<div style="display:flex;align-items:center;gap:.65rem">` +
+      `<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:flex-end">` +
         `<div style="display:flex;align-items:center;gap:.4rem">` +
           `<div class="online-dot ${erOnline ? 'er-online' : 'er-offline'}"></div>` +
           `<span class="online-status ${erOnline ? 'er-online' : ''}">${erOnline ? 'Online' : 'Offline'}</span>` +
         `</div>` +
-        (erOnline ? `<button class="btn btn-gron btn-sm" data-chat-til="${esc(mdl.email)}">Chat</button>` : '') +
+        knapper +
       `</div>`;
     liste.appendChild(el);
   });
 }
 
-// Delegeret click på Chat-knapper i listen
+// Delegeret click på knapper i listen
 document.getElementById('online-liste').addEventListener('click', e => {
-  const btn = e.target.closest('[data-chat-til]');
-  if (btn) aabnChatModal();
+  const chatBtn   = e.target.closest('[data-chat-til]');
+  if (chatBtn) { aabnChatModal(); return; }
+  const inviteBtn = e.target.closest('[data-invite-til]');
+  if (inviteBtn) inviterTilMoede(inviteBtn.dataset.inviteTil, inviteBtn.dataset.inviteNavn, inviteBtn);
 });
+
+// ── Daily.co videomøde ────────────────────────────────────────────────────────
+async function opretVideoRum() {
+  const rumNavn = 'olsen-' + Date.now().toString(36);
+  const res = await fetch('https://api.daily.co/v1/rooms', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + DAILY_KEY },
+    body: JSON.stringify({ name: rumNavn, properties: {
+      exp: Math.floor(Date.now() / 1000) + 3600,
+      max_participants: 10,
+      enable_chat: true
+    }})
+  });
+  if (!res.ok) throw new Error('Daily.co svar ' + res.status + ': ' + await res.text());
+  return (await res.json()).url;
+}
+
+async function inviterTilMoede(inviteretEmail, inviteretNavn, btn) {
+  if (!aktivBruger) return;
+  const gammelTekst = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Opretter rum…';
+  try {
+    const rumUrl = await opretVideoRum();
+    // Send invite til den anden via RTDB
+    await set(ref(rtdb, 'invites/' + emailNoegle(inviteretEmail)), {
+      fra: aktivBruger.navn, fraEmail: aktivBruger.email, rumUrl, tidspunkt: Date.now()
+    });
+    // Vis mødelinket til afsender
+    document.getElementById('moede-til-tekst').textContent = 'Invitation sendt til ' + inviteretNavn;
+    document.getElementById('moede-url').textContent = rumUrl;
+    document.getElementById('moede-join-link').href = rumUrl;
+    document.getElementById('moede-overlay').style.display = 'flex';
+  } catch(e) {
+    alert('Fejl ved oprettelse af møderum:\n' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = gammelTekst;
+  }
+}
+
+window.lukkMoedeModal = function() {
+  document.getElementById('moede-overlay').style.display = 'none';
+};
+
+// ── Indgående invitationer ────────────────────────────────────────────────────
+function startInviteLytter() {
+  if (!aktivBruger || inviteUnsubscribe) return;
+  inviteUnsubscribe = onValue(ref(rtdb, 'invites/' + emailNoegle(aktivBruger.email)), snap => {
+    const notif = document.getElementById('invite-notif');
+    if (!snap.exists()) { notif.style.display = 'none'; pendingInviteUrl = null; return; }
+    const inv = snap.val();
+    // Ignorer invitationer ældre end 15 min
+    if (Date.now() - (inv.tidspunkt || 0) > 15 * 60 * 1000) {
+      remove(ref(rtdb, 'invites/' + emailNoegle(aktivBruger.email)));
+      return;
+    }
+    pendingInviteUrl = inv.rumUrl;
+    document.getElementById('invite-fra').textContent = (inv.fra || 'Nogen') + ' inviterer dig til et videomøde';
+    notif.style.animation = 'none'; notif.offsetHeight; notif.style.animation = '';
+    notif.style.display = 'block';
+  });
+}
+
+document.getElementById('invite-deltag').addEventListener('click', async () => {
+  if (pendingInviteUrl) window.open(pendingInviteUrl, '_blank');
+  await fjernInvite();
+});
+document.getElementById('invite-afvis').addEventListener('click', fjernInvite);
+
+async function fjernInvite() {
+  document.getElementById('invite-notif').style.display = 'none';
+  if (aktivBruger) await remove(ref(rtdb, 'invites/' + emailNoegle(aktivBruger.email)));
+  pendingInviteUrl = null;
+}
 
 // ── Chat modal ────────────────────────────────────────────────────────────────
 function aabnChatModal() {
