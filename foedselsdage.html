@@ -171,7 +171,8 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 .tl-roed {background:var(--tl-roed);}
 
 /* ─── MDL.NR. KOLONNE ─── */
-.col-mdlnr{width:68px;text-align:center;white-space:nowrap;}
+.col-mdlnr{width:80px;text-align:center;white-space:nowrap;}
+.under-nr{font-size:10px;color:var(--tekst-lys);opacity:.65;}
 .mdlnr-ok{
   font-size:12px;color:var(--tekst-lys);
   background:none;border:none;padding:1px 5px;border-radius:4px;
@@ -596,6 +597,9 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
           <strong id="fnr-person-navn"></strong> <span id="fnr-steg0-tekst">har intet familienummer.</span>
           Hvad ønsker du at gøre?
         </p>
+        <p id="fnr-kun-redaktor-info" style="display:none;font-size:12px;color:var(--tekst-lys);background:var(--guld-pale);border-radius:6px;padding:.5rem .75rem;margin-bottom:.6rem;">
+          Du er logget ind som <strong>redaktør</strong> — kun administrator kan oprette nye familienumre.
+        </p>
         <div class="fnr-valg">
           <button class="fnr-valg-knap" id="fnr-opret-btn">
             <span class="fnr-valg-ikon">➕</span>
@@ -868,19 +872,36 @@ async function hentFoedsler() {
     const familienr = fam.nr || '';
     ALLE_FAMILIER.push({ docId, nr: familienr, navne: fam.navne || fam.fornavn || '', familiemedlemmer: fam.familiemedlemmer || [] });
     const medl = fam.familiemedlemmer || [];
+    let barnTaeller = 0;
     medl.forEach((m, idx) => {
+      const rolle = m.rolle || 'forælder';
+      if (rolle === 'barn') barnTaeller++;
+      const detteBarnsNr = barnTaeller;
+
       const dato = m.foedselsdato || '2026-01-01';
       const manglendeDato = dato === '2026-01-01';
       const [y, mo, d] = dato.split('-').map(Number);
       if (!y || !mo || !d) return;
+
+      // Undernummer: gemt i Firestore? Ellers beregn automatisk.
+      let undernummer;
+      if (m.undernummer) {
+        undernummer = m.undernummer;
+      } else if (rolle === 'barn') {
+        undernummer = familienr ? `${familienr}.${detteBarnsNr}` : '';
+      } else {
+        undernummer = familienr; // forældre/voksne får basis-nummeret
+      }
+
       liste.push({
         navn: m.navn || '?',
         dag: d, mdr: mo, aar: y,
         familienr,
+        undernummer,
         docId,
         personIndex: idx,
         manglendeDato,
-        rolle: m.rolle || 'forælder',
+        rolle,
         email: m.email || '',
         mobil: m.mobil || '',
         godkendt: m.godkendt || false,
@@ -987,8 +1008,13 @@ function byggKalender(FOEDSLER) {
           familienr: p.familienr, godkendt: p.godkendt
         }).replace(/'/g, '&#39;');
 
+        const visNr = p.undernummer || p.familienr;
+        const dotIdx = visNr.indexOf('.');
+        const mdlnrHtml = dotIdx > -1
+          ? `${esc(visNr.slice(0, dotIdx))}<span class="under-nr">${esc(visNr.slice(dotIdx))}</span>`
+          : esc(visNr);
         const mdlnrCell = p.familienr
-          ? `<button class="mdlnr-ok" data-navn="${esc(p.navn)}" data-doc="${esc(p.docId)}" data-idx="${p.personIndex}" data-nr="${esc(p.familienr)}" title="Klik for at ændre familienummer">${esc(p.familienr)}</button>`
+          ? `<button class="mdlnr-ok" data-navn="${esc(p.navn)}" data-doc="${esc(p.docId)}" data-idx="${p.personIndex}" data-nr="${esc(p.familienr)}" title="Klik for at ændre familienummer">${mdlnrHtml}</button>`
           : `<button class="mdlnr-mangler" data-navn="${esc(p.navn)}" data-doc="${esc(p.docId)}" data-idx="${p.personIndex}">MANGLER</button>`;
 
         tbody += `<tr>
@@ -1369,6 +1395,12 @@ function aabnefnrDialog(docId, idx, navn, nuvaerende) {
   document.getElementById('fnr-modal-titel').textContent = nuvaerende
     ? 'Ændre familienummer'
     : 'Tildel familienummer';
+
+  // Kun administrator må oprette nyt familienummer
+  const erAdmin = aktivRolle === 'administrator';
+  document.getElementById('fnr-opret-btn').style.display        = erAdmin ? '' : 'none';
+  document.getElementById('fnr-kun-redaktor-info').style.display = erAdmin ? 'none' : 'block';
+
   ['fnr-opret-succes','fnr-opret-fejl','fnr-tilknyt-succes','fnr-tilknyt-fejl'].forEach(id => {
     document.getElementById(id).style.display = 'none';
   });
