@@ -172,7 +172,13 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 
 /* ─── MDL.NR. KOLONNE ─── */
 .col-mdlnr{width:68px;text-align:center;white-space:nowrap;}
-.mdlnr-ok{font-size:12px;color:var(--tekst-lys);}
+.mdlnr-ok{
+  font-size:12px;color:var(--tekst-lys);
+  background:none;border:none;padding:1px 5px;border-radius:4px;
+  font-family:'Source Sans 3',sans-serif;
+}
+body.er-redaktor .mdlnr-ok{cursor:pointer;transition:background .12s,color .12s;}
+body.er-redaktor .mdlnr-ok:hover{background:var(--guld-pale);color:var(--guld);}
 .mdlnr-mangler{
   font-size:10.5px;font-weight:700;color:var(--tl-roed);
   border:1px solid var(--tl-roed);border-radius:4px;
@@ -181,6 +187,18 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
   transition:background .12s,color .12s;
 }
 .mdlnr-mangler:hover{background:var(--tl-roed);color:#fff;}
+
+/* ─── FILTER-KNAP ─── */
+.filter-knap{
+  font-size:11.5px;font-weight:600;
+  padding:3px 11px;border-radius:20px;
+  border:1.5px solid var(--tekst-lys);
+  color:var(--tekst-lys);background:none;cursor:pointer;
+  font-family:'Source Sans 3',sans-serif;
+  transition:all .15s;white-space:nowrap;
+}
+.filter-knap:hover{border-color:var(--gron);color:var(--gron);}
+.filter-knap.aktiv{background:var(--guld);border-color:var(--guld);color:#fff;}
 
 /* ─── FAMILIENR DIALOG ─── */
 .fnr-overlay{
@@ -546,6 +564,7 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
     <div class="leg">🙏 <span class="badge b-konf">Konfirmation</span> 15–16 år</div>
     <div class="leg">💍 <span class="badge b-sølv">Sølvbryllup</span> &nbsp;💍 <span class="badge b-guld">Guldbryllup</span></div>
     <div class="leg" style="background:#c8e6b0;padding:1px 6px;border-radius:4px;">Grøn alder = fødselsdag i dag</div>
+    <button id="filter-mangler-btn" class="filter-knap" style="margin-left:auto">Vis manglende data</button>
   </div>
 
   <!-- KALENDER -->
@@ -563,14 +582,14 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
 <div id="fnr-overlay" class="fnr-overlay" style="display:none">
   <div class="fnr-modal">
     <div class="fnr-header">
-      <div class="fnr-titel">Medlemsnummer mangler</div>
+      <div class="fnr-titel" id="fnr-modal-titel">Tildel familienummer</div>
       <button class="modal-luk" id="fnr-luk-x" style="color:rgba(255,255,255,.7)">×</button>
     </div>
     <div class="fnr-body">
       <!-- Trin 0: vælg handling -->
       <div class="fnr-steg aktiv" id="fnr-steg0">
         <p class="fnr-info">
-          <strong id="fnr-person-navn"></strong> har intet familienummer.
+          <strong id="fnr-person-navn"></strong> <span id="fnr-steg0-tekst">har intet familienummer.</span>
           Hvad ønsker du at gøre?
         </p>
         <div class="fnr-valg">
@@ -965,7 +984,7 @@ function byggKalender(FOEDSLER) {
         }).replace(/'/g, '&#39;');
 
         const mdlnrCell = p.familienr
-          ? `<span class="mdlnr-ok">${esc(p.familienr)}</span>`
+          ? `<button class="mdlnr-ok" data-navn="${esc(p.navn)}" data-doc="${esc(p.docId)}" data-idx="${p.personIndex}" data-nr="${esc(p.familienr)}">${esc(p.familienr)}</button>`
           : `<button class="mdlnr-mangler" data-navn="${esc(p.navn)}" data-doc="${esc(p.docId)}" data-idx="${p.personIndex}">MANGLER</button>`;
 
         tbody += `<tr>
@@ -1336,10 +1355,16 @@ function naesteLedigNr() {
   return numre.length ? Math.max(...numre) + 1 : 1;
 }
 
-function aabnefnrDialog(docId, idx, navn) {
+function aabnefnrDialog(docId, idx, navn, nuvaerende) {
   fnrAktiv = { docId, idx, navn };
   fnrValgtFamilie = null;
   document.getElementById('fnr-person-navn').textContent = navn;
+  document.getElementById('fnr-steg0-tekst').textContent = nuvaerende
+    ? `har familienummer ${nuvaerende} — ønsker du at ændre det?`
+    : 'har intet familienummer.';
+  document.getElementById('fnr-modal-titel').textContent = nuvaerende
+    ? 'Ændre familienummer'
+    : 'Tildel familienummer';
   ['fnr-opret-succes','fnr-opret-fejl','fnr-tilknyt-succes','fnr-tilknyt-fejl'].forEach(id => {
     document.getElementById(id).style.display = 'none';
   });
@@ -1465,10 +1490,36 @@ document.getElementById('fnr-bekraeft-tilknyt').addEventListener('click', async 
   }
 });
 
-// Delegeret klik på MANGLER-knap
+// Delegeret klik på MANGLER-knap (rød) og eksisterende mdl.nr. (redaktør)
 document.addEventListener('click', e => {
-  const btn = e.target.closest('.mdlnr-mangler');
-  if (btn) aabnefnrDialog(btn.dataset.doc, parseInt(btn.dataset.idx), btn.dataset.navn);
+  const m = e.target.closest('.mdlnr-mangler');
+  if (m) { aabnefnrDialog(m.dataset.doc, parseInt(m.dataset.idx), m.dataset.navn, null); return; }
+  const ok = e.target.closest('.mdlnr-ok');
+  if (ok && aktivRolle) aabnefnrDialog(ok.dataset.doc, parseInt(ok.dataset.idx), ok.dataset.navn, ok.dataset.nr);
+});
+
+// ─── FILTER: VIS MANGLENDE DATA ─────────────────────────────────────────────
+let filterAktiv = false;
+
+document.getElementById('filter-mangler-btn').addEventListener('click', () => {
+  filterAktiv = !filterAktiv;
+  const btn = document.getElementById('filter-mangler-btn');
+  if (filterAktiv) {
+    btn.textContent = '✕ Vis alle';
+    btn.classList.add('aktiv');
+    document.querySelectorAll('.tabel tbody tr').forEach(tr => {
+      tr.style.display = tr.querySelector('.tl-groen') ? 'none' : '';
+    });
+    document.querySelectorAll('.maaned-blok').forEach(blok => {
+      const synlige = [...blok.querySelectorAll('tbody tr')].filter(tr => tr.style.display !== 'none');
+      blok.style.display = synlige.length ? '' : 'none';
+    });
+  } else {
+    btn.textContent = 'Vis manglende data';
+    btn.classList.remove('aktiv');
+    document.querySelectorAll('.tabel tbody tr').forEach(tr => { tr.style.display = ''; });
+    document.querySelectorAll('.maaned-blok').forEach(blok => { blok.style.display = ''; });
+  }
 });
 
 // ─── START ───────────────────────────────────────────────────────────────────
