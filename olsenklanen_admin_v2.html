@@ -536,49 +536,13 @@ body{font-family:'Source Sans 3',sans-serif;background:#f0ece0;color:var(--tekst
       <div class="panel" id="panel-online-nu">
         <div class="side-titel">Online nu</div>
         <div class="side-sub">OlsenBanden — administratorer og redaktører</div>
-
-        <!-- Login-view -->
-        <div id="chat-login-view">
-          <div class="kort">
-            <div class="kort-body">
-              <div class="chat-login-boks">
-                <div style="font-family:'Playfair Display',serif;font-size:17px;margin-bottom:1.25rem;text-align:center">Log ind for at se hvem der er online</div>
-                <div class="form-felt" style="margin-bottom:.75rem"><label>Email</label><input type="email" id="chat-email" placeholder="din@email.dk" /></div>
-                <div class="form-felt" style="margin-bottom:1rem"><label>Kodeord</label><input type="password" id="chat-kode" placeholder="••••••••" /></div>
-                <button class="btn btn-gron" style="width:100%" id="chat-login-btn">Log ind</button>
-                <div class="login-fejl" id="chat-fejl" style="margin-top:.75rem">Forkert email eller adgangskode.</div>
-              </div>
-            </div>
+        <div class="kort">
+          <div class="kort-header">
+            <div class="kort-titel">OlsenBanden</div>
+            <div id="online-bruger-chip" style="font-size:12px;color:var(--tekst-lys)"></div>
           </div>
-        </div>
-
-        <!-- Ingen adgang -->
-        <div id="chat-ingen-adgang-view" style="display:none">
-          <div class="kort">
-            <div class="kort-body">
-              <div class="chat-ingen-adgang">
-                <div style="font-size:36px;margin-bottom:1rem">🔒</div>
-                <div style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:.5rem">Ingen adgang</div>
-                <div style="font-size:13px">Kun for administratorer og redaktører.</div>
-                <button class="btn btn-lys" style="margin-top:1.25rem" id="chat-logud-ingen">Log ud</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Aktiv view: memberliste -->
-        <div id="chat-aktiv-view" style="display:none">
-          <div class="kort">
-            <div class="kort-header">
-              <div class="kort-titel">OlsenBanden</div>
-              <div style="display:flex;align-items:center;gap:.75rem">
-                <div id="online-bruger-chip" style="font-size:12px;color:var(--tekst-lys)"></div>
-                <button class="btn btn-lys btn-sm" id="chat-logud-btn">Log ud</button>
-              </div>
-            </div>
-            <div class="kort-body" id="online-liste">
-              <div style="text-align:center;color:var(--tekst-lys);font-size:13px;padding:1.5rem">Henter medlemmer…</div>
-            </div>
+          <div class="kort-body" id="online-liste">
+            <div style="text-align:center;color:var(--tekst-lys);font-size:13px;padding:1.5rem">Forbinder…</div>
           </div>
         </div>
       </div>
@@ -648,11 +612,9 @@ body{font-family:'Source Sans 3',sans-serif;background:#f0ece0;color:var(--tekst
 </div>
 
 <script type="module">
-import { initializeApp }                                                  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, onAuthStateChanged,
-         signInWithEmailAndPassword, signOut }                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, doc, getDoc, getDocs, collection }                from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { getDatabase, ref, push, onValue, set, onDisconnect, remove }    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+import { initializeApp }                                             from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInAnonymously, signOut, onAuthStateChanged }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getDatabase, ref, push, onValue, set, onDisconnect, remove } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
 const CFG = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -668,7 +630,6 @@ const DAILY_KEY = '30a8763becc5812a9ff6b8173839e9c7435258266cfec082c79879913c8a8
 
 const fbApp = initializeApp(CFG);
 const auth  = getAuth(fbApp);
-const fsdb  = getFirestore(fbApp);
 const rtdb  = getDatabase(fbApp);
 
 let aktivBruger       = null;
@@ -681,59 +642,59 @@ let pendingInviteUrl  = null;
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
 function emailNoegle(e){ return e.replace(/\./g,',').replace(/@/g,'_at_') }
 
-function visView(id) {
-  ['chat-login-view','chat-ingen-adgang-view','chat-aktiv-view'].forEach(v =>
-    document.getElementById(v).style.display = v === id ? '' : 'none'
-  );
-}
-
-// ── Auth ──────────────────────────────────────────────────────────────────────
-onAuthStateChanged(auth, async bruger => {
-  if (!bruger) { aktivBruger = null; stopAlt(); visView('chat-login-view'); return; }
-  const snap  = await getDoc(doc(fsdb, 'brugere', bruger.email));
-  const d     = snap.exists() ? snap.data() : {};
-  const rolle = d.rolle || '';
-  if (rolle === 'administrator' || rolle === 'redaktør') {
-    aktivBruger = { email: bruger.email, navn: d.navn || bruger.email };
-    document.getElementById('online-bruger-chip').textContent = 'Logget ind som ' + aktivBruger.navn;
-    visView('chat-aktiv-view');
-    // Sæt presence
-    const presRef = ref(rtdb, 'presence/' + emailNoegle(bruger.email));
-    await set(presRef, { navn: aktivBruger.navn, email: bruger.email, t: Date.now() });
-    onDisconnect(presRef).remove();
-    // Indlæs medlemsliste + lyt til presence
-    await indlaesmedlemmer();
-    startPresenceLytter();
-    startInviteLytter();
+// ── Auth via adminLogin/adminLogout events ────────────────────────────────────
+window.addEventListener('adminLogin', async e => {
+  const b = e.detail;
+  window.lokalAdmin = b;
+  allemedlemmer = (window.olsenBrugere || []).map(m => ({email:m.email, navn:m.navn, rolle:m.rolle}));
+  if (!auth.currentUser) {
+    try { await signInAnonymously(auth); } catch(err) { console.error('signInAnonymously fejl:', err); }
   } else {
-    aktivBruger = null;
-    visView('chat-ingen-adgang-view');
+    await onFirebaseReady();
   }
 });
 
+window.addEventListener('adminLogout', async () => {
+  window.lokalAdmin = null;
+  stopAlt();
+  allemedlemmer = [];
+  opdaterLister(new Set());
+  try { await signOut(auth); } catch(_) {}
+});
+
+onAuthStateChanged(auth, async fbBruger => {
+  if (!fbBruger || !window.lokalAdmin) return;
+  await onFirebaseReady();
+});
+
+async function onFirebaseReady() {
+  const b = window.lokalAdmin;
+  if (!b) return;
+  aktivBruger = { email: b.email, navn: b.navn };
+  const chip = document.getElementById('online-bruger-chip');
+  if (chip) chip.textContent = aktivBruger.navn;
+  const presRef = ref(rtdb, 'presence/' + emailNoegle(aktivBruger.email));
+  try {
+    await set(presRef, { navn: aktivBruger.navn, email: aktivBruger.email, t: Date.now() });
+    onDisconnect(presRef).remove();
+  } catch(err) { console.error('Presence fejl:', err); }
+  startPresenceLytter();
+  startInviteLytter();
+}
+
 function stopAlt() {
+  aktivBruger = null;
   if (presUnsubscribe)   { presUnsubscribe(); presUnsubscribe = null; }
   if (chatUnsubscribe)   { chatUnsubscribe(); chatUnsubscribe = null; }
   if (inviteUnsubscribe) { inviteUnsubscribe(); inviteUnsubscribe = null; }
   lukkChatModal();
   lukkMoedeModal();
-  document.getElementById('invite-notif').style.display = 'none';
+  const n = document.getElementById('invite-notif'); if (n) n.style.display = 'none';
 }
 
-async function doLogud() {
-  stopAlt();
-  await signOut(auth);
-}
-
-// ── Medlemsliste ──────────────────────────────────────────────────────────────
-async function indlaesmedlemmer() {
-  if (allemedlemmer.length) return;
-  const snap = await getDocs(collection(fsdb, 'brugere'));
-  snap.forEach(d => {
-    const data = d.data();
-    if (data.rolle === 'administrator' || data.rolle === 'redaktør')
-      allemedlemmer.push({ email: d.id, navn: data.navn || d.id, rolle: data.rolle });
-  });
+function opdaterLister(onlineEmails) {
+  renderMedlemListe(onlineEmails);
+  renderBrugerstyring(onlineEmails);
 }
 
 function startPresenceLytter() {
@@ -966,30 +927,18 @@ async function sendBesked() {
 document.getElementById('chat-modal-send').addEventListener('click', sendBesked);
 document.getElementById('chat-modal-tekst').addEventListener('keyup', e => { if (e.key === 'Enter') sendBesked(); });
 
-// ── Login / Logout ────────────────────────────────────────────────────────────
-document.getElementById('chat-login-btn').addEventListener('click', async () => {
-  const email = document.getElementById('chat-email').value.trim();
-  const kode  = document.getElementById('chat-kode').value;
-  const fejl  = document.getElementById('chat-fejl');
-  fejl.style.display = 'none';
-  try { await signInWithEmailAndPassword(auth, email, kode); }
-  catch(e) { fejl.style.display = 'block'; }
-});
-document.getElementById('chat-kode').addEventListener('keyup', e => {
-  if (e.key === 'Enter') document.getElementById('chat-login-btn').click();
-});
-document.getElementById('chat-logud-btn').addEventListener('click', doLogud);
-document.getElementById('chat-logud-ingen').addEventListener('click', doLogud);
 </script>
 
 <script>
 // Login brugere
 const brugere = [
-  {email:'kurt@olsen.dk', kodeord:'kurt2026', navn:'Kurt Olsen', rolle:'Webmaster · Admin', initial:'K'},
-  {email:'carsten@olsenklanen.dk', kodeord:'carsten2026', navn:'Carsten Gram', rolle:'Ejer · Initiativtager', initial:'C'},
-  {email:'tommy@familie.dk', kodeord:'tommy2026', navn:'Tommy', rolle:'Kasserer · Admin', initial:'T'},
-  {email:'demo@test.dk', kodeord:'demo', navn:'Demo Bruger', rolle:'Admin', initial:'D'},
+  {email:'kurt@olsen.dk',          kodeord:'kurt2026',     navn:'Kurt Olsen',    rolle:'administrator', initial:'K'},
+  {email:'carsten@olsenklanen.dk', kodeord:'carsten2026',  navn:'Carsten Gram',  rolle:'administrator', initial:'C'},
+  {email:'tommy@familie.dk',       kodeord:'tommy2026',    navn:'Tommy Olsen',   rolle:'redaktør',      initial:'T'},
+  {email:'demo@test.dk',           kodeord:'demo',         navn:'Demo Bruger',   rolle:'redaktør',      initial:'D'},
 ];
+// Gør tilgængelig for Firebase-modulet
+window.olsenBrugere = brugere;
 
 document.getElementById('nyhed-dato').valueAsDate = new Date();
 
@@ -1006,6 +955,8 @@ function forsogLogin(){
     document.getElementById('bruger-avatar').textContent = b.initial;
     document.getElementById('login-side').style.display = 'none';
     document.getElementById('admin-side').style.display = 'block';
+    window.lokalAdmin = b;
+    window.dispatchEvent(new CustomEvent('adminLogin', {detail: b}));
   } else {
     document.getElementById('login-fejl').style.display = 'block';
   }
@@ -1017,6 +968,8 @@ function logUd(){
   document.getElementById('email-felt').value = '';
   document.getElementById('kodeord-felt').value = '';
   document.getElementById('login-fejl').style.display = 'none';
+  window.lokalAdmin = null;
+  window.dispatchEvent(new CustomEvent('adminLogout'));
 }
 
 function visPanel(id, navItem){
