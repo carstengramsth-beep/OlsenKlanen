@@ -176,14 +176,11 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 .mdlnr-ok{
   font-size:12px;color:var(--tekst-lys);
   background:none;border:none;padding:1px 5px;border-radius:4px;
-  font-family:'Source Sans 3',sans-serif;cursor:default;
-}
-body.er-redaktor .mdlnr-ok{
-  cursor:pointer;
+  font-family:'Source Sans 3',sans-serif;cursor:pointer;
   border-bottom:1px dashed var(--tekst-lys);
   transition:background .12s,color .12s,border-color .12s;
 }
-body.er-redaktor .mdlnr-ok:hover{background:var(--guld-pale);color:var(--guld);border-color:var(--guld);}
+.mdlnr-ok:hover{background:var(--guld-pale);color:var(--guld);border-color:var(--guld);}
 .mdlnr-mangler{
   font-size:10.5px;font-weight:700;color:var(--tl-roed);
   border:1px solid var(--tl-roed);border-radius:4px;
@@ -488,6 +485,34 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
 .hilsen-knap-laes     {background:var(--gron);}
 .hilsen-knap-laes:hover{background:var(--gron-lys);}
 
+/* ─── FAMILIE DIALOG ─── */
+.fam-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.55);
+  z-index:3000;display:flex;align-items:center;justify-content:center;padding:1rem;
+}
+.fam-modal{
+  background:var(--baggrund);border:2px solid var(--guld);border-radius:12px;
+  max-width:520px;width:100%;max-height:88vh;overflow-y:auto;
+  box-shadow:0 8px 40px rgba(0,0,0,.35);
+}
+.fam-modal-header{
+  background:var(--gron);padding:.8rem 1.25rem;border-radius:10px 10px 0 0;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:1;
+}
+.fam-titel{font-family:'Playfair Display',serif;font-size:16px;color:var(--hvid);font-weight:400;}
+.fam-body{padding:1rem 1.25rem 1.25rem;}
+.fam-person{
+  background:var(--hvid);border:1px solid var(--border);border-radius:8px;
+  padding:.7rem 1rem;margin-bottom:.65rem;
+  display:flex;align-items:flex-start;gap:.75rem;
+}
+.fam-person:last-child{margin-bottom:0;}
+.fam-person-info{flex:1;min-width:0;}
+.fam-person-navn{font-size:14px;font-weight:600;color:var(--tekst);display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
+.fam-person-nr{font-size:11px;color:var(--tekst-lys);font-style:italic;}
+.fam-person-detalje{font-size:12px;color:var(--tekst-lys);margin-top:3px;}
+
 /* ─── FLAG-FOOTER ─── */
 .flag-footer{background:var(--gron);border-top:3px solid var(--guld);text-align:center;padding:.9rem 0 .6rem;}
 .flag-footer-flag{font-size:26px;letter-spacing:6px;}
@@ -581,6 +606,17 @@ textarea.hilsen-input{resize:vertical;min-height:80px;}
 <div class="flag-footer">
   <div class="flag-footer-flag">🇩🇰 🇩🇰 🇩🇰 🇩🇰 🇩🇰</div>
   <div class="flag-footer-tekst" id="footer-tekst"></div>
+</div>
+
+<!-- ─── FAMILIE DIALOG ──────────────────────────────────────────────────────── -->
+<div id="fam-overlay" class="fam-overlay" style="display:none">
+  <div class="fam-modal">
+    <div class="fam-modal-header">
+      <div class="fam-titel" id="fam-titel">Familie</div>
+      <button class="modal-luk" id="fam-luk-x" style="color:rgba(255,255,255,.7)">×</button>
+    </div>
+    <div class="fam-body" id="fam-body"></div>
+  </div>
 </div>
 
 <!-- ─── FAMILIENR DIALOG ──────────────────────────────────────────────────── -->
@@ -1380,6 +1416,91 @@ function lukFnrModal() {
   fnrAktiv = null; fnrValgtFamilie = null;
 }
 
+// ─── FAMILIE DIALOG ──────────────────────────────────────────────────────────
+function lukFamDialog() {
+  document.getElementById('fam-overlay').style.display = 'none';
+}
+
+async function aabneFamiliedialog(docId, familienr) {
+  document.getElementById('fam-titel').textContent = `Familie Nr. ${familienr}`;
+  const body = document.getElementById('fam-body');
+  body.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--tekst-lys)">Henter familiedata…</div>';
+  document.getElementById('fam-overlay').style.display = 'flex';
+
+  try {
+    const docRef = doc(db, 'membres', docId);
+    const snap   = await getDoc(docRef);
+    if (!snap.exists()) throw new Error('Familie ikke fundet');
+
+    const fam  = snap.data();
+    const medl = fam.familiemedlemmer || [];
+
+    if (!medl.length) {
+      body.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--tekst-lys)">Ingen familiemedlemmer.</div>';
+      return;
+    }
+
+    body.innerHTML = '';
+    let barnTaeller = 0;
+    medl.forEach((m, idx) => {
+      const rolle = m.rolle || 'forælder';
+      if (rolle === 'barn') barnTaeller++;
+
+      const dato         = m.foedselsdato || '2026-01-01';
+      const manglendeDato = dato === '2026-01-01';
+      const [y, mo, d]   = dato.split('-').map(Number);
+
+      let undernummer;
+      if (m.undernummer) {
+        undernummer = m.undernummer;
+      } else if (rolle === 'barn') {
+        undernummer = familienr ? `${familienr}.${barnTaeller}` : '';
+      } else {
+        undernummer = familienr;
+      }
+
+      const tl      = !familienr ? 'roed' : manglendeDato ? 'gul' : 'groen';
+      const datoVis = manglendeDato ? '—' : `${d}. ${MAANEDER_KORT[mo - 1]} ${y}`;
+      const alderVis = (!manglendeDato && y && d && mo) ? alderPrIdag(d, mo, y) + ' år' : '';
+
+      const retJson = JSON.stringify({
+        docId, idx,
+        navn: m.navn || '?', dag: d || 1, mdr: mo || 1, aar: y || 2026,
+        rolle: m.rolle || 'forælder',
+        email: m.email || '', mobil: m.mobil || '',
+        familienr, godkendt: m.godkendt || false
+      }).replace(/'/g, '&#39;');
+
+      const el = document.createElement('div');
+      el.className = 'fam-person';
+      el.innerHTML =
+        `<div style="padding-top:3px;flex-shrink:0"><span class="tl tl-${tl}"></span></div>` +
+        `<div class="fam-person-info">` +
+          `<div class="fam-person-navn">` +
+            `${esc(m.navn || '?')}` +
+            `<span class="fam-person-nr">${esc(undernummer)}</span>` +
+            `<button class="ret-knap" data-ret='${retJson}'>Ret</button>` +
+          `</div>` +
+          `<div class="fam-person-detalje">` +
+            `${esc(rolle.charAt(0).toUpperCase() + rolle.slice(1))}` +
+            ` · ${datoVis}` +
+            (alderVis ? ` · ${alderVis}` : '') +
+          `</div>` +
+          (m.email ? `<div class="fam-person-detalje">${esc(m.email)}</div>` : '') +
+          (m.mobil ? `<div class="fam-person-detalje">${esc(m.mobil)}</div>` : '') +
+        `</div>`;
+      body.appendChild(el);
+    });
+  } catch(e) {
+    body.innerHTML = `<div style="text-align:center;padding:1rem;color:#c0392b">Fejl: ${esc(e.message)}</div>`;
+  }
+}
+
+document.getElementById('fam-luk-x').addEventListener('click', lukFamDialog);
+document.getElementById('fam-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('fam-overlay')) lukFamDialog();
+});
+
 function naesteLedigNr() {
   const numre = ALLE_FAMILIER.map(f => parseInt(f.nr)).filter(n => !isNaN(n));
   return numre.length ? Math.max(...numre) + 1 : 1;
@@ -1526,12 +1647,12 @@ document.getElementById('fnr-bekraeft-tilknyt').addEventListener('click', async 
   }
 });
 
-// Delegeret klik på MANGLER-knap (rød) og eksisterende mdl.nr. (logget-ind)
+// Delegeret klik på MANGLER-knap (rød) → familienr-dialog; mdl.nr.-knap → familiedialog
 document.addEventListener('click', e => {
   const m = e.target.closest('.mdlnr-mangler');
   if (m) { aabnefnrDialog(m.dataset.doc, parseInt(m.dataset.idx), m.dataset.navn, null); return; }
   const ok = e.target.closest('.mdlnr-ok');
-  if (ok && getAuth().currentUser) aabnefnrDialog(ok.dataset.doc, parseInt(ok.dataset.idx), ok.dataset.navn, ok.dataset.nr);
+  if (ok) aabneFamiliedialog(ok.dataset.doc, ok.dataset.nr);
 });
 
 // ─── FILTER: VIS MANGLENDE DATA ─────────────────────────────────────────────
