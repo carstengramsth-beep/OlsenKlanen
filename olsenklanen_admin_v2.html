@@ -646,12 +646,28 @@ function emailNoegle(e){ return e.replace(/\./g,',').replace(/@/g,'_at_') }
 window.addEventListener('adminLogin', async e => {
   const b = e.detail;
   window.lokalAdmin = b;
+  aktivBruger = { email: b.email, navn: b.navn };
   allemedlemmer = (window.olsenBrugere || []).map(m => ({email:m.email, navn:m.navn, rolle:m.rolle}));
-  if (!auth.currentUser) {
-    try { await signInAnonymously(auth); } catch(err) { console.error('signInAnonymously fejl:', err); }
-  } else {
-    await onFirebaseReady();
-  }
+
+  // Vis listen straks med alle offline — opdateres når presence-data ankommer
+  const chip = document.getElementById('online-bruger-chip');
+  if (chip) chip.textContent = aktivBruger.navn;
+  opdaterLister(new Set());
+
+  // Forsøg anonym Firebase-login (kræver at Anonymous Auth er slået til i Firebase Console)
+  try {
+    if (!auth.currentUser) await signInAnonymously(auth);
+  } catch(err) { console.warn('signInAnonymously:', err.code, err.message); }
+
+  // Sæt presence uanset om auth lykkes (virker hvis RTDB-regler tillader det)
+  try {
+    const presRef = ref(rtdb, 'presence/' + emailNoegle(aktivBruger.email));
+    await set(presRef, { navn: aktivBruger.navn, email: aktivBruger.email, t: Date.now() });
+    onDisconnect(presRef).remove();
+  } catch(err) { console.warn('Presence set fejl:', err.code, err.message); }
+
+  startPresenceLytter();
+  startInviteLytter();
 });
 
 window.addEventListener('adminLogout', async () => {
@@ -661,26 +677,6 @@ window.addEventListener('adminLogout', async () => {
   opdaterLister(new Set());
   try { await signOut(auth); } catch(_) {}
 });
-
-onAuthStateChanged(auth, async fbBruger => {
-  if (!fbBruger || !window.lokalAdmin) return;
-  await onFirebaseReady();
-});
-
-async function onFirebaseReady() {
-  const b = window.lokalAdmin;
-  if (!b) return;
-  aktivBruger = { email: b.email, navn: b.navn };
-  const chip = document.getElementById('online-bruger-chip');
-  if (chip) chip.textContent = aktivBruger.navn;
-  const presRef = ref(rtdb, 'presence/' + emailNoegle(aktivBruger.email));
-  try {
-    await set(presRef, { navn: aktivBruger.navn, email: aktivBruger.email, t: Date.now() });
-    onDisconnect(presRef).remove();
-  } catch(err) { console.error('Presence fejl:', err); }
-  startPresenceLytter();
-  startInviteLytter();
-}
 
 function stopAlt() {
   aktivBruger = null;
