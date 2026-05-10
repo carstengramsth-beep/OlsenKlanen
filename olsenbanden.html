@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="da">
 <head>
@@ -541,8 +542,18 @@
 <div id="login-skærm">
   <div class="login-boks">
     <h2>OlsenBanden</h2>
-    <p>Log ind for at tilgå administrations­centeret</p>
-    <a href="index.html" style="color:var(--grøn);font-size:0.9rem;">← Gå til forsiden og log ind</a>
+    <p>Log ind med din OlsenKlanen email</p>
+    <div id="login-fejl" style="display:none;background:#fee2e2;color:#b91c1c;padding:8px 12px;border-radius:6px;font-size:0.85rem;margin-bottom:12px;"></div>
+    <div style="margin-bottom:12px;">
+      <input type="email" id="login-email" placeholder="din@email.dk"
+        style="width:100%;padding:10px 12px;border:1px solid var(--kant);border-radius:8px;font-size:0.9rem;font-family:inherit;margin-bottom:8px;">
+      <input type="password" id="login-kode" placeholder="Adgangskode"
+        style="width:100%;padding:10px 12px;border:1px solid var(--kant);border-radius:8px;font-size:0.9rem;font-family:inherit;">
+    </div>
+    <button onclick="window.logIndOlsenBanden()" id="login-knap"
+      style="width:100%;background:#1B4332;color:white;border:none;padding:11px;border-radius:8px;font-size:0.9rem;cursor:pointer;font-family:inherit;">
+      Log ind
+    </button>
   </div>
 </div>
 
@@ -715,12 +726,13 @@
   // ── Firebase config ────────────────────────────────────────
   // ⚠️ INDSÆT DINE RIGTIGE NØGLER HER FØR UPLOAD TIL GITHUB
   const firebaseConfig = {
-    apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAoUMpZU",
+    apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
     authDomain:        "olsenklanen-familieside.firebaseapp.com",
     projectId:         "olsenklanen-familieside",
     storageBucket:     "olsenklanen-familieside.appspot.com",
     messagingSenderId: "640843662410",
-    appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+    appId: "1:640843662410:web:e749b77ec9271e75c4d2b3",
+    databaseURL: "https://olsenklanen-familieside-default-rtdb.europe-west1.firebasedatabase.app"
   };
 
   const app  = initializeApp(firebaseConfig);
@@ -1122,7 +1134,40 @@
   }
 
   // ── Auth ────────────────────────────────────────────────────
+  // Login funktion
+  window.logIndOlsenBanden = async function() {
+    const email = document.getElementById('login-email').value.trim();
+    const kode  = document.getElementById('login-kode').value;
+    const fejl  = document.getElementById('login-fejl');
+    const knap  = document.getElementById('login-knap');
+    if (!email || !kode) { fejl.textContent = 'Udfyld email og adgangskode'; fejl.style.display='block'; return; }
+    knap.disabled = true; knap.textContent = 'Logger ind…';
+    try {
+      const { signInWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+      await signInWithEmailAndPassword(auth, email, kode);
+    } catch(e) {
+      fejl.textContent = 'Forkert email eller adgangskode';
+      fejl.style.display = 'block';
+      knap.disabled = false;
+      knap.textContent = 'Log ind';
+    }
+  };
+
+  // Enter key support
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('login-skærm').style.display !== 'none') {
+      window.logIndOlsenBanden();
+    }
+  });
+
+  // Vis loading mens Firebase tjekker login
+  document.getElementById("login-skærm").style.display = "none";
+  document.getElementById("app").style.display = "none";
+  
+  let loginTjekket = false;
+  
   onAuthStateChanged(auth, bruger => {
+    loginTjekket = true;
     if (bruger) {
       mig = bruger;
       document.getElementById("login-skærm").style.display = "none";
@@ -1136,6 +1181,7 @@
       lytBeskeder(bruger);
       bygChips(bruger);
     } else {
+      // Ingen bruger — vis login med email/kode felt
       document.getElementById("login-skærm").style.display = "flex";
       document.getElementById("app").style.display = "none";
     }
