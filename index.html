@@ -11,7 +11,6 @@ body{font-family:Georgia,serif;background:#f5f0e8;color:#2c2c2a;min-height:100vh
 .header{background:#2d4a1e;padding:12px 20px;display:flex;align-items:center;justify-content:space-between}
 .header-title{color:#d4af37;font-size:22px;letter-spacing:0.05em}
 .header-title em{color:#fff;font-style:italic}
-.header-sub{color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;margin-top:2px}
 .header-login{color:rgba(255,255,255,0.8);font-size:12px;cursor:pointer;border:1px solid rgba(255,255,255,0.3);padding:6px 14px;border-radius:4px;text-decoration:none;background:rgba(255,255,255,0.05)}
 .header-login:hover{background:rgba(255,255,255,0.15)}
 .layout{display:grid;grid-template-columns:200px 1fr 200px;min-height:calc(100vh - 52px)}
@@ -25,10 +24,10 @@ body{font-family:Georgia,serif;background:#f5f0e8;color:#2c2c2a;min-height:100vh
 .opslag-ikon{font-size:15px;margin-bottom:3px}
 .opslag-titel{font-size:12px;font-weight:bold;color:#2c2c2a}
 .opslag-sub{font-size:11px;color:#8a7a5a;margin-top:2px}
-.photo-area{width:100%;height:650px;background:#3a5c28;display:flex;align-items:flex-end;padding:12px 16px;position:relative;overflow:hidden}
-.photo-tekst{font-size:16px;color:#fff;font-style:italic;z-index:1}
-.photo-aar{font-size:12px;color:rgba(255,255,255,0.6);margin-left:auto;z-index:1}
-.photo-ikon{position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);font-size:80px;opacity:0.12;color:#fff}
+.photo-area{width:100%;position:relative}
+.photo-area img{width:100%;display:block}
+.photo-tekst{position:absolute;bottom:12px;left:16px;font-size:16px;color:#fff;font-style:italic;text-shadow:1px 1px 3px rgba(0,0,0,0.8)}
+.photo-aar{position:absolute;bottom:12px;right:16px;font-size:12px;color:rgba(255,255,255,0.8);text-shadow:1px 1px 3px rgba(0,0,0,0.8)}
 .event-boks{margin:12px;background:#fff;border:1px solid #d4c9a8;border-radius:8px;overflow:hidden}
 .event-header{background:#2d4a1e;padding:8px 14px}
 .event-header span{color:#d4af37;font-size:12px;font-weight:bold;letter-spacing:0.05em}
@@ -57,73 +56,55 @@ body{font-family:Georgia,serif;background:#f5f0e8;color:#2c2c2a;min-height:100vh
 .nav-item.active{background:#2d4a1e;border-color:#2d4a1e}
 .nav-item.active .nav-titel{color:#d4af37}
 .nav-item.active .nav-sub{color:rgba(255,255,255,0.5)}
-.nav-ikon{width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:space-between;font-size:14px;flex-shrink:0}
+.nav-ikon{width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
 .nav-titel{font-size:12px;font-weight:bold;color:#2c2c2a;line-height:1.3}
 .nav-sub{font-size:10px;color:#8a7a5a}
 .footer{background:#2d4a1e;padding:8px 20px;text-align:center;border-top:1px solid #1a3010}
 .footer span{color:rgba(255,255,255,0.35);font-size:10px;letter-spacing:0.05em}
-@media(max-width:700px){
-  .layout{grid-template-columns:1fr}
-  .left,.right{display:none}
-  .left{display:flex;flex-direction:row;flex-wrap:wrap;gap:6px;border-right:none;border-bottom:1px solid #d4c9a8}
-  .opslag{flex:1;min-width:140px}
-}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div>
-    <div class="header-title">OlsenKlanen <em>·</em> Familieside</div>
-    
-  </div>
+  <div class="header-title">OlsenKlanen <em>&middot;</em> Familieside</div>
   <a href="admin.html" class="header-login">Log ind</a>
 </div>
 
 <div class="layout">
 
-  <!-- VENSTRE: OPSLAGSTAVLE -->
   <div class="left">
     <div class="zone-label">Opslagstavlen</div>
-
     <div class="opslag highlight">
       <div class="opslag-ikon">🎂</div>
       <div class="opslag-titel">Tommy fylder 60!</div>
       <div class="opslag-sub">Om 12 dage &middot; 24. maj</div>
     </div>
-
     <div class="opslag highlight">
       <div class="opslag-ikon">🌲</div>
       <div class="opslag-titel">Skovtur 2026</div>
       <div class="opslag-sub">29&ndash;31. maj &middot; 17 dage</div>
     </div>
-
     <div class="opslag">
       <div class="opslag-ikon">📹</div>
       <div class="opslag-titel">Videomøde</div>
       <div class="opslag-sub">Torsdag kl. 20:00</div>
     </div>
-
     <div class="opslag">
       <div class="opslag-ikon">📷</div>
       <div class="opslag-titel">Nye billeder</div>
       <div class="opslag-sub">Kurt har uploadet 8</div>
     </div>
-
     <div class="opslag">
       <div class="opslag-ikon">✋</div>
       <div class="opslag-titel">Afstemning</div>
       <div class="opslag-sub">Sted til skovturen?</div>
     </div>
-
   </div>
 
-  <!-- MIDTEN -->
   <div class="center">
-
-    <div class="photo-area" style="background-image:url(billeder/IMG_4390.JPEG);background-size:cover;background-position:center 80%;">
-      <div class="photo-ikon">👨&zwj;👩&zwj;👧&zwj;👦</div>
-      <span class="photo-tekst">Skovtur maj 2025 Skovtur maj 2025 Skovtur 2025 &mdash; Haderslevmdash; Haderslevmdash; Haderslev</span>
+    <div class="photo-area">
+      <img src="billeder/IMG_4390.JPEG" alt="Skovtur maj 2025 - Haderslev">
+      <span class="photo-tekst">Skovtur maj 2025 &mdash; Haderslev</span>
       <span class="photo-aar">Maj 2025</span>
     </div>
 
@@ -157,7 +138,7 @@ body{font-family:Georgia,serif;background:#f5f0e8;color:#2c2c2a;min-height:100vh
         <a href="admin.html">Ret begivenhed &rarr;</a>
       </div>
       <div class="kal-grid">
-        <div class="kd hd">Ma</div><div class="kd hd">Ti</div><div class="kd hd">On</div><div class="kd hd">To</div><div class="kd hd">Fr</div><div class="kd hd">Lø</div><div class="kd hd">Sø</div>
+        <div class="kd hd">Ma</div><div class="kd hd">Ti</div><div class="kd hd">On</div><div class="kd hd">To</div><div class="kd hd">Fr</div><div class="kd hd">L&oslash;</div><div class="kd hd">S&oslash;</div>
         <div class="kd"></div><div class="kd"></div><div class="kd"></div><div class="kd"></div><div class="kd"></div><div class="kd">2</div><div class="kd">3</div>
         <div class="kd">4</div><div class="kd">5</div><div class="kd">6</div><div class="kd">7</div><div class="kd">8</div><div class="kd">9</div><div class="kd">10</div>
         <div class="kd">11</div><div class="kd idag">12</div><div class="kd">13</div><div class="kd">14</div><div class="kd">15</div><div class="kd">16</div><div class="kd">17</div>
@@ -165,62 +146,48 @@ body{font-family:Georgia,serif;background:#f5f0e8;color:#2c2c2a;min-height:100vh
         <div class="kd">25</div><div class="kd">26</div><div class="kd">27</div><div class="kd">28</div><div class="kd skovtur">29</div><div class="kd skovtur">30</div><div class="kd skovtur">31</div>
       </div>
     </div>
-
   </div>
 
-  <!-- HØJRE: NAVIGATION -->
   <div class="right">
     <div class="zone-label">Navigation</div>
-
     <a href="index.html" class="nav-item active">
       <div class="nav-ikon" style="background:#e8f5e0">🏠</div>
       <div><div class="nav-titel">Forside</div><div class="nav-sub">Du er her</div></div>
     </a>
-
     <a href="admin.html" class="nav-item">
       <div class="nav-ikon" style="background:#eeedfe">💬</div>
       <div><div class="nav-titel">OlsenBanden Center</div><div class="nav-sub">Beskeder &middot; video &middot; chat</div></div>
     </a>
-
     <a href="admin.html" class="nav-item">
       <div class="nav-ikon" style="background:#e6f1fb">👥</div>
       <div><div class="nav-titel">Medlemskartotek</div><div class="nav-sub">5 medlemmer</div></div>
     </a>
-
     <a href="admin.html" class="nav-item">
       <div class="nav-ikon" style="background:#faeeda">🎂</div>
-      <div><div class="nav-titel">Mærkedage</div><div class="nav-sub">Fødselsdage &middot; jubilæer</div></div>
+      <div><div class="nav-titel">Mærkedage</div><div class="nav-sub">F&oslash;dselsdage &middot; jubil&aelig;er</div></div>
     </a>
-
     <a href="admin.html" class="nav-item">
       <div class="nav-ikon" style="background:#eaf3de">📷</div>
       <div><div class="nav-titel">Arkiv</div><div class="nav-sub">Billeder &middot; steder &middot; referater</div></div>
     </a>
-
     <a href="admin.html" class="nav-item">
       <div class="nav-ikon" style="background:#faece7">📅</div>
       <div><div class="nav-titel">Arrangementer</div><div class="nav-sub">Skovtur &middot; kalender</div></div>
     </a>
-
     <a href="admin.html" class="nav-item">
       <div class="nav-ikon" style="background:#f1efe8">🕊️</div>
       <div><div class="nav-titel">Mindelunden</div><div class="nav-sub">Tidligere medlemmer</div></div>
     </a>
-
     <div class="nav-sep">Medlemmer</div>
-
     <a href="admin.html" class="nav-item">
       <div class="nav-ikon" style="background:#f1efe8">🔑</div>
       <div><div class="nav-titel">Log ind</div><div class="nav-sub">Medlemsnummer + kode</div></div>
     </a>
-
     <div class="nav-sep">Kun Carsten</div>
-
     <a href="admin.html" class="nav-item">
       <div class="nav-ikon" style="background:#f1efe8">⚙️</div>
       <div><div class="nav-titel">Administration</div><div class="nav-sub">Fuld adgang</div></div>
     </a>
-
   </div>
 
 </div>
