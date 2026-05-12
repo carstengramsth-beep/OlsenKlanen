@@ -4,215 +4,230 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OlsenKlanen — Start</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Source+Sans+3:wght@300;400;500&display=swap" rel="stylesheet">
+<title>OlsenKlanen</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --gron:#2d5016;--gron-lys:#4a7c2a;--gron-pale:#e8f0dc;
-  --guld:#c8952a;--guld-pale:#fdf8ee;
-  --hvid:#fefcf8;--tekst:#1a1a0e;--tekst-lys:#4a4a35;--border:#d4c9a0;
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#f5f0e8;color:#2c2c2a;min-height:100vh}
+.header{background:#2d4a1e;padding:12px 20px;display:flex;align-items:center;justify-content:space-between}
+.header-title{color:#d4af37;font-size:22px;letter-spacing:0.05em}
+.header-title em{color:#fff;font-style:italic}
+.header-sub{color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;margin-top:2px}
+.header-login{color:rgba(255,255,255,0.8);font-size:12px;cursor:pointer;border:1px solid rgba(255,255,255,0.3);padding:6px 14px;border-radius:4px;text-decoration:none;background:rgba(255,255,255,0.05)}
+.header-login:hover{background:rgba(255,255,255,0.15)}
+.layout{display:grid;grid-template-columns:200px 1fr 200px;min-height:calc(100vh - 52px)}
+.left{background:#f0ebe0;border-right:1px solid #d4c9a8;padding:14px}
+.center{background:#f5f0e8;display:flex;flex-direction:column}
+.right{background:#f0ebe0;border-left:1px solid #d4c9a8;padding:14px}
+.zone-label{font-size:10px;font-weight:bold;color:#8a7a5a;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #d4c9a8}
+.opslag{background:#fff;border:1px solid #d4c9a8;border-radius:6px;padding:9px 10px;margin-bottom:8px;cursor:pointer}
+.opslag:hover{border-color:#2d4a1e;background:#fafaf5}
+.opslag.highlight{border-left:3px solid #d4af37}
+.opslag-ikon{font-size:15px;margin-bottom:3px}
+.opslag-titel{font-size:12px;font-weight:bold;color:#2c2c2a}
+.opslag-sub{font-size:11px;color:#8a7a5a;margin-top:2px}
+.photo-area{width:100%;height:220px;background:#3a5c28;display:flex;align-items:flex-end;padding:12px 16px;position:relative;overflow:hidden}
+.photo-tekst{font-size:16px;color:#fff;font-style:italic;z-index:1}
+.photo-aar{font-size:12px;color:rgba(255,255,255,0.6);margin-left:auto;z-index:1}
+.photo-ikon{position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);font-size:80px;opacity:0.12;color:#fff}
+.event-boks{margin:12px;background:#fff;border:1px solid #d4c9a8;border-radius:8px;overflow:hidden}
+.event-header{background:#2d4a1e;padding:8px 14px}
+.event-header span{color:#d4af37;font-size:12px;font-weight:bold;letter-spacing:0.05em}
+.event-raekke{display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid #f0ebe0}
+.event-raekke:last-child{border-bottom:none}
+.event-dato{font-size:11px;color:#8a7a5a;min-width:52px;font-style:italic}
+.event-navn{font-size:13px;color:#2c2c2a;flex:1}
+.badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:bold}
+.badge-guld{background:#fff8e0;color:#7a5a00;border:1px solid #d4af37}
+.badge-groen{background:#e8f5e0;color:#2d4a1e;border:1px solid #9fc870}
+.badge-blaa{background:#e0eef5;color:#1a4a6e;border:1px solid #70a8c8}
+.kal-boks{margin:0 12px 12px;background:#fff;border:1px solid #d4c9a8;border-radius:8px;overflow:hidden}
+.kal-top{background:#f0ebe0;padding:7px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #d4c9a8}
+.kal-top span{font-size:12px;font-weight:bold;color:#2d4a1e}
+.kal-top a{font-size:11px;color:#8a7a5a;cursor:pointer;text-decoration:none}
+.kal-top a:hover{color:#2d4a1e}
+.kal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding:8px 10px}
+.kd{font-size:10px;text-align:center;padding:4px 2px;border-radius:50%;color:#8a7a5a}
+.kd.hd{font-weight:bold;color:#5a4a2a;font-size:9px;border-radius:0}
+.kd.idag{background:#2d4a1e;color:#fff;font-weight:bold}
+.kd.begivenhed{background:#fff8e0;color:#7a5a00;font-weight:bold}
+.kd.skovtur{background:#e8f5e0;color:#2d4a1e;font-weight:bold}
+.nav-sep{font-size:9px;font-weight:bold;color:#8a7a5a;letter-spacing:0.08em;text-transform:uppercase;padding:8px 0 4px;border-top:1px solid #d4c9a8;margin-top:6px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;margin-bottom:4px;border:1px solid transparent;text-decoration:none}
+.nav-item:hover{background:#fff;border-color:#d4c9a8}
+.nav-item.active{background:#2d4a1e;border-color:#2d4a1e}
+.nav-item.active .nav-titel{color:#d4af37}
+.nav-item.active .nav-sub{color:rgba(255,255,255,0.5)}
+.nav-ikon{width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.nav-titel{font-size:12px;font-weight:bold;color:#2c2c2a;line-height:1.3}
+.nav-sub{font-size:10px;color:#8a7a5a}
+.footer{background:#2d4a1e;padding:8px 20px;text-align:center;border-top:1px solid #1a3010}
+.footer span{color:rgba(255,255,255,0.35);font-size:10px;letter-spacing:0.05em}
+@media(max-width:700px){
+  .layout{grid-template-columns:1fr}
+  .left,.right{display:none}
+  .left{display:flex;flex-direction:row;flex-wrap:wrap;gap:6px;border-right:none;border-bottom:1px solid #d4c9a8}
+  .opslag{flex:1;min-width:140px}
 }
-body{font-family:'Source Sans 3',sans-serif;background:var(--gron);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem 3rem;}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 30% 30%,rgba(200,149,42,0.15) 0%,transparent 60%),linear-gradient(135deg,#1a3009 0%,#2d5016 60%,#1a3009 100%);z-index:0;}
-.container{position:relative;z-index:1;width:100%;}
-.logo{text-align:center;margin-bottom:2rem;}
-.logo-navn{font-family:'Playfair Display',serif;font-size:48px;font-weight:700;color:var(--hvid);letter-spacing:-1px;line-height:1;}
-.logo-sub{font-size:11px;color:rgba(254,252,248,0.5);letter-spacing:4px;text-transform:uppercase;margin-top:8px;}
-.logo-streg{width:50px;height:2px;background:var(--guld);margin:14px auto 0;border-radius:2px;}
-.hoved-grid{display:flex;flex-direction:column;gap:1.25rem;}
-.galleri-sektion{background:var(--hvid);border-radius:14px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.4);}
-.galleri-hero{width:100%;height:600px;object-fit:cover;object-position:center center;display:block;cursor:pointer;transition:opacity 0.2s;}
-.galleri-hero:hover{opacity:0.93;}
-.galleri-meta{padding:0.65rem 1.5rem 0.75rem;display:flex;align-items:baseline;justify-content:space-between;background:var(--guld-pale);border-bottom:1px solid var(--border);}
-.galleri-titel{font-family:'Playfair Display',serif;font-size:17px;font-weight:500;color:var(--tekst);}
-.galleri-dato{font-size:11px;color:var(--tekst-lys);}
-.galleri-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:3px 0 0;}
-.galleri-mini img{width:100%;height:350px;object-fit:cover;object-position:center center;display:block;cursor:pointer;transition:opacity 0.15s;}
-.galleri-mini img:hover{opacity:0.82;}
-.kort{background:var(--hvid);border-radius:14px;overflow:visible;box-shadow:0 24px 64px rgba(0,0,0,0.4);}
-.kort-top{border-radius:14px 14px 0 0;background:var(--guld-pale);border-bottom:1px solid var(--border);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
-.kort-titel{font-size:13px;font-weight:500;color:var(--tekst);letter-spacing:0.3px;}
-.dato{font-size:12px;color:var(--tekst-lys);}
-.sektion{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);}
-.sektion:last-child{border-bottom:none;}
-.sektion-label{font-size:10px;font-weight:500;color:var(--tekst-lys);letter-spacing:2px;text-transform:uppercase;margin-bottom:0.75rem;}
-.fil-liste{display:flex;flex-direction:column;gap:6px;}
-.fil{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--guld-pale);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.15s;text-decoration:none;}
-.fil:hover{background:var(--gron-pale);border-color:var(--gron);transform:translateX(3px);}
-.fil-ikon{font-size:20px;width:28px;text-align:center;flex-shrink:0;}
-.fil-info{flex:1;min-width:0;}
-.fil-navn{font-size:13px;font-weight:500;color:var(--tekst);}
-.fil-sub{font-size:11px;color:var(--tekst-lys);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.fil-pil{font-size:16px;color:var(--border);flex-shrink:0;}
-.fil:hover .fil-pil{color:var(--gron);}
-.fil-olsenbanden{background:linear-gradient(135deg,#1a3009,#2d5016);border-color:#4a7c2a;}
-.fil-olsenbanden .fil-navn,.fil-olsenbanden .fil-sub{color:#fefcf8;}
-.fil-olsenbanden .fil-pil{color:var(--guld);}
-.fil-olsenbanden:hover{background:linear-gradient(135deg,#2d5016,#4a7c2a);transform:translateX(3px);}
-.note{background:var(--gron-pale);border-left:3px solid var(--gron);padding:10px 14px;border-radius:0 6px 6px 0;font-size:12px;color:var(--tekst-lys);line-height:1.6;margin-top:0.75rem;}
-#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.93);z-index:1000;align-items:center;justify-content:center;}
-#lightbox.vis{display:flex;}
-#lightbox img{max-width:94vw;max-height:90vh;object-fit:contain;border-radius:4px;}
-#lightbox-luk{position:fixed;top:16px;right:20px;font-size:28px;color:#fff;cursor:pointer;background:none;border:none;line-height:1;opacity:0.7;}
-#lightbox-luk:hover{opacity:1;}
-.footer{text-align:center;margin-top:1.5rem;font-size:11px;color:rgba(254,252,248,0.35);line-height:1.8;}
-@media(min-width:600px){body{padding:2.5rem 2rem 4rem;}.galleri-hero{height:600px;}.fil-sub{white-space:normal;}}
-@media(min-width:960px){body{padding:3rem 2rem 5rem;justify-content:flex-start;}.hoved-grid{display:grid;grid-template-columns:1fr 400px;gap:1.5rem;align-items:start;}.galleri-sektion{border-radius:14px;}.galleri-hero{height:600px;}.fil-liste-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}}
-@media(min-width:1280px){.galleri-hero{height:600px;}}
 </style>
 </head>
 <body>
 
-<div id="lightbox" onclick="lukLightbox()">
-  <button id="lightbox-luk" onclick="lukLightbox()">✕</button>
-  <img id="lightbox-img" src="" alt="">
+<div class="header">
+  <div>
+    <div class="header-title">OlsenKlanen <em>·</em> Familieside</div>
+    <div class="header-sub">Projektmappe &middot; Maj 2026</div>
+  </div>
+  <a href="admin.html" class="header-login">Log ind</a>
 </div>
 
-<div class="container">
+<div class="layout">
 
-  <div class="logo">
-    <div class="logo-navn">OlsenKlanen</div>
-    <div class="logo-sub">Projektmappe · Maj 2026</div>
-    <div class="logo-streg"></div>
-  </div>
+  <!-- VENSTRE: OPSLAGSTAVLE -->
+  <div class="left">
+    <div class="zone-label">Opslagstavlen</div>
 
-  <div class="hoved-grid">
-
-    <div class="galleri-sektion" id="galleri-sektion">
-      <img class="galleri-hero" id="galleri-hero" src="billeder/IMG_4390.JPEG" alt="Skovtur 2025 — Haderslev" onclick="åbnLightbox(this.src)">
-      <div class="galleri-meta">
-        <span class="galleri-titel">Skovtur 2025 — Haderslev</span>
-        <span class="galleri-dato">Maj 2025</span>
-      </div>
-      <div class="galleri-mini" id="galleri-mini"></div>
+    <div class="opslag highlight">
+      <div class="opslag-ikon">🎂</div>
+      <div class="opslag-titel">Tommy fylder 60!</div>
+      <div class="opslag-sub">Om 12 dage &middot; 24. maj</div>
     </div>
 
-    <div class="kort">
-
-      <div class="kort-top">
-        <span class="kort-titel">Alle projektfiler samlet ét sted</span>
-        <span class="dato" id="dato"></span>
-      </div>
-
-      <!-- HJEMMESIDEN -->
-      <div class="sektion">
-        <div class="sektion-label">Hjemmesiden — demo</div>
-        <div class="fil-liste">
-          <a class="fil" href="olsenklanen_designudkast.html">
-            <span class="fil-ikon">🏠</span>
-            <div class="fil-info"><div class="fil-navn">Forside</div><div class="fil-sub">Designudkast til den nye olsenklanen.dk</div></div>
-            <span class="fil-pil">→</span>
-          </a>
-          <a class="fil" href="olsenklanen_login_firebase.html">
-            <span class="fil-ikon">🔑</span>
-            <div class="fil-info"><div class="fil-navn">Login</div><div class="fil-sub">Login-side koblet til Firebase</div></div>
-            <span class="fil-pil">→</span>
-          </a>
-          <a class="fil" href="admin.html">
-            <span class="fil-ikon">⚙️</span>
-            <div class="fil-info"><div class="fil-navn">Admin-panel</div><div class="fil-sub">Til Kurt, Tommy, Sanne og Karin</div></div>
-            <span class="fil-pil">→</span>
-          </a>
-          <a class="fil fil-olsenbanden" href="olsenbanden.html">
-            <span class="fil-ikon">🔐</span>
-            <div class="fil-info"><div class="fil-navn">OlsenBanden Center</div><div class="fil-sub">Beskeder · Video · Online-status · Ring til hinanden</div></div>
-            <span class="fil-pil">→</span>
-          </a>
-          <a class="fil" href="olsenklanen_ai_assistent.html">
-            <span class="fil-ikon">🤖</span>
-            <div class="fil-info"><div class="fil-navn">AI-assistent</div><div class="fil-sub">Spørgsmål og svar om Olsenklanen</div></div>
-            <span class="fil-pil">→</span>
-          </a>
-          <a class="fil" href="aarsarkiv_skabelon.html">
-            <span class="fil-ikon">🗂️</span>
-            <div class="fil-info"><div class="fil-navn">Årsarkiv — Skovtur 2025</div><div class="fil-sub">Standardskabelon · Haderslev · Maj 2025</div></div>
-            <span class="fil-pil">→</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- DOKUMENTER -->
-      <div class="sektion">
-        <div class="sektion-label">Projektdokumenter</div>
-        <div class="fil-liste">
-          <a class="fil" href="olsenklanen_projektdokument_v2.docx">
-            <span class="fil-ikon">📋</span>
-            <div class="fil-info"><div class="fil-navn">Projektdokument v2.0</div><div class="fil-sub">Send til Claude ved start af ny chat</div></div>
-            <span class="fil-pil">↓</span>
-          </a>
-          <a class="fil" href="olsenklanen_kravspecifikation_v05.docx">
-            <span class="fil-ikon">📄</span>
-            <div class="fil-info"><div class="fil-navn">Kravspecifikation v0.5</div><div class="fil-sub">Opdateret maj 2026 — inkl. årsarkiv</div></div>
-            <span class="fil-pil">↓</span>
-          </a>
-          <a class="fil" href="olsenklanen_firebase_vejledning.docx">
-            <span class="fil-ikon">🔧</span>
-            <div class="fil-info"><div class="fil-navn">Firebase vejledning</div><div class="fil-sub">Teknisk opsætningsvejledning</div></div>
-            <span class="fil-pil">↓</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- NÆSTE SKRIDT -->
-      <div class="sektion">
-        <div class="sektion-label">Næste skridt</div>
-        <div class="fil-liste">
-          <div class="fil" onclick="alert('Åbn en ny chat på claude.ai og send projektdokumentet')">
-            <span class="fil-ikon">💬</span>
-            <div class="fil-info"><div class="fil-navn">Fortsæt med Claude</div><div class="fil-sub">claude.ai → ny chat → send projektdokumentet</div></div>
-            <span class="fil-pil">→</span>
-          </div>
-          <div class="fil" onclick="window.open('https://console.firebase.google.com','_blank')">
-            <span class="fil-ikon">🔥</span>
-            <div class="fil-info"><div class="fil-navn">Firebase konsol</div><div class="fil-sub">Olsenklanen familieside · cg@gallerieg.dk</div></div>
-            <span class="fil-pil">→</span>
-          </div>
-        </div>
-        <div class="note">
-          ✓ Fase 1 klar — Designudkast godkendt<br>
-          ✓ Fase 2 klar — Firebase oprettet og login virker<br>
-          ✓ Årsarkiv-skabelon bygget og live på GitHub<br>
-          ✓ Fase 9 klar — Beskedsystem + OlsenBanden Center bygget<br>
-          ⏳ Næste — GDPR privatlivspolitik
-        </div>
-      </div>
-
+    <div class="opslag highlight">
+      <div class="opslag-ikon">🌲</div>
+      <div class="opslag-titel">Skovtur 2026</div>
+      <div class="opslag-sub">29&ndash;31. maj &middot; 17 dage</div>
     </div>
+
+    <div class="opslag">
+      <div class="opslag-ikon">📹</div>
+      <div class="opslag-titel">Videomøde</div>
+      <div class="opslag-sub">Torsdag kl. 20:00</div>
+    </div>
+
+    <div class="opslag">
+      <div class="opslag-ikon">📷</div>
+      <div class="opslag-titel">Nye billeder</div>
+      <div class="opslag-sub">Kurt har uploadet 8</div>
+    </div>
+
+    <div class="opslag">
+      <div class="opslag-ikon">✋</div>
+      <div class="opslag-titel">Afstemning</div>
+      <div class="opslag-sub">Sted til skovturen?</div>
+    </div>
+
   </div>
 
-  <div class="footer">
-    OlsenKlanen.dk · Carsten &amp; Claude · Maj 2026<br>
-    Alle filer skal ligge i samme mappe for at links virker
+  <!-- MIDTEN -->
+  <div class="center">
+
+    <div class="photo-area">
+      <div class="photo-ikon">👨&zwj;👩&zwj;👧&zwj;👦</div>
+      <span class="photo-tekst">Skovtur 2025 &mdash; Haderslev</span>
+      <span class="photo-aar">Maj 2025</span>
+    </div>
+
+    <div class="event-boks">
+      <div class="event-header"><span>&#11088; FREMHÆVEDE BEGIVENHEDER</span></div>
+      <div class="event-raekke">
+        <span class="event-dato">24. maj</span>
+        <span class="event-navn">Tommy fylder 60 år</span>
+        <span class="badge badge-guld">Mærkedag</span>
+      </div>
+      <div class="event-raekke">
+        <span class="event-dato">29. maj</span>
+        <span class="event-navn">Skovtur 2026 starter</span>
+        <span class="badge badge-groen">Arrangement</span>
+      </div>
+      <div class="event-raekke">
+        <span class="event-dato">31. maj</span>
+        <span class="event-navn">Skovtur 2026 slutter</span>
+        <span class="badge badge-groen">Arrangement</span>
+      </div>
+      <div class="event-raekke">
+        <span class="event-dato">Aug 2026</span>
+        <span class="event-navn">OlsenKlanens 60&nbsp;års jubilæum</span>
+        <span class="badge badge-guld">Jubilæum</span>
+      </div>
+    </div>
+
+    <div class="kal-boks">
+      <div class="kal-top">
+        <span>Kalender &mdash; Maj 2026</span>
+        <a href="admin.html">Ret begivenhed &rarr;</a>
+      </div>
+      <div class="kal-grid">
+        <div class="kd hd">Ma</div><div class="kd hd">Ti</div><div class="kd hd">On</div><div class="kd hd">To</div><div class="kd hd">Fr</div><div class="kd hd">Lø</div><div class="kd hd">Sø</div>
+        <div class="kd"></div><div class="kd"></div><div class="kd"></div><div class="kd"></div><div class="kd"></div><div class="kd">2</div><div class="kd">3</div>
+        <div class="kd">4</div><div class="kd">5</div><div class="kd">6</div><div class="kd">7</div><div class="kd">8</div><div class="kd">9</div><div class="kd">10</div>
+        <div class="kd">11</div><div class="kd idag">12</div><div class="kd">13</div><div class="kd">14</div><div class="kd">15</div><div class="kd">16</div><div class="kd">17</div>
+        <div class="kd">18</div><div class="kd">19</div><div class="kd">20</div><div class="kd">21</div><div class="kd">22</div><div class="kd">23</div><div class="kd begivenhed">24</div>
+        <div class="kd">25</div><div class="kd">26</div><div class="kd">27</div><div class="kd">28</div><div class="kd skovtur">29</div><div class="kd skovtur">30</div><div class="kd skovtur">31</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- HØJRE: NAVIGATION -->
+  <div class="right">
+    <div class="zone-label">Navigation</div>
+
+    <a href="index.html" class="nav-item active">
+      <div class="nav-ikon" style="background:#e8f5e0">🏠</div>
+      <div><div class="nav-titel">Forside</div><div class="nav-sub">Du er her</div></div>
+    </a>
+
+    <a href="admin.html" class="nav-item">
+      <div class="nav-ikon" style="background:#eeedfe">💬</div>
+      <div><div class="nav-titel">OlsenBanden Center</div><div class="nav-sub">Beskeder &middot; video &middot; chat</div></div>
+    </a>
+
+    <a href="admin.html" class="nav-item">
+      <div class="nav-ikon" style="background:#e6f1fb">👥</div>
+      <div><div class="nav-titel">Medlemskartotek</div><div class="nav-sub">5 medlemmer</div></div>
+    </a>
+
+    <a href="admin.html" class="nav-item">
+      <div class="nav-ikon" style="background:#faeeda">🎂</div>
+      <div><div class="nav-titel">Mærkedage</div><div class="nav-sub">Fødselsdage &middot; jubilæer</div></div>
+    </a>
+
+    <a href="admin.html" class="nav-item">
+      <div class="nav-ikon" style="background:#eaf3de">📷</div>
+      <div><div class="nav-titel">Arkiv</div><div class="nav-sub">Billeder &middot; steder &middot; referater</div></div>
+    </a>
+
+    <a href="admin.html" class="nav-item">
+      <div class="nav-ikon" style="background:#faece7">📅</div>
+      <div><div class="nav-titel">Arrangementer</div><div class="nav-sub">Skovtur &middot; kalender</div></div>
+    </a>
+
+    <a href="admin.html" class="nav-item">
+      <div class="nav-ikon" style="background:#f1efe8">🕊️</div>
+      <div><div class="nav-titel">Mindelunden</div><div class="nav-sub">Tidligere medlemmer</div></div>
+    </a>
+
+    <div class="nav-sep">Medlemmer</div>
+
+    <a href="admin.html" class="nav-item">
+      <div class="nav-ikon" style="background:#f1efe8">🔑</div>
+      <div><div class="nav-titel">Log ind</div><div class="nav-sub">Medlemsnummer + kode</div></div>
+    </a>
+
+    <div class="nav-sep">Kun Carsten</div>
+
+    <a href="admin.html" class="nav-item">
+      <div class="nav-ikon" style="background:#f1efe8">⚙️</div>
+      <div><div class="nav-titel">Administration</div><div class="nav-sub">Fuld adgang</div></div>
+    </a>
+
   </div>
 
 </div>
 
-<script>
-const dage = ['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
-const maaneder = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december'];
-const nu = new Date();
-document.getElementById('dato').textContent = dage[nu.getDay()] + ' den ' + nu.getDate() + '. ' + maaneder[nu.getMonth()] + ' ' + nu.getFullYear();
-
-const mini = document.getElementById("galleri-mini");
-["billeder/IMG_4405.JPEG","billeder/IMG_4336.JPEG","billeder/IMG_4395.JPEG"].forEach(src => {
-  const img = document.createElement("img");
-  img.src = src;
-  img.alt = "Skovtur 2025";
-  img.onclick = () => åbnLightbox(src);
-  mini.appendChild(img);
-});
-
-function åbnLightbox(src) {
-  document.getElementById("lightbox-img").src = src;
-  document.getElementById("lightbox").classList.add("vis");
-}
-function lukLightbox() {
-  document.getElementById("lightbox").classList.remove("vis");
-  document.getElementById("lightbox-img").src = "";
-}
-document.addEventListener("keydown", e => { if (e.key === "Escape") lukLightbox(); });
-</script>
+<div class="footer">
+  <span>OlsenKlanen.dk &middot; Familieside &middot; Maj 2026</span>
+</div>
 
 </body>
 </html>
