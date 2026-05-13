@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen — Log ind</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; }
+  body {
+    font-family: Georgia, serif;
+    background:#1B4332;
+    color:#f5d76e;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+  }
+  .login-boks {
+    text-align:center;
+    padding:40px;
+    max-width:420px;
+    width:90%;
+  }
+  .logo {
+    width:160px;
+    height:160px;
+    margin:0 auto 20px;
+    display:block;
+    border-radius:12px;
+  }
+  h1 {
+    color:#f5d76e;
+    font-size:2rem;
+    margin-bottom:8px;
+    letter-spacing:2px;
+  }
+  .undertekst {
+    color:#c9b96e;
+    font-style:italic;
+    margin-bottom:30px;
+    font-size:0.95rem;
+  }
+  .felt {
+    width:100%;
+    padding:14px 16px;
+    font-size:1.1rem;
+    font-family:inherit;
+    border:1px solid #f5d76e;
+    background:rgba(255,255,255,0.05);
+    color:#fff;
+    border-radius:4px;
+    margin-bottom:14px;
+    text-align:center;
+    letter-spacing:1px;
+  }
+  .felt:focus { outline:none; border-color:#fff; background:rgba(255,255,255,0.1); }
+  .felt::placeholder { color:#a89860; }
+  .knap {
+    width:100%;
+    padding:14px;
+    font-size:1.1rem;
+    font-family:inherit;
+    background:#f5d76e;
+    color:#1B4332;
+    border:none;
+    border-radius:4px;
+    cursor:pointer;
+    font-weight:bold;
+    letter-spacing:1px;
+  }
+  .knap:hover { background:#fff; }
+  .besked {
+    margin-top:16px;
+    min-height:24px;
+    font-size:0.95rem;
+    color:#ff9999;
+  }
+  .besked.ok { color:#90ee90; }
+  .hjaelp {
+    margin-top:24px;
+    font-size:0.8rem;
+    color:#8a7d4a;
+    line-height:1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="login-boks">
+  <img src="icon-512.png" alt="OlsenKlanen logo" class="logo">
+  <h1>OlsenKlanen</h1>
+  <div class="undertekst">Familieside</div>
+
+  <input type="password" id="kode" class="felt" placeholder="Skriv din kode" autofocus>
+  <button class="knap" onclick="logInd()">Log ind</button>
+
+  <div id="besked" class="besked"></div>
+
+  <div class="hjaelp">
+    Gæster bruger fælleskoden.<br>
+    Medlemmer bruger medlemsnummer + egen kode.
+  </div>
+</div>
+
+<script>
+  // Login-logik — version v19.3 — 13. maj 2026
+  // Genkender automatisk hvilken type bruger der logger ind
+
+  // ---- KODER (rettes når medlemskartoteket er klart) ----
+  const GAEST_KODE = "Vormslev";
+  const ADMIN_KODE = "Olsen26";   // Carstens kode fra hukommelsesdokumentet
+  // Medlemmer: nummer + egen kode (klar når kartoteket er ryddet op)
+  // ---------------------------------------------------------
+
+  function logInd() {
+    const kode = document.getElementById("kode").value.trim();
+    const besked = document.getElementById("besked");
+
+    if (!kode) {
+      besked.textContent = "Skriv en kode først.";
+      besked.className = "besked";
+      return;
+    }
+
+    // Tjek admin
+    if (kode === ADMIN_KODE) {
+      besked.textContent = "Velkommen, Carsten — du er logget ind som admin.";
+      besked.className = "besked ok";
+      gemAdgang("admin", "Carsten Gram");
+      videreTil("forside.html");
+      return;
+    }
+
+    // Tjek gæst
+    if (kode === GAEST_KODE) {
+      besked.textContent = "Velkommen — du er logget ind som gæst.";
+      besked.className = "besked ok";
+      gemAdgang("gaest", "Gæst");
+      videreTil("forside.html");
+      return;
+    }
+
+    // Tjek medlem (kommer når kartoteket er klart)
+    // Format: 3 cifre + kode, fx "002minkode"
+    // -- udkommenteret indtil videre --
+    // const numCheck = kode.match(/^(\d{3})(.+)$/);
+    // if (numCheck) {
+    //   const nr = numCheck[1];
+    //   const medlemKode = numCheck[2];
+    //   // her slås op i kartoteket
+    // }
+
+    // Ingen match
+    besked.textContent = "Forkert kode. Prøv igen.";
+    besked.className = "besked";
+  }
+
+  function gemAdgang(niveau, navn) {
+    // Gemmer login-status så forsiden kan se hvem brugeren er
+    try {
+      sessionStorage.setItem("ok_niveau", niveau);
+      sessionStorage.setItem("ok_navn", navn);
+    } catch(e) {
+      // hvis sessionStorage ikke virker, fortsætter vi alligevel
+    }
+  }
+
+  function videreTil(side) {
+    setTimeout(function() { window.location.href = side; }, 800);
+  }
+
+  // Enter-tast = log ind
+  document.getElementById("kode").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") logInd();
+  });
+</script>
+
+</body>
+</html>
