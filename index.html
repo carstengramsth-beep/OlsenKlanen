@@ -27,34 +27,34 @@
   .opslag-item .meta { font-size:0.8rem; color:#666; margin-top:2px; }
 
   /* MIDTEN */
-  .midten { display:flex; flex-direction:column; gap:16px; }
+  .midten { display:flex; flex-direction:column; gap:12px; }
   .billede-felt {
     position:relative;
     height:480px;
     background-image:url(billeder/IMG_4390.JPEG);
     background-size:cover;
-    background-position:center center;
+    background-position:center 75%;
     border-radius:4px;
   }
   .billede-tekst { position:absolute; bottom:12px; left:16px; color:#fff; font-style:italic; text-shadow:0 1px 3px rgba(0,0,0,0.6); }
   .billede-dato { position:absolute; bottom:12px; right:16px; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.6); }
 
   .fremhaev { background:#fff; border-radius:4px; overflow:hidden; }
-  .fremhaev-titel { background:#2d4a1f; color:#f5d76e; padding:10px 16px; font-weight:bold; letter-spacing:1px; }
-  .fremhaev-row { display:flex; align-items:center; padding:10px 16px; border-bottom:1px solid #eee; }
+  .fremhaev-titel { background:#2d4a1f; color:#f5d76e; padding:6px 16px; font-weight:bold; letter-spacing:1px; font-size:0.9rem; }
+  .fremhaev-row { display:flex; align-items:center; padding:5px 16px; border-bottom:1px solid #eee; font-size:0.9rem; }
   .fremhaev-row:last-child { border-bottom:none; }
   .fremhaev-dato { font-style:italic; color:#666; width:80px; }
   .fremhaev-tekst { flex:1; }
-  .tag { padding:3px 10px; border-radius:12px; font-size:0.75rem; }
+  .tag { padding:2px 10px; border-radius:12px; font-size:0.72rem; }
   .tag-maerkedag { background:#fff3cd; color:#856404; border:1px solid #ffe69c; }
   .tag-arrangement { background:#d4edda; color:#155724; border:1px solid #b8dac0; }
   .tag-jubilaeum { background:#fff3cd; color:#856404; border:1px solid #ffe69c; }
 
-  .kalender { background:#fff; border-radius:4px; padding:16px; }
-  .kalender h3 { margin-bottom:12px; }
-  .kalender-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; }
-  .kalender-grid .dag-label { font-size:0.75rem; color:#999; padding:4px; }
-  .kalender-grid .dag { padding:8px; font-size:0.9rem; }
+  .kalender { background:#fff; border-radius:4px; padding:10px 16px; }
+  .kalender h3 { margin-bottom:6px; font-size:1rem; }
+  .kalender-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; text-align:center; }
+  .kalender-grid .dag-label { font-size:0.7rem; color:#999; padding:2px; }
+  .kalender-grid .dag { padding:4px; font-size:0.85rem; }
   .dag.skovtur { background:#d4edda; border-radius:50%; font-weight:bold; }
   .dag.maerkedag { background:#fff3cd; border-radius:50%; font-weight:bold; }
   .dag.idag { background:#2d4a1f; color:#fff; border-radius:50%; font-weight:bold; }
@@ -226,6 +226,7 @@
 
 </div>
 
-<!-- VERSION: v19.1 — 13. maj 2026 — billede rettet til center center -->
+<!-- VERSION: v19.2 — 13. maj 2026 — billede flyttet ned, datafelter kompakteret -->
 </body>
 </html>
+
