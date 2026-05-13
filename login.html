@@ -5,6 +5,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OlsenKlanen — Log ind</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1B4332">
+<link rel="apple-touch-icon" href="icon-192.png">
+
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body { height:100%; }
@@ -93,6 +99,26 @@
     color:#8a7d4a;
     line-height:1.5;
   }
+  .installer-knap {
+    display:none;
+    margin-top:20px;
+    padding:10px 20px;
+    background:transparent;
+    color:#f5d76e;
+    border:1px dashed #f5d76e;
+    border-radius:4px;
+    cursor:pointer;
+    font-family:inherit;
+    font-size:0.9rem;
+  }
+  .installer-knap:hover { background:rgba(245,215,110,0.1); }
+  .husk-mig {
+    margin:8px 0 14px;
+    text-align:left;
+    color:#c9b96e;
+    font-size:0.85rem;
+  }
+  .husk-mig input { margin-right:8px; }
 </style>
 </head>
 <body>
@@ -102,8 +128,14 @@
   <h1>OlsenKlanen</h1>
   <div class="undertekst">Familieside</div>
 
-  <input type="email" id="email" class="felt" placeholder="Din email" autofocus>
-  <input type="password" id="kode" class="felt" placeholder="Din kode">
+  <input type="email" id="email" class="felt" placeholder="Din email" autofocus autocomplete="email">
+  <input type="password" id="kode" class="felt" placeholder="Din kode" autocomplete="current-password">
+
+  <label class="husk-mig">
+    <input type="checkbox" id="huskMig" checked>
+    Husk mig på denne computer
+  </label>
+
   <button class="knap" onclick="logInd()">Log ind</button>
 
   <div id="besked" class="besked"></div>
@@ -112,6 +144,10 @@
     <a onclick="logIndSomGaest()">Log ind som gæst</a>
   </div>
 
+  <button id="installerKnap" class="installer-knap" onclick="installerApp()">
+    📲 Installer OlsenKlanen som app
+  </button>
+
   <div class="hjaelp">
     OlsenBanden bruger fælleskoden indtil videre.<br>
     Egen kode kan vælges senere.
@@ -119,9 +155,8 @@
 </div>
 
 <script>
-  // Login-system — version v19.5 — 13. maj 2026
-  // OlsenBanden (5 personer) bruger fælleskoden Olsen26 + egen email
-  // Gæster bruger gæste-linket
+  // Login-system — version v19.6 — 13. maj 2026
+  // Med PWA-installation + "Husk mig"
 
   // ---- OLSENBANDEN ----
   const OLSENBANDEN = [
@@ -131,12 +166,20 @@
     { email: "safi@dr.dk",          navn: "Sanne Gram Fadel",      rettighed: "olsenbanden" },
     { email: "kld@inmobia.com",     navn: "Karin Lund",            rettighed: "olsenbanden" }
   ];
-
   const FAELLESKODE = "Olsen26";
+
+  // ---- HUSK MIG: udfyld felter hvis vi har gemt før ----
+  try {
+    const gemtEmail = localStorage.getItem("ok_husk_email");
+    const gemtKode  = localStorage.getItem("ok_husk_kode");
+    if (gemtEmail) document.getElementById("email").value = gemtEmail;
+    if (gemtKode)  document.getElementById("kode").value  = gemtKode;
+  } catch(e) {}
 
   function logInd() {
     const email   = document.getElementById("email").value.trim().toLowerCase();
     const kode    = document.getElementById("kode").value.trim();
+    const husk    = document.getElementById("huskMig").checked;
     const besked  = document.getElementById("besked");
 
     if (!email || !kode) {
@@ -145,23 +188,30 @@
       return;
     }
 
-    // Find personen
     const person = OLSENBANDEN.find(p => p.email.toLowerCase() === email);
-
     if (!person) {
       besked.textContent = "Email ikke fundet. Tjek stavning.";
       besked.className = "besked";
       return;
     }
 
-    // Tjek kode
     if (kode !== FAELLESKODE) {
       besked.textContent = "Forkert kode.";
       besked.className = "besked";
       return;
     }
 
-    // Login OK
+    // Gem "husk mig"
+    try {
+      if (husk) {
+        localStorage.setItem("ok_husk_email", email);
+        localStorage.setItem("ok_husk_kode", kode);
+      } else {
+        localStorage.removeItem("ok_husk_email");
+        localStorage.removeItem("ok_husk_kode");
+      }
+    } catch(e) {}
+
     besked.textContent = "Velkommen, " + person.navn + "!";
     besked.className = "besked ok";
     gemAdgang(person.rettighed, person.navn, person.email);
@@ -181,7 +231,7 @@
       sessionStorage.setItem("ok_niveau", niveau);
       sessionStorage.setItem("ok_navn", navn);
       sessionStorage.setItem("ok_email", email);
-    } catch(e) { /* fortsætter alligevel */ }
+    } catch(e) {}
   }
 
   function videreTil(side) {
@@ -195,6 +245,35 @@
   document.getElementById("email").addEventListener("keydown", function(e) {
     if (e.key === "Enter") document.getElementById("kode").focus();
   });
+
+  // ---- PWA: Service Worker registrering ----
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function() {
+      navigator.serviceWorker.register("sw.js").catch(function(err) {
+        console.log("SW registrering fejlede:", err);
+      });
+    });
+  }
+
+  // ---- PWA: Installer-knap ----
+  let installPrompt = null;
+  window.addEventListener("beforeinstallprompt", function(e) {
+    e.preventDefault();
+    installPrompt = e;
+    document.getElementById("installerKnap").style.display = "inline-block";
+  });
+
+  function installerApp() {
+    if (!installPrompt) {
+      alert("Installation er ikke tilgængelig i denne browser. Prøv Chrome eller Edge på computer, eller 'Føj til hjemmeskærm' i Safari på iPhone.");
+      return;
+    }
+    installPrompt.prompt();
+    installPrompt.userChoice.then(function() {
+      installPrompt = null;
+      document.getElementById("installerKnap").style.display = "none";
+    });
+  }
 </script>
 
 </body>
