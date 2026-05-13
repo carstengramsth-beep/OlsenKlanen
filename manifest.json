@@ -1,24 +1,38 @@
 {
-  "name": "OlsenBanden",
-  "short_name": "OlsenBanden",
-  "description": "OlsenBandens administrationscenter — beskeder, video og online-status",
-  "start_url": "/OlsenKlanen/olsenbanden.html",
+  "name": "OlsenKlanen — Familieside",
+  "short_name": "OlsenKlanen",
+  "description": "Familieside for OlsenKlanen",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#1B4332",
   "theme_color": "#1B4332",
-  "orientation": "any",
+  "lang": "da",
   "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
