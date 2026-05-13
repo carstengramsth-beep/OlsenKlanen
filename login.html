@@ -4,252 +4,277 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OlsenKlanen — Familieside</title>
+<title>OlsenKlanen — Log ind</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1B4332">
+<link rel="apple-touch-icon" href="icon-192.png">
+
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: Georgia, serif; background:#f5f1e8; color:#2a2a2a; }
-
-  /* TOPBAR */
-  .topbar { background:#2d4a1f; color:#f5d76e; padding:14px 24px; display:flex; justify-content:space-between; align-items:center; }
-  .topbar h1 { font-size:1.4rem; }
-  .topbar h1 span { color:#f5d76e; }
-  .topbar-hoejre { display:flex; align-items:center; gap:14px; }
-  .bruger-info { color:#f5d76e; font-size:0.9rem; font-style:italic; }
-  .btn-login { background:transparent; color:#f5d76e; border:1px solid #f5d76e; padding:6px 16px; border-radius:4px; cursor:pointer; font-family:inherit; }
-  .btn-login:hover { background:#f5d76e; color:#2d4a1f; }
-
-  /* LAYOUT */
-  .layout { display:grid; grid-template-columns:240px 1fr 260px; gap:16px; padding:16px; }
-
-  /* OPSLAGSTAVLEN venstre */
-  .opslag h3 { font-size:0.75rem; letter-spacing:2px; color:#666; margin-bottom:12px; }
-  .opslag-item { background:#fff; padding:12px; margin-bottom:10px; border-left:3px solid #2d4a1f; border-radius:2px; }
-  .opslag-item .ikon { font-size:1.3rem; }
-  .opslag-item .titel { font-weight:bold; margin-top:4px; }
-  .opslag-item .meta { font-size:0.8rem; color:#666; margin-top:2px; }
-
-  /* MIDTEN */
-  .midten { display:flex; flex-direction:column; gap:12px; }
-  .billede-felt {
-    position:relative;
-    height:480px;
-    background-image:url(billeder/IMG_4390.JPEG);
-    background-size:cover;
-    background-position:center 75%;
-    border-radius:4px;
+  html, body { height:100%; }
+  body {
+    font-family: Georgia, serif;
+    background:#1B4332;
+    color:#f5d76e;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
   }
-  .billede-tekst { position:absolute; bottom:12px; left:16px; color:#fff; font-style:italic; text-shadow:0 1px 3px rgba(0,0,0,0.6); }
-  .billede-dato { position:absolute; bottom:12px; right:16px; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.6); }
-
-  .fremhaev { background:#fff; border-radius:4px; overflow:hidden; }
-  .fremhaev-titel { background:#2d4a1f; color:#f5d76e; padding:6px 16px; font-weight:bold; letter-spacing:1px; font-size:0.9rem; }
-  .fremhaev-row { display:flex; align-items:center; padding:5px 16px; border-bottom:1px solid #eee; font-size:0.9rem; }
-  .fremhaev-row:last-child { border-bottom:none; }
-  .fremhaev-dato { font-style:italic; color:#666; width:80px; }
-  .fremhaev-tekst { flex:1; }
-  .tag { padding:2px 10px; border-radius:12px; font-size:0.72rem; }
-  .tag-maerkedag { background:#fff3cd; color:#856404; border:1px solid #ffe69c; }
-  .tag-arrangement { background:#d4edda; color:#155724; border:1px solid #b8dac0; }
-  .tag-jubilaeum { background:#fff3cd; color:#856404; border:1px solid #ffe69c; }
-
-  .kalender { background:#fff; border-radius:4px; padding:10px 16px; }
-  .kalender h3 { margin-bottom:6px; font-size:1rem; }
-  .kalender-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; text-align:center; }
-  .kalender-grid .dag-label { font-size:0.7rem; color:#999; padding:2px; }
-  .kalender-grid .dag { padding:4px; font-size:0.85rem; }
-  .dag.skovtur { background:#d4edda; border-radius:50%; font-weight:bold; }
-  .dag.maerkedag { background:#fff3cd; border-radius:50%; font-weight:bold; }
-  .dag.idag { background:#2d4a1f; color:#fff; border-radius:50%; font-weight:bold; }
-
-  /* HØJRE NAVIGATION */
-  .nav h3 { font-size:0.75rem; letter-spacing:2px; color:#666; margin-bottom:12px; }
-  .nav-item { background:#fff; padding:10px 14px; margin-bottom:6px; border-radius:3px; display:flex; align-items:center; gap:10px; cursor:pointer; }
-  .nav-item:hover { background:#f0ead8; }
-  .nav-item.active { background:#e8f0e0; border-left:3px solid #2d4a1f; }
-  .nav-item .ikon { font-size:1.2rem; }
-  .nav-item .titel { font-weight:bold; font-size:0.95rem; }
-  .nav-item .undertekst { font-size:0.75rem; color:#666; }
-
-  .skjult { display:none !important; }
+  .login-boks {
+    text-align:center;
+    padding:40px;
+    max-width:420px;
+    width:90%;
+  }
+  .logo {
+    width:160px;
+    height:160px;
+    margin:0 auto 20px;
+    display:block;
+    border-radius:12px;
+  }
+  h1 {
+    color:#f5d76e;
+    font-size:2rem;
+    margin-bottom:8px;
+    letter-spacing:2px;
+  }
+  .undertekst {
+    color:#c9b96e;
+    font-style:italic;
+    margin-bottom:30px;
+    font-size:0.95rem;
+  }
+  .felt {
+    width:100%;
+    padding:14px 16px;
+    font-size:1.1rem;
+    font-family:inherit;
+    border:1px solid #f5d76e;
+    background:rgba(255,255,255,0.05);
+    color:#fff;
+    border-radius:4px;
+    margin-bottom:14px;
+    text-align:center;
+    letter-spacing:1px;
+  }
+  .felt:focus { outline:none; border-color:#fff; background:rgba(255,255,255,0.1); }
+  .felt::placeholder { color:#a89860; }
+  .knap {
+    width:100%;
+    padding:14px;
+    font-size:1.1rem;
+    font-family:inherit;
+    background:#f5d76e;
+    color:#1B4332;
+    border:none;
+    border-radius:4px;
+    cursor:pointer;
+    font-weight:bold;
+    letter-spacing:1px;
+  }
+  .knap:hover { background:#fff; }
+  .besked {
+    margin-top:16px;
+    min-height:24px;
+    font-size:0.95rem;
+    color:#ff9999;
+  }
+  .besked.ok { color:#90ee90; }
+  .gaest-link {
+    margin-top:20px;
+    font-size:0.85rem;
+  }
+  .gaest-link a {
+    color:#c9b96e;
+    text-decoration:underline;
+    cursor:pointer;
+  }
+  .hjaelp {
+    margin-top:24px;
+    font-size:0.78rem;
+    color:#8a7d4a;
+    line-height:1.5;
+  }
+  .installer-knap {
+    display:none;
+    margin-top:20px;
+    padding:10px 20px;
+    background:transparent;
+    color:#f5d76e;
+    border:1px dashed #f5d76e;
+    border-radius:4px;
+    cursor:pointer;
+    font-family:inherit;
+    font-size:0.9rem;
+  }
+  .installer-knap:hover { background:rgba(245,215,110,0.1); }
+  .husk-mig {
+    margin:8px 0 14px;
+    text-align:left;
+    color:#c9b96e;
+    font-size:0.85rem;
+  }
+  .husk-mig input { margin-right:8px; }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <h1>OlsenKlanen <span>· Familieside</span></h1>
-  <div class="topbar-hoejre">
-    <span class="bruger-info" id="brugerInfo">Logget ind</span>
-    <button class="btn-login" onclick="logUd()">Log ud</button>
+<div class="login-boks">
+  <img src="icon-512.png" alt="OlsenKlanen logo" class="logo">
+  <h1>OlsenKlanen</h1>
+  <div class="undertekst">Familieside</div>
+
+  <input type="email" id="email" class="felt" placeholder="Din email" autofocus autocomplete="email">
+  <input type="password" id="kode" class="felt" placeholder="Din kode" autocomplete="current-password">
+
+  <label class="husk-mig">
+    <input type="checkbox" id="huskMig" checked>
+    Husk mig på denne computer
+  </label>
+
+  <button class="knap" onclick="logInd()">Log ind</button>
+
+  <div id="besked" class="besked"></div>
+
+  <div class="gaest-link">
+    <a onclick="logIndSomGaest()">Log ind som gæst</a>
+  </div>
+
+  <button id="installerKnap" class="installer-knap" onclick="installerApp()">
+    📲 Installer OlsenKlanen som app
+  </button>
+
+  <div class="hjaelp">
+    OlsenBanden bruger fælleskoden indtil videre.<br>
+    Egen kode kan vælges senere.
   </div>
 </div>
 
-<div class="layout">
-
-  <!-- VENSTRE: OPSLAGSTAVLEN -->
-  <aside class="opslag">
-    <h3>OPSLAGSTAVLEN</h3>
-    <div class="opslag-item">
-      <div class="ikon">🎂</div>
-      <div class="titel">Tommy fylder 60!</div>
-      <div class="meta">Om 12 dage · 24. maj</div>
-    </div>
-    <div class="opslag-item">
-      <div class="ikon">🌲</div>
-      <div class="titel">Skovtur 2026</div>
-      <div class="meta">29.–31. maj · 17 dage</div>
-    </div>
-    <div class="opslag-item">
-      <div class="ikon">📹</div>
-      <div class="titel">Videomøde</div>
-      <div class="meta">Torsdag kl. 20:00</div>
-    </div>
-    <div class="opslag-item">
-      <div class="ikon">📷</div>
-      <div class="titel">Nye billeder</div>
-      <div class="meta">Kurt har uploadet 8</div>
-    </div>
-    <div class="opslag-item">
-      <div class="ikon">✋</div>
-      <div class="titel">Afstemning</div>
-      <div class="meta">Sted til skovturen?</div>
-    </div>
-  </aside>
-
-  <!-- MIDTEN -->
-  <main class="midten">
-    <div class="billede-felt">
-      <div class="billede-tekst">Skovtur maj 2025 — Haderslev</div>
-      <div class="billede-dato">Maj 2025</div>
-    </div>
-
-    <div class="fremhaev">
-      <div class="fremhaev-titel">⭐ FREMHÆVEDE BEGIVENHEDER</div>
-      <div class="fremhaev-row">
-        <div class="fremhaev-dato">24. maj</div>
-        <div class="fremhaev-tekst">Tommy fylder 60 år</div>
-        <div class="tag tag-maerkedag">Mærkedag</div>
-      </div>
-      <div class="fremhaev-row">
-        <div class="fremhaev-dato">29. maj</div>
-        <div class="fremhaev-tekst">Skovtur 2026 starter</div>
-        <div class="tag tag-arrangement">Arrangement</div>
-      </div>
-      <div class="fremhaev-row">
-        <div class="fremhaev-dato">31. maj</div>
-        <div class="fremhaev-tekst">Skovtur 2026 slutter</div>
-        <div class="tag tag-arrangement">Arrangement</div>
-      </div>
-      <div class="fremhaev-row">
-        <div class="fremhaev-dato">Aug 2026</div>
-        <div class="fremhaev-tekst">OlsenKlanens 60 års jubilæum</div>
-        <div class="tag tag-jubilaeum">Jubilæum</div>
-      </div>
-    </div>
-
-    <div class="kalender">
-      <h3>Kalender — Maj 2026</h3>
-      <div class="kalender-grid">
-        <div class="dag-label">Ma</div><div class="dag-label">Ti</div><div class="dag-label">On</div><div class="dag-label">To</div><div class="dag-label">Fr</div><div class="dag-label">Lø</div><div class="dag-label">Sø</div>
-        <div class="dag"></div><div class="dag"></div><div class="dag"></div><div class="dag"></div><div class="dag">1</div><div class="dag">2</div><div class="dag">3</div>
-        <div class="dag">4</div><div class="dag">5</div><div class="dag">6</div><div class="dag">7</div><div class="dag">8</div><div class="dag">9</div><div class="dag">10</div>
-        <div class="dag">11</div><div class="dag idag">12</div><div class="dag">13</div><div class="dag">14</div><div class="dag">15</div><div class="dag">16</div><div class="dag">17</div>
-        <div class="dag">18</div><div class="dag">19</div><div class="dag">20</div><div class="dag">21</div><div class="dag">22</div><div class="dag">23</div><div class="dag maerkedag">24</div>
-        <div class="dag">25</div><div class="dag">26</div><div class="dag">27</div><div class="dag">28</div><div class="dag skovtur">29</div><div class="dag skovtur">30</div><div class="dag skovtur">31</div>
-      </div>
-    </div>
-  </main>
-
-  <!-- HØJRE NAVIGATION -->
-  <aside class="nav">
-    <h3>NAVIGATION</h3>
-    <div class="nav-item active">
-      <div class="ikon">🏠</div>
-      <div>
-        <div class="titel">Forside</div>
-        <div class="undertekst">Du er her</div>
-      </div>
-    </div>
-    <div class="nav-item">
-      <div class="ikon">💬</div>
-      <div>
-        <div class="titel">OlsenBanden Center</div>
-        <div class="undertekst">Beskeder · video · chat</div>
-      </div>
-    </div>
-    <div class="nav-item">
-      <div class="ikon">👥</div>
-      <div>
-        <div class="titel">Medlemskartotek</div>
-        <div class="undertekst">5 medlemmer</div>
-      </div>
-    </div>
-    <div class="nav-item">
-      <div class="ikon">🎉</div>
-      <div>
-        <div class="titel">Mærkedage</div>
-        <div class="undertekst">Fødselsdage · jubilæer</div>
-      </div>
-    </div>
-    <div class="nav-item">
-      <div class="ikon">📸</div>
-      <div>
-        <div class="titel">Arkiv</div>
-        <div class="undertekst">Billeder · steder · referater</div>
-      </div>
-    </div>
-    <div class="nav-item">
-      <div class="ikon">📅</div>
-      <div>
-        <div class="titel">Arrangementer</div>
-        <div class="undertekst">Skovtur · kalender</div>
-      </div>
-    </div>
-    <div class="nav-item">
-      <div class="ikon">🕯️</div>
-      <div>
-        <div class="titel">Mindelunden</div>
-        <div class="undertekst">Tidligere medlemmer</div>
-      </div>
-    </div>
-
-    <h3 style="margin-top:20px;" id="adminTitel">KUN CARSTEN</h3>
-    <div class="nav-item" id="adminLink">
-      <div class="ikon">⚙️</div>
-      <div>
-        <div class="titel">Administration</div>
-        <div class="undertekst">Fuld adgang</div>
-      </div>
-    </div>
-  </aside>
-
-</div>
-
 <script>
-  // ---- Login-tjek ----
-  // Hvis ikke logget ind → send til login.html
-  const niveau = sessionStorage.getItem("ok_niveau");
-  const navn = sessionStorage.getItem("ok_navn");
+  // Login-system — version v19.6 — 13. maj 2026
+  // Med PWA-installation + "Husk mig"
 
-  if (!niveau) {
-    window.location.href = "login.html";
+  // ---- OLSENBANDEN ----
+  const OLSENBANDEN = [
+    { email: "cg@gallerieg.dk",     navn: "Carsten Gram",          rettighed: "admin" },
+    { email: "tvo@ishoejby.dk",     navn: "Tommy Vormslev Olsen",  rettighed: "olsenbanden" },
+    { email: "kurt@vormslev.dk",    navn: "Kurt Olsen",            rettighed: "olsenbanden" },
+    { email: "safi@dr.dk",          navn: "Sanne Gram Fadel",      rettighed: "olsenbanden" },
+    { email: "kld@inmobia.com",     navn: "Karin Lund",            rettighed: "olsenbanden" }
+  ];
+  const FAELLESKODE = "Olsen26";
+
+  // ---- HUSK MIG: udfyld felter hvis vi har gemt før ----
+  try {
+    const gemtEmail = localStorage.getItem("ok_husk_email");
+    const gemtKode  = localStorage.getItem("ok_husk_kode");
+    if (gemtEmail) document.getElementById("email").value = gemtEmail;
+    if (gemtKode)  document.getElementById("kode").value  = gemtKode;
+  } catch(e) {}
+
+  function logInd() {
+    const email   = document.getElementById("email").value.trim().toLowerCase();
+    const kode    = document.getElementById("kode").value.trim();
+    const husk    = document.getElementById("huskMig").checked;
+    const besked  = document.getElementById("besked");
+
+    if (!email || !kode) {
+      besked.textContent = "Skriv både email og kode.";
+      besked.className = "besked";
+      return;
+    }
+
+    const person = OLSENBANDEN.find(p => p.email.toLowerCase() === email);
+    if (!person) {
+      besked.textContent = "Email ikke fundet. Tjek stavning.";
+      besked.className = "besked";
+      return;
+    }
+
+    if (kode !== FAELLESKODE) {
+      besked.textContent = "Forkert kode.";
+      besked.className = "besked";
+      return;
+    }
+
+    // Gem "husk mig"
+    try {
+      if (husk) {
+        localStorage.setItem("ok_husk_email", email);
+        localStorage.setItem("ok_husk_kode", kode);
+      } else {
+        localStorage.removeItem("ok_husk_email");
+        localStorage.removeItem("ok_husk_kode");
+      }
+    } catch(e) {}
+
+    besked.textContent = "Velkommen, " + person.navn + "!";
+    besked.className = "besked ok";
+    gemAdgang(person.rettighed, person.navn, person.email);
+    videreTil("forside.html");
   }
 
-  // Vis brugernavn øverst
-  document.getElementById("brugerInfo").textContent = navn + " (" + niveau + ")";
-
-  // Skjul Admin-link hvis ikke admin
-  if (niveau !== "admin") {
-    document.getElementById("adminTitel").classList.add("skjult");
-    document.getElementById("adminLink").classList.add("skjult");
+  function logIndSomGaest() {
+    const besked = document.getElementById("besked");
+    besked.textContent = "Velkommen — du er logget ind som gæst.";
+    besked.className = "besked ok";
+    gemAdgang("gaest", "Gæst", "");
+    videreTil("forside.html");
   }
 
-  function logUd() {
-    sessionStorage.removeItem("ok_niveau");
-    sessionStorage.removeItem("ok_navn");
-    window.location.href = "login.html";
+  function gemAdgang(niveau, navn, email) {
+    try {
+      sessionStorage.setItem("ok_niveau", niveau);
+      sessionStorage.setItem("ok_navn", navn);
+      sessionStorage.setItem("ok_email", email);
+    } catch(e) {}
+  }
+
+  function videreTil(side) {
+    setTimeout(function() { window.location.href = side; }, 800);
+  }
+
+  // Enter-tast
+  document.getElementById("kode").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") logInd();
+  });
+  document.getElementById("email").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") document.getElementById("kode").focus();
+  });
+
+  // ---- PWA: Service Worker registrering ----
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function() {
+      navigator.serviceWorker.register("sw.js").catch(function(err) {
+        console.log("SW registrering fejlede:", err);
+      });
+    });
+  }
+
+  // ---- PWA: Installer-knap ----
+  let installPrompt = null;
+  window.addEventListener("beforeinstallprompt", function(e) {
+    e.preventDefault();
+    installPrompt = e;
+    document.getElementById("installerKnap").style.display = "inline-block";
+  });
+
+  function installerApp() {
+    if (!installPrompt) {
+      alert("Installation er ikke tilgængelig i denne browser. Prøv Chrome eller Edge på computer, eller 'Føj til hjemmeskærm' i Safari på iPhone.");
+      return;
+    }
+    installPrompt.prompt();
+    installPrompt.userChoice.then(function() {
+      installPrompt = null;
+      document.getElementById("installerKnap").style.display = "none";
+    });
   }
 </script>
 
-<!-- VERSION: v19.3 — 13. maj 2026 — login-tjek og logud-knap tilføjet -->
 </body>
 </html>
