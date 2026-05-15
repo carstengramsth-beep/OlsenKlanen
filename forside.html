@@ -224,8 +224,7 @@
 </div>
 
 <script>
-  // ---- Login-tjek ----
-  // Hvis ikke logget ind → send til login.html
+  // Login-tjek — hvis ikke logget ind, send til login.html
   const niveau = sessionStorage.getItem("ok_niveau");
   const navn = sessionStorage.getItem("ok_navn");
 
@@ -234,7 +233,9 @@
   }
 
   // Vis brugernavn øverst
-  document.getElementById("brugerInfo").textContent = navn + " (" + niveau + ")";
+  if (navn) {
+    document.getElementById("brugerInfo").textContent = navn + " (" + niveau + ")";
+  }
 
   // Skjul Admin-link hvis ikke admin
   if (niveau !== "admin") {
@@ -245,10 +246,11 @@
   function logUd() {
     sessionStorage.removeItem("ok_niveau");
     sessionStorage.removeItem("ok_navn");
+    sessionStorage.removeItem("ok_email");
     window.location.href = "login.html";
   }
 </script>
 
-<!-- VERSION: v19.3 — 13. maj 2026 — login-tjek og logud-knap tilføjet -->
+<!-- VERSION: v19.2 genskabt — 15. maj 2026 — billede med bunden i fokus, kompakte datafelter -->
 </body>
 </html>
