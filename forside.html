@@ -8,7 +8,6 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family: Georgia, serif; background:#f5f1e8; color:#2a2a2a; }
 
-  /* TOPBAR */
   .topbar { background:#2d4a1f; color:#f5d76e; padding:14px 24px; display:flex; justify-content:space-between; align-items:center; }
   .topbar h1 { font-size:1.4rem; }
   .topbar h1 span { color:#f5d76e; }
@@ -17,28 +16,30 @@
   .btn-login { background:transparent; color:#f5d76e; border:1px solid #f5d76e; padding:6px 16px; border-radius:4px; cursor:pointer; font-family:inherit; }
   .btn-login:hover { background:#f5d76e; color:#2d4a1f; }
 
-  /* LAYOUT */
   .layout { display:grid; grid-template-columns:240px 1fr 260px; gap:16px; padding:16px; }
 
-  /* OPSLAGSTAVLEN venstre */
   .opslag h3 { font-size:0.75rem; letter-spacing:2px; color:#666; margin-bottom:12px; }
   .opslag-item { background:#fff; padding:12px; margin-bottom:10px; border-left:3px solid #2d4a1f; border-radius:2px; }
   .opslag-item .ikon { font-size:1.3rem; }
   .opslag-item .titel { font-weight:bold; margin-top:4px; }
   .opslag-item .meta { font-size:0.8rem; color:#666; margin-top:2px; }
 
-  /* MIDTEN */
   .midten { display:flex; flex-direction:column; gap:12px; }
+
   .billede-felt {
     position:relative;
-    height:480px;
-    background-image:url(billeder/IMG_4390.JPEG);
-    background-size:cover;
-    background-position:center 75%;
+    width:100%;
     border-radius:4px;
+    overflow:hidden;
+    background:#2d4a1f;
   }
-  .billede-tekst { position:absolute; bottom:12px; left:16px; color:#fff; font-style:italic; text-shadow:0 1px 3px rgba(0,0,0,0.6); }
-  .billede-dato { position:absolute; bottom:12px; right:16px; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.6); }
+  .billede-felt img {
+    display:block;
+    width:100%;
+    height:auto;
+  }
+  .billede-tekst { position:absolute; bottom:12px; left:16px; color:#fff; font-style:italic; text-shadow:0 1px 3px rgba(0,0,0,0.8); }
+  .billede-dato { position:absolute; bottom:12px; right:16px; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.8); }
 
   .fremhaev { background:#fff; border-radius:4px; overflow:hidden; }
   .fremhaev-titel { background:#2d4a1f; color:#f5d76e; padding:6px 16px; font-weight:bold; letter-spacing:1px; font-size:0.9rem; }
@@ -60,197 +61,6 @@
   .dag.maerkedag { background:#fff3cd; border-radius:50%; font-weight:bold; }
   .dag.idag { background:#2d4a1f; color:#fff; border-radius:50%; font-weight:bold; }
 
-  /* HØJRE NAVIGATION */
   .nav h3 { font-size:0.75rem; letter-spacing:2px; color:#666; margin-bottom:12px; }
   .nav-item { background:#fff; padding:10px 14px; margin-bottom:6px; border-radius:3px; display:flex; align-items:center; gap:10px; cursor:pointer; }
   .nav-item:hover { background:#f0ead8; }
-  .nav-item.active { background:#e8f0e0; border-left:3px solid #2d4a1f; }
-  .nav-item .ikon { font-size:1.2rem; }
-  .nav-item .titel { font-weight:bold; font-size:0.95rem; }
-  .nav-item .undertekst { font-size:0.75rem; color:#666; }
-
-  .skjult { display:none !important; }
-</style>
-</head>
-<body>
-
-<div class="topbar">
-  <h1>OlsenKlanen <span>· Familieside</span></h1>
-  <div class="topbar-hoejre">
-    <span class="bruger-info" id="brugerInfo">Logget ind</span>
-    <button class="btn-login" onclick="logUd()">Log ud</button>
-  </div>
-</div>
-
-<div class="layout">
-
-  <!-- VENSTRE: OPSLAGSTAVLEN -->
-  <aside class="opslag">
-    <h3>OPSLAGSTAVLEN</h3>
-    <div class="opslag-item">
-      <div class="ikon">🎂</div>
-      <div class="titel">Tommy fylder 60!</div>
-      <div class="meta">Om 12 dage · 24. maj</div>
-    </div>
-    <div class="opslag-item">
-      <div class="ikon">🌲</div>
-      <div class="titel">Skovtur 2026</div>
-      <div class="meta">29.–31. maj · 17 dage</div>
-    </div>
-    <div class="opslag-item">
-      <div class="ikon">📹</div>
-      <div class="titel">Videomøde</div>
-      <div class="meta">Torsdag kl. 20:00</div>
-    </div>
-    <div class="opslag-item">
-      <div class="ikon">📷</div>
-      <div class="titel">Nye billeder</div>
-      <div class="meta">Kurt har uploadet 8</div>
-    </div>
-    <div class="opslag-item">
-      <div class="ikon">✋</div>
-      <div class="titel">Afstemning</div>
-      <div class="meta">Sted til skovturen?</div>
-    </div>
-  </aside>
-
-  <!-- MIDTEN -->
-  <main class="midten">
-    <div class="billede-felt">
-      <div class="billede-tekst">Skovtur maj 2025 — Haderslev</div>
-      <div class="billede-dato">Maj 2025</div>
-    </div>
-
-    <div class="fremhaev">
-      <div class="fremhaev-titel">⭐ FREMHÆVEDE BEGIVENHEDER</div>
-      <div class="fremhaev-row">
-        <div class="fremhaev-dato">24. maj</div>
-        <div class="fremhaev-tekst">Tommy fylder 60 år</div>
-        <div class="tag tag-maerkedag">Mærkedag</div>
-      </div>
-      <div class="fremhaev-row">
-        <div class="fremhaev-dato">29. maj</div>
-        <div class="fremhaev-tekst">Skovtur 2026 starter</div>
-        <div class="tag tag-arrangement">Arrangement</div>
-      </div>
-      <div class="fremhaev-row">
-        <div class="fremhaev-dato">31. maj</div>
-        <div class="fremhaev-tekst">Skovtur 2026 slutter</div>
-        <div class="tag tag-arrangement">Arrangement</div>
-      </div>
-      <div class="fremhaev-row">
-        <div class="fremhaev-dato">Aug 2026</div>
-        <div class="fremhaev-tekst">OlsenKlanens 60 års jubilæum</div>
-        <div class="tag tag-jubilaeum">Jubilæum</div>
-      </div>
-    </div>
-
-    <div class="kalender">
-      <h3>Kalender — Maj 2026</h3>
-      <div class="kalender-grid">
-        <div class="dag-label">Ma</div><div class="dag-label">Ti</div><div class="dag-label">On</div><div class="dag-label">To</div><div class="dag-label">Fr</div><div class="dag-label">Lø</div><div class="dag-label">Sø</div>
-        <div class="dag"></div><div class="dag"></div><div class="dag"></div><div class="dag"></div><div class="dag">1</div><div class="dag">2</div><div class="dag">3</div>
-        <div class="dag">4</div><div class="dag">5</div><div class="dag">6</div><div class="dag">7</div><div class="dag">8</div><div class="dag">9</div><div class="dag">10</div>
-        <div class="dag">11</div><div class="dag idag">12</div><div class="dag">13</div><div class="dag">14</div><div class="dag">15</div><div class="dag">16</div><div class="dag">17</div>
-        <div class="dag">18</div><div class="dag">19</div><div class="dag">20</div><div class="dag">21</div><div class="dag">22</div><div class="dag">23</div><div class="dag maerkedag">24</div>
-        <div class="dag">25</div><div class="dag">26</div><div class="dag">27</div><div class="dag">28</div><div class="dag skovtur">29</div><div class="dag skovtur">30</div><div class="dag skovtur">31</div>
-      </div>
-    </div>
-  </main>
-
-  <!-- HØJRE NAVIGATION -->
-  <aside class="nav">
-    <h3>NAVIGATION</h3>
-    <div class="nav-item active">
-      <div class="ikon">🏠</div>
-      <div>
-        <div class="titel">Forside</div>
-        <div class="undertekst">Du er her</div>
-      </div>
-    </div>
-    <div class="nav-item">
-      <div class="ikon">💬</div>
-      <div>
-        <div class="titel">OlsenBanden Center</div>
-        <div class="undertekst">Beskeder · video · chat</div>
-      </div>
-    </div>
-    <div class="nav-item">
-      <div class="ikon">👥</div>
-      <div>
-        <div class="titel">Medlemskartotek</div>
-        <div class="undertekst">5 medlemmer</div>
-      </div>
-    </div>
-    <div class="nav-item">
-      <div class="ikon">🎉</div>
-      <div>
-        <div class="titel">Mærkedage</div>
-        <div class="undertekst">Fødselsdage · jubilæer</div>
-      </div>
-    </div>
-    <div class="nav-item">
-      <div class="ikon">📸</div>
-      <div>
-        <div class="titel">Arkiv</div>
-        <div class="undertekst">Billeder · steder · referater</div>
-      </div>
-    </div>
-    <div class="nav-item">
-      <div class="ikon">📅</div>
-      <div>
-        <div class="titel">Arrangementer</div>
-        <div class="undertekst">Skovtur · kalender</div>
-      </div>
-    </div>
-    <div class="nav-item">
-      <div class="ikon">🕯️</div>
-      <div>
-        <div class="titel">Mindelunden</div>
-        <div class="undertekst">Tidligere medlemmer</div>
-      </div>
-    </div>
-
-    <h3 style="margin-top:20px;" id="adminTitel">KUN CARSTEN</h3>
-    <div class="nav-item" id="adminLink">
-      <div class="ikon">⚙️</div>
-      <div>
-        <div class="titel">Administration</div>
-        <div class="undertekst">Fuld adgang</div>
-      </div>
-    </div>
-  </aside>
-
-</div>
-
-<script>
-  // Login-tjek — hvis ikke logget ind, send til login.html
-  const niveau = sessionStorage.getItem("ok_niveau");
-  const navn = sessionStorage.getItem("ok_navn");
-
-  if (!niveau) {
-    window.location.href = "login.html";
-  }
-
-  // Vis brugernavn øverst
-  if (navn) {
-    document.getElementById("brugerInfo").textContent = navn + " (" + niveau + ")";
-  }
-
-  // Skjul Admin-link hvis ikke admin
-  if (niveau !== "admin") {
-    document.getElementById("adminTitel").classList.add("skjult");
-    document.getElementById("adminLink").classList.add("skjult");
-  }
-
-  function logUd() {
-    sessionStorage.removeItem("ok_niveau");
-    sessionStorage.removeItem("ok_navn");
-    sessionStorage.removeItem("ok_email");
-    window.location.href = "login.html";
-  }
-</script>
-
-<!-- VERSION: v19.2 genskabt — 15. maj 2026 — billede med bunden i fokus, kompakte datafelter -->
-</body>
-</html>
