@@ -94,7 +94,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 <div class="modal-note" id="modal-bemark"></div>
 <div class="field"><label>Fornavn</label><input type="text" id="f-fornavn"></div>
 <div class="field"><label>Efternavn</label><input type="text" id="f-efternavn"></div>
-<div class="field"><label>Medlemsnummer</label><input type="text" id="f-nr"></div>
+<div class="field"><label>Medlemsnummer</label><input type="text" id="f-nr" onfocus="visLedigeNumre()" oninput="visLedigeNumre()"><div id="ledige-forslag" style="display:none;background:#f5f1e8;border:1px solid #c4b896;border-radius:4px;margin-top:6px;max-height:200px;overflow-y:auto;font-size:13px;"></div></div>
 <div class="field"><label>Husstand</label><input type="text" id="f-husstand"></div>
 <div class="field"><label>Rolle</label><input type="text" id="f-rolle"></div>
 <div class="field"><label>Fødselsdato (DD-MM-ÅÅÅÅ)</label><input type="text" id="f-fdato"></div>
@@ -366,9 +366,41 @@ function åbenModal(idx) {
   document.getElementById('f-adresse').value = m.adresse || '';
   document.getElementById('f-telefon').value = m.telefon || '';
   document.getElementById('f-email').value = m.email || '';
+  document.getElementById('ledige-forslag').style.display = 'none';
   document.getElementById('modal-rediger').classList.add('show');
 }
 function lukModal() { document.getElementById('modal-rediger').classList.remove('show'); aktivIdx = -1; }
+function visLedigeNumre() {
+  const boks = document.getElementById('ledige-forslag');
+  const grupper = {};
+  medlemmer.forEach(m=>{ if(!grupper[m.nr]) grupper[m.nr]={husstand:m.husstand}; });
+  const brugte = Object.keys(grupper).filter(n=>n!=='???').map(n=>parseInt(n)).filter(n=>!isNaN(n)).sort((a,b)=>a-b);
+  const hojeste = brugte.length > 0 ? Math.max(...brugte) : 0;
+  const ledige = [];
+  for(let i=1; i<=hojeste; i++) {
+    if(!brugte.includes(i)) ledige.push(i);
+  }
+  ledige.push(hojeste+1);
+  let html = '<div style="padding:8px 12px;font-weight:bold;color:#2d5016;background:#e8f0d8;border-bottom:1px solid #c4b896;">Klik på et ledigt nummer for at vælge det</div>';
+  ledige.forEach(nr=>{
+    const nrStr = String(nr).padStart(3,'0');
+    let for_nr = null, efter_nr = null;
+    for(let i=nr-1; i>=1; i--) { if(brugte.includes(i)) { for_nr = i; break; } }
+    for(let i=nr+1; i<=hojeste; i++) { if(brugte.includes(i)) { efter_nr = i; break; } }
+    let info = '';
+    if(for_nr !== null) info += '↑ '+String(for_nr).padStart(3,'0')+' '+(grupper[String(for_nr).padStart(3,'0')]?.husstand||'');
+    if(for_nr !== null && efter_nr !== null) info += ' &nbsp;&nbsp; ';
+    if(efter_nr !== null) info += '↓ '+String(efter_nr).padStart(3,'0')+' '+(grupper[String(efter_nr).padStart(3,'0')]?.husstand||'');
+    if(nr > hojeste) info = '<span style="color:#2d7a2d;">Nyt nummer ved nyoprettelse</span>';
+    html += '<div onclick="vaelgNummer(\''+nrStr+'\')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;" onmouseover="this.style.background=\'#fff8e1\'" onmouseout="this.style.background=\'transparent\'"><strong style="color:#b03030;min-width:50px;">'+nrStr+'</strong><span style="color:#666;font-size:12px;">'+info+'</span></div>';
+  });
+  boks.innerHTML = html;
+  boks.style.display = 'block';
+}
+function vaelgNummer(nr) {
+  document.getElementById('f-nr').value = nr;
+  document.getElementById('ledige-forslag').style.display = 'none';
+}
 function gemRettelse() {
   if(aktivIdx<0) return;
   const m = medlemmer[aktivIdx];
