@@ -1,401 +1,271 @@
-
 <!DOCTYPE html>
 <html lang="da">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>OlsenBanden — Administrationscenter</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-  <link rel="manifest" href="manifest.json"/>
-  <meta name="theme-color" content="#1B4332"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-title" content="OlsenBanden"/>
-  <link rel="apple-touch-icon" href="icon-192.png"/>
-  <style>
-    :root{--skov:#1B4332;--grøn:#2D6A4F;--lysgrøn:#52B788;--mint:#D8F3DC;--guld:#D4A017;--hvid:#F8FAF8;--kort:#ffffff;--tekst:#1a1a1a;--meta:#6B7280;--kant:#E2EDE5;--rød:#DC2626;--online:#22C55E;--væk:#F59E0B;--offline:#9CA3AF;}
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'DM Sans',sans-serif;background:var(--hvid);color:var(--tekst);min-height:100vh;}
-    header{background:var(--skov);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(0,0,0,0.2);}
-    .logo{font-family:'Playfair Display',serif;color:white;font-size:1.25rem;}
-    .logo span{color:var(--lysgrøn);}
-    .header-bruger{display:flex;align-items:center;gap:10px;color:rgba(255,255,255,0.85);font-size:0.88rem;}
-    .min-avatar{width:36px;height:36px;border-radius:50%;background:var(--lysgrøn);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;border:2px solid rgba(255,255,255,0.3);}
-    nav a{color:rgba(255,255,255,0.7);text-decoration:none;font-size:0.85rem;margin-left:20px;}
-    nav a:hover{color:white;}
-    #login-skærm{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;}
-    .login-boks{background:white;border-radius:16px;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,0.08);text-align:center;max-width:380px;width:90%;}
-    .login-boks h2{font-family:'Playfair Display',serif;color:var(--skov);margin-bottom:8px;}
-    .login-boks p{color:var(--meta);font-size:0.9rem;margin-bottom:24px;}
-    #app{display:none;max-width:1100px;margin:32px auto;padding:0 24px;}
-    .app-grid{display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start;}
-    .kort{background:var(--kort);border-radius:16px;border:1px solid var(--kant);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
-    .kort-header{padding:16px 20px;border-bottom:1px solid var(--kant);display:flex;align-items:center;justify-content:space-between;}
-    .kort-titel{font-family:'Playfair Display',serif;font-size:1rem;color:var(--skov);}
-    .medlem-liste{padding:8px 0;}
-    .medlem-række{display:flex;align-items:center;padding:12px 20px;gap:12px;transition:background 0.15s;}
-    .medlem-række:hover{background:var(--mint);}
-    .avatar-wrap{position:relative;flex-shrink:0;}
-    .avatar{width:44px;height:44px;border-radius:50%;background:var(--grøn);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;}
-    .status-lampe{width:12px;height:12px;border-radius:50%;border:2px solid white;position:absolute;bottom:1px;right:1px;}
-    .online{background:var(--online);box-shadow:0 0 6px var(--online);}
-    .væk{background:var(--væk);}
-    .offline{background:var(--offline);}
-    .medlem-info{flex:1;}
-    .medlem-navn{font-weight:600;font-size:0.92rem;}
-    .medlem-status-tekst{font-size:0.78rem;color:var(--meta);}
-    .direkte-opkald{padding:20px;border-top:1px solid var(--kant);}
-    .opkald-titel{font-size:0.8rem;font-weight:600;color:var(--meta);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px;}
-    .opkald-liste{display:flex;flex-direction:column;gap:8px;}
-    .opkald-række{display:flex;align-items:center;padding:10px 14px;border-radius:10px;border:1px solid var(--kant);background:var(--hvid);gap:10px;}
-    .opkald-navn{flex:1;font-size:0.88rem;font-weight:500;}
-    .opkald-status-tekst{font-size:0.75rem;color:var(--meta);}
-    .fane-linje{display:flex;border-bottom:2px solid var(--kant);padding:0 20px;}
-    .fane-knap{background:none;border:none;padding:12px 16px;font-family:'DM Sans',sans-serif;font-size:0.88rem;color:var(--meta);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;}
-    .fane-knap.aktiv{color:var(--skov);border-bottom-color:var(--skov);font-weight:600;}
-    .fane-panel{display:none;}
-    .fane-panel.aktiv{display:block;}
-    .besked-liste{max-height:420px;overflow-y:auto;}
-    .besked-item{padding:14px 20px;border-bottom:1px solid var(--kant);cursor:pointer;}
-    .besked-item:hover{background:#f9fbf9;}
-    .besked-item.ulæst{border-left:3px solid var(--lysgrøn);background:#f0faf2;}
-    .bm-top{display:flex;align-items:center;gap:8px;margin-bottom:3px;}
-    .bm-fra{font-weight:600;font-size:0.88rem;}
-    .bm-tid{font-size:0.75rem;color:var(--meta);margin-left:auto;}
-    .bm-emne{font-size:0.85rem;margin-bottom:2px;}
-    .bm-preview{font-size:0.8rem;color:var(--meta);}
-    .ny-badge{background:var(--lysgrøn);color:white;font-size:0.65rem;padding:2px 6px;border-radius:10px;font-weight:700;}
-    .ny-besked-form{padding:20px;}
-    .fg{margin-bottom:14px;}
-    .fg label{display:block;font-size:0.8rem;color:var(--meta);font-weight:500;margin-bottom:5px;}
-    .fg input,.fg textarea{width:100%;padding:10px 13px;border:1px solid var(--kant);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.9rem;background:var(--hvid);}
-    .fg textarea{min-height:110px;resize:vertical;}
-    .modtager-chips{display:flex;flex-wrap:wrap;gap:6px;}
-    .chip{display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--kant);border-radius:20px;font-size:0.82rem;cursor:pointer;background:white;}
-    .chip.valgt{background:var(--skov);color:white;border-color:var(--skov);}
-    .chip-dot{width:8px;height:8px;border-radius:50%;background:var(--kant);}
-    .chip.valgt .chip-dot{background:var(--lysgrøn);}
-    .video-sektion{margin-top:24px;}
-    .video-rum-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:20px;}
-    .video-rum-kort{border:1px solid var(--kant);border-radius:12px;overflow:hidden;}
-    .video-rum-top{background:var(--skov);padding:16px 20px;color:white;}
-    .video-rum-navn{font-family:'Playfair Display',serif;font-size:1rem;margin-bottom:4px;}
-    .video-rum-beskrivelse{font-size:0.8rem;opacity:0.75;}
-    .video-rum-bund{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;background:white;}
-    .video-deltagere{font-size:0.8rem;color:var(--meta);}
-    .knap{background:var(--skov);color:white;border:none;padding:10px 22px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
-    .knap:hover{background:var(--grøn);}
-    .knap.grøn{background:var(--lysgrøn);}
-    .knap.grøn:hover{background:var(--grøn);}
-    .knap.rød{background:var(--rød);}
-    .knap.lille{padding:7px 14px;font-size:0.82rem;}
-    .knap.video{background:linear-gradient(135deg,#1B4332,#2D6A4F);padding:12px 20px;border-radius:10px;font-size:0.88rem;width:100%;justify-content:center;}
-    .knap.video:hover{background:linear-gradient(135deg,#2D6A4F,#52B788);}
-    #besked-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;}
-    .besked-boks{background:white;border-radius:16px;max-width:540px;width:94%;max-height:80vh;overflow-y:auto;padding:28px;}
-    .besked-boks-header{display:flex;justify-content:space-between;margin-bottom:16px;}
-    .besked-boks-emne{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--skov);}
-    .luk{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--meta);}
-    .bf{margin-bottom:6px;font-size:0.85rem;}
-    .bf strong{color:var(--meta);display:inline-block;width:44px;}
-    .btekst{margin-top:16px;padding:14px;background:var(--hvid);border-radius:8px;font-size:0.92rem;line-height:1.65;white-space:pre-wrap;}
-    .bhandlinger{display:flex;gap:10px;margin-top:16px;}
-    #alert{display:none;padding:12px 18px;border-radius:8px;margin-bottom:16px;font-size:0.88rem;}
-    #alert.ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;}
-    #alert.err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;}
-    @media(max-width:700px){.app-grid{grid-template-columns:1fr;}.video-rum-grid{grid-template-columns:1fr;}}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenBanden Center</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; }
+.header { background: #2d5016; color: #f5e6a8; padding: 18px 30px; display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 22px; }
+.header-links { display: flex; gap: 14px; align-items: center; }
+.header a { color: #f5e6a8; text-decoration: none; padding: 6px 14px; border: 1px solid #f5e6a8; border-radius: 4px; font-size: 14px; }
+.bruger { background: #1d3a0f; padding: 6px 14px; border-radius: 4px; font-size: 13px; }
+.container { max-width: 1100px; margin: 0 auto; padding: 25px; display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
+.kort { background: #fff; padding: 18px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 18px; }
+.kort h2 { color: #2d5016; font-size: 17px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #c89e3c; }
+.bandit { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 4px; margin-bottom: 6px; }
+.bandit.online { background: #e8f5e8; }
+.bandit.offline { background: #f5f5f5; opacity: 0.7; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; background: #2d5016; color: #f5e6a8; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+.bandit-navn { flex: 1; font-size: 14px; }
+.bandit-status { font-size: 11px; color: #888; }
+.online .bandit-status { color: #2d7a2d; }
+.lampe { width: 10px; height: 10px; border-radius: 50%; }
+.lampe.gron { background: #2d7a2d; box-shadow: 0 0 6px #2d7a2d; animation: puls 2s infinite; }
+.lampe.gra { background: #ccc; }
+@keyframes puls { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+.knap-raekke { display: flex; gap: 6px; margin-top: 6px; }
+.knap-lille { padding: 5px 10px; font-size: 12px; border: none; border-radius: 3px; cursor: pointer; }
+.knap-besked { background: #c89e3c; color: #2d5016; }
+.knap-ring { background: #b03030; color: #fff; }
+.knap-ring:disabled, .knap-besked:disabled { opacity: 0.4; cursor: not-allowed; }
+.faner { display: flex; border-bottom: 2px solid #c89e3c; margin-bottom: 18px; }
+.fane-knap { padding: 10px 18px; background: none; border: none; cursor: pointer; font-size: 15px; color: #888; font-family: inherit; }
+.fane-knap.active { color: #2d5016; font-weight: bold; border-bottom: 3px solid #c89e3c; margin-bottom: -2px; }
+.fane-indhold { display: none; }
+.fane-indhold.active { display: block; }
+.video-kort { background: linear-gradient(135deg, #2d5016, #3a6020); color: #f5e6a8; padding: 22px; border-radius: 8px; margin-bottom: 14px; }
+.video-kort h3 { font-size: 19px; margin-bottom: 8px; }
+.video-kort p { font-size: 13px; opacity: 0.9; margin-bottom: 14px; }
+.knap-stor { padding: 12px 22px; background: #c89e3c; color: #2d5016; border: none; border-radius: 5px; font-size: 15px; font-weight: bold; cursor: pointer; }
+.knap-stor:hover { background: #d9b04e; }
+.knap-saml { background: #b03030; color: #fff; padding: 14px 22px; border: none; border-radius: 5px; font-size: 15px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+.knap-saml:hover { background: #8a2424; }
+.besked-form textarea { width: 100%; padding: 10px; border: 1px solid #c4b896; border-radius: 4px; font-family: inherit; font-size: 14px; min-height: 100px; }
+.besked-form select { width: 100%; padding: 10px; border: 1px solid #c4b896; border-radius: 4px; font-family: inherit; font-size: 14px; margin-bottom: 10px; }
+.besked-form button { background: #2d7a2d; color: #fff; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-top: 10px; }
+.besked-item { background: #f5f1e8; padding: 12px; border-radius: 4px; margin-bottom: 8px; border-left: 4px solid #c89e3c; }
+.besked-fra { font-weight: bold; color: #2d5016; font-size: 14px; }
+.besked-tid { font-size: 11px; color: #888; }
+.besked-tekst { margin-top: 6px; font-size: 14px; }
+.info-boks { background: #fff8e1; border-left: 4px solid #c89e3c; padding: 12px; border-radius: 4px; font-size: 13px; color: #6b5b1f; margin-bottom: 14px; }
+.ring-pop { display: none; position: fixed; bottom: 30px; right: 30px; background: #b03030; color: #fff; padding: 22px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 1000; animation: ring 1s infinite; }
+.ring-pop.show { display: block; }
+@keyframes ring { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+.ring-pop h3 { margin-bottom: 8px; }
+.ring-pop .knaprum { display: flex; gap: 10px; margin-top: 14px; }
+.ring-pop button { padding: 10px 18px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+.svar { background: #2d7a2d; color: #fff; }
+.afvis { background: #fff; color: #b03030; }
+</style>
 </head>
 <body>
-<header>
-  <div class="logo">🌳 Olsen<span>Banden</span></div>
-  <div style="display:flex;align-items:center;">
-    <nav><a href="index.html">Forside</a><a href="admin.html">Admin</a></nav>
-    <div class="header-bruger" style="margin-left:24px;">
-      <div class="min-avatar" id="min-avatar">?</div>
-      <span id="bruger-navn-header">—</span>
-    </div>
-  </div>
-</header>
-
-<div id="login-skærm">
-  <div class="login-boks">
-    <h2>OlsenBanden</h2>
-    <p>Log ind med din OlsenKlanen email</p>
-    <div id="login-fejl" style="display:none;background:#fee2e2;color:#b91c1c;padding:8px 12px;border-radius:6px;font-size:0.85rem;margin-bottom:12px;"></div>
-    <div style="margin-bottom:12px;">
-      <input type="email" id="login-email" placeholder="din@email.dk" style="width:100%;padding:10px 12px;border:1px solid var(--kant);border-radius:8px;font-size:0.9rem;font-family:inherit;margin-bottom:8px;">
-      <input type="password" id="login-kode" placeholder="Adgangskode" style="width:100%;padding:10px 12px;border:1px solid var(--kant);border-radius:8px;font-size:0.9rem;font-family:inherit;">
-    </div>
-    <button onclick="window.logIndOlsenBanden()" id="login-knap" style="width:100%;background:#1B4332;color:white;border:none;padding:11px;border-radius:8px;font-size:0.9rem;cursor:pointer;font-family:inherit;">Log ind</button>
-  </div>
+<div class="header">
+<h1>🌳 OlsenBanden Center</h1>
+<div class="header-links">
+<a href="forside.html">← Forside</a>
+<div class="bruger" id="bruger-navn">Logger ind...</div>
 </div>
-
-<div id="app">
-  <div id="alert"></div>
-  <div class="app-grid">
-    <div>
-      <div class="kort">
-        <div class="kort-header">
-          <span class="kort-titel">👥 OlsenBanden — online nu</span>
-          <span id="online-tæller" style="font-size:0.78rem;color:var(--meta);"></span>
-        </div>
-        <div class="medlem-liste" id="tilstede-liste"></div>
-        <div class="direkte-opkald">
-          <div class="opkald-titel">📞 Ring direkte</div>
-          <div class="opkald-liste" id="ring-liste"></div>
-        </div>
-      </div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:24px;">
-      <div class="kort">
-        <div class="fane-linje">
-          <button class="fane-knap aktiv" onclick="visFane('indbakke')">📥 Indbakke <span id="ulæst-tal"></span></button>
-          <button class="fane-knap" onclick="visFane('ny')">✏️ Ny besked</button>
-          <button class="fane-knap" onclick="visFane('sendt')">📤 Sendt</button>
-        </div>
-        <div class="fane-panel aktiv" id="fp-indbakke">
-          <div class="besked-liste" id="indbakke-liste"><div style="padding:20px;text-align:center;color:var(--meta);font-size:0.85rem;">Henter…</div></div>
-        </div>
-        <div class="fane-panel" id="fp-ny">
-          <div class="ny-besked-form">
-            <div class="fg"><label>Modtager(e)</label><div class="modtager-chips" id="chips"></div></div>
-            <div class="fg"><label>Emne</label><input type="text" id="emne" placeholder="Hvad handler det om?"/></div>
-            <div class="fg"><label>Besked</label><textarea id="besked-tekst" placeholder="Skriv din besked…"></textarea></div>
-            <button class="knap grøn" id="send-btn" onclick="sendBesked()">📨 Send besked</button>
-          </div>
-        </div>
-        <div class="fane-panel" id="fp-sendt">
-          <div class="besked-liste" id="sendt-liste"><div style="padding:20px;text-align:center;color:var(--meta);font-size:0.85rem;">Henter…</div></div>
-        </div>
-      </div>
-      <div class="kort video-sektion">
-        <div class="kort-header"><span class="kort-titel">🎥 Videomøder</span></div>
-        <div class="video-rum-grid">
-          <div class="video-rum-kort">
-            <div class="video-rum-top"><div class="video-rum-navn">🌳 Video Klanen</div><div class="video-rum-beskrivelse">Fælles møderum for hele familien</div></div>
-            <div class="video-rum-bund"><span class="video-deltagere">Alle kan deltage</span>
-              <button class="knap video lille" onclick="window.open('https://meet.jit.si/VideoKlanen-FamilieOlsen','_blank')">🎥 Gå ind</button>
-            </div>
-          </div>
-          <div class="video-rum-kort">
-            <div class="video-rum-top" style="background:linear-gradient(135deg,#1B4332,#2D6A4F);"><div class="video-rum-navn">🔐 OlsenBanden</div><div class="video-rum-beskrivelse">Arbejdsmøder for administrationen</div></div>
-            <div class="video-rum-bund"><span class="video-deltagere">Kun OlsenBanden</span>
-              <button class="knap video lille" onclick="window.open('https://meet.jit.si/OlsenBanden-Admin-2026-privat','_blank')">🎥 Gå ind</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
-
-<div id="besked-modal" onclick="if(event.target===this)lukBesked()">
-  <div class="besked-boks">
-    <div class="besked-boks-header">
-      <span class="besked-boks-emne" id="bm-emne">—</span>
-      <button class="luk" onclick="lukBesked()">✕</button>
-    </div>
-    <div class="bf"><strong>Fra:</strong> <span id="bm-fra"></span></div>
-    <div class="bf"><strong>Til:</strong> <span id="bm-til"></span></div>
-    <div class="bf"><strong>Tid:</strong> <span id="bm-tid"></span></div>
-    <div class="btekst" id="bm-tekst"></div>
-    <div class="bhandlinger">
-      <button class="knap grøn lille" id="bm-svar-knap">↩️ Svar</button>
-      <button class="knap lille" style="background:white;color:var(--skov);border:1px solid var(--kant);" onclick="lukBesked()">Luk</button>
-    </div>
-  </div>
+<div class="container">
+<div>
+<div class="kort">
+<h2>OlsenBanden — <span id="antal-online">0</span> online</h2>
+<div id="bandit-liste"></div>
 </div>
-
-<script type="module">
-  import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import{getFirestore,collection,addDoc,query,where,orderBy,onSnapshot,serverTimestamp,doc,updateDoc,setDoc,deleteDoc}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import{getAuth,onAuthStateChanged,signInWithEmailAndPassword}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-  const firebaseConfig={
-    apiKey:"AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
-    authDomain:"olsenklanen-familieside.firebaseapp.com",
-    projectId:"olsenklanen-familieside",
-    storageBucket:"olsenklanen-familieside.firebasestorage.app",
-    messagingSenderId:"640843662410",
-    appId:"1:640843662410:web:e749b77ec9271e75c4d2b3",
-    databaseURL:"https://olsenklanen-familieside-default-rtdb.europe-west1.firebasedatabase.app"
-  };
-
-  const app=initializeApp(firebaseConfig);
-  const db=getFirestore(app);
-  const auth=getAuth(app);
-
-  const BANDEN=[
-    {navn:"Carsten Gram",email:"cg@gallerieg.dk",bogstav:"C"},
-    {navn:"Tommy Vormslev Olsen",email:"tvo@ishoejby.dk",bogstav:"T"},
-    {navn:"Kurt Olsen",email:"kurt@vormslev.dk",bogstav:"K"},
-    {navn:"Sanne Gram Fadel",email:"safi@dr.dk",bogstav:"S"},
-    {navn:"Karin Lund",email:"kld@inmobia.com",bogstav:"K"},
-  ];
-
-  let mig=null;
-
-  async function registrerOnline(bruger){
-    const ref=doc(db,"tilstede",bruger.email.replace(/\./g,"_"));
-    await setDoc(ref,{email:bruger.email,navn:bruger.displayName||bruger.email,sidstSet:serverTimestamp(),online:true},{merge:true});
-    setInterval(async()=>{await updateDoc(ref,{sidstSet:serverTimestamp(),online:true});},45000);
-    window.addEventListener("beforeunload",()=>{updateDoc(ref,{online:false});});
-  }
-
-  function lytTilstede(){
-    onSnapshot(collection(db,"tilstede"),snapshot=>{
-      const nu=Date.now();const tilstedeMap={};
-      snapshot.docs.forEach(d=>{
-        const data=d.data();
-        const sidst=data.sidstSet?.toMillis?.()||0;
-        const minSiden=(nu-sidst)/60000;
-        let status="offline";
-        if(data.online&&minSiden<2)status="online";
-        else if(data.online&&minSiden<10)status="væk";
-        tilstedeMap[data.email]=status;
-      });
-      bygTilstedeListe(tilstedeMap);
-    });
-  }
-
-  function bygTilstedeListe(tilstedeMap){
-    const liste=document.getElementById("tilstede-liste");
-    const ring=document.getElementById("ring-liste");
-    liste.innerHTML="";ring.innerHTML="";let onlineAntal=0;
-    BANDEN.forEach(m=>{
-      const status=tilstedeMap[m.email]||"offline";
-      if(status==="online")onlineAntal++;
-      const erMig=mig&&m.email===mig.email;
-      const statusTekst=status==="online"?"Online nu":status==="væk"?"Væk et øjeblik":"Offline";
-      const li=document.createElement("div");li.className="medlem-række";
-      li.innerHTML=`<div class="avatar-wrap"><div class="avatar">${m.bogstav}</div><div class="status-lampe ${status}"></div></div><div class="medlem-info"><div class="medlem-navn">${m.navn}${erMig?" (dig)":""}</div><div class="medlem-status-tekst">${statusTekst}</div></div>`;
-      liste.appendChild(li);
-      if(!erMig){
-        const rli=document.createElement("div");rli.className="opkald-række";
-        rli.innerHTML=`<div class="status-lampe ${status}" style="position:static;margin:0;flex-shrink:0;width:10px;height:10px;border:none;"></div><span class="opkald-navn">${m.navn}</span><span class="opkald-status-tekst">${statusTekst}</span><button class="knap lille${status==="online"?" grøn":""}" style="${status!=="online"?"background:#e5e7eb;color:#6b7280;":""}" onclick="visFane('ny');document.querySelectorAll('.chip').forEach(c=>{c.classList.toggle('valgt',c.dataset.email==='${m.email}');})">${status==="online"?"📞 Ring":"📨 Besked"}</button>`;
-        ring.appendChild(rli);
-      }
-    });
-    document.getElementById("online-tæller").textContent=onlineAntal>0?`${onlineAntal} online`:"Ingen online";
-  }
-
-  function lytBeskeder(bruger){
-    const q=query(collection(db,"postkasse"),where("modtagere","array-contains",bruger.email),orderBy("tidspunkt","desc"));
-    onSnapshot(q,snap=>{
-      const liste=document.getElementById("indbakke-liste");liste.innerHTML="";let ulæste=0;
-      if(snap.empty){liste.innerHTML='<div style="padding:20px;text-align:center;color:var(--meta);font-size:0.85rem;">Ingen beskeder endnu</div>';return;}
-      snap.docs.forEach(docSnap=>{const d=docSnap.data();const ulæst=d.ulesteAf?.includes(bruger.email);if(ulæst)ulæste++;liste.appendChild(lavBeskedRække(docSnap.id,d,ulæst,false));});
-      document.getElementById("ulæst-tal").textContent=ulæste>0?` (${ulæste})`:"";
-    },(error)=>{
-      console.error("Besked fejl:",error);
-      document.getElementById("indbakke-liste").innerHTML='<div style="padding:20px;text-align:center;color:var(--meta);font-size:0.85rem;">Kunne ikke hente beskeder</div>';
-    });
-    const qs=query(collection(db,"postkasse"),where("afsender","==",bruger.email),orderBy("tidspunkt","desc"));
-    onSnapshot(qs,snap=>{
-      const liste=document.getElementById("sendt-liste");liste.innerHTML="";
-      if(snap.empty){liste.innerHTML='<div style="padding:20px;text-align:center;color:var(--meta);font-size:0.85rem;">Ingen sendte beskeder</div>';return;}
-      snap.docs.forEach(docSnap=>{liste.appendChild(lavBeskedRække(docSnap.id,docSnap.data(),false,true));});
-    });
-  }
-
-  function lavBeskedRække(id,d,ulæst,erSendt){
-    const el=document.createElement("div");el.className="besked-item"+(ulæst?" ulæst":"");
-    const fra=erSendt?"Til: "+(d.modtagerNavne||d.modtagere||[]).join(", "):d.afsenderNavn||d.afsender;
-    el.innerHTML=`<div class="bm-top"><span class="bm-fra">${esc(fra)}</span>${ulæst?'<span class="ny-badge">NY</span>':""}<span class="bm-tid">${formatTid(d.tidspunkt)}</span></div><div class="bm-emne">${esc(d.emne||"(Ingen emne)")}</div><div class="bm-preview">${esc((d.tekst||"").substring(0,90))}</div>`;
-    el.addEventListener("click",()=>åbnBesked(id,d));return el;
-  }
-
-  async function åbnBesked(id,d){
-    if(d.ulesteAf?.includes(mig.email)){await updateDoc(doc(db,"postkasse",id),{ulesteAf:d.ulesteAf.filter(e=>e!==mig.email)});}
-    document.getElementById("bm-emne").textContent=d.emne||"(Ingen emne)";
-    document.getElementById("bm-fra").textContent=d.afsenderNavn||d.afsender;
-    document.getElementById("bm-til").textContent=(d.modtagerNavne||d.modtagere||[]).join(", ");
-    document.getElementById("bm-tid").textContent=formatTid(d.tidspunkt);
-    document.getElementById("bm-tekst").textContent=d.tekst;
-    const svarKnap=document.getElementById("bm-svar-knap");
-    svarKnap.onclick=()=>{visFane("ny");document.getElementById("emne").value="Sv: "+(d.emne||"");document.querySelectorAll(".chip").forEach(c=>{c.classList.toggle("valgt",c.dataset.email===d.afsender);});lukBesked();};
-    document.getElementById("besked-modal").style.display="flex";
-  }
-
-  window.lukBesked=function(){document.getElementById("besked-modal").style.display="none";};
-
-  window.sendBesked=async function(){
-    const tekst=document.getElementById("besked-tekst").value.trim();
-    const emne=document.getElementById("emne").value.trim()||"(Ingen emne)";
-    if(!tekst){visAlert("Skriv en besked først.","err");return;}
-    const valgte=[...document.querySelectorAll(".chip.valgt")];
-    if(!valgte.length){visAlert("Vælg mindst én modtager.","err");return;}
-    const emails=valgte.map(c=>c.dataset.email);
-    const navne=valgte.map(c=>c.dataset.navn);
-    try{
-      document.getElementById("send-btn").disabled=true;
-      await addDoc(collection(db,"postkasse"),{
-        afsender:mig.email,afsenderNavn:mig.displayName||mig.email,
-        modtagere:emails,modtagerNavne:navne,emne,tekst,
-        tidspunkt:serverTimestamp(),ulesteAf:emails
-      });
-      document.getElementById("besked-tekst").value="";
-      document.getElementById("emne").value="";
-      document.querySelectorAll(".chip").forEach(c=>c.classList.remove("valgt"));
-      visFane("indbakke");visAlert("✅ Besked sendt!","ok");
-    }catch(e){visAlert("❌ Fejl: "+e.message,"err");}
-    finally{document.getElementById("send-btn").disabled=false;}
-  };
-
-  function bygChips(bruger){
-    const wrap=document.getElementById("chips");wrap.innerHTML="";
-    BANDEN.forEach(m=>{
-      if(m.email===bruger.email)return;
-      const chip=document.createElement("div");chip.className="chip";
-      chip.dataset.email=m.email;chip.dataset.navn=m.navn;
-      chip.innerHTML=`<div class="chip-dot"></div>${m.navn.split(" ")[0]}`;
-      chip.addEventListener("click",()=>chip.classList.toggle("valgt"));
-      wrap.appendChild(chip);
-    });
-  }
-
-  window.visFane=function(id){
-    document.querySelectorAll(".fane-knap").forEach((k,i)=>{k.classList.toggle("aktiv",["indbakke","ny","sendt"][i]===id);});
-    document.querySelectorAll(".fane-panel").forEach(p=>p.classList.remove("aktiv"));
-    document.getElementById("fp-"+id).classList.add("aktiv");
-  };
-
-  function formatTid(ts){if(!ts)return"";const d=ts.toDate?ts.toDate():new Date(ts.seconds*1000);return d.toLocaleString("da-DK",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});}
-  function esc(s){return(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
-  function visAlert(tekst,type){const el=document.getElementById("alert");el.textContent=tekst;el.className=type;el.style.display="block";setTimeout(()=>el.style.display="none",4000);}
-
-  window.logIndOlsenBanden=async function(){
-    const email=document.getElementById('login-email').value.trim();
-    const kode=document.getElementById('login-kode').value;
-    const fejl=document.getElementById('login-fejl');
-    const knap=document.getElementById('login-knap');
-    if(!email||!kode){fejl.textContent='Udfyld email og adgangskode';fejl.style.display='block';return;}
-    knap.disabled=true;knap.textContent='Logger ind…';
-    try{await signInWithEmailAndPassword(auth,email,kode);}
-    catch(e){fejl.textContent='Forkert email eller adgangskode';fejl.style.display='block';knap.disabled=false;knap.textContent='Log ind';}
-  };
-
-  document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('login-skærm').style.display!=='none')window.logIndOlsenBanden();});
-  document.getElementById("login-skærm").style.display="none";
-  document.getElementById("app").style.display="none";
-
-  onAuthStateChanged(auth,bruger=>{
-    if(bruger){
-      mig=bruger;
-      document.getElementById("login-skærm").style.display="none";
-      document.getElementById("app").style.display="block";
-      document.getElementById("bruger-navn-header").textContent=bruger.displayName||bruger.email;
-      document.getElementById("min-avatar").textContent=(bruger.displayName||"?").charAt(0).toUpperCase();
-      registrerOnline(bruger);
-      lytTilstede();
-      lytBeskeder(bruger);
-      bygChips(bruger);
-    }else{
-      document.getElementById("login-skærm").style.display="flex";
-      document.getElementById("app").style.display="none";
+<div class="kort">
+<h2>📢 Kald alle til møde</h2>
+<p style="font-size:13px;color:#666;margin-bottom:10px;">Aktiver "samling" — alle online banditter får en notifikation om at gå ind i OlsenBanden-mødet.</p>
+<button class="knap-saml" onclick="kaldAlle()">📣 KALD TIL SAMLING</button>
+</div>
+</div>
+<div>
+<div class="faner">
+<button class="fane-knap active" onclick="visFane('video', this)">📹 Videomøder</button>
+<button class="fane-knap" onclick="visFane('besked', this)">✉️ Beskeder</button>
+<button class="fane-knap" onclick="visFane('nybesked', this)">✏️ Ny besked</button>
+</div>
+<div id="fane-video" class="fane-indhold active">
+<div class="info-boks">Klik "Gå ind" for at åbne et videomøde. Det åbner i et nyt vindue via Jitsi (gratis, sikkert, kræver ingen konto).</div>
+<div class="video-kort">
+<h3>🌳 Video Klanen</h3>
+<p>Fælles møderum for hele familien — alle kan deltage.</p>
+<button class="knap-stor" onclick="aabnVideo('VideoKlanen-FamilieOlsen-2026')">🎥 Gå ind i Video Klanen</button>
+</div>
+<div class="video-kort" style="background:linear-gradient(135deg, #8a2424, #b03030);">
+<h3>🔒 OlsenBanden — privat</h3>
+<p>Arbejdsmøder for de 5 banditter (Carsten, Tommy, Kurt, Sanne, Karin).</p>
+<button class="knap-stor" onclick="aabnVideo('OlsenBanden-Admin-2026-privat')">🎥 Gå ind i OlsenBanden-mødet</button>
+</div>
+</div>
+<div id="fane-besked" class="fane-indhold">
+<h2 style="color:#2d5016;margin-bottom:12px;">📥 Indbakke</h2>
+<div id="besked-liste"><p style="color:#888;padding:20px;text-align:center;">Ingen beskeder endnu</p></div>
+</div>
+<div id="fane-nybesked" class="fane-indhold">
+<h2 style="color:#2d5016;margin-bottom:12px;">✏️ Skriv ny besked</h2>
+<div class="besked-form">
+<label style="font-size:13px;color:#555;">Til:</label>
+<select id="til-vaelg">
+<option value="alle">📣 Alle i OlsenBanden</option>
+<option value="Tommy">Tommy Vormslev Olsen</option>
+<option value="Kurt">Kurt Olsen</option>
+<option value="Sanne">Sanne Gram Fadel</option>
+<option value="Karin">Karin Lund</option>
+</select>
+<label style="font-size:13px;color:#555;">Besked:</label>
+<textarea id="besked-tekst" placeholder="Skriv din besked her..."></textarea>
+<button onclick="sendBesked()">📤 Send besked</button>
+</div>
+</div>
+</div>
+</div>
+<div class="ring-pop" id="ring-pop">
+<h3>📞 Indkommende opkald</h3>
+<div id="ring-fra">...</div>
+<div class="knaprum">
+<button class="svar" onclick="svarOpkald()">✅ Svar</button>
+<button class="afvis" onclick="afvisOpkald()">❌ Afvis</button>
+</div>
+</div>
+<script>
+const banditter = [
+  {id:'Carsten', navn:'Carsten Gram', email:'cg@gallerieg.dk'},
+  {id:'Tommy', navn:'Tommy Vormslev Olsen', email:'tvo@ishoejby.dk'},
+  {id:'Kurt', navn:'Kurt Olsen', email:'kurt@vormslev.dk'},
+  {id:'Sanne', navn:'Sanne Gram Fadel', email:'safi@dr.dk'},
+  {id:'Karin', navn:'Karin Lund', email:'kld@inmobia.com'}
+];
+let migId = localStorage.getItem('olsen-bandit') || 'Carsten';
+let mig = banditter.find(b => b.id === migId);
+document.getElementById('bruger-navn').textContent = mig.email;
+function markerOnline() {
+  localStorage.setItem('online-' + mig.id, Date.now());
+  setTimeout(markerOnline, 5000);
+}
+markerOnline();
+function erOnline(id) {
+  const tid = parseInt(localStorage.getItem('online-' + id) || '0');
+  return (Date.now() - tid) < 15000;
+}
+function visBanditter() {
+  let html = '';
+  let antal = 0;
+  banditter.forEach(b => {
+    const online = erOnline(b.id);
+    if(online) antal++;
+    const erMig = b.id === mig.id;
+    const initialer = b.navn.split(' ').map(n=>n[0]).join('').substring(0,2);
+    html += '<div class="bandit '+(online?'online':'offline')+'">';
+    html += '<div class="avatar">'+initialer+'</div>';
+    html += '<div style="flex:1;">';
+    html += '<div class="bandit-navn">'+b.navn+(erMig?' (dig)':'')+'</div>';
+    html += '<div class="bandit-status">'+(online?'Online':'Offline')+'</div>';
+    if(!erMig) {
+      html += '<div class="knap-raekke">';
+      html += '<button class="knap-lille knap-besked" onclick="skrivTil(\''+b.id+'\')">✉️ Besked</button>';
+      html += '<button class="knap-lille knap-ring" onclick="ringTil(\''+b.id+'\')" '+(online?'':'disabled')+'>📞 Ring</button>';
+      html += '</div>';
+    }
+    html += '</div>';
+    html += '<span class="lampe '+(online?'gron':'gra')+'"></span>';
+    html += '</div>';
+  });
+  document.getElementById('bandit-liste').innerHTML = html;
+  document.getElementById('antal-online').textContent = antal;
+}
+visBanditter();
+setInterval(visBanditter, 3000);
+function visFane(navn, knap) {
+  document.querySelectorAll('.fane-indhold').forEach(f => f.classList.remove('active'));
+  document.querySelectorAll('.fane-knap').forEach(k => k.classList.remove('active'));
+  document.getElementById('fane-'+navn).classList.add('active');
+  knap.classList.add('active');
+}
+function aabnVideo(rumNavn) {
+  window.open('https://meet.jit.si/' + rumNavn, '_blank', 'width=1200,height=800');
+}
+function kaldAlle() {
+  if(!confirm('Send notifikation til ALLE online banditter om at gå ind i OlsenBanden-mødet?')) return;
+  const beskeder = JSON.parse(localStorage.getItem('beskeder') || '[]');
+  banditter.forEach(b => {
+    if(b.id !== mig.id) {
+      beskeder.push({fra: mig.id, til: b.id, tekst: '📣 SAMLING! Gå ind i OlsenBanden-mødet med det samme.', tid: Date.now(), samling: true});
     }
   });
+  localStorage.setItem('beskeder', JSON.stringify(beskeder));
+  aabnVideo('OlsenBanden-Admin-2026-privat');
+}
+function skrivTil(id) {
+  document.querySelector('[onclick*=nybesked]').click();
+  document.getElementById('til-vaelg').value = id;
+  document.getElementById('besked-tekst').focus();
+}
+function sendBesked() {
+  const til = document.getElementById('til-vaelg').value;
+  const tekst = document.getElementById('besked-tekst').value.trim();
+  if(!tekst) { alert('Skriv en besked først!'); return; }
+  const beskeder = JSON.parse(localStorage.getItem('beskeder') || '[]');
+  if(til === 'alle') {
+    banditter.forEach(b => { if(b.id !== mig.id) beskeder.push({fra: mig.id, til: b.id, tekst: tekst, tid: Date.now()}); });
+  } else {
+    beskeder.push({fra: mig.id, til: til, tekst: tekst, tid: Date.now()});
+  }
+  localStorage.setItem('beskeder', JSON.stringify(beskeder));
+  document.getElementById('besked-tekst').value = '';
+  alert('Besked sendt! 📤');
+  visBeskeder();
+}
+function visBeskeder() {
+  const alle = JSON.parse(localStorage.getItem('beskeder') || '[]');
+  const mine = alle.filter(b => b.til === mig.id).sort((a,b)=>b.tid-a.tid);
+  if(mine.length === 0) {
+    document.getElementById('besked-liste').innerHTML = '<p style="color:#888;padding:20px;text-align:center;">Ingen beskeder endnu</p>';
+    return;
+  }
+  let html = '';
+  mine.forEach(b => {
+    const fraB = banditter.find(x=>x.id===b.fra);
+    const fraNavn = fraB ? fraB.navn : b.fra;
+    const tid = new Date(b.tid).toLocaleString('da-DK');
+    html += '<div class="besked-item"><div style="display:flex;justify-content:space-between;"><span class="besked-fra">Fra '+fraNavn+'</span><span class="besked-tid">'+tid+'</span></div><div class="besked-tekst">'+b.tekst+'</div></div>';
+  });
+  document.getElementById('besked-liste').innerHTML = html;
+}
+visBeskeder();
+setInterval(visBeskeder, 3000);
+let indkommendeOpkald = null;
+function ringTil(id) {
+  const b = banditter.find(x=>x.id===id);
+  const opkald = {fra: mig.id, til: id, tid: Date.now(), rum: 'opkald-'+mig.id+'-'+id};
+  localStorage.setItem('opkald', JSON.stringify(opkald));
+  alert('📞 Ringer til '+b.navn+'... Når '+b.navn+' svarer, går I begge ind i videomødet.');
+  aabnVideo(opkald.rum);
+}
+function tjekOpkald() {
+  const opkald = JSON.parse(localStorage.getItem('opkald') || 'null');
+  if(opkald && opkald.til === mig.id && (Date.now() - opkald.tid) < 30000 && !indkommendeOpkald) {
+    indkommendeOpkald = opkald;
+    const fraB = banditter.find(x=>x.id===opkald.fra);
+    document.getElementById('ring-fra').textContent = (fraB?fraB.navn:opkald.fra) + ' ringer til dig';
+    document.getElementById('ring-pop').classList.add('show');
+  }
+}
+setInterval(tjekOpkald, 2000);
+function svarOpkald() {
+  if(!indkommendeOpkald) return;
+  aabnVideo(indkommendeOpkald.rum);
+  document.getElementById('ring-pop').classList.remove('show');
+  localStorage.removeItem('opkald');
+  indkommendeOpkald = null;
+}
+function afvisOpkald() {
+  document.getElementById('ring-pop').classList.remove('show');
+  localStorage.removeItem('opkald');
+  indkommendeOpkald = null;
+}
 </script>
-<script>if('serviceWorker'in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}</script>
 </body>
 </html>
