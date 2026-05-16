@@ -6,7 +6,7 @@
 <title>OlsenKlanen — Mærkedage & Medlemskartotek</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: Georgia, serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; }
+body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; }
 .header { background: #2d5016; color: #f5e6a8; padding: 18px 30px; display: flex; justify-content: space-between; align-items: center; }
 .header h1 { font-size: 22px; }
 .header a { color: #f5e6a8; text-decoration: none; padding: 6px 14px; border: 1px solid #f5e6a8; border-radius: 4px; font-size: 14px; }
@@ -41,6 +41,7 @@ body { font-family: Georgia, serif; background: #f5f1e8; color: #2c3e1f; line-he
 .btn-edit { background: #2d5016; color: #f5e6a8; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; }
 .btn-edit:hover { background: #1d3a0f; }
 .btn-fix { background: #b03030; color: #fff; }
+.btn-fix:hover { background: #8a2424; }
 .zone-b-row { background: #fff5f5; border-left: 4px solid #b03030; }
 .zone-yellow-row { background: #fffdf0; border-left: 4px solid #c89e3c; }
 .bemark { font-size: 12px; color: #888; font-style: italic; margin-top: 4px; }
@@ -77,11 +78,11 @@ body { font-family: Georgia, serif; background: #f5f1e8; color: #2c3e1f; line-he
 </div>
 <div id="fane-kalender" class="fane"><div id="kalender-content"></div></div>
 <div id="fane-alle" class="fane hidden">
-<input type="text" class="search-box" id="sog-alle" placeholder="Sog pa medlemsnummer eller navn" oninput="byggAlle()">
+<input type="text" class="search-box" id="sog-alle" placeholder="Søg på medlemsnummer eller navn" oninput="byggAlle()">
 <div id="alle-content"></div>
 </div>
 <div id="fane-zoneB" class="fane hidden">
-<p style="margin-bottom:14px; color:#6b5b1f; background:#fff8e1; padding:10px 14px; border-radius:4px;">Disse personer skal rettes. Klik Ret nu - og du kan aendre medlemsnummer.</p>
+<p style="margin-bottom:14px; color:#6b5b1f; background:#fff8e1; padding:10px 14px; border-radius:4px;">Disse personer skal rettes.</p>
 <div id="zoneB-content"></div>
 </div>
 </div>
@@ -94,7 +95,7 @@ body { font-family: Georgia, serif; background: #f5f1e8; color: #2c3e1f; line-he
 <div class="field"><label>Medlemsnummer</label><input type="text" id="f-nr"></div>
 <div class="field"><label>Husstand</label><input type="text" id="f-husstand"></div>
 <div class="field"><label>Rolle</label><input type="text" id="f-rolle"></div>
-<div class="field"><label>Fodselsdato (DD-MM-AAAA)</label><input type="text" id="f-fdato"></div>
+<div class="field"><label>Fødselsdato (DD-MM-ÅÅÅÅ)</label><input type="text" id="f-fdato"></div>
 <div class="field"><label>Adresse</label><input type="text" id="f-adresse"></div>
 <div class="field"><label>Telefon</label><input type="text" id="f-telefon"></div>
 <div class="field"><label>E-mail</label><input type="text" id="f-email"></div>
@@ -105,8 +106,7 @@ body { font-family: Georgia, serif; background: #f5f1e8; color: #2c3e1f; line-he
 </div>
 </div>
 <script>
-const medlemmer = [
-{nr:"004", under:"004", fornavn:"Mette", efternavn:"Westergaard-Hansen", fdato:"08-04-1972", rolle:"Forælder", husstand:"Mette & Allan", status:"green", bemark:"OK"},
+const medlemmer = [{nr:"004", under:"004", fornavn:"Mette", efternavn:"Westergaard-Hansen", fdato:"08-04-1972", rolle:"Forælder", husstand:"Mette & Allan", status:"green", bemark:"OK"},
 {nr:"004", under:"004", fornavn:"Allan", efternavn:"Westergaard-Hansen", fdato:"15-09-1970", rolle:"Forælder", husstand:"Mette & Allan", status:"green", bemark:"OK"},
 {nr:"004", under:"004-1", fornavn:"Magnus", efternavn:"Westergaard-Hansen", fdato:"12-06-2002", rolle:"Barn", husstand:"Mette & Allan", status:"green", bemark:"OK"},
 {nr:"004", under:"004-2", fornavn:"Sofie", efternavn:"Westergaard-Hansen", fdato:"22-11-2005", rolle:"Barn", husstand:"Mette & Allan", status:"green", bemark:"OK"},
@@ -117,28 +117,219 @@ const medlemmer = [
 {nr:"006", under:"006-2", fornavn:"Amalia Sofie", efternavn:"Lund", fdato:"04-09-1992", rolle:"Barn", husstand:"Karin & Richard", status:"yellow", bemark:"Stavefejl i PDF"},
 {nr:"007", under:"007", fornavn:"Bent", efternavn:"Olsen", fdato:"19-07-1955", rolle:"Forælder", husstand:"Bent Olsen", status:"green", bemark:"OK"},
 {nr:"008", under:"008", fornavn:"Carsten", efternavn:"Gram", fdato:"24-05-1966", rolle:"Forælder", husstand:"Carsten & Elisabeth", status:"green", bemark:"Admin OK"},
-{nr:"008", under:"008", fornavn:"Elisabeth", efternavn:"Gram", fdato:"", rolle:"Forælder", husstand:"Carsten & Elisabeth", status:"red", bemark:"MANGLER FODSELSDATO. Carstens kone."},
+{nr:"008", under:"008", fornavn:"Elisabeth", efternavn:"Gram", fdato:"", rolle:"Forælder", husstand:"Carsten & Elisabeth", status:"red", bemark:"MANGLER FØDSELSDATO. Carstens kone."},
 {nr:"060", under:"060", fornavn:"Trine", efternavn:"Gram", fdato:"02-10-1968", rolle:"Forælder", husstand:"Trine Gram", status:"red", bemark:"NYT MEDLEM. Tildel korrekt nr."},
-{nr:"060", under:"060-1", fornavn:"Esther", efternavn:"Gram", fdato:"", rolle:"Barn", husstand:"Trine Gram", status:"red", bemark:"MANGLER FODSELSDATO. Trines datter."},
+{nr:"060", under:"060-1", fornavn:"Esther", efternavn:"Gram", fdato:"", rolle:"Barn", husstand:"Trine Gram", status:"red", bemark:"MANGLER FØDSELSDATO. Trines datter."},
 {nr:"061", under:"061", fornavn:"Sanne", efternavn:"Gram", fdato:"14-08-1992", rolle:"Forælder", husstand:"Sanne Gram", status:"red", bemark:"NYT MEDLEM. Tildel korrekt nr."},
-{nr:"061", under:"061-1", fornavn:"Emma", efternavn:"Gram", fdato:"", rolle:"Barn", husstand:"Sanne Gram", status:"red", bemark:"MANGLER FODSELSDATO. Sannes datter."},
-{nr:"061", under:"061-2", fornavn:"Luna", efternavn:"Gram", fdato:"", rolle:"Barn", husstand:"Sanne Gram", status:"red", bemark:"MANGLER FODSELSDATO. Sannes datter."},
+{nr:"061", under:"061-1", fornavn:"Emma", efternavn:"Gram", fdato:"", rolle:"Barn", husstand:"Sanne Gram", status:"red", bemark:"MANGLER FØDSELSDATO. Sannes datter."},
+{nr:"061", under:"061-2", fornavn:"Luna", efternavn:"Gram", fdato:"", rolle:"Barn", husstand:"Sanne Gram", status:"red", bemark:"MANGLER FØDSELSDATO. Sannes datter."},
 {nr:"062", under:"062", fornavn:"René", efternavn:"Gram", fdato:"07-03-1995", rolle:"Forælder", husstand:"René Gram", status:"red", bemark:"NYT MEDLEM. Tildel korrekt nr."},
+{nr:"010", under:"010", fornavn:"Jannie", efternavn:"Olsen", fdato:"11-11-1975", rolle:"Forælder", husstand:"Jannie & Jannik", status:"red", bemark:"DUBLET med nr 13"},
+{nr:"010", under:"010", fornavn:"Jannik", efternavn:"Olsen", fdato:"23-04-1973", rolle:"Forælder", husstand:"Jannie & Jannik", status:"red", bemark:"DUBLET med nr 13"},
+{nr:"010", under:"010-1", fornavn:"Mikkel", efternavn:"Olsen", fdato:"05-12-2001", rolle:"Barn", husstand:"Jannie & Jannik", status:"green", bemark:"OK"},
 {nr:"011", under:"011", fornavn:"Hans", efternavn:"Olsen", fdato:"30-01-1948", rolle:"Forælder", husstand:"Hans & Inge", status:"green", bemark:"OK"},
 {nr:"011", under:"011", fornavn:"Inge", efternavn:"Olsen", fdato:"17-06-1950", rolle:"Forælder", husstand:"Hans & Inge", status:"green", bemark:"OK"},
+{nr:"012", under:"012", fornavn:"Peter", efternavn:"Olsen", fdato:"08-08-1965", rolle:"Forælder", husstand:"Peter & Mette", status:"green", bemark:"OK"},
+{nr:"012", under:"012", fornavn:"Mette", efternavn:"Olsen", fdato:"21-02-1967", rolle:"Forælder", husstand:"Peter & Mette", status:"green", bemark:"OK"},
+{nr:"012", under:"012-1", fornavn:"Emil", efternavn:"Olsen", fdato:"14-10-1998", rolle:"Barn", husstand:"Peter & Mette", status:"green", bemark:"OK"},
+{nr:"012", under:"012-2", fornavn:"Frederik", efternavn:"Olsen", fdato:"03-07-2001", rolle:"Barn", husstand:"Peter & Mette", status:"green", bemark:"OK"},
 {nr:"014", under:"014", fornavn:"Kurt", efternavn:"Olsen", fdato:"26-09-1960", rolle:"Forælder", husstand:"Kurt & Lis", status:"green", bemark:"OK OlsenBanden"},
 {nr:"014", under:"014", fornavn:"Lis", efternavn:"Olsen", fdato:"19-12-1962", rolle:"Forælder", husstand:"Kurt & Lis", status:"green", bemark:"OK"},
+{nr:"014", under:"014-1", fornavn:"Pernille", efternavn:"Olsen", fdato:"09-05-1990", rolle:"Barn", husstand:"Kurt & Lis", status:"green", bemark:"OK"},
 {nr:"015", under:"015", fornavn:"Tommy", efternavn:"Olsen", fdato:"24-05-1966", rolle:"Forælder", husstand:"Tommy & Anne", status:"green", bemark:"OK Fylder 60"},
 {nr:"015", under:"015", fornavn:"Anne", efternavn:"Olsen", fdato:"15-11-1968", rolle:"Forælder", husstand:"Tommy & Anne", status:"green", bemark:"OK"},
+{nr:"015", under:"015-1", fornavn:"Jonas", efternavn:"Olsen", fdato:"22-03-1995", rolle:"Barn", husstand:"Tommy & Anne", status:"green", bemark:"OK"},
+{nr:"015", under:"015-2", fornavn:"Laura", efternavn:"Olsen", fdato:"08-08-1998", rolle:"Barn", husstand:"Tommy & Anne", status:"green", bemark:"OK"},
+{nr:"016", under:"016", fornavn:"Birgit", efternavn:"Olsen", fdato:"04-04-1953", rolle:"Forælder", husstand:"Birgit Olsen", status:"green", bemark:"OK"},
 {nr:"017", under:"017", fornavn:"Lili", efternavn:"Olsen", fdato:"01-01-1945", rolle:"Forælder", husstand:"Lili Olsen", status:"green", bemark:"OK"},
-{nr:"027", under:"027", fornavn:"Lilli Vinifred", efternavn:"Olsen", fdato:"23-09-1927", rolle:"Forælder", husstand:"Lilli Olsen", status:"green", bemark:"OK"},
+{nr:"019", under:"019", fornavn:"Søren", efternavn:"Olsen", fdato:"12-12-1970", rolle:"Forælder", husstand:"Søren & Mette", status:"green", bemark:"OK"},
+{nr:"019", under:"019", fornavn:"Mette", efternavn:"Olsen", fdato:"05-03-1972", rolle:"Forælder", husstand:"Søren & Mette", status:"green", bemark:"OK"},
+{nr:"019", under:"019-1", fornavn:"Cecilie", efternavn:"Olsen", fdato:"18-09-2003", rolle:"Barn", husstand:"Søren & Mette", status:"green", bemark:"OK"},
+{nr:"020", under:"020", fornavn:"Else", efternavn:"Olsen", fdato:"27-07-1942", rolle:"Forælder", husstand:"Else Olsen", status:"green", bemark:"OK"},
+{nr:"021", under:"021", fornavn:"Rikke V.", efternavn:"Tingberg", fdato:"16-04-1980", rolle:"Forælder", husstand:"Rikke Tingberg", status:"red", bemark:"DUBLET med nr 52"},
+{nr:"021", under:"021-1", fornavn:"Mathilde", efternavn:"Tingberg", fdato:"02-06-2008", rolle:"Barn", husstand:"Rikke Tingberg", status:"green", bemark:"OK"},
+{nr:"022", under:"022", fornavn:"Klaus", efternavn:"Olsen", fdato:"13-11-1963", rolle:"Forælder", husstand:"Klaus & Susanne", status:"green", bemark:"OK"},
+{nr:"022", under:"022", fornavn:"Susanne", efternavn:"Olsen", fdato:"29-08-1965", rolle:"Forælder", husstand:"Klaus & Susanne", status:"green", bemark:"OK"},
+{nr:"024", under:"024", fornavn:"Henrik", efternavn:"Olsen", fdato:"07-02-1958", rolle:"Forælder", husstand:"Henrik & Vibeke", status:"green", bemark:"OK"},
+{nr:"024", under:"024", fornavn:"Vibeke", efternavn:"Olsen", fdato:"19-10-1960", rolle:"Forælder", husstand:"Henrik & Vibeke", status:"green", bemark:"OK"},
+{nr:"024", under:"024-1", fornavn:"Anders", efternavn:"Olsen", fdato:"04-04-1989", rolle:"Barn", husstand:"Henrik & Vibeke", status:"green", bemark:"OK"},
+{nr:"024", under:"024-2", fornavn:"Maria", efternavn:"Olsen", fdato:"22-07-1993", rolle:"Barn", husstand:"Henrik & Vibeke", status:"green", bemark:"OK"},
+{nr:"026", under:"026", fornavn:"Bodil", efternavn:"Olsen", fdato:"11-05-1949", rolle:"Forælder", husstand:"Bodil Olsen", status:"green", bemark:"OK"},{nr:"027", under:"027", fornavn:"Lilli Vinifred", efternavn:"Olsen", fdato:"23-09-1927", rolle:"Forælder", husstand:"Lilli Olsen", status:"green", bemark:"OK"},
+{nr:"028", under:"028", fornavn:"Mogens", efternavn:"Olsen", fdato:"05-06-1951", rolle:"Forælder", husstand:"Mogens & Lise", status:"green", bemark:"OK"},
+{nr:"028", under:"028", fornavn:"Lise", efternavn:"Olsen", fdato:"14-01-1954", rolle:"Forælder", husstand:"Mogens & Lise", status:"green", bemark:"OK"},
 {nr:"029", under:"029", fornavn:"Jesper Majgaard", efternavn:"Olsen", fdato:"14-07-1991", rolle:"Forælder", husstand:"Jesper Majgaard", status:"green", bemark:"OK"},
-{nr:"043", under:"043", fornavn:"Tom", efternavn:"Olsen", fdato:"", rolle:"Forælder", husstand:"Tom & Margit", status:"red", bemark:"MANGLER FODSELSDATO"},
-{nr:"043", under:"043", fornavn:"Margit", efternavn:"Olsen", fdato:"", rolle:"Forælder", husstand:"Tom & Margit", status:"red", bemark:"MANGLER FODSELSDATO"},
+{nr:"030", under:"030", fornavn:"Niels", efternavn:"Olsen", fdato:"28-02-1956", rolle:"Forælder", husstand:"Niels & Hanne", status:"green", bemark:"OK"},
+{nr:"030", under:"030", fornavn:"Hanne", efternavn:"Olsen", fdato:"09-09-1959", rolle:"Forælder", husstand:"Niels & Hanne", status:"green", bemark:"OK"},
+{nr:"030", under:"030-1", fornavn:"Christian", efternavn:"Olsen", fdato:"17-04-1985", rolle:"Barn", husstand:"Niels & Hanne", status:"green", bemark:"OK"},
+{nr:"031", under:"031", fornavn:"Lars", efternavn:"Olsen", fdato:"01-08-1968", rolle:"Forælder", husstand:"Lars & Charlotte", status:"green", bemark:"OK"},
+{nr:"031", under:"031", fornavn:"Charlotte", efternavn:"Olsen", fdato:"24-12-1970", rolle:"Forælder", husstand:"Lars & Charlotte", status:"green", bemark:"OK"},
+{nr:"031", under:"031-1", fornavn:"Sebastian", efternavn:"Olsen", fdato:"30-05-2000", rolle:"Barn", husstand:"Lars & Charlotte", status:"green", bemark:"OK"},
+{nr:"031", under:"031-2", fornavn:"Emma", efternavn:"Olsen", fdato:"12-08-2003", rolle:"Barn", husstand:"Lars & Charlotte", status:"green", bemark:"OK"},
+{nr:"032", under:"032", fornavn:"Ole", efternavn:"Olsen", fdato:"06-10-1944", rolle:"Forælder", husstand:"Ole & Gerda", status:"green", bemark:"OK"},
+{nr:"032", under:"032", fornavn:"Gerda", efternavn:"Olsen", fdato:"15-02-1947", rolle:"Forælder", husstand:"Ole & Gerda", status:"green", bemark:"OK"},
+{nr:"033", under:"033", fornavn:"Anne-Marie", efternavn:"Olsen", fdato:"19-06-1957", rolle:"Forælder", husstand:"Anne-Marie", status:"green", bemark:"OK"},
+{nr:"034", under:"034", fornavn:"Erik", efternavn:"Olsen", fdato:"03-03-1961", rolle:"Forælder", husstand:"Erik & Bente", status:"green", bemark:"OK"},
+{nr:"034", under:"034", fornavn:"Bente", efternavn:"Olsen", fdato:"22-11-1964", rolle:"Forælder", husstand:"Erik & Bente", status:"green", bemark:"OK"},
+{nr:"035", under:"035", fornavn:"Finn", efternavn:"Lennert", fdato:"08-05-1952", rolle:"Forælder", husstand:"Finn Lennert", status:"yellow", bemark:"MODSTRID navn"},
+{nr:"036", under:"036", fornavn:"Marianne", efternavn:"Olsen", fdato:"14-04-1963", rolle:"Forælder", husstand:"Marianne & Per", status:"green", bemark:"OK"},
+{nr:"036", under:"036", fornavn:"Per", efternavn:"Olsen", fdato:"02-09-1961", rolle:"Forælder", husstand:"Marianne & Per", status:"green", bemark:"OK"},
+{nr:"037", under:"037", fornavn:"Steen", efternavn:"Olsen", fdato:"11-01-1969", rolle:"Forælder", husstand:"Steen & Helle", status:"green", bemark:"OK"},
+{nr:"037", under:"037", fornavn:"Helle", efternavn:"Olsen", fdato:"25-07-1971", rolle:"Forælder", husstand:"Steen & Helle", status:"green", bemark:"OK"},
+{nr:"037", under:"037-1", fornavn:"Thomas", efternavn:"Olsen", fdato:"08-12-1997", rolle:"Barn", husstand:"Steen & Helle", status:"green", bemark:"OK"},
+{nr:"038", under:"038", fornavn:"Jens", efternavn:"Olsen", fdato:"17-08-1959", rolle:"Forælder", husstand:"Jens & Birte", status:"green", bemark:"OK"},
+{nr:"038", under:"038", fornavn:"Birte", efternavn:"Olsen", fdato:"30-04-1962", rolle:"Forælder", husstand:"Jens & Birte", status:"green", bemark:"OK"},
+{nr:"039", under:"039", fornavn:"Vibeke", efternavn:"Olsen", fdato:"06-11-1955", rolle:"Forælder", husstand:"Vibeke Olsen", status:"green", bemark:"OK"},
+{nr:"040", under:"040", fornavn:"Jørgen", efternavn:"Olsen", fdato:"21-05-1965", rolle:"Forælder", husstand:"Jørgen & Tina", status:"green", bemark:"OK"},
+{nr:"040", under:"040", fornavn:"Tina", efternavn:"Olsen", fdato:"04-10-1967", rolle:"Forælder", husstand:"Jørgen & Tina", status:"green", bemark:"OK"},
+{nr:"040", under:"040-1", fornavn:"Nikolaj", efternavn:"Olsen", fdato:"16-02-1994", rolle:"Barn", husstand:"Jørgen & Tina", status:"green", bemark:"OK"},
+{nr:"040", under:"040-2", fornavn:"Caroline", efternavn:"Olsen", fdato:"27-09-1996", rolle:"Barn", husstand:"Jørgen & Tina", status:"green", bemark:"OK"},
+{nr:"041", under:"041", fornavn:"Inga", efternavn:"Olsen", fdato:"10-03-1940", rolle:"Forælder", husstand:"Inga Olsen", status:"green", bemark:"OK"},
+{nr:"042", under:"042", fornavn:"Michael", efternavn:"Olsen", fdato:"08-07-1972", rolle:"Forælder", husstand:"Michael & Camilla", status:"green", bemark:"OK"},
+{nr:"042", under:"042", fornavn:"Camilla", efternavn:"Olsen", fdato:"19-11-1974", rolle:"Forælder", husstand:"Michael & Camilla", status:"green", bemark:"OK"},
+{nr:"043", under:"043", fornavn:"Tom", efternavn:"Olsen", fdato:"", rolle:"Forælder", husstand:"Tom & Margit", status:"red", bemark:"MANGLER FØDSELSDATO"},
+{nr:"043", under:"043", fornavn:"Margit", efternavn:"Olsen", fdato:"", rolle:"Forælder", husstand:"Tom & Margit", status:"red", bemark:"MANGLER FØDSELSDATO"},
+{nr:"044", under:"044", fornavn:"Knud", efternavn:"Olsen", fdato:"23-01-1950", rolle:"Forælder", husstand:"Knud & Gitte", status:"green", bemark:"OK"},
+{nr:"044", under:"044", fornavn:"Gitte", efternavn:"Olsen", fdato:"06-06-1953", rolle:"Forælder", husstand:"Knud & Gitte", status:"green", bemark:"OK"},
 {nr:"045", under:"045", fornavn:"Flemming", efternavn:"Lund", fdato:"", rolle:"Forælder", husstand:"Flemming Lund", status:"red", bemark:"MANGLER ALT"},
+{nr:"046", under:"046", fornavn:"Helle", efternavn:"Lund", fdato:"12-08-1976", rolle:"Forælder", husstand:"Helle & Brian", status:"green", bemark:"OK"},
+{nr:"046", under:"046", fornavn:"Brian", efternavn:"Lund", fdato:"03-04-1974", rolle:"Forælder", husstand:"Helle & Brian", status:"green", bemark:"OK"},
+{nr:"046", under:"046-1", fornavn:"Oliver", efternavn:"Lund", fdato:"15-10-2005", rolle:"Barn", husstand:"Helle & Brian", status:"green", bemark:"OK"},
+{nr:"047", under:"047", fornavn:"Mette", efternavn:"Westergaard-Hansen", fdato:"08-04-1972", rolle:"Forælder", husstand:"Mette W-H", status:"red", bemark:"DUBLET med nr 4"},
+{nr:"048", under:"048", fornavn:"Britt", efternavn:"Olsen", fdato:"29-03-1968", rolle:"Forælder", husstand:"Britt & Lasse", status:"green", bemark:"OK"},
+{nr:"048", under:"048", fornavn:"Lasse", efternavn:"Olsen", fdato:"11-12-1965", rolle:"Forælder", husstand:"Britt & Lasse", status:"green", bemark:"OK"},
+{nr:"049", under:"049", fornavn:"Dorthe", efternavn:"Olsen", fdato:"04-07-1962", rolle:"Forælder", husstand:"Dorthe & Henning", status:"green", bemark:"OK"},
+{nr:"049", under:"049", fornavn:"Henning", efternavn:"Olsen", fdato:"18-05-1960", rolle:"Forælder", husstand:"Dorthe & Henning", status:"green", bemark:"OK"},
+{nr:"050", under:"050", fornavn:"Diana", efternavn:"Lund", fdato:"22-10-1978", rolle:"Forælder", husstand:"Diana", status:"yellow", bemark:"MODSTRID Lund eller Larsen"},
+{nr:"051", under:"051", fornavn:"Lone", efternavn:"Hernvig", fdato:"07-09-1971", rolle:"Forælder", husstand:"Familien Hernvig", status:"green", bemark:"OK"},
+{nr:"051", under:"051", fornavn:"Martin", efternavn:"Hernvig", fdato:"14-02-1969", rolle:"Forælder", husstand:"Familien Hernvig", status:"red", bemark:"MODSTRID navn"},
+{nr:"051", under:"051-1", fornavn:"Sigurd Præstegaard", efternavn:"Olsen", fdato:"19-06-2002", rolle:"Barn", husstand:"Familien Hernvig", status:"yellow", bemark:"To forskellige fødselsdatoer"},
+{nr:"052", under:"052", fornavn:"Rikke V.", efternavn:"Tingberg", fdato:"16-04-1980", rolle:"Forælder", husstand:"Rikke Tingberg", status:"red", bemark:"DUBLET med nr 21"},
+{nr:"053", under:"053", fornavn:"Pia", efternavn:"Olsen", fdato:"25-11-1973", rolle:"Forælder", husstand:"Pia & Søren", status:"green", bemark:"OK"},
+{nr:"053", under:"053", fornavn:"Søren", efternavn:"Olsen", fdato:"06-08-1971", rolle:"Forælder", husstand:"Pia & Søren", status:"green", bemark:"OK"},
+{nr:"054", under:"054", fornavn:"Ulla", efternavn:"Olsen", fdato:"13-04-1946", rolle:"Forælder", husstand:"Ulla Olsen", status:"green", bemark:"OK"},
+{nr:"055", under:"055", fornavn:"Bjarne", efternavn:"Olsen", fdato:"28-06-1956", rolle:"Forælder", husstand:"Bjarne & Connie", status:"green", bemark:"OK"},
+{nr:"055", under:"055", fornavn:"Connie", efternavn:"Olsen", fdato:"11-10-1958", rolle:"Forælder", husstand:"Bjarne & Connie", status:"green", bemark:"OK"},
 {nr:"???", under:"???", fornavn:"Per", efternavn:"Beknow", fdato:"05-05-1965", rolle:"Forælder", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER"},
-{nr:"???", under:"???", fornavn:"Bettina", efternavn:"Beknow", fdato:"22-08-1967", rolle:"Forælder", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER"}
-];
+{nr:"???", under:"???", fornavn:"Bettina", efternavn:"Beknow", fdato:"22-08-1967", rolle:"Forælder", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER"},
+{nr:"???", under:"???", fornavn:"Lars", efternavn:"Beknow", fdato:"14-03-1995", rolle:"Barn", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER"},
+{nr:"???", under:"???", fornavn:"Laura", efternavn:"Beknow", fdato:"07-11-1998", rolle:"Barn", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER"},
+{nr:"???", under:"???", fornavn:"Line", efternavn:"Beknow", fdato:"19-09-2001", rolle:"Barn", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER"},
+{nr:"???", under:"???", fornavn:"Rasmus", efternavn:"Billstrøm", fdato:"02-04-1990", rolle:"Andet", husstand:"Usikker", status:"red", bemark:"MANGLER MEDLEMSNUMMER"}
+];const måneder = ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"];
+function parseDato(s) { if (!s) return null; const [d,m,y]=s.split("-").map(n=>parseInt(n)); return {dag:d,mnd:m,aar:y}; }
+function erRund(a) { return [40,50,60,70,75,80,85,90,95,100].includes(a); }
+function visFane(navn, el) {
+  document.querySelectorAll('.fane').forEach(f => f.classList.add('hidden'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('fane-'+navn).classList.remove('hidden');
+  el.classList.add('active');
+}
+function opdaterStats() {
+  document.getElementById('stat-total').textContent = medlemmer.length;
+  document.getElementById('stat-godkendt').textContent = medlemmer.filter(m=>m.status==='green').length;
+  document.getElementById('stat-fejl').textContent = medlemmer.filter(m=>m.status==='red'||m.status==='yellow').length;
+  document.getElementById('stat-husstande').textContent = new Set(medlemmer.map(m=>m.nr)).size;
+}
+function byggKalender() {
+  const efterMnd = {}; for (let i=1;i<=12;i++) efterMnd[i]=[];
+  medlemmer.filter(m=>m.status==='green'&&m.fdato).forEach(m=>{
+    const d=parseDato(m.fdato);
+    if(d) efterMnd[d.mnd].push({...m,dag:d.dag,alder:new Date().getFullYear()-d.aar});
+  });
+  let html='';
+  for (let mnd=1;mnd<=12;mnd++) {
+    if(efterMnd[mnd].length===0) continue;
+    efterMnd[mnd].sort((a,b)=>a.dag-b.dag);
+    html += '<div class="month"><div class="month-title">'+måneder[mnd-1].charAt(0).toUpperCase()+måneder[mnd-1].slice(1)+'</div>';
+    efterMnd[mnd].forEach(m=>{
+      const rund=erRund(m.alder);
+      html += '<div class="event '+(rund?'milestone':'')+'"><div class="event-date">'+m.dag+'. '+måneder[mnd-1].substr(0,3)+'</div><div class="event-name">'+m.fornavn+' '+m.efternavn+'</div><div class="event-extra">'+(rund?'🎉 ':'')+'fylder '+m.alder+' år</div></div>';
+    });
+    html += '</div>';
+  }
+  document.getElementById('kalender-content').innerHTML = html;
+}
+function byggAlle() {
+  const sog = document.getElementById('sog-alle').value.trim().toLowerCase();
+  const grupper = {};
+  medlemmer.forEach(m=>{
+    if(!grupper[m.nr]) grupper[m.nr] = {husstand:m.husstand, personer:[]};
+    grupper[m.nr].personer.push(m);
+  });
+  const vis = [];
+  Object.keys(grupper).sort().forEach(nr=>{
+    const g = grupper[nr];
+    if(!sog) { vis.push({nr, ...g}); return; }
+    const matchNr = nr.toLowerCase().includes(sog) || nr.replace(/^0+/,'').includes(sog);
+    const matchP = g.personer.some(p=>(p.fornavn+' '+p.efternavn).toLowerCase().includes(sog)||g.husstand.toLowerCase().includes(sog));
+    if(matchNr||matchP) vis.push({nr, ...g});
+  });
+  let html='';
+  if(vis.length===0) html = '<p style="text-align:center;color:#888;padding:30px;">Ingen medlemmer matcher.</p>';
+  vis.forEach(g=>{
+    html += '<div style="background:#f5f1e8;padding:8px 14px;margin:14px 0 6px;border-radius:4px;font-weight:bold;color:#2d5016;">Husstand '+g.nr+' — '+g.husstand+' <span style="font-weight:normal;color:#888;font-size:13px;">('+g.personer.length+' '+(g.personer.length===1?'person':'personer')+')</span></div>';
+    g.personer.forEach(m=>{
+      let sk = 'status-green', st = 'Godkendt', rk = '';
+      if(m.status==='red') { sk='status-red'; st='Mangler'; rk='zone-b-row'; }
+      else if(m.status==='yellow') { sk='status-yellow'; st='Modstrid'; rk='zone-yellow-row'; }
+      const bemarkHtml = m.status!=='green' ? '<div class="bemark">⚠️ '+m.bemark+'</div>' : '';
+      html += '<div class="person-row '+rk+'"><div class="person-num">'+m.under+'</div><div class="person-name">'+m.fornavn+' '+m.efternavn+' <span style="color:#888;font-size:12px;">· '+m.rolle+'</span>'+bemarkHtml+'</div><div class="person-date">'+(m.fdato||'—')+'</div><div class="person-status '+sk+'">'+st+'</div><button class="btn-edit '+(m.status==='red'?'btn-fix':'')+'" onclick="åbenModal('+medlemmer.indexOf(m)+')">Ret</button></div>';
+    });
+  });
+  document.getElementById('alle-content').innerHTML = html;
+}
+function byggZoneB() {
+  const fejl = medlemmer.filter(m=>m.status==='red'||m.status==='yellow');
+  let html='';
+  fejl.forEach(m=>{
+    const sk = m.status==='red'?'status-red':'status-yellow';
+    const sl = m.status==='red'?'Mangler':'Modstrid';
+    const rk = m.status==='red'?'zone-b-row':'zone-yellow-row';
+    html += '<div class="person-row '+rk+'"><div class="person-num">'+m.under+'</div><div style="flex:1;"><div><strong>'+m.fornavn+' '+m.efternavn+'</strong> <span style="color:#888;font-size:12px;">· '+m.husstand+'</span></div><div class="bemark">⚠️ '+m.bemark+'</div></div><div class="person-status '+sk+'">'+sl+'</div><button class="btn-edit btn-fix" onclick="åbenModal('+medlemmer.indexOf(m)+')">Ret nu</button></div>';
+  });
+  document.getElementById('zoneB-content').innerHTML = html;
+}
+let aktivIdx = -1;
+function åbenModal(idx) {
+  aktivIdx = idx;
+  const m = medlemmer[idx];
+  document.getElementById('modal-titel').textContent = 'Ret '+m.fornavn+' '+m.efternavn;
+  document.getElementById('modal-bemark').innerHTML = '<strong>Bemærkning:</strong><br>'+m.bemark;
+  document.getElementById('f-fornavn').value = m.fornavn || '';
+  document.getElementById('f-efternavn').value = m.efternavn || '';
+  document.getElementById('f-nr').value = m.under || '';
+  document.getElementById('f-husstand').value = m.husstand || '';
+  document.getElementById('f-rolle').value = m.rolle || '';
+  document.getElementById('f-fdato').value = m.fdato || '';
+  document.getElementById('f-adresse').value = m.adresse || '';
+  document.getElementById('f-telefon').value = m.telefon || '';
+  document.getElementById('f-email').value = m.email || '';
+  document.getElementById('modal-rediger').classList.add('show');
+}
+function lukModal() { document.getElementById('modal-rediger').classList.remove('show'); aktivIdx = -1; }
+function gemRettelse() {
+  if(aktivIdx<0) return;
+  const m = medlemmer[aktivIdx];
+  m.fornavn = document.getElementById('f-fornavn').value;
+  m.efternavn = document.getElementById('f-efternavn').value;
+  m.under = document.getElementById('f-nr').value;
+  m.nr = m.under.split('-')[0];
+  m.husstand = document.getElementById('f-husstand').value;
+  m.rolle = document.getElementById('f-rolle').value;
+  m.fdato = document.getElementById('f-fdato').value;
+  m.adresse = document.getElementById('f-adresse').value;
+  m.telefon = document.getElementById('f-telefon').value;
+  m.email = document.getElementById('f-email').value;
+  if(m.fornavn && m.efternavn && m.fdato && m.under !== '???') {
+    m.status = 'green';
+    m.bemark = 'OK Rettet';
+  }
+  lukModal();
+  byggAlt();
+  alert('Rettelse gemt!');
+}
+function byggAlt() { opdaterStats(); byggKalender(); byggAlle(); byggZoneB(); }
+byggAlt();
 </script>
 </body>
 </html>
