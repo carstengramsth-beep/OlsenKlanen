@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skovtur 2026 — OlsenKlanen</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.6; }
+.header { background: #2d5016; color: #f5e6a8; padding: 30px; text-align: center; }
+.header h1 { font-size: 32px; margin-bottom: 8px; letter-spacing: 1px; }
+.header .undertitel { font-size: 18px; color: #c89e3c; font-style: italic; }
+.header a { color: #f5e6a8; text-decoration: none; padding: 6px 14px; border: 1px solid #f5e6a8; border-radius: 4px; font-size: 14px; display: inline-block; margin-top: 14px; }
+.container { max-width: 1000px; margin: 0 auto; padding: 25px; }
+.hero { background: linear-gradient(135deg, #2d5016, #3a6020); color: #f5e6a8; padding: 30px; border-radius: 8px; margin-bottom: 25px; text-align: center; box-shadow: 0 3px 10px rgba(0,0,0,0.15); }
+.hero h2 { font-size: 26px; margin-bottom: 10px; color: #f5e6a8; }
+.hero .dato { font-size: 22px; color: #c89e3c; font-weight: bold; margin: 10px 0; }
+.hero .sted { font-size: 16px; opacity: 0.95; }
+.kort { background: #fff; padding: 25px 30px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.kort h2 { color: #2d5016; font-size: 22px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid #c89e3c; }
+.kort h3 { color: #2d5016; font-size: 17px; margin-top: 16px; margin-bottom: 8px; }
+.kort p { margin-bottom: 10px; }
+.priser-tabel { width: 100%; border-collapse: collapse; margin-top: 14px; }
+.priser-tabel th { background: #2d5016; color: #f5e6a8; padding: 10px 12px; text-align: left; font-size: 14px; }
+.priser-tabel td { padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+.priser-tabel tr:nth-child(even) td { background: #f9f6ed; }
+.program-dag { background: #f5f1e8; padding: 18px 22px; border-radius: 6px; margin-bottom: 14px; border-left: 4px solid #c89e3c; }
+.program-dag h3 { color: #2d5016; font-size: 19px; margin-bottom: 12px; }
+.program-tid { display: flex; gap: 16px; padding: 8px 0; border-bottom: 1px dashed #d4cba0; }
+.program-tid:last-child { border-bottom: none; }
+.program-tid .tid { font-weight: bold; color: #b03030; min-width: 90px; font-family: monospace; }
+.program-tid .aktivitet { flex: 1; }
+.boks-vigtig { background: #fff8e1; border-left: 4px solid #c89e3c; padding: 14px 18px; border-radius: 4px; margin: 14px 0; }
+.boks-vigtig strong { color: #6b5b1f; }
+.dagsorden { counter-reset: punkt; padding-left: 0; list-style: none; }
+.dagsorden li { counter-increment: punkt; padding: 8px 0 8px 40px; position: relative; border-bottom: 1px dotted #ddd; }
+.dagsorden li:before { content: counter(punkt); position: absolute; left: 0; top: 8px; background: #2d5016; color: #f5e6a8; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; }
+.kontakt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 14px; }
+.kontakt-kort { background: #f5f1e8; padding: 14px 18px; border-radius: 6px; border: 1px solid #d4cba0; }
+.kontakt-kort .navn { font-weight: bold; color: #2d5016; font-size: 16px; margin-bottom: 4px; }
+.kontakt-kort .rolle { font-size: 12px; color: #888; text-transform: uppercase; margin-bottom: 6px; }
+.kontakt-kort .tlf { color: #b03030; font-weight: bold; font-family: monospace; }
+.netbank-boks { background: #e8f0d8; border: 2px solid #2d5016; padding: 18px; border-radius: 6px; margin: 16px 0; }
+.netbank-boks .reg-konto { font-family: monospace; font-size: 18px; color: #2d5016; font-weight: bold; }
+.netbank-boks .eksempel { background: #fff; padding: 10px; border-radius: 4px; margin-top: 10px; font-family: monospace; font-size: 13px; color: #555; }
+.cta-knap { display: inline-block; background: #c89e3c; color: #2d5016; padding: 12px 28px; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 16px; margin-top: 10px; }
+.cta-knap:hover { background: #d9b04e; }
+.medbring-liste { list-style: none; padding-left: 0; }
+.medbring-liste li { padding: 6px 0 6px 28px; position: relative; }
+.medbring-liste li:before { content: '✓'; position: absolute; left: 0; color: #2d7a2d; font-weight: bold; font-size: 16px; }
+.footer-note { background: #2d5016; color: #f5e6a8; padding: 20px 30px; border-radius: 8px; text-align: center; margin-top: 25px; font-style: italic; }
+@media (max-width: 600px) {
+  .header h1 { font-size: 24px; }
+  .hero h2 { font-size: 20px; }
+  .hero .dato { font-size: 18px; }
+  .kort { padding: 18px 20px; }
+  .program-tid { flex-direction: column; gap: 4px; }
+  .program-tid .tid { min-width: auto; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>OlsenKlanens Skovtur 2026</h1>
+<div class="undertitel">Familietræffet vi alle ser frem til</div>
+<a href="forside.html">← Tilbage til forsiden</a>
+</div>
+<div class="container">
+<div class="hero">
+<h2>Vi mødes på Eriksminde</h2>
+<div class="dato">29. — 31. maj 2026</div>
+<div class="sted">Eriksmindevej 15, 4581 Rørvig</div>
+<p style="margin-top:14px;font-size:14px;opacity:0.9;">Et gensyn med det velkendte hus i skovbrynet — som vi besøgte i 2014, 2020 og 2022. Ca. 3 km fra Rørvig by og havn, 5 minutter fra vandet.</p>
+</div>
+<div class="kort">
+<h2>Hjertelig velkommen</h2>
+<p>Så er der tilmelding til årets festlige skovtur — og vi ser frem til et gensyn med rigtig mange af klanens medlemmer.</p>
+<p>Foran huset er et åbent område med fodboldmål og rige muligheder for leg og spil. Kolonien har 54 sengepladser fordelt i 1-, 2- og 4-personers rum, en stor spisesal, opholdsstue og aktivitetsrum.</p>
+<div class="boks-vigtig">
+<strong>Vigtigt:</strong> Det er ikke tilladt at medbringe husdyr, tænde lejrbål, eller slå telte/campingvogne op.
+</div>
+</div>
+<div class="kort">
+<h2>Priser</h2>
+<table class="priser-tabel">
+<thead>
+<tr><th>Forplejning</th><th>Voksne</th><th>Børn (3-15 år)</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Deltagergebyr</strong> (hele weekenden)</td><td>225 kr.</td><td>75 kr.</td></tr>
+<tr><td>Kun lørdag</td><td>100 kr.</td><td>50 kr.</td></tr>
+<tr><td>Aftensmad fredag</td><td>60 kr.</td><td>30 kr.</td></tr>
+<tr><td>Morgenmad søndag</td><td>35 kr.</td><td>20 kr.</td></tr>
+</tbody>
+</table>
+<p style="margin-top:14px;font-size:14px;color:#666;"><strong>I prisen er indregnet:</strong> Leje fra fredag kl. 16:30 til søndag, morgenbord lørdag, fælles aktiviteter samt rengøring søndag.</p>
+<p style="margin-top:8px;font-size:14px;color:#666;">Drikkevarer kan købes til familievenlige priser.</p>
+</div>
+<div class="kort">
+<h2>Tilmelding</h2>
+<p>Tilmelding og betaling sker via netbank eller på skovturen. Sidste frist: <strong>3. maj 2026</strong> af hensyn til planlægningen.</p>
+<div class="netbank-boks">
+<div style="font-weight:bold;color:#2d5016;margin-bottom:8px;">💳 Betaling via netbank</div>
+<div class="reg-konto">Reg. 1551 — Konto 1231790</div>
+<div style="margin-top:10px;font-size:14px;">Husk tekst ved betaling — fx:</div>
+<div class="eksempel">"Vi kommer: 2x vok. fre-søn / 2x aft.mad fre. / 2x mo mad sø."</div>
+</div>
+<h3>Kontingent</h3>
+<p>Kontingent 2026 er <strong>200 kr. pr. husstand</strong>. Selv hvis man ikke kan deltage i skovturen, betales kontingentet hvis man ønsker at være medlem af klanen og modtage information.</p>
+<h3>Online tilmelding</h3>
+<p>Tilmelding kan også ske via hjemmesiden: <a href="https://www.olsenklanen.minisite.dk" target="_blank" style="color:#2d5016;font-weight:bold;">www.olsenklanen.minisite.dk</a></p>
+<p style="font-size:14px;color:#666;">Adgangskode: <strong>oldermand</strong></p>
+</div>
+<div class="kort">
+<h2>Generalforsamling — lørdag kl. 9.45</h2>
+<p>Den ordinære generalforsamling afholdes lørdag den 30. maj 2026 kl. 9.45.</p>
+<div class="boks-vigtig">
+<strong>Frist for forslag:</strong> Eventuelle forslag til generalforsamlingen fremsendes til bestyrelsen senest <strong>10. maj 2026</strong>.
+</div>
+<h3>Dagsorden</h3>
+<ol class="dagsorden">
+<li>Valg af dirigent</li>
+<li>Formanden fremlægger beretning 2025/2026</li>
+<li>Kassereren fremlægger regnskab 2025</li>
+<li>Fastlæggelse af kontingent 2027</li>
+<li>Indkomne forslag</li>
+<li>Valg af bestyrelse for 2027</li>
+<li>Valg af arrangementskomité 2028</li>
+<li>Foreløbig information om skovtur 2027</li>
+<li>Eventuelt</li>
+</ol>
+</div>
+<div class="kort">
+<h2>Program for weekenden</h2>
+<div class="program-dag">
+<h3>🌅 Fredag den 29. maj 2026</h3>
+<div class="program-tid"><div class="tid">Fra 16:30</div><div class="aktivitet">Velkomst og indkvartering</div></div>
+<div class="program-tid"><div class="tid">18:30 — 21:00</div><div class="aktivitet">Køkkenet er åbent — aftensmad (husk bestilling)</div></div>
+<div class="program-tid"><div class="tid">21:00 — ??</div><div class="aktivitet">Hygge og samvær</div></div>
+</div>
+<div class="program-dag">
+<h3>☀️ Lørdag den 30. maj 2026</h3>
+<p style="font-size:13px;color:#888;font-style:italic;margin-bottom:10px;">Tiderne er vejledende og kan rykkes begge veje.</p>
+<div class="program-tid"><div class="tid">08:00</div><div class="aktivitet">Flaghejsning og morgensang</div></div>
+<div class="program-tid"><div class="tid">08:15</div><div class="aktivitet">Morgenmad</div></div>
+<div class="program-tid"><div class="tid">09:30</div><div class="aktivitet">Generalforsamling</div></div>
+<div class="program-tid"><div class="tid">10:15</div><div class="aktivitet">Fællesfoto (lige efter generalforsamlingen)</div></div>
+<div class="program-tid"><div class="tid">10:30</div><div class="aktivitet">Fælles aktiviteter (ikke planlagt endnu)</div></div>
+<div class="program-tid"><div class="tid">12:00</div><div class="aktivitet">Forberedelse til spisning</div></div>
+<div class="program-tid"><div class="tid">13:00</div><div class="aktivitet">Fællesspisning</div></div>
+<div class="program-tid"><div class="tid">16:30</div><div class="aktivitet">Kaffe/te og kage</div></div>
+<div class="program-tid"><div class="tid">20:00</div><div class="aktivitet">Flaget tages ned — vi spiser pølser</div></div>
+</div>
+<div class="program-dag">
+<h3>🌳 Søndag den 31. maj 2026</h3>
+<div class="program-tid"><div class="tid">08:00</div><div class="aktivitet">Morgenmad (husk bestilling)</div></div>
+<div class="program-tid"><div class="tid">09:00</div><div class="aktivitet">Alle hjælper med oprydning — vi gør klar til at forlade lejren</div></div>
+</div>
+</div>
+<div class="kort">
+<h2>Praktiske oplysninger</h2>
+<h3>Hvad skal du medbringe?</h3>
+<ul class="medbring-liste">
+<li>"Øjenåbner" til morgenkaffen ☕</li>
+<li>Gerne hjemmebagt kage 🍰</li>
+<li>Dyne, pude, lagen eller sovepose 🛏️</li>
+<li>Praktisk tøj til både inde- og udebrug (alt efter vejret)</li>
+<li>Evt. badetøj 🩱</li>
+<li>Spil til inde- og udebrug — til store og små 🎲</li>
+</ul>
+<h3>Overnatning</h3>
+<p>54 sengepladser fordelt på 1-, 2- og 4-personers rum.</p>
+<h3>Adresse og kørsel</h3>
+<p><strong>Eriksminde</strong><br>Eriksmindevej 15, 4581 Rørvig</p>
+<p style="font-size:14px;color:#666;">Brug GPS, Google Maps eller hvad du nu bruger til navigation.</p>
+</div>
+<div class="kort">
+<h2>Kontakt — Arrangementskomitéen</h2>
+<div class="kontakt-grid">
+<div class="kontakt-kort">
+<div class="navn">Gitte</div>
+<div class="rolle">Arrangementskomité</div>
+<div class="tlf">22 54 11 77</div>
+</div>
+<div class="kontakt-kort">
+<div class="navn">Jeannie og Nicki</div>
+<div class="rolle">Arrangementskomité</div>
+<div class="tlf">31 36 74 93</div>
+</div>
+<div class="kontakt-kort">
+<div class="navn">Martin</div>
+<div class="rolle">Arrangementskomité</div>
+<div class="tlf">22 74 44 87</div>
+</div>
+</div>
+<h3 style="margin-top:20px;">Konsulenter</h3>
+<div class="kontakt-grid">
+<div class="kontakt-kort">
+<div class="navn">Lise og Steen</div>
+<div class="rolle">Konsulenter</div>
+<div class="tlf">50 56 23 37 / 24 40 75 25</div>
+</div>
+</div>
+</div>
+<div class="footer-note">
+🌳 Vi glæder os til at se jer alle på Eriksminde! 🌳
+</div>
+</div>
+</body>
+</html>
