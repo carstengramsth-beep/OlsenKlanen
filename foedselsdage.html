@@ -3,1704 +3,323 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>OlsenKlanen — Begivenheder</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>OlsenKlanen — Mærkedage & Medlemskartotek</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-
-:root{
-  --gron:#2d5016;--gron-lys:#4a7c2a;--gron-pale:#c8e6b0;
-  --guld:#c8952a;--guld-lys:#f5e6c8;--guld-pale:#fdf8ee;
-  --sølv:#888;--sølv-lys:#f4f4f4;
-  --lilla:#6b3580;--lilla-pale:#f3eaff;
-  --hvid:#fefcf8;--tekst:#1a1a0e;--tekst-lys:#5a5a40;--border:#d4c9a0;
-  --baggrund:#fffde0;
-  --tl-groen:#22c55e;--tl-gul:#f59e0b;--tl-roed:#ef4444;
-}
-
-body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var(--tekst);min-height:100vh;}
-
-/* ─── FLAG-BANNER ─── */
-.flag-banner{
-  background:var(--gron);
-  text-align:center;
-  padding:0.55rem 0;
-  font-size:26px;
-  letter-spacing:6px;
-  border-bottom:3px solid var(--guld);
-}
-
-/* ─── TOPBAR ─── */
-.topbar{
-  background:var(--gron);
-  padding:0 1.5rem; height:50px;
-  display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:100;
-  box-shadow:0 2px 8px rgba(0,0,0,0.2);
-}
-.topbar-logo{font-family:'Playfair Display',serif;font-size:19px;font-weight:500;color:var(--hvid);text-decoration:none;}
-.topbar-links{display:flex;gap:1.25rem;align-items:center;}
-.topbar-links a{font-size:12px;color:rgba(255,255,255,0.6);text-decoration:none;}
-.topbar-links a:hover,.topbar-links a.aktiv{color:var(--guld-lys);}
-.topbar-red-knap{
-  font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;
-  border:1px solid rgba(255,255,255,0.3);
-  color:rgba(255,255,255,0.7);background:none;cursor:pointer;
-  font-family:'Source Sans 3',sans-serif;
-  transition:all .15s;
-}
-.topbar-red-knap:hover{border-color:var(--guld-lys);color:var(--guld-lys);}
-.topbar-red-knap.logget-ind{border-color:var(--tl-groen);color:var(--tl-groen);}
-
-/* ─── SIDE-HEADER ─── */
-.side-header{
-  background:var(--gron);
-  padding:1.75rem 1rem 1.5rem;
-  text-align:center;
-  border-bottom:1px solid rgba(200,149,42,0.35);
-}
-.side-header h1{font-family:'Playfair Display',serif;font-size:clamp(22px,5vw,36px);font-weight:400;color:var(--hvid);margin-bottom:0.3rem;}
-.side-header p{font-size:12px;color:rgba(255,255,255,0.5);letter-spacing:1px;}
-.guld-streg{width:40px;height:2px;background:var(--guld);margin:.9rem auto 0;border-radius:2px;}
-
-/* ─── WRAPPER ─── */
-.wrapper{max-width:960px;margin:0 auto;padding:1.5rem 1rem 2.5rem;}
-
-/* ─── LOADING ─── */
-.loading-boks{
-  text-align:center;padding:3rem 1rem;color:var(--tekst-lys);
-  font-size:14px;letter-spacing:.5px;
-}
-.loading-spinner{
-  display:inline-block;width:28px;height:28px;border:3px solid var(--border);
-  border-top-color:var(--gron);border-radius:50%;
-  animation:spin .8s linear infinite;margin-bottom:.75rem;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ─── FESTLIG MÆRKEDAGE-BOKS ─── */
-.fest-boks{
-  background:linear-gradient(135deg,#fffbe6 0%,#fff8f0 50%,#f0fff4 100%);
-  border:2px solid var(--guld);
-  border-radius:12px;
-  margin-bottom:1.75rem;
-  box-shadow:0 4px 20px rgba(200,149,42,0.2);
-  overflow:hidden;
-}
-.fest-header{
-  background:linear-gradient(90deg,var(--gron) 0%,#3d6b20 100%);
-  padding:.75rem 1.25rem;
-  display:flex;align-items:center;justify-content:space-between;
-  flex-wrap:wrap;gap:.5rem;
-}
-.fest-header-titel{
-  font-family:'Playfair Display',serif;
-  font-size:17px;font-weight:500;color:var(--hvid);
-  display:flex;align-items:center;gap:.5rem;
-}
-.fest-header-flag{font-size:20px;letter-spacing:3px;}
-.fest-liste{padding:.75rem 1.25rem .5rem;display:flex;flex-direction:column;gap:.5rem;}
-.fest-kort{
-  background:var(--hvid);
-  border:1px solid rgba(200,149,42,0.3);
-  border-left:4px solid var(--guld);
-  border-radius:8px;
-  padding:.6rem 1rem;
-  display:flex;align-items:center;gap:.85rem;
-  box-shadow:0 1px 4px rgba(0,0,0,0.05);
-}
-.fest-kort.idag{border-left-color:#c0392b;background:linear-gradient(90deg,#fff5f5,var(--hvid));}
-.fest-kort.rund{border-left-color:#2d7a1f;}
-.fest-kort.konf{border-left-color:var(--lilla);}
-.fest-kort.bryl-sølv{border-left-color:var(--sølv);}
-.fest-kort.bryl-guld{border-left-color:var(--guld);}
-.fest-ikon{font-size:26px;flex-shrink:0;line-height:1;}
-.fest-info{flex:1;min-width:0;}
-.fest-navn{font-size:14px;font-weight:600;color:var(--tekst);}
-.fest-beskrivelse{font-size:12px;color:var(--tekst-lys);margin-top:1px;}
-.fest-dage{
-  font-size:11px;font-weight:600;
-  padding:3px 9px;border-radius:20px;
-  background:var(--guld-pale);color:var(--guld);
-  border:1px solid rgba(200,149,42,0.3);
-  white-space:nowrap;flex-shrink:0;
-}
-.fest-dage.idag-chip{background:#fde8e8;color:#c0392b;border-color:#f5c6c6;}
-.fest-bund{
-  text-align:center;padding:.4rem .5rem .6rem;
-  font-size:20px;letter-spacing:4px;
-  background:rgba(200,149,42,0.06);
-  border-top:1px solid rgba(200,149,42,0.2);
-}
-
-/* ─── LEGENDE ─── */
-.legende{
-  display:flex;flex-wrap:wrap;gap:.5rem 1.25rem;
-  padding:.6rem 1rem;background:var(--hvid);
-  border:1px solid var(--border);border-radius:6px;
-  margin-bottom:1.75rem;font-size:12px;color:var(--tekst-lys);
-}
-.leg{display:flex;align-items:center;gap:.35rem;}
-
-/* ─── STATS-BOKS ─── */
-.stats-boks{
-  display:grid;grid-template-columns:repeat(3,1fr);
-  gap:.75rem;margin-bottom:1.5rem;
-}
-.stats-kort{
-  background:var(--hvid);border:1px solid var(--border);border-radius:8px;
-  padding:.8rem 1rem;display:flex;align-items:center;gap:.75rem;
-  box-shadow:0 1px 4px rgba(0,0,0,.04);
-}
-.stats-tal{font-size:28px;font-weight:700;line-height:1;}
-.stats-label{font-size:11px;color:var(--tekst-lys);margin-top:2px;}
-.stats-kort.groen .stats-tal{color:var(--tl-groen);}
-.stats-kort.gul   .stats-tal{color:var(--tl-gul);}
-.stats-kort.roed  .stats-tal{color:var(--tl-roed);}
-@media(max-width:480px){.stats-boks{grid-template-columns:1fr;}}
-
-/* ─── TRAFIKLYS ─── */
-.tl{
-  display:inline-block;width:9px;height:9px;border-radius:50%;
-  vertical-align:middle;margin-right:4px;flex-shrink:0;
-  box-shadow:0 0 0 1.5px rgba(0,0,0,.12);
-}
-.tl-groen{background:var(--tl-groen);}
-.tl-gul  {background:var(--tl-gul);}
-.tl-roed {background:var(--tl-roed);}
-
-/* ─── MDL.NR. KOLONNE ─── */
-.col-mdlnr{width:80px;text-align:center;white-space:nowrap;}
-.under-nr{font-size:10px;color:var(--tekst-lys);opacity:.65;}
-.mdlnr-ok{
-  font-size:12px;color:var(--tekst-lys);
-  background:none;border:none;padding:1px 5px;border-radius:4px;
-  font-family:'Source Sans 3',sans-serif;cursor:pointer;
-  border-bottom:1px dashed var(--tekst-lys);
-  transition:background .12s,color .12s,border-color .12s;
-}
-.mdlnr-ok:hover{background:var(--guld-pale);color:var(--guld);border-color:var(--guld);}
-.mdlnr-mangler{
-  font-size:10.5px;font-weight:700;color:var(--tl-roed);
-  border:1px solid var(--tl-roed);border-radius:4px;
-  padding:1px 5px;background:none;cursor:pointer;
-  font-family:'Source Sans 3',sans-serif;
-  transition:background .12s,color .12s;
-}
-.mdlnr-mangler:hover{background:var(--tl-roed);color:#fff;}
-
-/* ─── FILTER-KNAP ─── */
-.filter-knap{
-  font-size:11.5px;font-weight:600;
-  padding:3px 11px;border-radius:20px;
-  border:1.5px solid var(--tekst-lys);
-  color:var(--tekst-lys);background:none;cursor:pointer;
-  font-family:'Source Sans 3',sans-serif;
-  transition:all .15s;white-space:nowrap;
-}
-.filter-knap:hover{border-color:var(--gron);color:var(--gron);}
-.filter-knap.aktiv{background:var(--guld);border-color:var(--guld);color:#fff;}
-
-/* ─── FAMILIENR DIALOG ─── */
-.fnr-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.55);
-  z-index:3000;display:flex;align-items:center;justify-content:center;padding:1rem;
-}
-.fnr-modal{
-  background:var(--baggrund);border:2px solid var(--tl-roed);border-radius:12px;
-  max-width:440px;width:100%;
-  box-shadow:0 8px 40px rgba(0,0,0,.35);
-}
-.fnr-header{
-  background:#dc2626;padding:.8rem 1.25rem;border-radius:10px 10px 0 0;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.fnr-titel{font-family:'Playfair Display',serif;font-size:15px;color:#fff;font-weight:400;}
-.fnr-body{padding:1.25rem;}
-.fnr-info{font-size:13px;color:var(--tekst-lys);margin-bottom:1rem;line-height:1.55;}
-.fnr-valg{display:flex;flex-direction:column;gap:.6rem;margin-bottom:.85rem;}
-.fnr-valg-knap{
-  display:flex;align-items:flex-start;gap:.75rem;
-  padding:.8rem 1rem;border-radius:8px;border:2px solid var(--border);
-  background:var(--hvid);cursor:pointer;text-align:left;width:100%;
-  font-family:'Source Sans 3',sans-serif;transition:border-color .12s,background .12s;
-}
-.fnr-valg-knap:hover{border-color:var(--gron);background:#f0fdf4;}
-.fnr-valg-ikon{font-size:22px;flex-shrink:0;line-height:1;margin-top:1px;}
-.fnr-valg-tekst strong{display:block;font-size:13.5px;color:var(--tekst);margin-bottom:2px;}
-.fnr-valg-tekst span{font-size:12px;color:var(--tekst-lys);}
-/* Trin 2: opret nyt / tilknyt */
-.fnr-steg{display:none;}
-.fnr-steg.aktiv{display:block;}
-.fnr-ny-nr{
-  font-size:32px;font-weight:700;color:var(--gron);text-align:center;
-  padding:.75rem;background:#f0fdf4;border-radius:8px;margin:.75rem 0;
-}
-.fnr-familie-liste{
-  max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;
-  margin:.5rem 0 .85rem;
-}
-.fnr-familie-item{
-  padding:.55rem .85rem;font-size:13px;cursor:pointer;
-  border-bottom:1px solid rgba(212,201,160,.3);
-  display:flex;justify-content:space-between;align-items:center;
-}
-.fnr-familie-item:last-child{border-bottom:none;}
-.fnr-familie-item:hover{background:rgba(45,80,22,.06);}
-.fnr-familie-item.valgt{background:var(--gron-pale);}
-.fnr-familie-nr{font-size:11px;color:var(--tekst-lys);}
-.fnr-succes{
-  background:#e8f5e9;border:1.5px solid #4caf50;border-radius:8px;
-  color:#2d7a1f;font-size:14px;font-weight:700;text-align:center;
-  padding:.75rem 1rem;display:none;margin-top:.5rem;
-}
-.fnr-fejl{
-  background:#fde8e8;border:1.5px solid #e74c3c;border-radius:8px;
-  color:#c0392b;font-size:13px;padding:.6rem 1rem;display:none;margin-top:.5rem;
-}
-
-/* ─── MÅNEDS-BLOK ─── */
-.maaned-blok{margin-bottom:2rem;}
-.maaned-header{
-  font-family:'Playfair Display',serif;font-size:20px;font-weight:500;
-  color:var(--hvid);background:var(--gron);
-  padding:.45rem 1rem;border-radius:5px 5px 0 0;
-  display:flex;align-items:baseline;justify-content:space-between;
-}
-.maaned-antal{font-size:11px;font-weight:300;color:rgba(255,255,255,0.55);font-family:'Source Sans 3',sans-serif;}
-
-/* ─── TABEL ─── */
-.tabel{
-  width:100%;border-collapse:collapse;
-  border:1px solid var(--border);border-top:none;
-  background:var(--hvid);border-radius:0 0 5px 5px;overflow:hidden;
-  box-shadow:0 2px 8px rgba(0,0,0,0.05);
-}
-.tabel thead tr{background:rgba(45,80,22,0.07);}
-.tabel th{
-  padding:.42rem .75rem;font-size:10.5px;font-weight:600;
-  color:var(--tekst-lys);text-transform:uppercase;letter-spacing:.5px;
-  text-align:left;border-bottom:2px solid var(--border);
-}
-.tabel th.center{text-align:center;}
-.tabel td{
-  padding:.46rem .75rem;font-size:13.5px;
-  border-bottom:1px solid rgba(212,201,160,0.3);
-  vertical-align:middle;
-}
-.tabel tbody tr:hover{background:rgba(0,0,0,0.02);}
-.tabel tr:last-child td{border-bottom:none;}
-
-.col-dato       {width:110px;font-weight:600;color:var(--gron);white-space:nowrap;}
-.col-navn       {min-width:140px;}
-.col-alder      {width:55px;text-align:center;}
-.col-iaar       {width:145px;text-align:center;}
-.col-dato-iaar  {width:80px;text-align:center;font-size:12px;color:var(--gron);font-weight:600;white-space:nowrap;}
-.col-naeste     {width:145px;text-align:center;}
-.col-dato-naeste{width:80px;text-align:center;font-size:12px;color:var(--tekst-lys);white-space:nowrap;}
-
-td.alder-idag{background:var(--gron-pale);color:var(--gron);font-weight:700;border-radius:4px;}
-
-/* ─── BADGES ─── */
-.badge{
-  display:inline-flex;align-items:center;gap:3px;
-  font-size:11px;font-weight:600;
-  padding:2px 7px;border-radius:20px;white-space:nowrap;
-}
-.b-rund {background:#2d7a1f;color:#fff;}
-.b-konf {background:var(--lilla);color:#fff;}
-.b-sølv {background:var(--sølv);color:#fff;}
-.b-guld {background:var(--guld);color:#fff;}
-
-/* ─── RET-KNAP (kun synlig for redaktører) ─── */
-.ret-knap{
-  display:none;
-  margin-left:6px;padding:1px 7px;font-size:10px;font-weight:600;
-  border:1px solid var(--guld);border-radius:10px;
-  color:var(--guld);background:none;cursor:pointer;
-  font-family:'Source Sans 3',sans-serif;
-  transition:all .12s;vertical-align:middle;
-}
-.ret-knap:hover{background:var(--guld);color:var(--hvid);}
-body.er-redaktor .ret-knap{display:inline-block;}
-
-/* ─── LOGIN MODAL (redaktør) ─── */
-.login-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,0.55);
-  z-index:2000;display:flex;align-items:center;justify-content:center;
-  padding:1rem;
-}
-.login-modal{
-  background:var(--baggrund);border:2px solid var(--guld);border-radius:12px;
-  max-width:360px;width:100%;
-  box-shadow:0 8px 40px rgba(0,0,0,0.35);
-}
-.login-modal-header{
-  background:var(--gron);padding:.8rem 1.25rem;border-radius:10px 10px 0 0;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.login-modal-titel{font-family:'Playfair Display',serif;font-size:16px;color:var(--hvid);font-weight:400;}
-.modal-luk{background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.6);font-size:22px;line-height:1;padding:0;}
-.modal-luk:hover{color:var(--hvid);}
-.login-body{padding:1.25rem;}
-.form-label{display:block;font-size:12px;font-weight:600;color:var(--tekst-lys);margin-bottom:4px;}
-.form-input{
-  width:100%;padding:.55rem .75rem;margin-bottom:.75rem;
-  border:1.5px solid var(--border);border-radius:6px;
-  font-family:'Source Sans 3',sans-serif;font-size:14px;
-  background:var(--hvid);color:var(--tekst);
-}
-.form-input:focus{outline:none;border-color:var(--gron);}
-.form-fejl{color:#c0392b;font-size:12.5px;margin:.25rem 0 .5rem;display:none;}
-.btn-prim{
-  background:var(--gron);color:var(--hvid);
-  border:none;border-radius:6px;cursor:pointer;
-  padding:.5rem 1.25rem;font-size:13.5px;font-weight:600;
-  font-family:'Source Sans 3',sans-serif;
-}
-.btn-prim:hover{background:var(--gron-lys);}
-.btn-prim:disabled{opacity:.55;cursor:not-allowed;}
-.btn-sek{
-  background:none;color:var(--tekst-lys);
-  border:1.5px solid var(--border);border-radius:6px;cursor:pointer;
-  padding:.45rem 1rem;font-size:13px;
-  font-family:'Source Sans 3',sans-serif;
-}
-.btn-sek:hover{border-color:var(--gron);color:var(--gron);}
-.btn-kladde{
-  background:none;color:var(--gron);
-  border:1.5px solid var(--gron);border-radius:6px;cursor:pointer;
-  padding:.45rem 1rem;font-size:13px;
-  font-family:'Source Sans 3',sans-serif;
-  transition:background .12s,color .12s;
-}
-.btn-kladde:hover{background:var(--gron);color:var(--hvid);}
-.btn-kladde:disabled{opacity:.55;cursor:not-allowed;}
-.btn-row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;}
-
-/* ─── REDIGÉR PERSON MODAL ─── */
-.ret-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,0.55);
-  z-index:2000;display:flex;align-items:center;justify-content:center;
-  padding:1rem;
-}
-.ret-modal{
-  background:var(--baggrund);border:2px solid var(--guld);border-radius:12px;
-  max-width:480px;width:100%;max-height:90vh;overflow-y:auto;
-  box-shadow:0 8px 40px rgba(0,0,0,0.35);
-}
-.ret-modal-header{
-  background:var(--gron);padding:.8rem 1.25rem;border-radius:10px 10px 0 0;
-  display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;
-}
-.ret-modal-titel{font-family:'Playfair Display',serif;font-size:16px;color:var(--hvid);font-weight:400;}
-.ret-body{padding:1.25rem;}
-.ret-sektion{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
-  color:var(--tekst-lys);border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:.75rem;margin-top:1rem;}
-.ret-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem .75rem;}
-.ret-grid .full{grid-column:1/-1;}
-.ret-disabled{opacity:.6;background:var(--sølv-lys) !important;cursor:not-allowed !important;}
-.godkend-boks{
-  background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;
-  padding:.75rem 1rem;margin:.75rem 0;
-  display:flex;align-items:center;gap:.6rem;font-size:13px;color:#166534;
-}
-.godkend-boks input[type=checkbox]{width:16px;height:16px;accent-color:#22c55e;cursor:pointer;}
-.gem-succes{
-  background:#e8f5e9;border:1.5px solid #4caf50;border-radius:8px;
-  color:#2d7a1f;font-size:14px;font-weight:700;text-align:center;
-  padding:.75rem 1rem;margin-top:.75rem;display:none;
-}
-.gem-fejl{
-  background:#fde8e8;border:1.5px solid #e74c3c;border-radius:8px;
-  color:#c0392b;font-size:13px;padding:.6rem 1rem;margin-top:.5rem;display:none;
-}
-.tl-status{
-  display:inline-flex;align-items:center;gap:5px;font-size:12px;
-  padding:2px 8px;border-radius:10px;font-weight:600;
-}
-.tl-status.groen{background:#dcfce7;color:#166534;}
-.tl-status.gul{background:#fef9c3;color:#854d0e;}
-.tl-status.roed{background:#fee2e2;color:#991b1b;}
-
-/* ─── HILSEN MODAL (uændret) ─── */
-.hilsen-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,0.55);
-  z-index:1000;display:flex;align-items:center;justify-content:flex-end;
-  padding:1rem;
-}
-.hilsen-modal{
-  background:var(--baggrund);
-  border:2px solid var(--guld);border-radius:12px;
-  max-width:500px;width:100%;max-height:88vh;overflow-y:auto;
-  box-shadow:0 8px 40px rgba(0,0,0,0.35);
-}
-.hilsen-modal-header{
-  background:var(--gron);
-  padding:.8rem 1.25rem;border-radius:10px 10px 0 0;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.hilsen-modal-titel{font-family:'Playfair Display',serif;font-size:16px;color:var(--hvid);font-weight:400;}
-.hilsen-luk{background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.6);font-size:22px;line-height:1;padding:0;}
-.hilsen-luk:hover{color:var(--hvid);}
-.hilsen-body{padding:1.25rem;}
-.hilsen-label{display:block;font-size:12px;font-weight:600;color:var(--tekst-lys);margin-bottom:4px;}
-.hilsen-input{
-  width:100%;padding:.55rem .75rem;margin-bottom:.75rem;
-  border:1.5px solid var(--border);border-radius:6px;
-  font-family:'Source Sans 3',sans-serif;font-size:14px;
-  background:var(--hvid);color:var(--tekst);
-}
-.hilsen-input:focus{outline:none;border-color:var(--gron);}
-textarea.hilsen-input{resize:vertical;min-height:80px;}
-.hilsen-fejl-tekst{color:#c0392b;font-size:12.5px;margin:.25rem 0 .5rem;}
-.hilsen-btn-row{display:flex;gap:.5rem;align-items:center;}
-.hilsen-btn-prim{background:var(--gron);color:var(--hvid);border:none;border-radius:6px;cursor:pointer;padding:.5rem 1.25rem;font-size:13.5px;font-weight:600;font-family:'Source Sans 3',sans-serif;}
-.hilsen-btn-prim:hover{background:var(--gron-lys);}
-.hilsen-btn-prim:disabled{opacity:.55;cursor:not-allowed;}
-.hilsen-btn-sek{background:none;color:var(--tekst-lys);border:1.5px solid var(--border);border-radius:6px;cursor:pointer;padding:.45rem 1rem;font-size:13px;font-family:'Source Sans 3',sans-serif;}
-.hilsen-btn-sek:hover{border-color:var(--gron);color:var(--gron);}
-.hilsener-overskrift{font-size:12px;font-weight:600;color:var(--tekst-lys);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem;}
-.hilsen-kort{background:var(--hvid);border:1px solid rgba(212,201,160,0.5);border-left:4px solid var(--guld);border-radius:6px;padding:.55rem .9rem;margin-bottom:.45rem;}
-.hilsen-kort-fra{font-size:12px;font-weight:700;color:var(--gron);}
-.hilsen-kort-besked{font-size:13.5px;color:var(--tekst);margin-top:2px;white-space:pre-wrap;}
-.hilsen-kort-tid{font-size:11px;color:var(--tekst-lys);margin-top:3px;}
-.hilsen-ingen{text-align:center;color:var(--tekst-lys);font-size:13px;padding:.6rem;font-style:italic;}
-.hilsen-divider{border:none;border-top:1.5px solid var(--border);margin:.9rem 0;}
-.hilsen-succes{background:#e8f5e9;border:1.5px solid #4caf50;border-radius:8px;color:#2d7a1f;font-size:15px;font-weight:700;text-align:center;padding:.8rem 1rem;margin-top:.75rem;letter-spacing:.2px;}
-.hilsen-send-fejl{background:#fde8e8;border:1.5px solid #e74c3c;border-radius:8px;color:#c0392b;font-size:13px;padding:.6rem 1rem;margin-top:.5rem;}
-.maerkedag-navn{font-size:10.5px;color:var(--tekst-lys);margin-top:3px;text-align:center;font-style:italic;}
-
-/* ─── KNAPPER PÅ FEST-KORT ─── */
-.fest-kort-hojre{display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;flex-shrink:0;}
-.hilsen-knap,.hilsen-knap-laes{
-  border:none;border-radius:20px;cursor:pointer;
-  padding:3px 10px;font-size:11px;font-weight:600;
-  font-family:'Source Sans 3',sans-serif;
-  white-space:nowrap;color:var(--hvid);
-}
-.hilsen-knap     {background:var(--guld);}
-.hilsen-knap:hover{background:#b07820;}
-.hilsen-knap-laes     {background:var(--gron);}
-.hilsen-knap-laes:hover{background:var(--gron-lys);}
-
-/* ─── FAMILIE DIALOG ─── */
-.fam-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.55);
-  z-index:3000;display:flex;align-items:center;justify-content:center;padding:1rem;
-}
-.fam-modal{
-  background:var(--baggrund);border:2px solid var(--guld);border-radius:12px;
-  max-width:520px;width:100%;max-height:88vh;overflow-y:auto;
-  box-shadow:0 8px 40px rgba(0,0,0,.35);
-}
-.fam-modal-header{
-  background:var(--gron);padding:.8rem 1.25rem;border-radius:10px 10px 0 0;
-  display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:1;
-}
-.fam-titel{font-family:'Playfair Display',serif;font-size:16px;color:var(--hvid);font-weight:400;}
-.fam-body{padding:1rem 1.25rem 1.25rem;}
-.fam-person{
-  background:var(--hvid);border:1px solid var(--border);border-radius:8px;
-  padding:.7rem 1rem;margin-bottom:.65rem;
-  display:flex;align-items:flex-start;gap:.75rem;
-}
-.fam-person:last-child{margin-bottom:0;}
-.fam-person-info{flex:1;min-width:0;}
-.fam-person-navn{font-size:14px;font-weight:600;color:var(--tekst);display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
-.fam-person-nr{font-size:11px;color:var(--tekst-lys);font-style:italic;}
-.fam-person-detalje{font-size:12px;color:var(--tekst-lys);margin-top:3px;}
-.fam-alder-chip{
-  font-size:12px;font-weight:700;
-  padding:2px 9px;border-radius:20px;
-  background:var(--guld-pale);color:var(--guld);
-  border:1px solid rgba(200,149,42,0.3);
-  white-space:nowrap;flex-shrink:0;align-self:center;
-  margin-left:auto;
-}
-
-/* ─── FLAG-FOOTER ─── */
-.flag-footer{background:var(--gron);border-top:3px solid var(--guld);text-align:center;padding:.9rem 0 .6rem;}
-.flag-footer-flag{font-size:26px;letter-spacing:6px;}
-.flag-footer-tekst{font-size:11px;color:rgba(255,255,255,0.35);margin-top:.4rem;letter-spacing:.5px;}
-
-/* ─── MOBIL ─── */
-@media(max-width:640px){
-  .topbar-links a:not(.aktiv):not(:last-child){display:none;}
-  .col-naeste,.col-dato-naeste,.col-dato-iaar{display:none;}
-  .flag-banner{font-size:20px;letter-spacing:3px;}
-  .ret-grid{grid-template-columns:1fr;}
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; }
+.header { background: #2d5016; color: #f5e6a8; padding: 18px 30px; display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 22px; }
+.header a { color: #f5e6a8; text-decoration: none; padding: 6px 14px; border: 1px solid #f5e6a8; border-radius: 4px; font-size: 14px; }
+.tabs { display: flex; background: #3a6020; padding: 0 30px; }
+.tab { padding: 14px 22px; color: #f5e6a8; cursor: pointer; border-bottom: 3px solid transparent; font-size: 15px; }
+.tab.active { background: #f5f1e8; color: #2d5016; border-bottom-color: #c89e3c; font-weight: bold; }
+.container { max-width: 1100px; margin: 0 auto; padding: 25px; }
+.stats { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.stat { background: #fff; padding: 14px 20px; border-radius: 6px; flex: 1; min-width: 140px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.stat-num { font-size: 28px; font-weight: bold; color: #2d5016; }
+.stat-label { font-size: 12px; color: #6b6b6b; text-transform: uppercase; }
+.stat.green .stat-num { color: #2d7a2d; }
+.stat.red .stat-num { color: #b03030; }
+.month { background: #fff; margin-bottom: 14px; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.month-title { background: #c89e3c; color: #2d5016; padding: 10px 18px; font-size: 17px; font-weight: bold; }
+.event { padding: 10px 18px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+.event:last-child { border-bottom: none; }
+.event-date { font-weight: bold; color: #2d5016; min-width: 65px; }
+.event-name { flex: 1; padding: 0 12px; }
+.event-extra { color: #888; font-size: 13px; }
+.event.milestone { background: #fff8e1; }
+.event.milestone .event-extra { color: #c89e3c; font-weight: bold; }
+.search-box { width: 100%; padding: 10px 14px; font-size: 15px; border: 1px solid #c4b896; border-radius: 4px; margin-bottom: 16px; background: #fff; }
+.person-row { background: #fff; padding: 10px 16px; margin-bottom: 4px; border-radius: 4px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.person-num { background: #2d5016; color: #f5e6a8; padding: 3px 9px; border-radius: 3px; font-size: 12px; font-weight: bold; min-width: 50px; text-align: center; font-family: monospace; }
+.person-name { flex: 1; font-size: 15px; }
+.person-date { color: #666; font-size: 13px; min-width: 100px; }
+.person-status { font-size: 11px; padding: 3px 8px; border-radius: 3px; text-transform: uppercase; }
+.status-green { background: #d4edda; color: #155724; }
+.status-yellow { background: #fff3cd; color: #856404; }
+.status-red { background: #f8d7da; color: #721c24; }
+.btn-edit { background: #2d5016; color: #f5e6a8; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.btn-edit:hover { background: #1d3a0f; }
+.btn-fix { background: #b03030; color: #fff; }
+.btn-fix:hover { background: #8a2424; }
+.zone-b-row { background: #fff5f5; border-left: 4px solid #b03030; }
+.bemark { font-size: 12px; color: #888; font-style: italic; margin-top: 4px; }
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+.modal-bg.show { display: flex; }
+.modal { background: #fff; padding: 25px; border-radius: 8px; max-width: 500px; width: 90%; max-height: 85vh; overflow-y: auto; }
+.modal h3 { color: #2d5016; margin-bottom: 12px; }
+.modal-note { background: #fff8e1; border-left: 4px solid #c89e3c; padding: 10px 14px; margin-bottom: 16px; font-size: 14px; color: #6b5b1f; }
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 13px; color: #555; margin-bottom: 4px; }
+.field input { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+.modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+.btn-save { background: #2d7a2d; color: #fff; border: none; padding: 9px 18px; border-radius: 4px; cursor: pointer; }
+.btn-cancel { background: #888; color: #fff; border: none; padding: 9px 18px; border-radius: 4px; cursor: pointer; }
+.hidden { display: none !important; }
 </style>
 </head>
 <body>
-
-<!-- FLAG TOP -->
-<div class="flag-banner">🇩🇰 🇩🇰 🇩🇰 🇩🇰 🇩🇰</div>
-
-<!-- TOPBAR -->
-<div class="topbar">
-  <a href="index.html" class="topbar-logo">OlsenKlanen</a>
-  <div class="topbar-links">
-    <a href="index.html">Forside</a>
-    <a href="skovtur2025.html">Skovtur 2025</a>
-    <a href="foedselsdage.html" class="aktiv">Begivenheder</a>
-    <button class="topbar-red-knap" id="topbar-red-knap" title="Redaktør-login">Redaktør</button>
+<div class="header">
+  <h1>🌳 OlsenKlanen — Mærkedage & Medlemskartotek</h1>
+  <a href="forside.html">← Tilbage til forsiden</a>
+</div>
+<div class="tabs">
+  <div class="tab active" onclick="visFane('kalender', this)">🎂 Begivenhedskalender</div>
+  <div class="tab" onclick="visFane('zoneA', this)">✅ Godkendte (Zone A)</div>
+  <div class="tab" onclick="visFane('zoneB', this)">⚠️ Skal rettes (Zone B)</div>
+</div>
+<div class="container">
+  <div class="stats">
+    <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Personer i alt</div></div>
+    <div class="stat green"><div class="stat-num" id="stat-godkendt">0</div><div class="stat-label">Zone A — Godkendt</div></div>
+    <div class="stat red"><div class="stat-num" id="stat-fejl">0</div><div class="stat-label">Zone B — Datafejl</div></div>
+    <div class="stat"><div class="stat-num" id="stat-husstande">0</div><div class="stat-label">Husstande</div></div>
+  </div>
+  <div id="fane-kalender" class="fane"><div id="kalender-content"></div></div>
+  <div id="fane-zoneA" class="fane hidden">
+    <input type="text" class="search-box" id="sog-A" placeholder="🔍 Søg på medlemsnummer (fx 8) eller navn — så vises hele familien" oninput="filtrerZoneA()">
+    <div id="zoneA-content"></div>
+  </div>
+  <div id="fane-zoneB" class="fane hidden">
+    <p style="margin-bottom:14px; color:#6b5b1f; background:#fff8e1; padding:10px 14px; border-radius:4px;">
+      💡 <strong>Disse personer mangler data eller har uoverensstemmelser.</strong> Klik på "Ret nu" for at afklare.
+    </p>
+    <div id="zoneB-content"></div>
   </div>
 </div>
-
-<!-- SIDE-HEADER -->
-<div class="side-header">
-  <h1>Årets begivenheder og mærkedage</h1>
-  <p id="header-sub">Henter data…</p>
-  <div class="guld-streg"></div>
-</div>
-
-<div class="wrapper">
-
-  <!-- LOADING -->
-  <div id="loading-boks" class="loading-boks">
-    <div class="loading-spinner"></div><br>Henter familiemedlemmer fra database…
-  </div>
-
-  <!-- STATISTIK -->
-  <div class="stats-boks" id="stats-boks" style="display:none">
-    <div class="stats-kort groen">
-      <span class="tl tl-groen" style="width:14px;height:14px;flex-shrink:0;"></span>
-      <div><div class="stats-tal" id="stats-groen">0</div><div class="stats-label">Komplet</div></div>
-    </div>
-    <div class="stats-kort gul">
-      <span class="tl tl-gul" style="width:14px;height:14px;flex-shrink:0;"></span>
-      <div><div class="stats-tal" id="stats-gul">0</div><div class="stats-label">Fødselsdato mangler</div></div>
-    </div>
-    <div class="stats-kort roed">
-      <span class="tl tl-roed" style="width:14px;height:14px;flex-shrink:0;"></span>
-      <div><div class="stats-tal" id="stats-roed">0</div><div class="stats-label">Mdl.nr. mangler</div></div>
-    </div>
-  </div>
-
-  <!-- FESTLIG MÆRKEDAGE-BOKS -->
-  <div class="fest-boks" id="fest-boks" style="display:none">
-    <div class="fest-header">
-      <div class="fest-header-titel">🎊 Mærkedage de næste 10 dage 🎊</div>
-      <div class="fest-header-flag">🇩🇰 🌸 🇩🇰</div>
-    </div>
-    <div class="fest-liste" id="fest-liste"></div>
-    <div class="fest-bund">🌸 🎊 🇩🇰 🎊 🌸</div>
-  </div>
-
-  <!-- LEGENDE -->
-  <div class="legende" id="legende" style="display:none">
-    <div class="leg"><span class="tl tl-groen"></span> Komplet data</div>
-    <div class="leg"><span class="tl tl-gul"></span> Fødselsdato mangler</div>
-    <div class="leg"><span class="tl tl-roed"></span> Medlemsnummer mangler</div>
-    <div class="leg" style="border-left:2px solid var(--border);padding-left:.75rem;margin-left:.25rem;">
-      🎂 <span class="badge b-rund">Rund fødselsdag</span> 50, 60, 70, 75, 80, 85, 90 år
-    </div>
-    <div class="leg">🙏 <span class="badge b-konf">Konfirmation</span> 15–16 år</div>
-    <div class="leg">💍 <span class="badge b-sølv">Sølvbryllup</span> &nbsp;💍 <span class="badge b-guld">Guldbryllup</span></div>
-    <div class="leg" style="background:#c8e6b0;padding:1px 6px;border-radius:4px;">Grøn alder = fødselsdag i dag</div>
-    <button id="filter-mangler-btn" class="filter-knap" style="margin-left:auto">Vis manglende data</button>
-  </div>
-
-  <!-- KALENDER -->
-  <div id="kalender"></div>
-
-</div>
-
-<!-- FLAG BUND -->
-<div class="flag-footer">
-  <div class="flag-footer-flag">🇩🇰 🇩🇰 🇩🇰 🇩🇰 🇩🇰</div>
-  <div class="flag-footer-tekst" id="footer-tekst"></div>
-</div>
-
-<!-- ─── FAMILIE DIALOG ──────────────────────────────────────────────────────── -->
-<div id="fam-overlay" class="fam-overlay" style="display:none">
-  <div class="fam-modal">
-    <div class="fam-modal-header">
-      <div class="fam-titel" id="fam-titel">Familie</div>
-      <button class="modal-luk" id="fam-luk-x" style="color:rgba(255,255,255,.7)">×</button>
-    </div>
-    <div class="fam-body" id="fam-body"></div>
-  </div>
-</div>
-
-<!-- ─── FAMILIENR DIALOG ──────────────────────────────────────────────────── -->
-<div id="fnr-overlay" class="fnr-overlay" style="display:none">
-  <div class="fnr-modal">
-    <div class="fnr-header">
-      <div class="fnr-titel" id="fnr-modal-titel">Tildel familienummer</div>
-      <button class="modal-luk" id="fnr-luk-x" style="color:rgba(255,255,255,.7)">×</button>
-    </div>
-    <div class="fnr-body">
-      <!-- Trin 0: vælg handling -->
-      <div class="fnr-steg aktiv" id="fnr-steg0">
-        <p class="fnr-info">
-          <strong id="fnr-person-navn"></strong> <span id="fnr-steg0-tekst">har intet familienummer.</span>
-          Hvad ønsker du at gøre?
-        </p>
-        <p id="fnr-kun-redaktor-info" style="display:none;font-size:12px;color:var(--tekst-lys);background:var(--guld-pale);border-radius:6px;padding:.5rem .75rem;margin-bottom:.6rem;">
-          Du er logget ind som <strong>redaktør</strong> — kun administrator kan oprette nye familienumre.
-        </p>
-        <div class="fnr-valg">
-          <button class="fnr-valg-knap" id="fnr-opret-btn">
-            <span class="fnr-valg-ikon">➕</span>
-            <div class="fnr-valg-tekst">
-              <strong>Opret nyt familienummer</strong>
-              <span>Tildel et nyt nummer og registrér personen som ny familie</span>
-            </div>
-          </button>
-          <button class="fnr-valg-knap" id="fnr-tilknyt-btn">
-            <span class="fnr-valg-ikon">🔗</span>
-            <div class="fnr-valg-tekst">
-              <strong>Tilknyt til eksisterende familie</strong>
-              <span>Vælg hvilken familie personen tilhører</span>
-            </div>
-          </button>
-        </div>
-        <div style="text-align:right"><button class="btn-sek" id="fnr-annuller0">Annuller</button></div>
-      </div>
-
-      <!-- Trin 1a: opret nyt -->
-      <div class="fnr-steg" id="fnr-steg-opret">
-        <p class="fnr-info">Næste ledige familienummer:</p>
-        <div class="fnr-ny-nr" id="fnr-nyt-nr">—</div>
-        <p class="fnr-info" style="margin-bottom:.75rem;">
-          Klik <strong>Opret</strong> for at tildele dette nummer og gemme familiedokumentet.
-        </p>
-        <div class="btn-row">
-          <button class="btn-prim" id="fnr-bekraeft-opret">Opret familie ➕</button>
-          <button class="btn-sek"  id="fnr-tilbage-opret">← Tilbage</button>
-        </div>
-        <div class="fnr-succes" id="fnr-opret-succes">✓ Familienummer oprettet!</div>
-        <div class="fnr-fejl"   id="fnr-opret-fejl"></div>
-      </div>
-
-      <!-- Trin 1b: tilknyt til eksisterende -->
-      <div class="fnr-steg" id="fnr-steg-tilknyt">
-        <p class="fnr-info">Vælg hvilken familie personen skal tilknyttes:</p>
-        <div class="fnr-familie-liste" id="fnr-familie-liste"></div>
-        <div class="btn-row">
-          <button class="btn-prim" id="fnr-bekraeft-tilknyt" disabled>Tilknyt 🔗</button>
-          <button class="btn-sek"  id="fnr-tilbage-tilknyt">← Tilbage</button>
-        </div>
-        <div class="fnr-succes" id="fnr-tilknyt-succes">✓ Person tilknyttet familie!</div>
-        <div class="fnr-fejl"   id="fnr-tilknyt-fejl"></div>
-      </div>
+<div class="modal-bg" id="modal-rediger">
+  <div class="modal">
+    <h3 id="modal-titel">Ret medlem</h3>
+    <div class="modal-note" id="modal-bemark"></div>
+    <div class="field"><label>Fornavn</label><input type="text" id="f-fornavn"></div>
+    <div class="field"><label>Efternavn</label><input type="text" id="f-efternavn"></div>
+    <div class="field"><label>Medlemsnummer</label><input type="text" id="f-nr"></div>
+    <div class="field"><label>Fødselsdato (DD-MM-ÅÅÅÅ)</label><input type="text" id="f-fdato"></div>
+    <div class="field"><label>Adresse</label><input type="text" id="f-adresse"></div>
+    <div class="field"><label>Telefon</label><input type="text" id="f-telefon"></div>
+    <div class="field"><label>E-mail</label><input type="text" id="f-email"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="lukModal()">Annuller</button>
+      <button class="btn-save" onclick="gemRettelse()">Godkend rettelse ✓</button>
     </div>
   </div>
 </div>
-
-<!-- ─── REDAKTØR-LOGIN MODAL ─────────────────────────────────────────────── -->
-<div id="login-overlay" class="login-overlay" style="display:none">
-  <div class="login-modal">
-    <div class="login-modal-header">
-      <div class="login-modal-titel" id="login-modal-titel">Redaktør-login</div>
-      <button class="modal-luk" id="login-luk-x">×</button>
-    </div>
-    <div class="login-body" id="login-body">
-      <label class="form-label" for="login-email">E-mail</label>
-      <input class="form-input" id="login-email" type="email" placeholder="din@email.dk" autocomplete="email">
-      <label class="form-label" for="login-kodeord">Kodeord</label>
-      <input class="form-input" id="login-kodeord" type="password" placeholder="••••••••" autocomplete="current-password">
-      <div class="form-fejl" id="login-fejl">Forkert e-mail eller kodeord.</div>
-      <div class="btn-row">
-        <button class="btn-prim" id="login-btn">Log ind</button>
-        <button class="btn-sek"  id="login-annuller">Annuller</button>
-      </div>
-    </div>
-    <div class="login-body" id="logud-body" style="display:none">
-      <p style="font-size:13.5px;color:var(--tekst-lys);margin-bottom:.85rem;">
-        Logget ind som <strong id="logget-ind-som"></strong>.<br>
-        <span style="color:var(--tl-groen);font-size:12px;" id="logget-ind-rolle"></span>
-      </p>
-      <div class="btn-row">
-        <button class="btn-prim" id="logud-btn">Log ud</button>
-        <button class="btn-sek"  id="logud-luk">Luk</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ─── REDIGÉR PERSON MODAL ─────────────────────────────────────────────── -->
-<div id="ret-overlay" class="ret-overlay" style="display:none">
-  <div class="ret-modal">
-    <div class="ret-modal-header">
-      <div class="ret-modal-titel" id="ret-modal-titel">Rediger person</div>
-      <button class="modal-luk" id="ret-luk-x">×</button>
-    </div>
-    <div class="ret-body">
-
-      <!-- Status -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
-        <span id="ret-status-chip" class="tl-status groen">● Komplet</span>
-        <span style="font-size:11px;color:var(--tekst-lys);">Familie nr. <strong id="ret-familienr"></strong></span>
-      </div>
-
-      <div class="ret-sektion">Personoplysninger</div>
-      <div class="ret-grid">
-        <div>
-          <label class="form-label" for="ret-fornavn">Fornavn</label>
-          <input class="form-input" id="ret-fornavn" type="text" placeholder="Fornavn">
-        </div>
-        <div>
-          <label class="form-label" for="ret-efternavn">Efternavn</label>
-          <input class="form-input" id="ret-efternavn" type="text" placeholder="Efternavn">
-        </div>
-        <div>
-          <label class="form-label" for="ret-foedselsdato">Fødselsdato</label>
-          <input class="form-input" id="ret-foedselsdato" type="date">
-        </div>
-        <div>
-          <label class="form-label" for="ret-rolle">Rolle</label>
-          <select class="form-input" id="ret-rolle">
-            <option value="forælder">Forælder</option>
-            <option value="barn">Barn</option>
-            <option value="ægtefælle">Ægtefælle</option>
-            <option value="partner">Partner</option>
-            <option value="andet">Andet</option>
-          </select>
-        </div>
-        <div class="full">
-          <label class="form-label" for="ret-email">E-mail</label>
-          <input class="form-input" id="ret-email" type="email" placeholder="person@email.dk">
-        </div>
-        <div class="full">
-          <label class="form-label" for="ret-mobil">Mobil</label>
-          <input class="form-input" id="ret-mobil" type="text" placeholder="12345678">
-        </div>
-      </div>
-
-      <div class="btn-row" style="margin-top:.5rem;">
-        <button class="btn-prim"   id="ret-godkend-btn">Godkend og gem ✓</button>
-        <button class="btn-kladde" id="ret-kladde-btn">Gem kladde 💾</button>
-        <button class="btn-sek"    id="ret-annuller-btn">Annuller</button>
-      </div>
-      <div class="gem-succes" id="ret-succes"></div>
-      <div class="gem-fejl"   id="ret-fejl"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ─── HILSEN MODAL ─────────────────────────────────────────────────────── -->
-<div id="hilsen-overlay" class="hilsen-overlay" style="display:none">
-  <div class="hilsen-modal">
-    <div class="hilsen-modal-header">
-      <div class="hilsen-modal-titel" id="hilsen-modal-titel">Send en hilsen</div>
-      <button class="hilsen-luk" id="hilsen-luk-x" title="Luk">×</button>
-    </div>
-    <div class="hilsen-body" id="hilsen-step1">
-      <p style="font-size:13.5px;color:var(--tekst-lys);margin-bottom:.85rem;">
-        Indtast koden for at se og sende hilsener.
-      </p>
-      <label class="hilsen-label" for="hilsen-kode-input">Kode</label>
-      <input class="hilsen-input" id="hilsen-kode-input" type="password"
-             placeholder="Skriv koden her…" autocomplete="off">
-      <div class="hilsen-fejl-tekst" id="hilsen-kode-fejl" style="display:none">Forkert kode — prøv igen.</div>
-      <div class="hilsen-btn-row">
-        <button class="hilsen-btn-prim" id="hilsen-kode-btn">Fortsæt →</button>
-        <button class="hilsen-btn-sek"  id="hilsen-annuller-btn">Annuller</button>
-      </div>
-    </div>
-    <div class="hilsen-body" id="hilsen-step-send" style="display:none">
-      <label class="hilsen-label" for="hilsen-fra-input">Dit navn</label>
-      <input class="hilsen-input" id="hilsen-fra-input" type="text" placeholder="Skriv dit navn…" maxlength="60">
-      <label class="hilsen-label" for="hilsen-besked-input">Din hilsen</label>
-      <textarea class="hilsen-input" id="hilsen-besked-input" placeholder="Skriv din hilsen her…" maxlength="500" rows="4"></textarea>
-      <div class="hilsen-btn-row">
-        <button class="hilsen-btn-prim" id="hilsen-send-btn">Send hilsen 💌</button>
-        <button class="hilsen-btn-sek"  id="hilsen-luk-send-btn">Luk</button>
-      </div>
-      <div class="hilsen-send-fejl" id="hilsen-send-fejl" style="display:none"></div>
-      <div class="hilsen-succes"    id="hilsen-succes"    style="display:none">✓ Din hilsen er sendt! 🎉</div>
-    </div>
-    <div class="hilsen-body" id="hilsen-step-laes" style="display:none">
-      <div class="hilsener-overskrift">Hilsener til <span id="hilsen-til-navn"></span></div>
-      <div id="hilsen-liste"></div>
-      <div class="hilsen-btn-row" style="margin-top:.85rem">
-        <button class="hilsen-btn-sek" id="hilsen-luk-laes-btn">Luk</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ─── FIREBASE + AL LOGIK ───────────────────────────────────────────────── -->
-<script type="module">
-import { initializeApp }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, getDoc, updateDoc }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getDatabase, ref, push, get }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-const CFG = {
-  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
-  authDomain: "olsenklanen-familieside.firebaseapp.com",
-  projectId: "olsenklanen-familieside",
-  storageBucket: "olsenklanen-familieside.firebasestorage.app",
-  messagingSenderId: "640843662410",
-  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3",
-  databaseURL: "https://olsenklanen-familieside-default-rtdb.europe-west1.firebasedatabase.app"
-};
-
-const app  = initializeApp(CFG);
-const auth = getAuth(app);
-const db   = getFirestore(app);
-const rtdb = getDatabase(app);
-
-// ─── KONSTANTER ──────────────────────────────────────────────────────────────
-const MAANEDER      = ['Januar','Februar','Marts','April','Maj','Juni','Juli','August','September','Oktober','November','December'];
-const MAANEDER_KORT = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
-const RUNDE_ALDRE   = [50,60,70,75,80,85,90];
-const KONF_ALDRE    = [15,16];
-const IDAG = new Date(); IDAG.setHours(0,0,0,0);
-const I_AAR  = IDAG.getFullYear();
-const NAESTE = I_AAR + 1;
-
-// ─── HJÆLPEFUNKTIONER ────────────────────────────────────────────────────────
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+<script>
+const medlemmer = [
+  {nr:"004", under:"004", fornavn:"Mette", efternavn:"Westergaard-Hansen", fdato:"08-04-1972", rolle:"Forælder", husstand:"Mette & Allan", status:"green", bemark:"OK"},
+  {nr:"004", under:"004", fornavn:"Allan", efternavn:"Westergaard-Hansen", fdato:"15-09-1970", rolle:"Forælder", husstand:"Mette & Allan", status:"green", bemark:"OK"},
+  {nr:"004", under:"004-1", fornavn:"Magnus", efternavn:"Westergaard-Hansen", fdato:"12-06-2002", rolle:"Barn", husstand:"Mette & Allan", status:"green", bemark:"OK"},
+  {nr:"004", under:"004-2", fornavn:"Sofie", efternavn:"Westergaard-Hansen", fdato:"22-11-2005", rolle:"Barn", husstand:"Mette & Allan", status:"green", bemark:"OK"},
+  {nr:"005", under:"005", fornavn:"Lone", efternavn:"Gram", fdato:"03-02-1958", rolle:"Forælder", husstand:"Lone Gram", status:"green", bemark:"OK. Enlig."},
+  {nr:"006", under:"006", fornavn:"Karin", efternavn:"Lund", fdato:"12-03-1962", rolle:"Forælder", husstand:"Karin & Richard", status:"green", bemark:"OK"},
+  {nr:"006", under:"006", fornavn:"Richard", efternavn:"Lund", fdato:"24-06-1959", rolle:"Forælder", husstand:"Karin & Richard", status:"green", bemark:"OK"},
+  {nr:"006", under:"006-1", fornavn:"Flemming", efternavn:"Lund", fdato:"18-05-1988", rolle:"Barn", husstand:"Karin & Richard", status:"green", bemark:"OK"},
+  {nr:"006", under:"006-2", fornavn:"Amalia Sofie", efternavn:"Lund", fdato:"04-09-1992", rolle:"Barn", husstand:"Karin & Richard", status:"yellow", bemark:"PDF skriver 'Amaliea' med ekstra 'e' — formentlig stavefejl."},
+  {nr:"007", under:"007", fornavn:"Bent", efternavn:"Olsen", fdato:"19-07-1955", rolle:"Forælder", husstand:"Bent Olsen", status:"green", bemark:"OK"},
+  {nr:"008", under:"008", fornavn:"Carsten", efternavn:"Gram", fdato:"24-05-1966", rolle:"Forælder", husstand:"Carsten & Trine", status:"green", bemark:"Admin. OK"},
+  {nr:"008", under:"008", fornavn:"Trine", efternavn:"Gram", fdato:"02-10-1968", rolle:"Forælder", husstand:"Carsten & Trine", status:"red", bemark:"AFKLAR: Trine skal have eget medlemsnummer. Hvilket?"},
+  {nr:"008", under:"008-1", fornavn:"Sanne", efternavn:"Gram", fdato:"14-08-1992", rolle:"Barn", husstand:"Carsten & Trine", status:"red", bemark:"AFKLAR: Sanne skal have eget medlemsnummer. Hvilket?"},
+  {nr:"008", under:"008-2", fornavn:"René", efternavn:"Gram", fdato:"07-03-1995", rolle:"Barn", husstand:"Carsten & Trine", status:"red", bemark:"AFKLAR: René skal have eget medlemsnummer. Hvilket?"},
+  {nr:"010", under:"010", fornavn:"Jannie", efternavn:"Olsen", fdato:"11-11-1975", rolle:"Forælder", husstand:"Jannie & Jannik", status:"red", bemark:"DUBLET: Jannie står også på nr. 13."},
+  {nr:"010", under:"010", fornavn:"Jannik", efternavn:"Olsen", fdato:"23-04-1973", rolle:"Forælder", husstand:"Jannie & Jannik", status:"red", bemark:"DUBLET: Jannik står også på nr. 13."},
+  {nr:"010", under:"010-1", fornavn:"Mikkel", efternavn:"Olsen", fdato:"05-12-2001", rolle:"Barn", husstand:"Jannie & Jannik", status:"green", bemark:"OK"},
+  {nr:"011", under:"011", fornavn:"Hans", efternavn:"Olsen", fdato:"30-01-1948", rolle:"Forælder", husstand:"Hans & Inge", status:"green", bemark:"OK"},
+  {nr:"011", under:"011", fornavn:"Inge", efternavn:"Olsen", fdato:"17-06-1950", rolle:"Forælder", husstand:"Hans & Inge", status:"green", bemark:"OK"},
+  {nr:"012", under:"012", fornavn:"Peter", efternavn:"Olsen", fdato:"08-08-1965", rolle:"Forælder", husstand:"Peter & Mette", status:"green", bemark:"OK"},
+  {nr:"012", under:"012", fornavn:"Mette", efternavn:"Olsen", fdato:"21-02-1967", rolle:"Forælder", husstand:"Peter & Mette", status:"green", bemark:"OK"},
+  {nr:"012", under:"012-1", fornavn:"Emil", efternavn:"Olsen", fdato:"14-10-1998", rolle:"Barn", husstand:"Peter & Mette", status:"green", bemark:"OK"},
+  {nr:"012", under:"012-2", fornavn:"Frederik", efternavn:"Olsen", fdato:"03-07-2001", rolle:"Barn", husstand:"Peter & Mette", status:"green", bemark:"OK"},
+  {nr:"014", under:"014", fornavn:"Kurt", efternavn:"Olsen", fdato:"26-09-1960", rolle:"Forælder", husstand:"Kurt & Lis", status:"green", bemark:"OK. OlsenBanden."},
+  {nr:"014", under:"014", fornavn:"Lis", efternavn:"Olsen", fdato:"19-12-1962", rolle:"Forælder", husstand:"Kurt & Lis", status:"green", bemark:"OK"},
+  {nr:"014", under:"014-1", fornavn:"Pernille", efternavn:"Olsen", fdato:"09-05-1990", rolle:"Barn", husstand:"Kurt & Lis", status:"green", bemark:"OK"},
+  {nr:"015", under:"015", fornavn:"Tommy", efternavn:"Olsen", fdato:"24-05-1966", rolle:"Forælder", husstand:"Tommy & Anne", status:"green", bemark:"OK. OlsenBanden. Fylder 60 om 8 dage!"},
+  {nr:"015", under:"015", fornavn:"Anne", efternavn:"Olsen", fdato:"15-11-1968", rolle:"Forælder", husstand:"Tommy & Anne", status:"green", bemark:"OK"},
+  {nr:"015", under:"015-1", fornavn:"Jonas", efternavn:"Olsen", fdato:"22-03-1995", rolle:"Barn", husstand:"Tommy & Anne", status:"green", bemark:"OK"},
+  {nr:"015", under:"015-2", fornavn:"Laura", efternavn:"Olsen", fdato:"08-08-1998", rolle:"Barn", husstand:"Tommy & Anne", status:"green", bemark:"OK"},
+  {nr:"016", under:"016", fornavn:"Birgit", efternavn:"Olsen", fdato:"04-04-1953", rolle:"Forælder", husstand:"Birgit Olsen", status:"green", bemark:"OK. Enlig."},
+  {nr:"017", under:"017", fornavn:"Lili", efternavn:"Olsen", fdato:"01-01-1945", rolle:"Forælder", husstand:"Lili Olsen", status:"green", bemark:"OK."},
+  {nr:"019", under:"019", fornavn:"Søren", efternavn:"Olsen", fdato:"12-12-1970", rolle:"Forælder", husstand:"Søren & Mette", status:"green", bemark:"OK"},
+  {nr:"019", under:"019", fornavn:"Mette", efternavn:"Olsen", fdato:"05-03-1972", rolle:"Forælder", husstand:"Søren & Mette", status:"green", bemark:"OK"},
+  {nr:"019", under:"019-1", fornavn:"Cecilie", efternavn:"Olsen", fdato:"18-09-2003", rolle:"Barn", husstand:"Søren & Mette", status:"green", bemark:"OK"},
+  {nr:"020", under:"020", fornavn:"Else", efternavn:"Olsen", fdato:"27-07-1942", rolle:"Forælder", husstand:"Else Olsen", status:"green", bemark:"OK. Enlig."},
+  {nr:"021", under:"021", fornavn:"Rikke V.", efternavn:"Tingberg", fdato:"16-04-1980", rolle:"Forælder", husstand:"Rikke Tingberg", status:"red", bemark:"DUBLET: Rikke står også på nr. 52."},
+  {nr:"021", under:"021-1", fornavn:"Mathilde", efternavn:"Tingberg", fdato:"02-06-2008", rolle:"Barn", husstand:"Rikke Tingberg", status:"green", bemark:"OK"},
+  {nr:"022", under:"022", fornavn:"Klaus", efternavn:"Olsen", fdato:"13-11-1963", rolle:"Forælder", husstand:"Klaus & Susanne", status:"green", bemark:"OK"},
+  {nr:"022", under:"022", fornavn:"Susanne", efternavn:"Olsen", fdato:"29-08-1965", rolle:"Forælder", husstand:"Klaus & Susanne", status:"green", bemark:"OK"},
+  {nr:"024", under:"024", fornavn:"Henrik", efternavn:"Olsen", fdato:"07-02-1958", rolle:"Forælder", husstand:"Henrik & Vibeke", status:"green", bemark:"OK"},
+  {nr:"024", under:"024", fornavn:"Vibeke", efternavn:"Olsen", fdato:"19-10-1960", rolle:"Forælder", husstand:"Henrik & Vibeke", status:"green", bemark:"OK"},
+  {nr:"024", under:"024-1", fornavn:"Anders", efternavn:"Olsen", fdato:"04-04-1989", rolle:"Barn", husstand:"Henrik & Vibeke", status:"green", bemark:"OK"},
+  {nr:"024", under:"024-2", fornavn:"Maria", efternavn:"Olsen", fdato:"22-07-1993", rolle:"Barn", husstand:"Henrik & Vibeke", status:"green", bemark:"OK"},
+  {nr:"026", under:"026", fornavn:"Bodil", efternavn:"Olsen", fdato:"11-05-1949", rolle:"Forælder", husstand:"Bodil Olsen", status:"green", bemark:"OK. Enlig."},
+  {nr:"027", under:"027", fornavn:"Lilli Vinifred", efternavn:"Olsen", fdato:"23-09-1927", rolle:"Forælder", husstand:"Lilli Olsen", status:"green", bemark:"OK."},
+  {nr:"028", under:"028", fornavn:"Mogens", efternavn:"Olsen", fdato:"05-06-1951", rolle:"Forælder", husstand:"Mogens & Lise", status:"green", bemark:"OK"},
+  {nr:"028", under:"028", fornavn:"Lise", efternavn:"Olsen", fdato:"14-01-1954", rolle:"Forælder", husstand:"Mogens & Lise", status:"green", bemark:"OK"},
+  {nr:"029", under:"029", fornavn:"Jesper Majgaard", efternavn:"Olsen", fdato:"14-07-1991", rolle:"Forælder", husstand:"Jesper Majgaard", status:"green", bemark:"OK."},
+  {nr:"030", under:"030", fornavn:"Niels", efternavn:"Olsen", fdato:"28-02-1956", rolle:"Forælder", husstand:"Niels & Hanne", status:"green", bemark:"OK"},
+  {nr:"030", under:"030", fornavn:"Hanne", efternavn:"Olsen", fdato:"09-09-1959", rolle:"Forælder", husstand:"Niels & Hanne", status:"green", bemark:"OK"},
+  {nr:"030", under:"030-1", fornavn:"Christian", efternavn:"Olsen", fdato:"17-04-1985", rolle:"Barn", husstand:"Niels & Hanne", status:"green", bemark:"OK"},
+  {nr:"031", under:"031", fornavn:"Lars", efternavn:"Olsen", fdato:"01-08-1968", rolle:"Forælder", husstand:"Lars & Charlotte", status:"green", bemark:"OK"},
+  {nr:"031", under:"031", fornavn:"Charlotte", efternavn:"Olsen", fdato:"24-12-1970", rolle:"Forælder", husstand:"Lars & Charlotte", status:"green", bemark:"OK"},
+  {nr:"031", under:"031-1", fornavn:"Sebastian", efternavn:"Olsen", fdato:"30-05-2000", rolle:"Barn", husstand:"Lars & Charlotte", status:"green", bemark:"OK"},
+  {nr:"031", under:"031-2", fornavn:"Emma", efternavn:"Olsen", fdato:"12-08-2003", rolle:"Barn", husstand:"Lars & Charlotte", status:"green", bemark:"OK"},
+  {nr:"032", under:"032", fornavn:"Ole", efternavn:"Olsen", fdato:"06-10-1944", rolle:"Forælder", husstand:"Ole & Gerda", status:"green", bemark:"OK"},
+  {nr:"032", under:"032", fornavn:"Gerda", efternavn:"Olsen", fdato:"15-02-1947", rolle:"Forælder", husstand:"Ole & Gerda", status:"green", bemark:"OK"},
+  {nr:"033", under:"033", fornavn:"Anne-Marie", efternavn:"Olsen", fdato:"19-06-1957", rolle:"Forælder", husstand:"Anne-Marie", status:"green", bemark:"OK. Enlig."},
+  {nr:"034", under:"034", fornavn:"Erik", efternavn:"Olsen", fdato:"03-03-1961", rolle:"Forælder", husstand:"Erik & Bente", status:"green", bemark:"OK"},
+  {nr:"034", under:"034", fornavn:"Bente", efternavn:"Olsen", fdato:"22-11-1964", rolle:"Forælder", husstand:"Erik & Bente", status:"green", bemark:"OK"},
+  {nr:"035", under:"035", fornavn:"Finn", efternavn:"Lennert", fdato:"08-05-1952", rolle:"Forælder", husstand:"Finn Lennert", status:"yellow", bemark:"MODSTRID: 'Christensen Lennert' eller 'Lennert'?"},
+  {nr:"036", under:"036", fornavn:"Marianne", efternavn:"Olsen", fdato:"14-04-1963", rolle:"Forælder", husstand:"Marianne & Per", status:"green", bemark:"OK"},
+  {nr:"036", under:"036", fornavn:"Per", efternavn:"Olsen", fdato:"02-09-1961", rolle:"Forælder", husstand:"Marianne & Per", status:"green", bemark:"OK"},
+  {nr:"037", under:"037", fornavn:"Steen", efternavn:"Olsen", fdato:"11-01-1969", rolle:"Forælder", husstand:"Steen & Helle", status:"green", bemark:"OK"},
+  {nr:"037", under:"037", fornavn:"Helle", efternavn:"Olsen", fdato:"25-07-1971", rolle:"Forælder", husstand:"Steen & Helle", status:"green", bemark:"OK"},
+  {nr:"037", under:"037-1", fornavn:"Thomas", efternavn:"Olsen", fdato:"08-12-1997", rolle:"Barn", husstand:"Steen & Helle", status:"green", bemark:"OK"},
+  {nr:"038", under:"038", fornavn:"Jens", efternavn:"Olsen", fdato:"17-08-1959", rolle:"Forælder", husstand:"Jens & Birte", status:"green", bemark:"OK"},
+  {nr:"038", under:"038", fornavn:"Birte", efternavn:"Olsen", fdato:"30-04-1962", rolle:"Forælder", husstand:"Jens & Birte", status:"green", bemark:"OK"},
+  {nr:"039", under:"039", fornavn:"Vibeke", efternavn:"Olsen", fdato:"06-11-1955", rolle:"Forælder", husstand:"Vibeke Olsen", status:"green", bemark:"OK. Enlig."},
+  {nr:"040", under:"040", fornavn:"Jørgen", efternavn:"Olsen", fdato:"21-05-1965", rolle:"Forælder", husstand:"Jørgen & Tina", status:"green", bemark:"OK"},
+  {nr:"040", under:"040", fornavn:"Tina", efternavn:"Olsen", fdato:"04-10-1967", rolle:"Forælder", husstand:"Jørgen & Tina", status:"green", bemark:"OK"},
+  {nr:"040", under:"040-1", fornavn:"Nikolaj", efternavn:"Olsen", fdato:"16-02-1994", rolle:"Barn", husstand:"Jørgen & Tina", status:"green", bemark:"OK"},
+  {nr:"040", under:"040-2", fornavn:"Caroline", efternavn:"Olsen", fdato:"27-09-1996", rolle:"Barn", husstand:"Jørgen & Tina", status:"green", bemark:"OK"},
+  {nr:"041", under:"041", fornavn:"Inga", efternavn:"Olsen", fdato:"10-03-1940", rolle:"Forælder", husstand:"Inga Olsen", status:"green", bemark:"OK. Enlig."},
+  {nr:"042", under:"042", fornavn:"Michael", efternavn:"Olsen", fdato:"08-07-1972", rolle:"Forælder", husstand:"Michael & Camilla", status:"green", bemark:"OK"},
+  {nr:"042", under:"042", fornavn:"Camilla", efternavn:"Olsen", fdato:"19-11-1974", rolle:"Forælder", husstand:"Michael & Camilla", status:"green", bemark:"OK"},
+  {nr:"043", under:"043", fornavn:"Tom", efternavn:"Olsen", fdato:"", rolle:"Forælder", husstand:"Tom & Margit", status:"red", bemark:"MANGLER FØDSELSDATO. Spørg Tom."},
+  {nr:"043", under:"043", fornavn:"Margit", efternavn:"Olsen", fdato:"", rolle:"Forælder", husstand:"Tom & Margit", status:"red", bemark:"MANGLER FØDSELSDATO. Spørg Margit."},
+  {nr:"044", under:"044", fornavn:"Knud", efternavn:"Olsen", fdato:"23-01-1950", rolle:"Forælder", husstand:"Knud & Gitte", status:"green", bemark:"OK"},
+  {nr:"044", under:"044", fornavn:"Gitte", efternavn:"Olsen", fdato:"06-06-1953", rolle:"Forælder", husstand:"Knud & Gitte", status:"green", bemark:"OK"},
+  {nr:"045", under:"045", fornavn:"Flemming", efternavn:"Lund", fdato:"", rolle:"Forælder", husstand:"Flemming Lund", status:"red", bemark:"MANGLER ALT: adresse, telefon, email, fødselsdato."},
+  {nr:"046", under:"046", fornavn:"Helle", efternavn:"Lund", fdato:"12-08-1976", rolle:"Forælder", husstand:"Helle & Brian", status:"green", bemark:"OK"},
+  {nr:"046", under:"046", fornavn:"Brian", efternavn:"Lund", fdato:"03-04-1974", rolle:"Forælder", husstand:"Helle & Brian", status:"green", bemark:"OK"},
+  {nr:"046", under:"046-1", fornavn:"Oliver", efternavn:"Lund", fdato:"15-10-2005", rolle:"Barn", husstand:"Helle & Brian", status:"green", bemark:"OK"},
+  {nr:"047", under:"047", fornavn:"Mette", efternavn:"Westergaard-Hansen", fdato:"08-04-1972", rolle:"Forælder", husstand:"Mette W-H", status:"red", bemark:"DUBLET: Samme Mette som nr. 4."},
+  {nr:"048", under:"048", fornavn:"Britt", efternavn:"Olsen", fdato:"29-03-1968", rolle:"Forælder", husstand:"Britt & Lasse", status:"green", bemark:"OK"},
+  {nr:"048", under:"048", fornavn:"Lasse", efternavn:"Olsen", fdato:"11-12-1965", rolle:"Forælder", husstand:"Britt & Lasse", status:"green", bemark:"OK"},
+  {nr:"049", under:"049", fornavn:"Dorthe", efternavn:"Olsen", fdato:"04-07-1962", rolle:"Forælder", husstand:"Dorthe & Henning", status:"green", bemark:"OK"},
+  {nr:"049", under:"049", fornavn:"Henning", efternavn:"Olsen", fdato:"18-05-1960", rolle:"Forælder", husstand:"Dorthe & Henning", status:"green", bemark:"OK"},
+  {nr:"050", under:"050", fornavn:"Diana", efternavn:"Lund", fdato:"22-10-1978", rolle:"Forælder", husstand:"Diana", status:"yellow", bemark:"MODSTRID: 'Lund' eller 'Larsen'?"},
+  {nr:"051", under:"051", fornavn:"Lone", efternavn:"Hernvig", fdato:"07-09-1971", rolle:"Forælder", husstand:"Familien Hernvig", status:"green", bemark:"OK"},
+  {nr:"051", under:"051", fornavn:"Martin", efternavn:"Hernvig", fdato:"14-02-1969", rolle:"Forælder", husstand:"Familien Hernvig", status:"red", bemark:"MODSTRID: Husstandsnavn = 'Lars Jørgensen', personliste = 'Martin Hernvig'."},
+  {nr:"051", under:"051-1", fornavn:"Sigurd Præstegaard", efternavn:"Olsen", fdato:"19-06-2002", rolle:"Barn", husstand:"Familien Hernvig", status:"yellow", bemark:"To forskellige fødselsdatoer på listen."},
+  {nr:"052", under:"052", fornavn:"Rikke V.", efternavn:"Tingberg", fdato:"16-04-1980", rolle:"Forælder", husstand:"Rikke Tingberg", status:"red", bemark:"DUBLET: Samme Rikke som nr. 21."},
+  {nr:"053", under:"053", fornavn:"Pia", efternavn:"Olsen", fdato:"25-11-1973", rolle:"Forælder", husstand:"Pia & Søren", status:"green", bemark:"OK"},
+  {nr:"053", under:"053", fornavn:"Søren", efternavn:"Olsen", fdato:"06-08-1971", rolle:"Forælder", husstand:"Pia & Søren", status:"green", bemark:"OK"},
+  {nr:"054", under:"054", fornavn:"Ulla", efternavn:"Olsen", fdato:"13-04-1946", rolle:"Forælder", husstand:"Ulla Olsen", status:"green", bemark:"OK. Enlig."},
+  {nr:"055", under:"055", fornavn:"Bjarne", efternavn:"Olsen", fdato:"28-06-1956", rolle:"Forælder", husstand:"Bjarne & Connie", status:"green", bemark:"OK"},
+  {nr:"055", under:"055", fornavn:"Connie", efternavn:"Olsen", fdato:"11-10-1958", rolle:"Forælder", husstand:"Bjarne & Connie", status:"green", bemark:"OK"},
+  {nr:"???", under:"???", fornavn:"Per", efternavn:"Beknow", fdato:"05-05-1965", rolle:"Forælder", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER."},
+  {nr:"???", under:"???", fornavn:"Bettina", efternavn:"Beknow", fdato:"22-08-1967", rolle:"Forælder", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER."},
+  {nr:"???", under:"???", fornavn:"Lars", efternavn:"Beknow", fdato:"14-03-1995", rolle:"Barn", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER."},
+  {nr:"???", under:"???", fornavn:"Laura", efternavn:"Beknow", fdato:"07-11-1998", rolle:"Barn", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER."},
+  {nr:"???", under:"???", fornavn:"Line", efternavn:"Beknow", fdato:"19-09-2001", rolle:"Barn", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER."},
+  {nr:"???", under:"???", fornavn:"Rasmus", efternavn:"Billstrøm", fdato:"02-04-1990", rolle:"Andet", husstand:"Usikker", status:"red", bemark:"MANGLER MEDLEMSNUMMER + familietilhør."}
+];
+const måneder = ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"];
+function parseDato(s) { if (!s) return null; const [d,m,y]=s.split("-").map(n=>parseInt(n)); return {dag:d,mnd:m,aar:y}; }
+function erRundFødselsdag(a) { return [40,50,60,70,75,80,85,90,95,100].includes(a); }
+function visFane(navn, el) {
+  document.querySelectorAll('.fane').forEach(f => f.classList.add('hidden'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('fane-'+navn).classList.remove('hidden');
+  el.classList.add('active');
 }
-function erFodselsdagIdag(dag, mdr) {
-  return IDAG.getDate() === dag && (IDAG.getMonth()+1) === mdr;
+function opdaterStats() {
+  document.getElementById('stat-total').textContent = medlemmer.length;
+  document.getElementById('stat-godkendt').textContent = medlemmer.filter(m=>m.status==='green').length;
+  document.getElementById('stat-fejl').textContent = medlemmer.filter(m=>m.status==='red'||m.status==='yellow').length;
+  document.getElementById('stat-husstande').textContent = new Set(medlemmer.map(m=>m.nr)).size;
 }
-function alderPrIdag(dag, mdr, aar) {
-  const naaet = (IDAG.getMonth()+1) > mdr || ((IDAG.getMonth()+1)===mdr && IDAG.getDate()>=dag);
-  return I_AAR - aar - (naaet ? 0 : 1);
+function byggKalender() {
+  const efterMnd = {}; for (let i=1;i<=12;i++) efterMnd[i]=[];
+  medlemmer.filter(m=>m.status==='green'&&m.fdato).forEach(m=>{
+    const d=parseDato(m.fdato);
+    if(d) efterMnd[d.mnd].push({...m,dag:d.dag,alder:new Date().getFullYear()-d.aar});
+  });
+  let html='';
+  for (let mnd=1;mnd<=12;mnd++) {
+    if(efterMnd[mnd].length===0) continue;
+    efterMnd[mnd].sort((a,b)=>a.dag-b.dag);
+    html += `<div class="month"><div class="month-title">${måneder[mnd-1].charAt(0).toUpperCase()+måneder[mnd-1].slice(1)}</div>`;
+    efterMnd[mnd].forEach(m=>{
+      const rund=erRundFødselsdag(m.alder);
+      html += `<div class="event ${rund?'milestone':''}"><div class="event-date">${m.dag}. ${måneder[mnd-1].substr(0,3)}</div><div class="event-name">${m.fornavn} ${m.efternavn}</div><div class="event-extra">${rund?'🎉 ':''}fylder ${m.alder} år</div></div>`;
+    });
+    html += '</div>';
+  }
+  document.getElementById('kalender-content').innerHTML = html;
 }
-function dageHenTil(dag, mdr) {
-  let d = new Date(I_AAR, mdr-1, dag); d.setHours(0,0,0,0);
-  if (d < IDAG) d.setFullYear(I_AAR+1);
-  return Math.round((d - IDAG)/86400000);
-}
-function maerkeDato(dag, mdr, aar) {
-  return `${dag}. ${MAANEDER_KORT[mdr-1]} ${aar}`;
-}
-function foedselsBadge(dag, mdr, aar, navn, checkAar) {
-  const alder = checkAar - aar;
-  if (RUNDE_ALDRE.includes(alder))
-    return `<span class="badge b-rund">🎂 ${alder} år</span><div class="maerkedag-navn">${esc(navn)}</div>`;
-  if (KONF_ALDRE.includes(alder))
-    return `<span class="badge b-konf">🙏 ${checkAar===I_AAR?'Konfirmation i år!':'Konfirmation næste år!'}</span><div class="maerkedag-navn">${esc(navn)}</div>`;
-  return '';
-}
-function tlKlasse(p) {
-  if (!p.familienr) return 'roed';
-  if (p.manglendeDato) return 'gul';
-  return 'groen';
-}
-function navnDel(fuldt) {
-  const del = (fuldt||'').trim().split(' ');
-  if (del.length <= 1) return { fornavn: del[0]||'', efternavn: '' };
-  return { fornavn: del.slice(0,-1).join(' '), efternavn: del[del.length-1] };
-}
-function tilKey(s) { return s.replace(/[.#$\/\[\] ]/g,'_'); }
-function formatDato(d) {
-  return d.toLocaleString('da-DK',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-}
-
-// ─── FIRESTORE: HENT MEMBRES ─────────────────────────────────────────────────
-let ALLE_FAMILIER = []; // {docId, nr, navne, familiemedlemmer}
-
-async function hentFoedsler() {
-  const snap = await getDocs(collection(db, 'membres'));
-  const liste = [];
-  ALLE_FAMILIER = [];
-  snap.forEach(docSnap => {
-    const fam = docSnap.data();
-    const docId = docSnap.id;
-    const familienr = fam.nr || '';
-    ALLE_FAMILIER.push({ docId, nr: familienr, navne: fam.navne || fam.fornavn || '', familiemedlemmer: fam.familiemedlemmer || [] });
-    const medl = fam.familiemedlemmer || [];
-    let barnTaeller = 0;
-    medl.forEach((m, idx) => {
-      const rolle = m.rolle || 'forælder';
-      if (rolle === 'barn') barnTaeller++;
-      const detteBarnsNr = barnTaeller;
-
-      const dato = m.foedselsdato || '2026-01-01';
-      const manglendeDato = dato === '2026-01-01';
-      const [y, mo, d] = dato.split('-').map(Number);
-      if (!y || !mo || !d) return;
-
-      // Undernummer: gemt i Firestore? Ellers beregn automatisk.
-      let undernummer;
-      if (m.undernummer) {
-        undernummer = m.undernummer;
-      } else if (rolle === 'barn') {
-        undernummer = familienr ? `${familienr}.${detteBarnsNr}` : '';
-      } else {
-        undernummer = familienr; // forældre/voksne får basis-nummeret
-      }
-
-      liste.push({
-        navn: m.navn || '?',
-        dag: d, mdr: mo, aar: y,
-        familienr,
-        undernummer,
-        docId,
-        personIndex: idx,
-        manglendeDato,
-        rolle,
-        email: m.email || '',
-        mobil: m.mobil || '',
-        godkendt: m.godkendt || false,
-      });
+function byggZoneA() {
+  const sog = document.getElementById('sog-A').value.trim().toLowerCase();
+  const grupper = {};
+  medlemmer.filter(m=>m.status==='green').forEach(m=>{
+    if(!grupper[m.nr]) grupper[m.nr] = {husstand:m.husstand, personer:[]};
+    grupper[m.nr].personer.push(m);
+  });
+  const vis = [];
+  Object.keys(grupper).sort().forEach(nr=>{
+    const g = grupper[nr];
+    if(!sog) { vis.push({nr, ...g}); return; }
+    const matchNr = nr.toLowerCase().includes(sog) || nr.replace(/^0+/,'').includes(sog);
+    const matchP = g.personer.some(p=>(p.fornavn+' '+p.efternavn).toLowerCase().includes(sog)||g.husstand.toLowerCase().includes(sog));
+    if(matchNr||matchP) vis.push({nr, ...g});
+  });
+  let html='';
+  if(vis.length===0) html = '<p style="text-align:center;color:#888;padding:30px;">Ingen medlemmer matcher søgningen.</p>';
+  vis.forEach(g=>{
+    html += `<div style="background:#f5f1e8;padding:8px 14px;margin:14px 0 6px;border-radius:4px;font-weight:bold;color:#2d5016;">🏠 Husstand ${g.nr} — ${g.husstand} <span style="font-weight:normal;color:#888;font-size:13px;">(${g.personer.length} ${g.personer.length===1?'person':'personer'})</span></div>`;
+    g.personer.forEach(m=>{
+      html += `<div class="person-row"><div class="person-num">${m.under}</div><div class="person-name">${m.fornavn} ${m.efternavn} <span style="color:#888;font-size:12px;">· ${m.rolle}</span></div><div class="person-date">${m.fdato||'—'}</div><div class="person-status status-green">Godkendt</div><button class="btn-edit" onclick="åbenModal(${medlemmer.indexOf(m)})">Ret</button></div>`;
     });
   });
-  return liste;
+  document.getElementById('zoneA-content').innerHTML = html;
 }
-
-// ─── BYGG KALENDER ───────────────────────────────────────────────────────────
-function byggKalender(FOEDSLER) {
-  document.getElementById('loading-boks').style.display = 'none';
-  document.getElementById('legende').style.display = 'flex';
-
-  const BRYLLUPPER = [];
-
-  // ── Statistik ──────────────────────────────────────────────────────────────
-  let tGroen = 0, tGul = 0, tRoed = 0;
-  FOEDSLER.forEach(p => {
-    const k = tlKlasse(p);
-    if (k === 'groen') tGroen++;
-    else if (k === 'gul') tGul++;
-    else tRoed++;
+function filtrerZoneA() { byggZoneA(); }
+function byggZoneB() {
+  const fejl = medlemmer.filter(m=>m.status==='red'||m.status==='yellow');
+  let html='';
+  fejl.forEach(m=>{
+    const sk = m.status==='red'?'status-red':'status-yellow';
+    const sl = m.status==='red'?'Mangler':'Modstrid';
+    html += `<div class="person-row zone-b-row"><div class="person-num">${m.under}</div><div style="flex:1;"><div><strong>${m.fornavn} ${m.efternavn}</strong> <span style="color:#888;font-size:12px;">· ${m.husstand}</span></div><div class="bemark">⚠️ ${m.bemark}</div></div><div class="person-status ${sk}">${sl}</div><button class="btn-edit btn-fix" onclick="åbenModal(${medlemmer.indexOf(m)})">Ret nu</button></div>`;
   });
-  document.getElementById('stats-groen').textContent = tGroen;
-  document.getElementById('stats-gul').textContent   = tGul;
-  document.getElementById('stats-roed').textContent  = tRoed;
-  document.getElementById('stats-boks').style.display = 'grid';
-
-  document.getElementById('header-sub').textContent =
-    `${FOEDSLER.length} familiemedlemmer · ${I_AAR} og ${NAESTE}`;
-  document.getElementById('footer-tekst').textContent =
-    `OlsenKlanen · Begivenheder & Mærkedage · ${I_AAR}–${NAESTE}`;
-
-  // ── Festlig boks ──────────────────────────────────────────────────────────
-  const festListe = [];
-  FOEDSLER.forEach(p => {
-    const d = dageHenTil(p.dag, p.mdr);
-    if (d > 10) return;
-    const nextYear = new Date(I_AAR, p.mdr-1, p.dag) < IDAG ? I_AAR+1 : I_AAR;
-    const alderIAar = nextYear - p.aar;
-    const erRund = RUNDE_ALDRE.includes(alderIAar);
-    const erKonf = KONF_ALDRE.includes(alderIAar);
-    if (!erRund && !erKonf) return;
-    let ikon, kortKlasse, beskrivelse;
-    if (erRund && d===0) { ikon='🎂'; kortKlasse='rund idag'; beskrivelse=`Fylder ${alderIAar} år — I dag! 🎉`; }
-    else if (erRund)     { ikon='🎂'; kortKlasse='rund';      beskrivelse=`Fylder ${alderIAar} år`; }
-    else if (erKonf && d===0) { ikon='✝️'; kortKlasse='konf idag'; beskrivelse='Konfirmationsalder — I dag!'; }
-    else                      { ikon='✝️'; kortKlasse='konf';      beskrivelse=`Konfirmationsalder (${alderIAar} år)`; }
-    festListe.push({navn:p.navn, ikon, kortKlasse, beskrivelse, dage:d,
-      dato:`${p.dag}. ${MAANEDER_KORT[p.mdr-1]}`, noegle:p.navn});
-  });
-
-  if (festListe.length) {
-    festListe.sort((a,b) => a.dage-b.dage);
-    const fl = document.getElementById('fest-liste');
-    festListe.forEach(k => {
-      const dagChip  = k.dage===0?'I dag! 🎊':k.dage===1?'I morgen':`Om ${k.dage} dage`;
-      const chipKlasse = k.dage===0?'fest-dage idag-chip':'fest-dage';
-      const kort = document.createElement('div');
-      kort.className = 'fest-kort ' + k.kortKlasse;
-      const sn = esc(k.noegle);
-      kort.innerHTML =
-        `<div class="fest-ikon">${k.ikon}</div>` +
-        `<div class="fest-info"><div class="fest-navn">${esc(k.navn)}</div>` +
-        `<div class="fest-beskrivelse">${k.dato} · ${k.beskrivelse}</div></div>` +
-        `<div class="fest-kort-hojre">` +
-        `<div class="${chipKlasse}">${dagChip}</div>` +
-        `<button class="hilsen-knap"      data-noegle="${sn}" data-mode="send">💌 Send hilsen</button>` +
-        `<button class="hilsen-knap-laes" data-noegle="${sn}" data-mode="laes">📬 Læs hilsener</button>` +
-        `</div>`;
-      fl.appendChild(kort);
-    });
-    document.getElementById('fest-boks').style.display = 'block';
-  }
-
-  // ── Måneds-gruppering ─────────────────────────────────────────────────────
-  const maanedSpande = Array.from({length:12}, () => []);
-  FOEDSLER.forEach(p => maanedSpande[p.mdr-1].push({type:'f', p}));
-  BRYLLUPPER.forEach(b => maanedSpande[b.mdr-1].push({type:'b', b}));
-  maanedSpande.forEach(sp => sp.sort((a,b) => {
-    return (a.type==='f'?a.p.dag:a.b.dag) - (b.type==='f'?b.p.dag:b.b.dag);
-  }));
-
-  const kal = document.getElementById('kalender');
-
-  for (let mi = 0; mi < 12; mi++) {
-    const sp = maanedSpande[mi];
-    if (!sp.length) continue;
-
-    let tbody = '';
-    sp.forEach(item => {
-      if (item.type === 'f') {
-        const p   = item.p;
-        const erI = erFodselsdagIdag(p.dag, p.mdr);
-        const al  = alderPrIdag(p.dag, p.mdr, p.aar);
-        const ib  = foedselsBadge(p.dag, p.mdr, p.aar, p.navn, I_AAR);
-        const nb  = foedselsBadge(p.dag, p.mdr, p.aar, p.navn, NAESTE);
-        const tl  = tlKlasse(p);
-        const retData = JSON.stringify({
-          docId: p.docId, idx: p.personIndex,
-          navn: p.navn, dag: p.dag, mdr: p.mdr, aar: p.aar,
-          rolle: p.rolle, email: p.email, mobil: p.mobil,
-          familienr: p.familienr, godkendt: p.godkendt
-        }).replace(/'/g, '&#39;');
-
-        const visNr = p.undernummer || p.familienr;
-        const dotIdx = visNr.indexOf('.');
-        const mdlnrHtml = dotIdx > -1
-          ? `${esc(visNr.slice(0, dotIdx))}<span class="under-nr">${esc(visNr.slice(dotIdx))}</span>`
-          : esc(visNr);
-        const mdlnrCell = p.familienr
-          ? `<button class="mdlnr-ok" data-navn="${esc(p.navn)}" data-doc="${esc(p.docId)}" data-idx="${p.personIndex}" data-nr="${esc(p.familienr)}" title="Klik for at ændre familienummer">${mdlnrHtml}</button>`
-          : `<button class="mdlnr-mangler" data-navn="${esc(p.navn)}" data-doc="${esc(p.docId)}" data-idx="${p.personIndex}">MANGLER</button>`;
-
-        tbody += `<tr>
-          <td class="col-mdlnr" style="text-align:center">${mdlnrCell}</td>
-          <td class="col-dato">${p.dag}. ${MAANEDER_KORT[mi]} ${p.aar}</td>
-          <td class="col-navn">
-            <span class="tl tl-${tl}" title="${tl==='groen'?'Komplet':tl==='gul'?'Fødselsdato mangler':'Medlemsnummer mangler'}"></span>${esc(p.navn)}
-            <button class="ret-knap" data-ret='${retData}'>Ret</button>
-          </td>
-          <td class="${erI?'col-alder alder-idag':'col-alder'}">${al>=0?al:'—'}</td>
-          <td class="col-iaar">${ib}</td>
-          <td class="col-dato-iaar">${ib?maerkeDato(p.dag,p.mdr,I_AAR):''}</td>
-          <td class="col-naeste">${nb}</td>
-          <td class="col-dato-naeste">${nb?maerkeDato(p.dag,p.mdr,NAESTE):''}</td>
-        </tr>`;
-      }
-    });
-
-    const folkAntal = sp.filter(x => x.type==='f').length;
-    const blok = document.createElement('div');
-    blok.className = 'maaned-blok';
-    blok.innerHTML =
-      `<div class="maaned-header">${MAANEDER[mi]}<span class="maaned-antal">${folkAntal} person${folkAntal===1?'':'er'}</span></div>` +
-      `<table class="tabel"><thead><tr>` +
-      `<th class="col-mdlnr center">Mdl.nr.</th>` +
-      `<th class="col-dato">Fødselsdato</th><th>Navn</th>` +
-      `<th class="col-alder center">Alder</th>` +
-      `<th class="col-iaar center">Mærkedag ${I_AAR}</th>` +
-      `<th class="col-dato-iaar center">Dato</th>` +
-      `<th class="col-naeste center">Mærkedag ${NAESTE}</th>` +
-      `<th class="col-dato-naeste center">Dato</th>` +
-      `</tr></thead><tbody>${tbody}</tbody></table>`;
-    kal.appendChild(blok);
-  }
+  document.getElementById('zoneB-content').innerHTML = html;
 }
-
-// ─── AUTH / REDAKTØR ─────────────────────────────────────────────────────────
-let aktivRolle = null;
-
-onAuthStateChanged(auth, async user => {
-  const knap = document.getElementById('topbar-red-knap');
-  if (!user) {
-    aktivRolle = null;
-    document.body.classList.remove('er-redaktor');
-    knap.textContent = 'Redaktør';
-    knap.classList.remove('logget-ind');
-    return;
-  }
-  try {
-    const brugerDoc = await getDoc(doc(db,'brugere',user.email));
-    if (brugerDoc.exists()) {
-      const rolle = brugerDoc.data().rolle || '';
-      if (rolle === 'redaktør' || rolle === 'administrator') {
-        aktivRolle = rolle;
-        document.body.classList.add('er-redaktor');
-        knap.textContent = '✓ ' + (brugerDoc.data().navn || user.email).split(' ')[0];
-        knap.classList.add('logget-ind');
-        document.getElementById('logget-ind-som').textContent = brugerDoc.data().navn || user.email;
-        document.getElementById('logget-ind-rolle').textContent =
-          rolle === 'administrator' ? 'Administrator' : 'Redaktør';
-      }
-    }
-  } catch(e) { /* ingen adgang til brugere */ }
-});
-
-// ─── LOGIN MODAL ─────────────────────────────────────────────────────────────
-function aabneLoginModal() {
-  const auth2 = getAuth();
-  const loginBody = document.getElementById('login-body');
-  const logudBody = document.getElementById('logud-body');
-  if (auth2.currentUser) {
-    loginBody.style.display = 'none';
-    logudBody.style.display = 'block';
-  } else {
-    loginBody.style.display = 'block';
-    logudBody.style.display = 'none';
-  }
-  document.getElementById('login-fejl').style.display = 'none';
-  document.getElementById('login-overlay').style.display = 'flex';
-  if (!auth2.currentUser) setTimeout(() => document.getElementById('login-email').focus(), 80);
+let aktivIdx = -1;
+function åbenModal(idx) {
+  aktivIdx = idx;
+  const m = medlemmer[idx];
+  document.getElementById('modal-titel').textContent = `Ret ${m.fornavn} ${m.efternavn}`;
+  document.getElementById('modal-bemark').innerHTML = `<strong>Programmør-bemærkning:</strong><br>${m.bemark}`;
+  document.getElementById('f-fornavn').value = m.fornavn || '';
+  document.getElementById('f-efternavn').value = m.efternavn || '';
+  document.getElementById('f-nr').value = m.under || '';
+  document.getElementById('f-fdato').value = m.fdato || '';
+  document.getElementById('f-adresse').value = m.adresse || '';
+  document.getElementById('f-telefon').value = m.telefon || '';
+  document.getElementById('f-email').value = m.email || '';
+  document.getElementById('modal-rediger').classList.add('show');
 }
-function lukLoginModal() { document.getElementById('login-overlay').style.display = 'none'; }
-
-document.getElementById('topbar-red-knap').addEventListener('click', aabneLoginModal);
-document.getElementById('login-luk-x').addEventListener('click', lukLoginModal);
-document.getElementById('login-annuller').addEventListener('click', lukLoginModal);
-document.getElementById('logud-luk').addEventListener('click', lukLoginModal);
-
-document.getElementById('login-btn').addEventListener('click', async () => {
-  const email = document.getElementById('login-email').value.trim();
-  const kode  = document.getElementById('login-kodeord').value;
-  const fejl  = document.getElementById('login-fejl');
-  const btn   = document.getElementById('login-btn');
-  fejl.style.display = 'none';
-  btn.disabled = true; btn.textContent = 'Logger ind…';
-  try {
-    await signInWithEmailAndPassword(auth, email, kode);
-    lukLoginModal();
-  } catch(e) {
-    fejl.style.display = 'block';
-  } finally {
-    btn.disabled = false; btn.textContent = 'Log ind';
+function lukModal() { document.getElementById('modal-rediger').classList.remove('show'); aktivIdx = -1; }
+function gemRettelse() {
+  if(aktivIdx<0) return;
+  const m = medlemmer[aktivIdx];
+  m.fornavn = document.getElementById('f-fornavn').value;
+  m.efternavn = document.getElementById('f-efternavn').value;
+  m.under = document.getElementById('f-nr').value;
+  m.nr = m.under.split('-')[0];
+  m.fdato = document.getElementById('f-fdato').value;
+  m.adresse = document.getElementById('f-adresse').value;
+  m.telefon = document.getElementById('f-telefon').value;
+  m.email = document.getElementById('f-email').value;
+  if(m.fornavn && m.efternavn && m.fdato && m.under !== '???') {
+    m.status = 'green';
+    m.bemark = 'OK. Rettet af OlsenBanden.';
   }
-});
-
-document.getElementById('login-kodeord').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('login-btn').click();
-});
-
-document.getElementById('logud-btn').addEventListener('click', async () => {
-  await signOut(auth);
-  lukLoginModal();
-});
-
-document.getElementById('login-overlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('login-overlay')) lukLoginModal();
-});
-
-// ─── REDIGÉR PERSON MODAL ────────────────────────────────────────────────────
-let aktivRet = null; // { docId, idx, familienr }
-let retDirty = false;
-
-function aabneRetModal(data) {
-  retDirty = false;
-  aktivRet = { docId: data.docId, idx: data.idx, familienr: data.familienr };
-  document.getElementById('ret-modal-titel').textContent = `Rediger: ${data.navn}`;
-  document.getElementById('ret-familienr').textContent = data.familienr || '—';
-
-  const navnDele = navnDel(data.navn);
-  document.getElementById('ret-fornavn').value       = navnDele.fornavn;
-  document.getElementById('ret-efternavn').value     = navnDele.efternavn;
-  document.getElementById('ret-rolle').value         = data.rolle || 'forælder';
-  document.getElementById('ret-email').value         = data.email || '';
-  document.getElementById('ret-mobil').value         = data.mobil || '';
-
-  // Fødselsdato → YYYY-MM-DD
-  const dato = `${data.aar}-${String(data.mdr).padStart(2,'0')}-${String(data.dag).padStart(2,'0')}`;
-  document.getElementById('ret-foedselsdato').value = dato === '2026-01-01' ? '' : dato;
-
-  // Status chip
-  const chip = document.getElementById('ret-status-chip');
-  if (!data.familienr) {
-    chip.className = 'tl-status roed'; chip.textContent = '● Mangler nr.';
-  } else if (dato === '2026-01-01') {
-    chip.className = 'tl-status gul'; chip.textContent = '● Fødselsdato mangler';
-  } else {
-    chip.className = 'tl-status groen'; chip.textContent = '● Komplet';
-  }
-
-  document.getElementById('ret-succes').style.display = 'none';
-  document.getElementById('ret-fejl').style.display   = 'none';
-  document.getElementById('ret-overlay').style.display = 'flex';
-  setTimeout(() => document.getElementById('ret-fornavn').focus(), 80);
+  lukModal();
+  byggAlt();
+  alert('✓ Rettelse gemt!');
 }
-
-function lukRetModal() {
-  if (retDirty && !confirm('Du har ugemte ændringer. Vil du lukke uden at gemme?')) return;
-  retDirty = false;
-  document.getElementById('ret-overlay').style.display = 'none';
-}
-
-document.getElementById('ret-luk-x').addEventListener('click', lukRetModal);
-document.getElementById('ret-annuller-btn').addEventListener('click', lukRetModal);
-document.getElementById('ret-overlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('ret-overlay')) lukRetModal();
-});
-
-// Registrér brugerinput som "dirty" (ugemte ændringer)
-['ret-fornavn','ret-efternavn','ret-foedselsdato','ret-rolle','ret-email','ret-mobil'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) {
-    el.addEventListener('input',  () => { retDirty = true; });
-    el.addEventListener('change', () => { retDirty = true; });
-  }
-});
-
-window.addEventListener('beforeunload', e => {
-  if (retDirty) { e.preventDefault(); e.returnValue = ''; }
-});
-
-async function gemPerson(skalGodkendes) {
-  if (!aktivRet) return;
-  const godkendBtn = document.getElementById('ret-godkend-btn');
-  const kladdeBtn  = document.getElementById('ret-kladde-btn');
-  godkendBtn.disabled = true; kladdeBtn.disabled = true;
-  (skalGodkendes ? godkendBtn : kladdeBtn).textContent = 'Gemmer…';
-  document.getElementById('ret-succes').style.display = 'none';
-  document.getElementById('ret-fejl').style.display   = 'none';
-
-  try {
-    const fornavn      = document.getElementById('ret-fornavn').value.trim();
-    const efternavn    = document.getElementById('ret-efternavn').value.trim();
-    const datoRaw      = document.getElementById('ret-foedselsdato').value;
-    const rolle        = document.getElementById('ret-rolle').value;
-    const email        = document.getElementById('ret-email').value.trim();
-    const mobil        = document.getElementById('ret-mobil').value.trim();
-    const navn         = [fornavn, efternavn].filter(Boolean).join(' ');
-    const foedselsdato = datoRaw || '2026-01-01';
-
-    const docRef  = doc(db, 'membres', aktivRet.docId);
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) throw new Error('Dokument ikke fundet');
-
-    const fam  = docSnap.data();
-    const medl = [...(fam.familiemedlemmer || [])];
-    medl[aktivRet.idx] = {
-      ...medl[aktivRet.idx],
-      navn, foedselsdato, rolle, email, mobil,
-      godkendt: skalGodkendes,
-      ...(skalGodkendes ? {
-        godkendtAf:  getAuth().currentUser?.email || '?',
-        godkendtTid: new Date().toISOString()
-      } : {})
-    };
-
-    await updateDoc(docRef, { familiemedlemmer: medl });
-    retDirty = false;
-
-    const succesEl = document.getElementById('ret-succes');
-    succesEl.textContent = skalGodkendes ? '✓ Data gemt og godkendt!' : '✓ Kladde gemt — status forbliver gul';
-    succesEl.style.display = 'block';
-    setTimeout(lukRetModal, 1600);
-  } catch(e) {
-    const fejlEl = document.getElementById('ret-fejl');
-    fejlEl.textContent = 'Fejl: ' + e.message;
-    fejlEl.style.display = 'block';
-  } finally {
-    godkendBtn.disabled = false; kladdeBtn.disabled = false;
-    godkendBtn.textContent = 'Godkend og gem ✓';
-    kladdeBtn.textContent  = 'Gem kladde 💾';
-  }
-}
-
-document.getElementById('ret-godkend-btn').addEventListener('click', () => gemPerson(true));
-document.getElementById('ret-kladde-btn').addEventListener('click',  () => gemPerson(false));
-
-// Delegeret klik på "Ret"-knapper
-document.addEventListener('click', e => {
-  const btn = e.target.closest('.ret-knap');
-  if (btn && aktivRolle) {
-    try { aabneRetModal(JSON.parse(btn.dataset.ret)); } catch(_) {}
-  }
-});
-
-// ─── HILSEN MODAL ────────────────────────────────────────────────────────────
-let aktivNoegle = '', aktivMode = 'send';
-
-function lukHilsenModal() { document.getElementById('hilsen-overlay').style.display = 'none'; }
-
-function aabneHilsenModal(noegle, mode) {
-  aktivNoegle = noegle; aktivMode = mode;
-  document.getElementById('hilsen-modal-titel').textContent =
-    mode==='laes' ? `Hilsener til ${noegle}` : `Send en hilsen til ${noegle}`;
-  ['hilsen-kode-input','hilsen-fra-input','hilsen-besked-input'].forEach(id => {
-    document.getElementById(id).value = '';
-  });
-  document.getElementById('hilsen-kode-fejl').style.display   = 'none';
-  document.getElementById('hilsen-succes').style.display      = 'none';
-  document.getElementById('hilsen-send-fejl').style.display   = 'none';
-  document.getElementById('hilsen-step1').style.display       = 'block';
-  document.getElementById('hilsen-step-send').style.display   = 'none';
-  document.getElementById('hilsen-step-laes').style.display   = 'none';
-  document.getElementById('hilsen-overlay').style.display     = 'flex';
-  setTimeout(() => document.getElementById('hilsen-kode-input').focus(), 80);
-}
-
-function tjekKode() {
-  const kode = document.getElementById('hilsen-kode-input').value.trim();
-  if (kode.toLowerCase() !== 'vormslev') {
-    document.getElementById('hilsen-kode-fejl').style.display = 'block';
-    document.getElementById('hilsen-kode-input').select();
-    return;
-  }
-  document.getElementById('hilsen-kode-fejl').style.display = 'none';
-  document.getElementById('hilsen-step1').style.display     = 'none';
-  if (aktivMode === 'laes') {
-    document.getElementById('hilsen-til-navn').textContent    = aktivNoegle;
-    document.getElementById('hilsen-step-laes').style.display = 'block';
-    indlaesHilsener(aktivNoegle);
-  } else {
-    document.getElementById('hilsen-step-send').style.display = 'block';
-    setTimeout(() => document.getElementById('hilsen-fra-input').focus(), 80);
-  }
-}
-
-async function indlaesHilsener(noegle) {
-  const liste = document.getElementById('hilsen-liste');
-  liste.innerHTML = '<div class="hilsen-ingen">Henter hilsener…</div>';
-  try {
-    const snap = await get(ref(rtdb, `hilsener/${tilKey(noegle)}`));
-    liste.innerHTML = '';
-    if (!snap.exists()) {
-      liste.innerHTML = '<div class="hilsen-ingen">Ingen hilsener endnu — vær den første! 🎉</div>';
-      return;
-    }
-    const entries = [];
-    snap.forEach(c => entries.push(c.val()));
-    entries.sort((a,b) => (b.tidspunkt||0)-(a.tidspunkt||0));
-    entries.forEach(h => {
-      const el = document.createElement('div');
-      el.className = 'hilsen-kort';
-      el.innerHTML =
-        `<div class="hilsen-kort-fra">${esc(h.fra)}</div>` +
-        `<div class="hilsen-kort-besked">${esc(h.besked)}</div>` +
-        (h.tidspunkt ? `<div class="hilsen-kort-tid">${formatDato(new Date(h.tidspunkt))}</div>` : '');
-      liste.appendChild(el);
-    });
-  } catch(e) {
-    liste.innerHTML = '<div class="hilsen-ingen">Kunne ikke hente hilsener.</div>';
-  }
-}
-
-async function sendHilsen() {
-  const fra    = document.getElementById('hilsen-fra-input').value.trim();
-  const besked = document.getElementById('hilsen-besked-input').value.trim();
-  document.getElementById('hilsen-send-fejl').style.display = 'none';
-  if (!fra)    { document.getElementById('hilsen-fra-input').focus();    return; }
-  if (!besked) { document.getElementById('hilsen-besked-input').focus(); return; }
-  const btn = document.getElementById('hilsen-send-btn');
-  btn.disabled = true; btn.textContent = 'Sender…';
-  try {
-    await push(ref(rtdb, `hilsener/${tilKey(aktivNoegle)}`), { fra, besked, tidspunkt: Date.now() });
-    document.getElementById('hilsen-fra-input').value    = '';
-    document.getElementById('hilsen-besked-input').value = '';
-    document.getElementById('hilsen-succes').style.display = 'block';
-    await indlaesHilsener(aktivNoegle);
-  } catch(e) {
-    const fejl = document.getElementById('hilsen-send-fejl');
-    fejl.textContent = 'Hilsenen kunne ikke sendes. Prøv igen.';
-    fejl.style.display = 'block';
-  } finally {
-    btn.disabled = false; btn.textContent = 'Send hilsen 💌';
-  }
-}
-
-document.getElementById('hilsen-kode-input').addEventListener('keydown', e => { if(e.key==='Enter') tjekKode(); });
-document.getElementById('hilsen-kode-btn').addEventListener('click', tjekKode);
-document.getElementById('hilsen-annuller-btn').addEventListener('click', lukHilsenModal);
-document.getElementById('hilsen-send-btn').addEventListener('click', sendHilsen);
-document.getElementById('hilsen-luk-send-btn').addEventListener('click', lukHilsenModal);
-document.getElementById('hilsen-luk-laes-btn').addEventListener('click', lukHilsenModal);
-document.getElementById('hilsen-luk-x').addEventListener('click', lukHilsenModal);
-document.getElementById('hilsen-overlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('hilsen-overlay')) lukHilsenModal();
-});
-document.addEventListener('click', e => {
-  const btn = e.target.closest('.hilsen-knap, .hilsen-knap-laes');
-  if (btn) aabneHilsenModal(btn.dataset.noegle, btn.dataset.mode);
-});
-
-// ─── FAMILIENR DIALOG ────────────────────────────────────────────────────────
-let fnrAktiv = null; // { docId, idx, navn }
-let fnrValgtFamilie = null; // { docId, nr }
-
-function visFnrSteg(id) {
-  ['fnr-steg0','fnr-steg-opret','fnr-steg-tilknyt'].forEach(s => {
-    document.getElementById(s).classList.toggle('aktiv', s === id);
-  });
-}
-
-function lukFnrModal() {
-  document.getElementById('fnr-overlay').style.display = 'none';
-  fnrAktiv = null; fnrValgtFamilie = null;
-}
-
-// ─── FAMILIE DIALOG ──────────────────────────────────────────────────────────
-function lukFamDialog() {
-  document.getElementById('fam-overlay').style.display = 'none';
-}
-
-async function aabneFamiliedialog(familienr) {
-  document.getElementById('fam-titel').textContent = `Familie Nr. ${familienr}`;
-  const body = document.getElementById('fam-body');
-  body.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--tekst-lys)">Henter familiedata…</div>';
-  document.getElementById('fam-overlay').style.display = 'flex';
-
-  try {
-    const docRef = doc(db, 'membres', familienr);
-    const snap   = await getDoc(docRef);
-    if (!snap.exists()) throw new Error('Familie ikke fundet');
-
-    const fam  = snap.data();
-    const medl = fam.familiemedlemmer || [];
-
-    if (!medl.length) {
-      body.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--tekst-lys)">Ingen familiemedlemmer.</div>';
-      return;
-    }
-
-    body.innerHTML = '';
-    let barnTaeller = 0;
-    medl.forEach((m, idx) => {
-      const rolle = m.rolle || 'forælder';
-      if (rolle === 'barn') barnTaeller++;
-
-      const dato          = m.foedselsdato || '2026-01-01';
-      const manglendeDato = dato === '2026-01-01';
-      const [y, mo, d]    = dato.split('-').map(Number);
-
-      let undernummer;
-      if (m.undernummer) {
-        undernummer = m.undernummer;
-      } else if (rolle === 'barn') {
-        undernummer = familienr ? `${familienr}.${barnTaeller}` : '';
-      } else {
-        undernummer = familienr;
-      }
-
-      const tl        = !familienr ? 'roed' : manglendeDato ? 'gul' : 'groen';
-      const datoVis   = manglendeDato ? '—' : `${d}. ${MAANEDER_KORT[mo - 1]} ${y}`;
-      const alder     = (!manglendeDato && y && d && mo) ? alderPrIdag(d, mo, y) : null;
-      const alderVis  = alder !== null ? `${alder} år` : '';
-
-      const retJson = JSON.stringify({
-        docId: familienr, idx,
-        navn: m.navn || '?', dag: d || 1, mdr: mo || 1, aar: y || 2026,
-        rolle: m.rolle || 'forælder',
-        email: m.email || '', mobil: m.mobil || '',
-        familienr, godkendt: m.godkendt || false
-      }).replace(/'/g, '&#39;');
-
-      const el = document.createElement('div');
-      el.className = 'fam-person';
-      el.innerHTML =
-        `<div style="padding-top:3px;flex-shrink:0"><span class="tl tl-${tl}"></span></div>` +
-        `<div class="fam-person-info">` +
-          `<div class="fam-person-navn">` +
-            `${esc(m.navn || '?')}` +
-            `<span class="fam-person-nr">${esc(undernummer)}</span>` +
-            `<button class="ret-knap" data-ret='${retJson}'>Ret</button>` +
-          `</div>` +
-          `<div class="fam-person-detalje">` +
-            `${esc(rolle.charAt(0).toUpperCase() + rolle.slice(1))} · ${datoVis}` +
-          `</div>` +
-          (m.email ? `<div class="fam-person-detalje">${esc(m.email)}</div>` : '') +
-          (m.mobil ? `<div class="fam-person-detalje">${esc(m.mobil)}</div>` : '') +
-        `</div>` +
-        (alderVis ? `<div class="fam-alder-chip">${alderVis}</div>` : '');
-      body.appendChild(el);
-    });
-  } catch(e) {
-    body.innerHTML = `<div style="text-align:center;padding:1rem;color:#c0392b">Fejl: ${esc(e.message)}</div>`;
-  }
-}
-
-document.getElementById('fam-luk-x').addEventListener('click', lukFamDialog);
-document.getElementById('fam-overlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('fam-overlay')) lukFamDialog();
-});
-
-function naesteLedigNr() {
-  const numre = ALLE_FAMILIER.map(f => parseInt(f.nr)).filter(n => !isNaN(n));
-  return numre.length ? Math.max(...numre) + 1 : 1;
-}
-
-function aabnefnrDialog(docId, idx, navn, nuvaerende) {
-  fnrAktiv = { docId, idx, navn };
-  fnrValgtFamilie = null;
-  document.getElementById('fnr-person-navn').textContent = navn;
-  document.getElementById('fnr-steg0-tekst').textContent = nuvaerende
-    ? `har familienummer ${nuvaerende} — ønsker du at ændre det?`
-    : 'har intet familienummer.';
-  document.getElementById('fnr-modal-titel').textContent = nuvaerende
-    ? 'Ændre familienummer'
-    : 'Tildel familienummer';
-
-  // Kun administrator må oprette nyt familienummer
-  const erAdmin = aktivRolle === 'administrator';
-  document.getElementById('fnr-opret-btn').style.display        = erAdmin ? '' : 'none';
-  document.getElementById('fnr-kun-redaktor-info').style.display = erAdmin ? 'none' : 'block';
-
-  ['fnr-opret-succes','fnr-opret-fejl','fnr-tilknyt-succes','fnr-tilknyt-fejl'].forEach(id => {
-    document.getElementById(id).style.display = 'none';
-  });
-  document.getElementById('fnr-bekraeft-tilknyt').disabled = true;
-  visFnrSteg('fnr-steg0');
-  document.getElementById('fnr-overlay').style.display = 'flex';
-}
-
-// Vælg handling
-document.getElementById('fnr-opret-btn').addEventListener('click', () => {
-  const nytNr = naesteLedigNr();
-  document.getElementById('fnr-nyt-nr').textContent = nytNr;
-  document.getElementById('fnr-opret-succes').style.display = 'none';
-  document.getElementById('fnr-opret-fejl').style.display   = 'none';
-  visFnrSteg('fnr-steg-opret');
-});
-
-document.getElementById('fnr-tilknyt-btn').addEventListener('click', () => {
-  const liste = document.getElementById('fnr-familie-liste');
-  liste.innerHTML = '';
-  const sorteret = [...ALLE_FAMILIER].filter(f => f.nr).sort((a,b) => parseInt(a.nr)-parseInt(b.nr));
-  sorteret.forEach(fam => {
-    const el = document.createElement('div');
-    el.className = 'fnr-familie-item';
-    el.innerHTML = `<span>${esc(fam.navne || fam.docId)}</span><span class="fnr-familie-nr">Nr. ${esc(fam.nr)}</span>`;
-    el.addEventListener('click', () => {
-      liste.querySelectorAll('.fnr-familie-item').forEach(i => i.classList.remove('valgt'));
-      el.classList.add('valgt');
-      fnrValgtFamilie = fam;
-      document.getElementById('fnr-bekraeft-tilknyt').disabled = false;
-    });
-    liste.appendChild(el);
-  });
-  document.getElementById('fnr-tilknyt-succes').style.display = 'none';
-  document.getElementById('fnr-tilknyt-fejl').style.display   = 'none';
-  visFnrSteg('fnr-steg-tilknyt');
-});
-
-// Tilbage-knapper
-document.getElementById('fnr-tilbage-opret').addEventListener('click',   () => visFnrSteg('fnr-steg0'));
-document.getElementById('fnr-tilbage-tilknyt').addEventListener('click',  () => visFnrSteg('fnr-steg0'));
-document.getElementById('fnr-annuller0').addEventListener('click',        lukFnrModal);
-document.getElementById('fnr-luk-x').addEventListener('click',            lukFnrModal);
-document.getElementById('fnr-overlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('fnr-overlay')) lukFnrModal();
-});
-
-// Opret nyt familienummer
-document.getElementById('fnr-bekraeft-opret').addEventListener('click', async () => {
-  if (!fnrAktiv) return;
-  const btn = document.getElementById('fnr-bekraeft-opret');
-  btn.disabled = true; btn.textContent = 'Opretter…';
-  document.getElementById('fnr-opret-fejl').style.display = 'none';
-  try {
-    const nytNr = String(naesteLedigNr());
-    const docRef = doc(db, 'membres', fnrAktiv.docId);
-    const snap   = await getDoc(docRef);
-    if (!snap.exists()) throw new Error('Dokument ikke fundet');
-    await updateDoc(docRef, { nr: nytNr });
-    // Opdatér lokalt cache
-    const famIdx = ALLE_FAMILIER.findIndex(f => f.docId === fnrAktiv.docId);
-    if (famIdx >= 0) ALLE_FAMILIER[famIdx].nr = nytNr;
-    document.getElementById('fnr-opret-succes').style.display = 'block';
-    // Opdatér celle i tabellen
-    document.querySelectorAll(`.mdlnr-mangler[data-doc="${CSS.escape(fnrAktiv.docId)}"]`).forEach(el => {
-      const span = document.createElement('span');
-      span.className = 'mdlnr-ok'; span.textContent = nytNr;
-      el.replaceWith(span);
-    });
-    // Opdatér statistik
-    const roed = document.getElementById('stats-roed');
-    roed.textContent = Math.max(0, parseInt(roed.textContent) - 1);
-    const groen = document.getElementById('stats-groen');
-    groen.textContent = parseInt(groen.textContent) + 1;
-    setTimeout(lukFnrModal, 1400);
-  } catch(e) {
-    const fejl = document.getElementById('fnr-opret-fejl');
-    fejl.textContent = 'Fejl: ' + e.message; fejl.style.display = 'block';
-  } finally {
-    btn.disabled = false; btn.textContent = 'Opret familie ➕';
-  }
-});
-
-// Tilknyt til eksisterende familie
-document.getElementById('fnr-bekraeft-tilknyt').addEventListener('click', async () => {
-  if (!fnrAktiv || !fnrValgtFamilie) return;
-  const btn = document.getElementById('fnr-bekraeft-tilknyt');
-  btn.disabled = true; btn.textContent = 'Tilknytter…';
-  document.getElementById('fnr-tilknyt-fejl').style.display = 'none';
-  try {
-    // Hent kildedokument
-    const kildRef  = doc(db, 'membres', fnrAktiv.docId);
-    const kildSnap = await getDoc(kildRef);
-    if (!kildSnap.exists()) throw new Error('Kildedokument ikke fundet');
-    const kildData = kildSnap.data();
-    const person   = (kildData.familiemedlemmer || [])[fnrAktiv.idx];
-    if (!person) throw new Error('Person ikke fundet i dokument');
-
-    // Tilføj person til målfamilien
-    const maalRef  = doc(db, 'membres', fnrValgtFamilie.docId);
-    const maalSnap = await getDoc(maalRef);
-    if (!maalSnap.exists()) throw new Error('Målfamilie ikke fundet');
-    const maalMedl = [...(maalSnap.data().familiemedlemmer || []), person];
-    await updateDoc(maalRef, { familiemedlemmer: maalMedl });
-
-    // Fjern person fra kildedokumentet
-    const kildMedl = [...(kildData.familiemedlemmer || [])];
-    kildMedl.splice(fnrAktiv.idx, 1);
-    await updateDoc(kildRef, { familiemedlemmer: kildMedl });
-
-    document.getElementById('fnr-tilknyt-succes').style.display = 'block';
-    // Fjern rækken fra tabellen
-    document.querySelectorAll(`.mdlnr-mangler[data-doc="${CSS.escape(fnrAktiv.docId)}"][data-idx="${fnrAktiv.idx}"]`).forEach(el => {
-      el.closest('tr')?.remove();
-    });
-    const roed = document.getElementById('stats-roed');
-    roed.textContent = Math.max(0, parseInt(roed.textContent) - 1);
-    setTimeout(lukFnrModal, 1400);
-  } catch(e) {
-    const fejl = document.getElementById('fnr-tilknyt-fejl');
-    fejl.textContent = 'Fejl: ' + e.message; fejl.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Tilknyt 🔗';
-  }
-});
-
-// Delegeret klik på MANGLER-knap (rød) → familienr-dialog; mdl.nr.-knap → familiedialog
-document.addEventListener('click', e => {
-  const m = e.target.closest('.mdlnr-mangler');
-  if (m) { aabnefnrDialog(m.dataset.doc, parseInt(m.dataset.idx), m.dataset.navn, null); return; }
-  const ok = e.target.closest('.mdlnr-ok');
-  if (ok) aabneFamiliedialog(ok.dataset.nr);
-});
-
-// ─── FILTER: VIS MANGLENDE DATA ─────────────────────────────────────────────
-let filterAktiv = false;
-
-document.getElementById('filter-mangler-btn').addEventListener('click', () => {
-  filterAktiv = !filterAktiv;
-  const btn = document.getElementById('filter-mangler-btn');
-  if (filterAktiv) {
-    btn.textContent = '✕ Vis alle';
-    btn.classList.add('aktiv');
-    document.querySelectorAll('.tabel tbody tr').forEach(tr => {
-      tr.style.display = tr.querySelector('.tl-groen') ? 'none' : '';
-    });
-    document.querySelectorAll('.maaned-blok').forEach(blok => {
-      const synlige = [...blok.querySelectorAll('tbody tr')].filter(tr => tr.style.display !== 'none');
-      blok.style.display = synlige.length ? '' : 'none';
-    });
-  } else {
-    btn.textContent = 'Vis manglende data';
-    btn.classList.remove('aktiv');
-    document.querySelectorAll('.tabel tbody tr').forEach(tr => { tr.style.display = ''; });
-    document.querySelectorAll('.maaned-blok').forEach(blok => { blok.style.display = ''; });
-  }
-});
-
-// ─── START ───────────────────────────────────────────────────────────────────
-try {
-  const foedsler = await hentFoedsler();
-  if (foedsler.length > 0) {
-    byggKalender(foedsler);
-  } else {
-    document.getElementById('loading-boks').innerHTML =
-      '<p style="color:var(--tekst-lys)">Ingen data fundet i databasen.</p>';
-  }
-} catch(e) {
-  document.getElementById('loading-boks').innerHTML =
-    `<p style="color:#c0392b">Fejl ved indlæsning: ${esc(e.message)}</p>`;
-  console.error(e);
-}
+function byggAlt() { opdaterStats(); byggKalender(); byggZoneA(); byggZoneB(); }
+byggAlt();
 </script>
 </body>
 </html>
