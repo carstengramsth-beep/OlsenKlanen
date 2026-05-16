@@ -36,7 +36,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .person-num { background: #2d5016; color: #f5e6a8; padding: 3px 9px; border-radius: 3px; font-size: 12px; font-weight: bold; min-width: 50px; text-align: center; font-family: monospace; }
 .person-name { flex: 1; font-size: 15px; }
 .person-date { color: #666; font-size: 13px; min-width: 100px; }
-.person-status { font-size: 11px; padding: 3px 8px; border-radius: 3px; text-transform: uppercase; }
+.person-status { font-size: 11px; padding: 3px 8px; border-radius: 3px; text-transform: uppercase; white-space: nowrap; }
 .status-green { background: #d4edda; color: #155724; }
 .status-yellow { background: #fff3cd; color: #856404; }
 .status-red { background: #f8d7da; color: #721c24; }
@@ -206,7 +206,7 @@ const medlemmer = [
 {nr:"050", under:"050", fornavn:"Diana", efternavn:"Lund", fdato:"22-10-1978", rolle:"Forælder", husstand:"Diana", status:"yellow", bemark:"MODSTRID Lund eller Larsen"},
 {nr:"051", under:"051", fornavn:"Lone", efternavn:"Hernvig", fdato:"07-09-1971", rolle:"Forælder", husstand:"Familien Hernvig", status:"green", bemark:"OK"},
 {nr:"051", under:"051", fornavn:"Martin", efternavn:"Hernvig", fdato:"14-02-1969", rolle:"Forælder", husstand:"Familien Hernvig", status:"red", bemark:"MODSTRID navn"},
-{nr:"051", under:"051-1", fornavn:"Sigurd Præstegaard", efternavn:"Olsen", fdato:"19-06-2002", rolle:"Barn", husstand:"Familien Hernvig", status:"yellow", bemark:"To forskellige fødselsdatoer"},
+{nr:"051", under:"051-1", fornavn:"Sigurd Præstegaard", efternavn:"Olsen", fdato:"19-06-2002", rolle:"Barn", husstand:"Familien Hernvig", status:"yellow", bemark:"To forskellige FØDSELSDATOer"},
 {nr:"052", under:"052", fornavn:"Rikke V.", efternavn:"Tingberg", fdato:"16-04-1980", rolle:"Forælder", husstand:"Rikke Tingberg", status:"red", bemark:"DUBLET med nr 21"},
 {nr:"053", under:"053", fornavn:"Pia", efternavn:"Olsen", fdato:"25-11-1973", rolle:"Forælder", husstand:"Pia & Søren", status:"green", bemark:"OK"},
 {nr:"053", under:"053", fornavn:"Søren", efternavn:"Olsen", fdato:"06-08-1971", rolle:"Forælder", husstand:"Pia & Søren", status:"green", bemark:"OK"},
@@ -223,6 +223,25 @@ const medlemmer = [
 const måneder = ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"];
 function parseDato(s) { if (!s) return null; const [d,m,y]=s.split("-").map(n=>parseInt(n)); return {dag:d,mnd:m,aar:y}; }
 function erRund(a) { return [40,50,60,70,75,80,85,90,95,100].includes(a); }
+function statusTekst(m) {
+  if(m.status === 'green') return 'Godkendt';
+  const mangler = [];
+  if(m.under === '???' || !m.under) mangler.push('medlemsnr');
+  if(!m.fdato) mangler.push('fødselsdato');
+  if(!m.efternavn || !m.fornavn) mangler.push('navn');
+  const b = (m.bemark||'').toUpperCase();
+  if(b.includes('DUBLET')) {
+    const match = m.bemark.match(/nr\s*(\d+)/i);
+    return match ? 'DUBLET nr '+match[1] : 'DUBLET';
+  }
+  if(b.includes('MODSTRID') && b.includes('NAVN')) return 'Navn modstrid';
+  if(b.includes('MODSTRID') && b.includes('FØDSEL')) return 'Dato modstrid';
+  if(b.includes('MODSTRID')) return 'Modstrid';
+  if(b.includes('STAVEFEJL')) return 'Stavefejl';
+  if(b.includes('TILDEL') || b.includes('NYT MEDLEM')) return 'Mangler nyt nr';
+  if(mangler.length > 0) return 'Mangler '+mangler.join(' + ');
+  return m.status==='red' ? 'Skal rettes' : 'Modstrid';
+}
 function visFane(navn, el) {
   document.querySelectorAll('.fane').forEach(f => f.classList.add('hidden'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -292,9 +311,10 @@ function byggAlle() {
       if(sog && !nr.toLowerCase().includes(sog) && !g.husstand.toLowerCase().includes(sog) && !g.personer.some(p=>(p.fornavn+' '+p.efternavn).toLowerCase().includes(sog))) return;
       html += '<div style="background:#f5f1e8;padding:8px 14px;margin:14px 0 6px;border-radius:4px;font-weight:bold;color:#2d5016;">Husstand '+nr+' — '+g.husstand+' <span style="font-weight:normal;color:#888;font-size:13px;">('+g.personer.length+' '+(g.personer.length===1?'person':'personer')+')</span></div>';
       g.personer.forEach(m=>{
-        let sk='status-green', st='Godkendt', rk='';
-        if(m.status==='red'){sk='status-red';st='Mangler';rk='zone-b-row';}
-        else if(m.status==='yellow'){sk='status-yellow';st='Modstrid';rk='zone-yellow-row';}
+        let sk='status-green', rk='';
+        const st = statusTekst(m);
+        if(m.status==='red'){sk='status-red';rk='zone-b-row';}
+        else if(m.status==='yellow'){sk='status-yellow';rk='zone-yellow-row';}
         const bh = m.status!=='green' ? '<div class="bemark">⚠️ '+m.bemark+'</div>' : '';
         html += '<div class="person-row '+rk+'"><div class="person-num">'+m.under+'</div><div class="person-name">'+m.fornavn+' '+m.efternavn+' <span style="color:#888;font-size:12px;">· '+m.rolle+'</span>'+bh+'</div><div class="person-date">'+(m.fdato||'—')+'</div><div class="person-status '+sk+'">'+st+'</div><button class="btn-edit '+(m.status==='red'?'btn-fix':'')+'" onclick="åbenModal('+medlemmer.indexOf(m)+')">Ret</button></div>';
       });
@@ -311,9 +331,10 @@ function byggAlle() {
   let html = '<h2 style="color:#2d5016;margin-bottom:14px;">'+titel+'</h2>';
   if(kilde.length===0) html += '<p style="text-align:center;color:#888;padding:30px;">Ingen medlemmer matcher.</p>';
   kilde.forEach(m=>{
-    let sk='status-green', st='Godkendt', rk='';
-    if(m.status==='red'){sk='status-red';st='Mangler';rk='zone-b-row';}
-    else if(m.status==='yellow'){sk='status-yellow';st='Modstrid';rk='zone-yellow-row';}
+    let sk='status-green', rk='';
+    const st = statusTekst(m);
+    if(m.status==='red'){sk='status-red';rk='zone-b-row';}
+    else if(m.status==='yellow'){sk='status-yellow';rk='zone-yellow-row';}
     const bh = m.status!=='green' ? '<div class="bemark">⚠️ '+m.bemark+'</div>' : '';
     html += '<div class="person-row '+rk+'"><div class="person-num">'+m.under+'</div><div class="person-name">'+m.fornavn+' '+m.efternavn+' <span style="color:#888;font-size:12px;">· '+m.husstand+'</span>'+bh+'</div><div class="person-date">'+(m.fdato||'—')+'</div><div class="person-status '+sk+'">'+st+'</div><button class="btn-edit '+(m.status==='red'?'btn-fix':'')+'" onclick="åbenModal('+medlemmer.indexOf(m)+')">Ret</button></div>';
   });
@@ -324,7 +345,7 @@ function byggZoneB() {
   let html='';
   fejl.forEach(m=>{
     const sk = m.status==='red'?'status-red':'status-yellow';
-    const sl = m.status==='red'?'Mangler':'Modstrid';
+    const sl = statusTekst(m);
     const rk = m.status==='red'?'zone-b-row':'zone-yellow-row';
     html += '<div class="person-row '+rk+'"><div class="person-num">'+m.under+'</div><div style="flex:1;"><div><strong>'+m.fornavn+' '+m.efternavn+'</strong> <span style="color:#888;font-size:12px;">· '+m.husstand+'</span></div><div class="bemark">⚠️ '+m.bemark+'</div></div><div class="person-status '+sk+'">'+sl+'</div><button class="btn-edit btn-fix" onclick="åbenModal('+medlemmer.indexOf(m)+')">Ret nu</button></div>';
   });
