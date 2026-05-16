@@ -108,7 +108,8 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 </div>
 </div>
 <script>
-const medlemmer = [{nr:"004", under:"004", fornavn:"Mette", efternavn:"Westergaard-Hansen", fdato:"08-04-1972", rolle:"Forælder", husstand:"Mette & Allan", status:"green", bemark:"OK"},
+const medlemmer = [
+{nr:"004", under:"004", fornavn:"Mette", efternavn:"Westergaard-Hansen", fdato:"08-04-1972", rolle:"Forælder", husstand:"Mette & Allan", status:"green", bemark:"OK"},
 {nr:"004", under:"004", fornavn:"Allan", efternavn:"Westergaard-Hansen", fdato:"15-09-1970", rolle:"Forælder", husstand:"Mette & Allan", status:"green", bemark:"OK"},
 {nr:"004", under:"004-1", fornavn:"Magnus", efternavn:"Westergaard-Hansen", fdato:"12-06-2002", rolle:"Barn", husstand:"Mette & Allan", status:"green", bemark:"OK"},
 {nr:"004", under:"004-2", fornavn:"Sofie", efternavn:"Westergaard-Hansen", fdato:"22-11-2005", rolle:"Barn", husstand:"Mette & Allan", status:"green", bemark:"OK"},
@@ -156,7 +157,8 @@ const medlemmer = [{nr:"004", under:"004", fornavn:"Mette", efternavn:"Westergaa
 {nr:"024", under:"024", fornavn:"Vibeke", efternavn:"Olsen", fdato:"19-10-1960", rolle:"Forælder", husstand:"Henrik & Vibeke", status:"green", bemark:"OK"},
 {nr:"024", under:"024-1", fornavn:"Anders", efternavn:"Olsen", fdato:"04-04-1989", rolle:"Barn", husstand:"Henrik & Vibeke", status:"green", bemark:"OK"},
 {nr:"024", under:"024-2", fornavn:"Maria", efternavn:"Olsen", fdato:"22-07-1993", rolle:"Barn", husstand:"Henrik & Vibeke", status:"green", bemark:"OK"},
-{nr:"026", under:"026", fornavn:"Bodil", efternavn:"Olsen", fdato:"11-05-1949", rolle:"Forælder", husstand:"Bodil Olsen", status:"green", bemark:"OK"},{nr:"027", under:"027", fornavn:"Lilli Vinifred", efternavn:"Olsen", fdato:"23-09-1927", rolle:"Forælder", husstand:"Lilli Olsen", status:"green", bemark:"OK"},
+{nr:"026", under:"026", fornavn:"Bodil", efternavn:"Olsen", fdato:"11-05-1949", rolle:"Forælder", husstand:"Bodil Olsen", status:"green", bemark:"OK"},
+{nr:"027", under:"027", fornavn:"Lilli Vinifred", efternavn:"Olsen", fdato:"23-09-1927", rolle:"Forælder", husstand:"Lilli Olsen", status:"green", bemark:"OK"},
 {nr:"028", under:"028", fornavn:"Mogens", efternavn:"Olsen", fdato:"05-06-1951", rolle:"Forælder", husstand:"Mogens & Lise", status:"green", bemark:"OK"},
 {nr:"028", under:"028", fornavn:"Lise", efternavn:"Olsen", fdato:"14-01-1954", rolle:"Forælder", husstand:"Mogens & Lise", status:"green", bemark:"OK"},
 {nr:"029", under:"029", fornavn:"Jesper Majgaard", efternavn:"Olsen", fdato:"14-07-1991", rolle:"Forælder", husstand:"Jesper Majgaard", status:"green", bemark:"OK"},
@@ -217,7 +219,8 @@ const medlemmer = [{nr:"004", under:"004", fornavn:"Mette", efternavn:"Westergaa
 {nr:"???", under:"???", fornavn:"Laura", efternavn:"Beknow", fdato:"07-11-1998", rolle:"Barn", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER"},
 {nr:"???", under:"???", fornavn:"Line", efternavn:"Beknow", fdato:"19-09-2001", rolle:"Barn", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER"},
 {nr:"???", under:"???", fornavn:"Rasmus", efternavn:"Billstrøm", fdato:"02-04-1990", rolle:"Andet", husstand:"Usikker", status:"red", bemark:"MANGLER MEDLEMSNUMMER"}
-];const måneder = ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"];
+];
+const måneder = ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"];
 function parseDato(s) { if (!s) return null; const [d,m,y]=s.split("-").map(n=>parseInt(n)); return {dag:d,mnd:m,aar:y}; }
 function erRund(a) { return [40,50,60,70,75,80,85,90,95,100].includes(a); }
 function visFane(navn, el) {
@@ -266,7 +269,24 @@ function byggAlle() {
   if(filterType === 'husstande') {
     const grupper = {};
     medlemmer.forEach(m=>{ if(!grupper[m.nr]) grupper[m.nr]={husstand:m.husstand,personer:[]}; grupper[m.nr].personer.push(m); });
+    const brugteNumre = Object.keys(grupper).filter(n=>n!=='???').map(n=>parseInt(n)).filter(n=>!isNaN(n));
+    const hojesteBrug = brugteNumre.length > 0 ? Math.max(...brugteNumre) : 0;
+    const ledige = [];
+    for(let i=1; i<=hojesteBrug; i++) {
+      if(!brugteNumre.includes(i)) ledige.push(String(i).padStart(3,'0'));
+    }
+    const nyOprettelseNr = String(hojesteBrug + 1).padStart(3,'0');
+    let ledigeHtml = '<div style="background:#e8f0d8;border:2px solid #2d5016;padding:14px 18px;margin-bottom:18px;border-radius:6px;">';
+    ledigeHtml += '<div style="font-weight:bold;color:#2d5016;font-size:15px;margin-bottom:6px;">📋 Ledige medlemsnumre</div>';
+    if(ledige.length === 0) {
+      ledigeHtml += '<div style="font-size:14px;color:#555;">Ingen huller i nummerrækken — alle numre 001-'+String(hojesteBrug).padStart(3,'0')+' er i brug.</div>';
+    } else {
+      ledigeHtml += '<div style="font-size:14px;color:#555;margin-bottom:6px;">Huller i rækken: <strong style="color:#b03030;">'+ledige.join(', ')+'</strong></div>';
+    }
+    ledigeHtml += '<div style="font-size:14px;color:#555;">Næste ledige nummer ved nyoprettelse: <strong style="color:#2d7a2d;font-size:16px;">'+nyOprettelseNr+'</strong></div>';
+    ledigeHtml += '</div>';
     let html = '<h2 style="color:#2d5016;margin-bottom:14px;">Husstande i nummerorden ('+Object.keys(grupper).length+')</h2>';
+    html += ledigeHtml;
     Object.keys(grupper).sort().forEach(nr=>{
       const g = grupper[nr];
       if(sog && !nr.toLowerCase().includes(sog) && !g.husstand.toLowerCase().includes(sog) && !g.personer.some(p=>(p.fornavn+' '+p.efternavn).toLowerCase().includes(sog))) return;
