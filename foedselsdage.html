@@ -16,6 +16,8 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .container { max-width: 1100px; margin: 0 auto; padding: 25px; }
 .stats { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
 .stat { background: #fff; padding: 14px 20px; border-radius: 6px; flex: 1; min-width: 140px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.stat.klik { cursor: pointer; transition: transform 0.1s; }
+.stat.klik:hover { transform: translateY(-2px); box-shadow: 0 3px 8px rgba(0,0,0,0.12); }
 .stat-num { font-size: 28px; font-weight: bold; color: #2d5016; }
 .stat-label { font-size: 12px; color: #6b6b6b; text-transform: uppercase; }
 .stat.green .stat-num { color: #2d7a2d; }
@@ -71,10 +73,10 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 </div>
 <div class="container">
 <div class="stats">
-<div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Personer i alt</div></div>
-<div class="stat green"><div class="stat-num" id="stat-godkendt">0</div><div class="stat-label">Godkendt</div></div>
-<div class="stat red"><div class="stat-num" id="stat-fejl">0</div><div class="stat-label">Skal rettes</div></div>
-<div class="stat"><div class="stat-num" id="stat-husstande">0</div><div class="stat-label">Husstande</div></div>
+<div class="stat klik" onclick="visListe('alle')"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Personer i alt</div></div>
+<div class="stat green klik" onclick="visListe('godkendt')"><div class="stat-num" id="stat-godkendt">0</div><div class="stat-label">Godkendt</div></div>
+<div class="stat red klik" onclick="visListe('fejl')"><div class="stat-num" id="stat-fejl">0</div><div class="stat-label">Skal rettes</div></div>
+<div class="stat klik" onclick="visListe('husstande')"><div class="stat-num" id="stat-husstande">0</div><div class="stat-label">Husstande</div></div>
 </div>
 <div id="fane-kalender" class="fane"><div id="kalender-content"></div></div>
 <div id="fane-alle" class="fane hidden">
@@ -249,32 +251,51 @@ function byggKalender() {
   }
   document.getElementById('kalender-content').innerHTML = html;
 }
+let filterType = 'alle';
+function visListe(type) {
+  document.querySelectorAll('.fane').forEach(f => f.classList.add('hidden'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('fane-alle').classList.remove('hidden');
+  document.querySelectorAll('.tab')[1].classList.add('active');
+  document.getElementById('sog-alle').value = '';
+  filterType = type;
+  byggAlle();
+}
 function byggAlle() {
   const sog = document.getElementById('sog-alle').value.trim().toLowerCase();
-  const grupper = {};
-  medlemmer.forEach(m=>{
-    if(!grupper[m.nr]) grupper[m.nr] = {husstand:m.husstand, personer:[]};
-    grupper[m.nr].personer.push(m);
-  });
-  const vis = [];
-  Object.keys(grupper).sort().forEach(nr=>{
-    const g = grupper[nr];
-    if(!sog) { vis.push({nr, ...g}); return; }
-    const matchNr = nr.toLowerCase().includes(sog) || nr.replace(/^0+/,'').includes(sog);
-    const matchP = g.personer.some(p=>(p.fornavn+' '+p.efternavn).toLowerCase().includes(sog)||g.husstand.toLowerCase().includes(sog));
-    if(matchNr||matchP) vis.push({nr, ...g});
-  });
-  let html='';
-  if(vis.length===0) html = '<p style="text-align:center;color:#888;padding:30px;">Ingen medlemmer matcher.</p>';
-  vis.forEach(g=>{
-    html += '<div style="background:#f5f1e8;padding:8px 14px;margin:14px 0 6px;border-radius:4px;font-weight:bold;color:#2d5016;">Husstand '+g.nr+' — '+g.husstand+' <span style="font-weight:normal;color:#888;font-size:13px;">('+g.personer.length+' '+(g.personer.length===1?'person':'personer')+')</span></div>';
-    g.personer.forEach(m=>{
-      let sk = 'status-green', st = 'Godkendt', rk = '';
-      if(m.status==='red') { sk='status-red'; st='Mangler'; rk='zone-b-row'; }
-      else if(m.status==='yellow') { sk='status-yellow'; st='Modstrid'; rk='zone-yellow-row'; }
-      const bemarkHtml = m.status!=='green' ? '<div class="bemark">⚠️ '+m.bemark+'</div>' : '';
-      html += '<div class="person-row '+rk+'"><div class="person-num">'+m.under+'</div><div class="person-name">'+m.fornavn+' '+m.efternavn+' <span style="color:#888;font-size:12px;">· '+m.rolle+'</span>'+bemarkHtml+'</div><div class="person-date">'+(m.fdato||'—')+'</div><div class="person-status '+sk+'">'+st+'</div><button class="btn-edit '+(m.status==='red'?'btn-fix':'')+'" onclick="åbenModal('+medlemmer.indexOf(m)+')">Ret</button></div>';
+  if(filterType === 'husstande') {
+    const grupper = {};
+    medlemmer.forEach(m=>{ if(!grupper[m.nr]) grupper[m.nr]={husstand:m.husstand,personer:[]}; grupper[m.nr].personer.push(m); });
+    let html = '<h2 style="color:#2d5016;margin-bottom:14px;">Husstande i nummerorden ('+Object.keys(grupper).length+')</h2>';
+    Object.keys(grupper).sort().forEach(nr=>{
+      const g = grupper[nr];
+      if(sog && !nr.toLowerCase().includes(sog) && !g.husstand.toLowerCase().includes(sog) && !g.personer.some(p=>(p.fornavn+' '+p.efternavn).toLowerCase().includes(sog))) return;
+      html += '<div style="background:#f5f1e8;padding:8px 14px;margin:14px 0 6px;border-radius:4px;font-weight:bold;color:#2d5016;">Husstand '+nr+' — '+g.husstand+' <span style="font-weight:normal;color:#888;font-size:13px;">('+g.personer.length+' '+(g.personer.length===1?'person':'personer')+')</span></div>';
+      g.personer.forEach(m=>{
+        let sk='status-green', st='Godkendt', rk='';
+        if(m.status==='red'){sk='status-red';st='Mangler';rk='zone-b-row';}
+        else if(m.status==='yellow'){sk='status-yellow';st='Modstrid';rk='zone-yellow-row';}
+        const bh = m.status!=='green' ? '<div class="bemark">⚠️ '+m.bemark+'</div>' : '';
+        html += '<div class="person-row '+rk+'"><div class="person-num">'+m.under+'</div><div class="person-name">'+m.fornavn+' '+m.efternavn+' <span style="color:#888;font-size:12px;">· '+m.rolle+'</span>'+bh+'</div><div class="person-date">'+(m.fdato||'—')+'</div><div class="person-status '+sk+'">'+st+'</div><button class="btn-edit '+(m.status==='red'?'btn-fix':'')+'" onclick="åbenModal('+medlemmer.indexOf(m)+')">Ret</button></div>';
+      });
     });
+    document.getElementById('alle-content').innerHTML = html;
+    return;
+  }
+  let kilde = medlemmer.slice();
+  let titel = 'Alle medlemmer alfabetisk ('+kilde.length+')';
+  if(filterType === 'godkendt') { kilde = kilde.filter(m=>m.status==='green'); titel = 'Godkendte medlemmer ('+kilde.length+')'; }
+  else if(filterType === 'fejl') { kilde = kilde.filter(m=>m.status==='red'||m.status==='yellow'); titel = 'Skal rettes ('+kilde.length+')'; }
+  kilde.sort((a,b)=>(a.fornavn+' '+a.efternavn).localeCompare(b.fornavn+' '+b.efternavn,'da'));
+  if(sog) kilde = kilde.filter(m=>(m.fornavn+' '+m.efternavn).toLowerCase().includes(sog)||m.under.toLowerCase().includes(sog)||m.husstand.toLowerCase().includes(sog));
+  let html = '<h2 style="color:#2d5016;margin-bottom:14px;">'+titel+'</h2>';
+  if(kilde.length===0) html += '<p style="text-align:center;color:#888;padding:30px;">Ingen medlemmer matcher.</p>';
+  kilde.forEach(m=>{
+    let sk='status-green', st='Godkendt', rk='';
+    if(m.status==='red'){sk='status-red';st='Mangler';rk='zone-b-row';}
+    else if(m.status==='yellow'){sk='status-yellow';st='Modstrid';rk='zone-yellow-row';}
+    const bh = m.status!=='green' ? '<div class="bemark">⚠️ '+m.bemark+'</div>' : '';
+    html += '<div class="person-row '+rk+'"><div class="person-num">'+m.under+'</div><div class="person-name">'+m.fornavn+' '+m.efternavn+' <span style="color:#888;font-size:12px;">· '+m.husstand+'</span>'+bh+'</div><div class="person-date">'+(m.fdato||'—')+'</div><div class="person-status '+sk+'">'+st+'</div><button class="btn-edit '+(m.status==='red'?'btn-fix':'')+'" onclick="åbenModal('+medlemmer.indexOf(m)+')">Ret</button></div>';
   });
   document.getElementById('alle-content').innerHTML = html;
 }
