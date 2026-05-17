@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Huskebog — OlsenBanden</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; }
+.header { background: #2d5016; color: #f5e6a8; padding: 18px 30px; display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 22px; }
+.header-links { display: flex; gap: 14px; align-items: center; }
+.header a { color: #f5e6a8; text-decoration: none; padding: 6px 14px; border: 1px solid #f5e6a8; border-radius: 4px; font-size: 14px; }
+.bruger { background: #1d3a0f; padding: 6px 14px; border-radius: 4px; font-size: 13px; }
+.container { max-width: 1100px; margin: 0 auto; padding: 25px; }
+.info-banner { background: #fff8e1; border-left: 4px solid #c89e3c; padding: 14px 18px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; color: #6b5b1f; }
+.status-boks { background: #fff; padding: 10px 14px; border-radius: 4px; font-size: 12px; color: #888; margin-bottom: 14px; text-align: center; }
+.status-boks.aktiv { background: #d4edda; color: #155724; }
+.statistik { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px; }
+.stat-kort { background: #fff; padding: 18px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.stat-tal { font-size: 32px; font-weight: bold; color: #2d5016; }
+.stat-titel { font-size: 13px; color: #888; text-transform: uppercase; margin-top: 4px; letter-spacing: 1px; }
+.stat-kort.faerdig .stat-tal { color: #2d7a2d; }
+.stat-kort.igang .stat-tal { color: #c89e3c; }
+.stat-kort.planlagt .stat-tal { color: #b03030; }
+.kategori { background: #fff; border-radius: 8px; margin-bottom: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; }
+.kategori-header { padding: 14px 20px; font-size: 17px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+.kategori.planlagt .kategori-header { background: #b03030; color: #fff; }
+.kategori.igang .kategori-header { background: #c89e3c; color: #2d5016; }
+.kategori.faerdig .kategori-header { background: #2d7a2d; color: #fff; }
+.kategori-antal { background: rgba(255,255,255,0.3); padding: 3px 10px; border-radius: 12px; font-size: 13px; }
+.kategori.igang .kategori-antal { background: rgba(45,80,22,0.2); }
+.opgave-liste { padding: 8px; }
+.opgave { background: #f5f1e8; padding: 14px 16px; border-radius: 6px; margin-bottom: 8px; border-left: 4px solid #c89e3c; }
+.opgave.faerdig { border-left-color: #2d7a2d; opacity: 0.85; }
+.opgave.igang { border-left-color: #c89e3c; }
+.opgave.planlagt { border-left-color: #b03030; }
+.opgave-top { display: flex; gap: 12px; align-items: flex-start; }
+.opgave-check { width: 22px; height: 22px; flex-shrink: 0; cursor: pointer; margin-top: 2px; }
+.opgave-indhold { flex: 1; }
+.opgave-titel { font-weight: bold; color: #2d5016; font-size: 15px; margin-bottom: 4px; }
+.opgave.faerdig .opgave-titel { text-decoration: line-through; color: #888; }
+.opgave-beskrivelse { font-size: 13px; color: #555; margin-bottom: 6px; white-space: pre-wrap; }
+.opgave-meta { font-size: 11px; color: #888; display: flex; gap: 14px; flex-wrap: wrap; }
+.opgave-meta .udfoert-af { color: #2d7a2d; font-weight: bold; }
+.opgave-knapper { display: flex; gap: 6px; margin-top: 8px; }
+.knap-mini { padding: 4px 10px; font-size: 11px; border: 1px solid #c4b896; background: #fff; border-radius: 3px; cursor: pointer; color: #555; }
+.knap-mini:hover { background: #2d5016; color: #f5e6a8; border-color: #2d5016; }
+.knap-mini.fjern { color: #b03030; border-color: #b03030; }
+.knap-mini.fjern:hover { background: #b03030; color: #fff; }
+.tilfoej-knap { background: #2d5016; color: #f5e6a8; padding: 12px 22px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold; margin-bottom: 22px; }
+.tilfoej-knap:hover { background: #3a6020; }
+.formular-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
+.formular-bg.show { display: flex; }
+.formular-boks { background: #fff; padding: 28px; border-radius: 8px; max-width: 500px; width: 90%; }
+.formular-boks h3 { color: #2d5016; margin-bottom: 14px; }
+.formular-boks label { display: block; font-size: 13px; color: #555; margin-bottom: 4px; margin-top: 10px; }
+.formular-boks input, .formular-boks textarea, .formular-boks select { width: 100%; padding: 10px; border: 1px solid #c4b896; border-radius: 4px; font-family: inherit; font-size: 14px; }
+.formular-boks textarea { min-height: 80px; resize: vertical; }
+.formular-knapper { display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end; }
+.formular-knapper button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+.knap-gem { background: #2d5016; color: #f5e6a8; }
+.knap-annul { background: #ccc; color: #555; }
+.vaelg-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+.vaelg-boks { background: #fff; padding: 30px; border-radius: 8px; max-width: 400px; width: 90%; }
+.vaelg-boks h2 { color: #2d5016; margin-bottom: 8px; }
+.vaelg-boks p { color: #666; font-size: 13px; margin-bottom: 18px; }
+.vaelg-knap { display: block; width: 100%; padding: 14px; background: #f5f1e8; border: 2px solid #c4b896; border-radius: 4px; margin-bottom: 8px; cursor: pointer; font-size: 15px; text-align: left; color: #2c3e1f; font-family: inherit; }
+.vaelg-knap:hover { background: #2d5016; color: #f5e6a8; border-color: #2d5016; }
+.kommentar-felt { background: #fff; padding: 8px 10px; border-radius: 4px; margin-top: 6px; font-size: 12px; color: #555; border: 1px dashed #c4b896; }
+.tom-besked { padding: 30px; text-align: center; color: #888; font-style: italic; }
+</style>
+</head>
+<body>
+<div id="vaelg-bandit" class="vaelg-bg">
+<div class="vaelg-boks">
+<h2>Huskebog — OlsenBanden</h2>
+<p>Hvem er du? Klik på dit navn for at logge ind.</p>
+<button class="vaelg-knap" onclick="vaelgMig('Carsten')">Carsten Gram</button>
+<button class="vaelg-knap" onclick="vaelgMig('Tommy')">Tommy Vormslev Olsen</button>
+<button class="vaelg-knap" onclick="vaelgMig('Kurt')">Kurt Olsen</button>
+<button class="vaelg-knap" onclick="vaelgMig('Sanne')">Sanne Gram Fadel</button>
+<button class="vaelg-knap" onclick="vaelgMig('Karin')">Karin Lund</button>
+</div>
+</div>
+<div class="header">
+<h1>📋 Huskebog — OlsenBanden</h1>
+<div class="header-links">
+<a href="forside.html">← Forside</a>
+<a href="olsenbanden.html">OlsenBanden Center</a>
+<a href="#" onclick="logUd();return false;">Skift bruger</a>
+<div class="bruger" id="bruger-navn">...</div>
+</div>
+</div>
+<div class="container">
+<div class="info-banner">
+<strong>📝 Sådan bruger du huskebogen:</strong> Sæt flueben når en opgave er udført. Klik på "Kommentar" for at tilføje noter. Tilføj nye opgaver med knappen nedenfor.
+</div>
+<div class="status-boks" id="firebase-status">Forbinder til Firebase...</div>
+<div class="statistik">
+<div class="stat-kort planlagt"><div class="stat-tal" id="stat-planlagt">0</div><div class="stat-titel">Planlagt</div></div>
+<div class="stat-kort igang"><div class="stat-tal" id="stat-igang">0</div><div class="stat-titel">I gang</div></div>
+<div class="stat-kort faerdig"><div class="stat-tal" id="stat-faerdig">0</div><div class="stat-titel">Færdig</div></div>
+</div>
+<button class="tilfoej-knap" onclick="visTilfoejForm()">➕ Tilføj ny opgave</button>
+<div class="kategori planlagt">
+<div class="kategori-header"><span>🔴 Planlagt</span><span class="kategori-antal" id="antal-planlagt">0</span></div>
+<div class="opgave-liste" id="liste-planlagt"></div>
+</div>
+<div class="kategori igang">
+<div class="kategori-header"><span>🟡 I gang</span><span class="kategori-antal" id="antal-igang">0</span></div>
+<div class="opgave-liste" id="liste-igang"></div>
+</div>
+<div class="kategori faerdig">
+<div class="kategori-header"><span>🟢 Færdig</span><span class="kategori-antal" id="antal-faerdig">0</span></div>
+<div class="opgave-liste" id="liste-faerdig"></div>
+</div>
+</div>
+<div class="formular-bg" id="formular-bg">
+<div class="formular-boks">
+<h3>Tilføj ny opgave</h3>
+<label>Titel:</label>
+<input type="text" id="form-titel" placeholder="fx Send mail til Kurt">
+<label>Beskrivelse (kan udelades):</label>
+<textarea id="form-beskrivelse" placeholder="Detaljer om opgaven..."></textarea>
+<label>Status:</label>
+<select id="form-status">
+<option value="planlagt">🔴 Planlagt</option>
+<option value="igang">🟡 I gang</option>
+<option value="faerdig">🟢 Færdig</option>
+</select>
+<div class="formular-knapper">
+<button class="knap-annul" onclick="lukForm()">Annuller</button>
+<button class="knap-gem" onclick="gemOpgave()">Gem</button>
+</div>
+</div>
+</div>
+<div class="formular-bg" id="kommentar-bg">
+<div class="formular-boks">
+<h3>Tilføj kommentar</h3>
+<label>Din kommentar:</label>
+<textarea id="kommentar-tekst" placeholder="Hvad er der sket med denne opgave?"></textarea>
+<div class="formular-knapper">
+<button class="knap-annul" onclick="lukKommentar()">Annuller</button>
+<button class="knap-gem" onclick="gemKommentar()">Gem kommentar</button>
+</div>
+</div>
+</div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set, onValue, push, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  databaseURL: "https://olsenklanen-familieside-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+window.banditter = {
+  Carsten: {navn: 'Carsten Gram', init: 'CG'},
+  Tommy: {navn: 'Tommy Vormslev Olsen', init: 'TVO'},
+  Kurt: {navn: 'Kurt Olsen', init: 'KO'},
+  Sanne: {navn: 'Sanne Gram Fadel', init: 'SGF'},
+  Karin: {navn: 'Karin Lund', init: 'KL'}
+};
+window.mig = null;
+window.alleOpgaver = {};
+window.kommentarOpgave = null;
+window.vaelgMig = function(id) {
+  localStorage.setItem('olsen-bandit', id);
+  window.mig = {id: id, ...window.banditter[id]};
+  document.getElementById('vaelg-bandit').style.display = 'none';
+  document.getElementById('bruger-navn').textContent = window.mig.navn;
+  startFirebase();
+};
+window.logUd = function() {
+  localStorage.removeItem('olsen-bandit');
+  location.reload();
+};
+function startFirebase() {
+  onValue(ref(db, 'huskebog'), (snap) => {
+    window.alleOpgaver = snap.val() || {};
+    document.getElementById('firebase-status').textContent = '✅ Forbundet til Firebase';
+    document.getElementById('firebase-status').classList.add('aktiv');
+    visOpgaver();
+    if(Object.keys(window.alleOpgaver).length === 0) opretStartdata();
+  });
+}
+function opretStartdata() {
+  const start = [
+    {titel: 'Forside med opslagstavle og kalender', beskrivelse: 'Live på carstengramsth-beep.github.io/OlsenKlanen/forside.html', status: 'faerdig'},
+    {titel: 'Foedselsdage-siden med alle 110 medlemmer', beskrivelse: 'Klikbare statistik-bokse, ledige medlemsnumre, præcise fejlbeskrivelser, medlemsnummer-vælger, børn følger med, familie-søgning', status: 'faerdig'},
+    {titel: 'OlsenBanden Center med Firebase', beskrivelse: 'Login via klik på navn, online-status, beskeder, ringeklokke, Video Klanen og OlsenBanden privat (Jitsi)', status: 'faerdig'},
+    {titel: 'Skovtur 2026-siden', beskrivelse: 'Hero, pristabel, tilmelding, generalforsamling, program, praktisk info, kontakter', status: 'faerdig'},
+    {titel: 'Skovtur-knap klikbar fra forsiden', beskrivelse: 'Opslagstavlen linker nu til skovtur2026.html', status: 'faerdig'},
+    {titel: 'Huskebog med Firebase', beskrivelse: 'Interaktiv liste med afkrydsning, initialer, dato og kommentarer', status: 'faerdig'},
+    {titel: 'Test OlsenBanden Center mellem 2 computere', beskrivelse: 'Send SMS eller mail til Kurt eller Sanne med adgang. Tjek at online-status virker mellem 2 brugere. Test ringeklokke.', status: 'igang'},
+    {titel: 'Tilmeldingsblanket til skovtur', beskrivelse: 'Husstand vælger sig selv fra medlemskartoteket, antal voksne og børn, vælg måltider, automatisk prisberegning, bekræftelse til arrangementskomitéen. Carsten sender eksempel fra olsenklanen.minisite.dk.', status: 'planlagt'},
+    {titel: 'Betalingsløsning undersøges', beskrivelse: 'MobilePay-integration eller netbank-link med pre-udfyldt beløb eller bekræftelse plus manuel overførsel eller betaling på stedet', status: 'planlagt'},
+    {titel: 'Send start-mail til Tommy, Kurt, Sanne, Karin', beskrivelse: 'Klar besked-template med adgang til OlsenBanden Center. Forklar hvordan systemet bruges.', status: 'planlagt'},
+    {titel: 'Zone B data-rettelser (26 personer)', beskrivelse: 'Elisabeth Gram mangler fødselsdato. Trine, Sanne, René tildel rigtige numre. Esther, Emma, Luna mangler fødselsdatoer. Dubletter, modstridende navne. Nano mangler i kartoteket (skal være 061).', status: 'planlagt'},
+    {titel: 'Mødeinvitation-funktion', beskrivelse: 'OlsenBanden kan invitere klanmedlemmer til møder. Mail sendes til inviterede med login-link.', status: 'planlagt'},
+    {titel: 'Indhold på Arkiv-siden', beskrivelse: 'Skal udvikles', status: 'planlagt'},
+    {titel: 'Indhold på Arrangementer-siden', beskrivelse: 'Skal udvikles', status: 'planlagt'},
+    {titel: 'Indhold på Mindelunden', beskrivelse: 'Skal udvikles', status: 'planlagt'},
+    {titel: 'Indhold på Administration', beskrivelse: 'Skal udvikles', status: 'planlagt'},
+    {titel: 'Familietræ på tværs af husstande', beskrivelse: 'Visualisering af slægtsforhold', status: 'planlagt'},
+    {titel: 'Opdater kravspecifikation v0.6', beskrivelse: 'Inkluder alle nye funktioner siden v0.5', status: 'planlagt'}
+  ];
+  start.forEach(opg => {
+    const data = {titel: opg.titel, beskrivelse: opg.beskrivelse, status: opg.status, oprettet: Date.now(), oprettetAf: window.mig.id};
+    if(opg.status === 'faerdig') {
+      data.udfoertAf = window.mig.id;
+      data.udfoertTid = Date.now();
+    }
+    push(ref(db, 'huskebog'), data);
+  });
+}
+window.visOpgaver = function() {
+  const planlagt = [], igang = [], faerdig = [];
+  Object.entries(window.alleOpgaver).forEach(([key, opg]) => {
+    const obj = {...opg, key: key};
+    if(opg.status === 'planlagt') planlagt.push(obj);
+    else if(opg.status === 'igang') igang.push(obj);
+    else if(opg.status === 'faerdig') faerdig.push(obj);
+  });
+  planlagt.sort((a,b) => (b.oprettet||0) - (a.oprettet||0));
+  igang.sort((a,b) => (b.oprettet||0) - (a.oprettet||0));
+  faerdig.sort((a,b) => (b.udfoertTid||0) - (a.udfoertTid||0));
+  renderOpgaver('liste-planlagt', planlagt);
+  renderOpgaver('liste-igang', igang);
+  renderOpgaver('liste-faerdig', faerdig);
+  document.getElementById('stat-planlagt').textContent = planlagt.length;
+  document.getElementById('stat-igang').textContent = igang.length;
+  document.getElementById('stat-faerdig').textContent = faerdig.length;
+  document.getElementById('antal-planlagt').textContent = planlagt.length;
+  document.getElementById('antal-igang').textContent = igang.length;
+  document.getElementById('antal-faerdig').textContent = faerdig.length;
+};
+function renderOpgaver(containerId, liste) {
+  const c = document.getElementById(containerId);
+  if(liste.length === 0) { c.innerHTML = '<div class="tom-besked">Ingen opgaver her</div>'; return; }
+  let html = '';
+  liste.forEach(opg => {
+    const erFaerdig = opg.status === 'faerdig';
+    let metaHtml = '<div class="opgave-meta">';
+    if(opg.oprettet) {
+      const dato = new Date(opg.oprettet).toLocaleDateString('da-DK');
+      metaHtml += '<span>📅 Oprettet '+dato+'</span>';
+    }
+    if(opg.udfoertAf && opg.udfoertTid) {
+      const dato = new Date(opg.udfoertTid).toLocaleDateString('da-DK');
+      const init = window.banditter[opg.udfoertAf] ? window.banditter[opg.udfoertAf].init : opg.udfoertAf;
+      metaHtml += '<span class="udfoert-af">✓ Udført af '+init+' den '+dato+'</span>';
+    }
+    metaHtml += '</div>';
+    let kommentarHtml = '';
+    if(opg.kommentarer && Array.isArray(opg.kommentarer) && opg.kommentarer.length > 0) {
+      opg.kommentarer.forEach(k => {
+        const dato = new Date(k.tid).toLocaleDateString('da-DK');
+        const init = window.banditter[k.af] ? window.banditter[k.af].init : k.af;
+        kommentarHtml += '<div class="kommentar-felt"><strong>'+init+' ('+dato+'):</strong> '+k.tekst+'</div>';
+      });
+    }
+    html += '<div class="opgave '+opg.status+'">';
+    html += '<div class="opgave-top">';
+    html += '<input type="checkbox" class="opgave-check" '+(erFaerdig?'checked':'')+' onclick="toggleFaerdig(\''+opg.key+'\','+!erFaerdig+')">';
+    html += '<div class="opgave-indhold">';
+    html += '<div class="opgave-titel">'+opg.titel+'</div>';
+    if(opg.beskrivelse) html += '<div class="opgave-beskrivelse">'+opg.beskrivelse+'</div>';
+    html += metaHtml;
+    html += kommentarHtml;
+    html += '<div class="opgave-knapper">';
+    if(!erFaerdig && opg.status === 'planlagt') html += '<button class="knap-mini" onclick="aendreStatus(\''+opg.key+'\',\'igang\')">→ I gang</button>';
+    if(!erFaerdig && opg.status === 'igang') html += '<button class="knap-mini" onclick="aendreStatus(\''+opg.key+'\',\'planlagt\')">← Planlagt</button>';
+    if(erFaerdig) html += '<button class="knap-mini" onclick="aendreStatus(\''+opg.key+'\',\'igang\')">↺ Genåbn</button>';
+    html += '<button class="knap-mini" onclick="aabnKommentar(\''+opg.key+'\')">💬 Kommentar</button>';
+    html += '<button class="knap-mini fjern" onclick="slettOpgave(\''+opg.key+'\')">🗑️ Slet</button>';
+    html += '</div></div></div></div>';
+  });
+  c.innerHTML = html;
+}
+window.toggleFaerdig = function(key, gørFaerdig) {
+  const opdatering = {status: gørFaerdig ? 'faerdig' : 'igang'};
+  if(gørFaerdig) { opdatering.udfoertAf = window.mig.id; opdatering.udfoertTid = Date.now(); }
+  else { opdatering.udfoertAf = null; opdatering.udfoertTid = null; }
+  update(ref(db, 'huskebog/' + key), opdatering);
+};
+window.aendreStatus = function(key, nyStatus) {
+  const opdatering = {status: nyStatus};
+  if(nyStatus === 'faerdig') { opdatering.udfoertAf = window.mig.id; opdatering.udfoertTid = Date.now(); }
+  else { opdatering.udfoertAf = null; opdatering.udfoertTid = null; }
+  update(ref(db, 'huskebog/' + key), opdatering);
+};
+window.slettOpgave = function(key) {
+  if(!confirm('Slet denne opgave?')) return;
+  remove(ref(db, 'huskebog/' + key));
+};
+window.visTilfoejForm = function() {
+  document.getElementById('form-titel').value = '';
+  document.getElementById('form-beskrivelse').value = '';
+  document.getElementById('form-status').value = 'planlagt';
+  document.getElementById('formular-bg').classList.add('show');
+};
+window.lukForm = function() { document.getElementById('formular-bg').classList.remove('show'); };
+window.gemOpgave = function() {
+  const titel = document.getElementById('form-titel').value.trim();
+  const beskrivelse = document.getElementById('form-beskrivelse').value.trim();
+  const status = document.getElementById('form-status').value;
+  if(!titel) { alert('Skriv en titel!'); return; }
+  const data = {titel: titel, beskrivelse: beskrivelse, status: status, oprettet: Date.now(), oprettetAf: window.mig.id};
+  if(status === 'faerdig') { data.udfoertAf = window.mig.id; data.udfoertTid = Date.now(); }
+  push(ref(db, 'huskebog'), data);
+  lukForm();
+};
+window.aabnKommentar = function(key) {
+  window.kommentarOpgave = key;
+  document.getElementById('kommentar-tekst').value = '';
+  document.getElementById('kommentar-bg').classList.add('show');
+};
+window.lukKommentar = function() {
+  document.getElementById('kommentar-bg').classList.remove('show');
+  window.kommentarOpgave = null;
+};
+window.gemKommentar = function() {
+  const tekst = document.getElementById('kommentar-tekst').value.trim();
+  if(!tekst) { alert('Skriv en kommentar!'); return; }
+  const opgave = window.alleOpgaver[window.kommentarOpgave];
+  const nyKom = {tekst: tekst, af: window.mig.id, tid: Date.now()};
+  const kommentarer = Array.isArray(opgave.kommentarer) ? opgave.kommentarer : [];
+  kommentarer.push(nyKom);
+  update(ref(db, 'huskebog/' + window.kommentarOpgave), {kommentarer: kommentarer});
+  lukKommentar();
+};
+const gemtId = localStorage.getItem('olsen-bandit');
+if(gemtId && window.banditter[gemtId]) window.vaelgMig(gemtId);
+</script>
+</body>
+</html>
