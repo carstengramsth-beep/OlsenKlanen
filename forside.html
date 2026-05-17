@@ -52,13 +52,24 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 #admin-knap { display: none; }
 @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
 </style>
+<script>
+  // SIKKERHED: Tjek om bruger er logget ind — ellers send til login
+  try {
+    const niveau = sessionStorage.getItem("ok_niveau");
+    if (!niveau) {
+      window.location.href = "login.html";
+    }
+  } catch(e) {
+    window.location.href = "login.html";
+  }
+</script>
 </head>
 <body>
 <div class="topbar">
   <h1>OlsenKlanen · Familieside</h1>
   <div class="user">
     <span id="bruger-navn">Carsten Gram (admin)</span>
-    <a href="login.html" class="logout">Log ud</a>
+    <a href="login.html" class="logout" onclick="logUd()">Log ud</a>
   </div>
 </div>
 <div class="layout">
@@ -159,4 +170,49 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
         <div class="nav-txt"><div class="nav-titel">Arrangementer</div><div class="nav-info">Skovtur · kalender</div></div>
       </a>
       <a class="nav-item" href="#">
-        <di
+        <div class="nav-emoji">🕯️</div>
+        <div class="nav-txt"><div class="nav-titel">Mindelunden</div><div class="nav-info">Tidligere medlemmer</div></div>
+      </a>
+      <a class="nav-item" href="admin.html" id="admin-knap">
+        <div class="nav-emoji">⚙️</div>
+        <div class="nav-txt"><div class="nav-titel">Administration</div><div class="nav-info">Kommunikation · data</div></div>
+      </a>
+    </div>
+  </aside>
+</div>
+
+<script>
+  // Vis Administration-knappen kun for OlsenBanden + admin
+  try {
+    const niveau = sessionStorage.getItem("ok_niveau");
+    const navn = sessionStorage.getItem("ok_navn");
+    
+    // Opdater brugernavnet øverst
+    if (navn) {
+      const rolleSuffix = niveau === "admin" ? " (admin)" 
+                        : niveau === "olsenbanden" ? " (OlsenBanden)" 
+                        : niveau === "gaest" ? " (gæst)"
+                        : "";
+      document.getElementById("bruger-navn").textContent = navn + rolleSuffix;
+    }
+    
+    // Vis Administration-knappen kun for admin og olsenbanden
+    if (niveau === "admin" || niveau === "olsenbanden") {
+      document.getElementById("admin-knap").style.display = "flex";
+    }
+  } catch(e) {
+    console.log("Fejl ved adgangskontrol:", e);
+  }
+  
+  // Log ud — ryd al adgang
+  function logUd() {
+    try {
+      sessionStorage.removeItem("ok_niveau");
+      sessionStorage.removeItem("ok_navn");
+      sessionStorage.removeItem("ok_email");
+    } catch(e) {}
+  }
+</script>
+
+</body>
+</html>
