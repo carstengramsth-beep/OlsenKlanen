@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="da">
 <head>
@@ -155,8 +154,13 @@
 </div>
 
 <script>
-  // Login-system — version v19.6 — 13. maj 2026
-  // Med PWA-installation + "Husk mig"
+  // Login-system — version v19.7 — 17. maj 2026
+  // Med PWA-installation + "Husk mig" + altid landing på forsiden
+
+  // ---- ALTID HOVEDDØREN: Ryd evt. gemt sidste-side ----
+  try {
+    sessionStorage.removeItem("ok_sidste_side");
+  } catch(e) {}
 
   // ---- OLSENBANDEN ----
   const OLSENBANDEN = [
