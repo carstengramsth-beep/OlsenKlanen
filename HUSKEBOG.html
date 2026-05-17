@@ -76,9 +76,12 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .knap-gem { background: #2d5016; color: #f5e6a8; }
 .knap-annul { background: #ccc; color: #555; }
 .vaelg-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-.vaelg-boks { background: #fff; padding: 30px; border-radius: 8px; max-width: 400px; width: 90%; }
+.vaelg-boks { background: #fff; padding: 30px; border-radius: 8px; max-width: 420px; width: 90%; }
 .vaelg-boks h2 { color: #2d5016; margin-bottom: 8px; }
 .vaelg-boks p { color: #666; font-size: 13px; margin-bottom: 18px; }
+.vaelg-besked { margin-top: 12px; padding: 10px; border-radius: 4px; font-size: 13px; min-height: 20px; }
+.vaelg-besked.fejl { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+.vaelg-besked.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
 .vaelg-knap { display: block; width: 100%; padding: 14px; background: #f5f1e8; border: 2px solid #c4b896; border-radius: 4px; margin-bottom: 8px; cursor: pointer; font-size: 15px; text-align: left; color: #2c3e1f; font-family: inherit; }
 .vaelg-knap:hover { background: #2d5016; color: #f5e6a8; border-color: #2d5016; }
 .kommentar-felt { background: #fff; padding: 8px 10px; border-radius: 4px; margin-top: 6px; font-size: 12px; color: #555; border: 1px dashed #c4b896; }
@@ -92,12 +95,13 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 <div id="vaelg-bandit" class="vaelg-bg">
 <div class="vaelg-boks">
 <h2>Huskebog — OlsenBanden</h2>
-<p>Hvem er du? Klik på dit navn for at logge ind.</p>
+<p id="vaelg-tekst">Hvem er du? Klik på dit navn for at logge ind.</p>
 <button class="vaelg-knap" onclick="vaelgMig('Carsten')">Carsten Gram</button>
 <button class="vaelg-knap" onclick="vaelgMig('Tommy')">Tommy Vormslev Olsen</button>
 <button class="vaelg-knap" onclick="vaelgMig('Kurt')">Kurt Olsen</button>
 <button class="vaelg-knap" onclick="vaelgMig('Sanne')">Sanne Gram Fadel</button>
 <button class="vaelg-knap" onclick="vaelgMig('Karin')">Karin Lund</button>
+<div id="vaelg-besked" class="vaelg-besked"></div>
 </div>
 </div>
 <div class="header">
@@ -197,24 +201,75 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
+// Krydsreference: email til navn
 window.banditter = {
-  Carsten: {navn: 'Carsten Gram', init: 'CG'},
-  Tommy: {navn: 'Tommy Vormslev Olsen', init: 'TVO'},
-  Kurt: {navn: 'Kurt Olsen', init: 'KO'},
-  Sanne: {navn: 'Sanne Gram Fadel', init: 'SGF'},
-  Karin: {navn: 'Karin Lund', init: 'KL'}
+  Carsten: {navn: 'Carsten Gram', init: 'CG', email: 'cg@gallerieg.dk'},
+  Tommy:   {navn: 'Tommy Vormslev Olsen', init: 'TVO', email: 'tvo@ishoejby.dk'},
+  Kurt:    {navn: 'Kurt Olsen', init: 'KO', email: 'kurt@vormslev.dk'},
+  Sanne:   {navn: 'Sanne Gram Fadel', init: 'SGF', email: 'safi@dr.dk'},
+  Karin:   {navn: 'Karin Lund', init: 'KL', email: 'kld@inmobia.com'}
 };
 window.mig = null;
 window.alleOpgaver = {};
 window.kommentarOpgave = null;
 window.redigerKey = null;
 
+// Hent email fra login
+function hentLoginEmail() {
+  try {
+    const e = sessionStorage.getItem('ok_email');
+    if(e && e.trim() !== '') return e.trim().toLowerCase();
+    return null;
+  } catch(err) { return null; }
+}
+
+// Vis besked på "Hvem er du?" boksen
+function visVaelgBesked() {
+  const loginEmail = hentLoginEmail();
+  const tekst = document.getElementById('vaelg-tekst');
+  const besked = document.getElementById('vaelg-besked');
+  if(loginEmail) {
+    const bandit = Object.values(window.banditter).find(b => b.email.toLowerCase() === loginEmail);
+    if(bandit) {
+      tekst.textContent = 'Du er logget ind som ' + bandit.navn + '. Klik på dit navn for at fortsætte.';
+      besked.className = 'vaelg-besked info';
+      besked.textContent = '🔐 Krydsreference aktiv: kun ' + bandit.navn + ' kan vælges.';
+    } else {
+      tekst.textContent = 'Hvem er du? Klik på dit navn for at logge ind.';
+      besked.className = 'vaelg-besked';
+      besked.textContent = '';
+    }
+  } else {
+    tekst.textContent = 'Hvem er du? Klik på dit navn for at logge ind.';
+    besked.className = 'vaelg-besked';
+    besked.textContent = '';
+  }
+}
+
 window.vaelgMig = function(id) {
-  window.mig = {id: id, ...window.banditter[id]};
+  const loginEmail = hentLoginEmail();
+  const bandit = window.banditter[id];
+  const besked = document.getElementById('vaelg-besked');
+
+  // Hvis bruger er logget ind: tjek at email passer med valgt navn
+  if(loginEmail) {
+    if(bandit.email.toLowerCase() !== loginEmail) {
+      // Find hvem der ER logget ind
+      const rigtigBandit = Object.values(window.banditter).find(b => b.email.toLowerCase() === loginEmail);
+      const rigtigNavn = rigtigBandit ? rigtigBandit.navn : loginEmail;
+      besked.className = 'vaelg-besked fejl';
+      besked.textContent = '❌ Du er logget ind som ' + rigtigNavn + '. Klik på dit eget navn.';
+      return;
+    }
+  }
+
+  window.mig = {id: id, navn: bandit.navn, init: bandit.init};
   document.getElementById('vaelg-bandit').style.display = 'none';
   document.getElementById('bruger-navn').textContent = window.mig.navn;
   startFirebase();
 };
+
 window.logUd = function() {
   location.reload();
 };
@@ -442,6 +497,9 @@ window.gemKommentar = function() {
   update(ref(db, 'huskebog/' + window.kommentarOpgave), {kommentarer: kommentarer});
   lukKommentar();
 };
+
+// Kør ved sidens start
+visVaelgBesked();
 </script>
 </body>
 </html>
