@@ -325,17 +325,11 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
       <div class="nav-item" data-panel="video" onclick="visPanel('video',this)">
         <span class="nav-ikon">📹</span>Videomøde
       </div>
-      <!-- ══ NY KNAP: OlsenBanden Center ══ -->
       <div class="nav-item" onclick="window.location.href='olsenbanden.html'" style="background:rgba(184,137,42,0.12);border-left:3px solid var(--guld);">
         <span class="nav-ikon">🔐</span>OlsenBanden Center
         <span class="nav-admin-tag" style="background:var(--guld);color:var(--mos-mork);">NY</span>
       </div>
     </div>
-          <!-- ══ NY KNAP: Huskebog ══ -->
-      <div class="nav-item" onclick="window.location.href='HUSKEBOG.html'" style="background:rgba(184,137,42,0.12);border-left:3px solid var(--guld);">
-        <span class="nav-ikon">📋</span>Huskebog
-        <span class="nav-admin-tag" style="background:var(--guld);color:var(--mos-mork);">NY</span>
-      </div>
     <div class="nav-gruppe">
       <span class="nav-gruppe-label">Indhold</span>
       <div class="nav-item" data-panel="nyheder" onclick="visPanel('nyheder',this)">
@@ -612,7 +606,6 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
   </div>
 </div>
 
-<!-- MODALER -->
 <div class="modal-overlay" id="glemt-modal"><div class="modal"><div class="modal-header"><div class="modal-titel">Glemt adgangskode</div><button class="modal-luk" onclick="lukModal('glemt-modal')">×</button></div><div class="modal-body"><p style="font-size:13px;color:var(--tekst-mid);margin-bottom:1.25rem">Skriv din email-adresse, så sender vi et link til at vælge en ny adgangskode.</p><div class="login-besked" id="glemt-besked"></div><div class="form-felt" style="margin-bottom:1rem"><label>Email</label><input type="email" id="glemt-email" placeholder="din@email.dk"></div><div class="form-handlinger"><button class="btn btn-mos" onclick="sendGlemtKode()">Send nulstillingslink</button><button class="btn btn-lys" onclick="lukModal('glemt-modal')">Annuller</button></div></div></div></div>
 <div class="modal-overlay" id="rediger-nyhed-modal"><div class="modal"><div class="modal-header"><div class="modal-titel">Rediger nyhed</div><button class="modal-luk" onclick="lukModal('rediger-nyhed-modal')">×</button></div><div class="modal-body"><input type="hidden" id="rediger-nyhed-id"><div class="form-grid"><div class="form-felt form-fuld"><label>Overskrift</label><input type="text" id="rediger-nyhed-overskrift"></div><div class="form-felt form-fuld"><label>Tekst</label><textarea id="rediger-nyhed-tekst"></textarea></div><div class="form-felt"><label>Dato</label><input type="date" id="rediger-nyhed-dato"></div><div class="form-felt"><label>Synlighed</label><select id="rediger-nyhed-synlighed"><option value="alle">Alle familiemedlemmer</option><option value="admins">Kun admins og redaktører</option></select></div></div><div class="form-handlinger"><button class="btn btn-mos" onclick="gemRedigertNyhed()">Gem ændringer</button><button class="btn btn-lys" onclick="lukModal('rediger-nyhed-modal')">Annuller</button></div></div></div></div>
 <div class="modal-overlay" id="rediger-kal-modal"><div class="modal"><div class="modal-header"><div class="modal-titel">Rediger begivenhed</div><button class="modal-luk" onclick="lukModal('rediger-kal-modal')">×</button></div><div class="modal-body"><input type="hidden" id="rediger-kal-id"><div class="form-grid"><div class="form-felt form-fuld"><label>Titel</label><input type="text" id="rediger-kal-titel"></div><div class="form-felt"><label>Dato (fra)</label><input type="date" id="rediger-kal-dato"></div><div class="form-felt"><label>Dato (til)</label><input type="date" id="rediger-kal-dato-til"></div><div class="form-felt form-fuld"><label>Beskrivelse</label><textarea id="rediger-kal-beskrivelse" style="min-height:80px"></textarea></div><div class="form-felt"><label>Type</label><select id="rediger-kal-type"><option value="arrangement">Arrangement</option><option value="maerkedag">Mærkedag</option><option value="fejring">Fejring</option></select></div><div class="form-felt"><label>Sted</label><input type="text" id="rediger-kal-sted"></div></div><div class="form-handlinger"><button class="btn btn-mos" onclick="gemRedigertBegivenhed()">Gem ændringer</button><button class="btn btn-lys" onclick="lukModal('rediger-kal-modal')">Annuller</button></div></div></div></div>
