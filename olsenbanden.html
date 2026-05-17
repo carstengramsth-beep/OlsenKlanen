@@ -107,6 +107,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 <button class="fane-knap active" onclick="visFane('video', this)">Videomøder</button>
 <button class="fane-knap" onclick="visFane('besked', this)">Beskeder</button>
 <button class="fane-knap" onclick="visFane('nybesked', this)">Ny besked</button>
+<button class="fane-knap" onclick="aabnHuskebog()">📋 Huskebog</button>
 </div>
 <div id="fane-video" class="fane-indhold active">
 <div class="info-boks">Klik Gå ind for at åbne et videomøde. Det åbner i et nyt vindue via Jitsi (gratis, sikkert, kræver ingen konto).</div>
@@ -248,6 +249,7 @@ window.visFane = function(navn, knap) {
   knap.classList.add('active');
 };
 window.aabnVideo = function(rumNavn) { window.open('https://meet.jit.si/' + rumNavn, '_blank', 'width=1200,height=800'); };
+window.aabnHuskebog = function() { window.open('HUSKEBOG.html', '_blank', 'width=1200,height=800'); };
 window.kaldAlle = function() {
   if(!confirm('Send notifikation til ALLE online banditter om at gå ind i OlsenBanden-mødet?')) return;
   window.banditter.forEach(b => {
