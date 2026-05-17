@@ -2,7 +2,7 @@
   "name": "OlsenKlanen — Familieside",
   "short_name": "OlsenKlanen",
   "description": "Familieside for OlsenKlanen",
-  "start_url": "./index.html",
+  "start_url": "./forside.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
