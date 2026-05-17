@@ -206,10 +206,10 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
   
   // Log ud — ryd al adgang
   function logUd() {
-    try {
-      sessionStorage.removeItem("ok_niveau");
-      sessionStorage.removeItem("ok_navn");
-      sessionStorage.removeItem("ok_email");
+  try {
+      sessionStorage.clear();
+      localStorage.removeItem("ok_husk_email");
+      localStorage.removeItem("ok_husk_kode");
     } catch(e) {}
   }
 </script>
