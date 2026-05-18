@@ -62,8 +62,39 @@
   }
   .felt:focus { outline:none; border-color:#fff; background:rgba(255,255,255,0.1); }
   .felt::placeholder { color:#a89860; }
+
+  /* Kode-feltet med forstørrelsesglas */
+  .kode-wrapper {
+    position:relative;
+    margin-bottom:14px;
+  }
+  .kode-wrapper .felt {
+    margin-bottom:0;
+    padding-right:48px;
+  }
+  .vis-kode {
+    position:absolute;
+    right:8px;
+    top:50%;
+    transform:translateY(-50%);
+    background:transparent;
+    border:none;
+    color:#f5d76e;
+    cursor:pointer;
+    font-size:1.3rem;
+    padding:8px;
+    border-radius:4px;
+  }
+  .vis-kode:hover { background:rgba(245,215,110,0.1); }
+
+  /* Knap-række (Log ind + Fortryd) */
+  .knap-raekke {
+    display:flex;
+    gap:10px;
+    margin-top:6px;
+  }
   .knap {
-    width:100%;
+    flex:1;
     padding:14px;
     font-size:1.1rem;
     font-family:inherit;
@@ -76,6 +107,14 @@
     letter-spacing:1px;
   }
   .knap:hover { background:#fff; }
+  .knap-fortryd {
+    background:transparent;
+    color:#f5d76e;
+    border:1px solid #f5d76e;
+    flex:0 0 110px;
+  }
+  .knap-fortryd:hover { background:rgba(245,215,110,0.1); color:#f5d76e; }
+
   .besked {
     margin-top:16px;
     min-height:24px;
@@ -128,14 +167,21 @@
   <div class="undertekst">Familieside</div>
 
   <input type="email" id="email" class="felt" placeholder="Din email" autofocus autocomplete="email">
-  <input type="password" id="kode" class="felt" placeholder="Din kode" autocomplete="current-password">
+
+  <div class="kode-wrapper">
+    <input type="password" id="kode" class="felt" placeholder="Din kode" autocomplete="current-password">
+    <button type="button" class="vis-kode" id="visKodeKnap" onclick="visKode()" title="Vis koden">🔍</button>
+  </div>
 
   <label class="husk-mig">
     <input type="checkbox" id="huskMig" checked>
     Husk mig på denne computer
   </label>
 
-  <button class="knap" onclick="logInd()">Log ind</button>
+  <div class="knap-raekke">
+    <button class="knap" onclick="logInd()">Log ind</button>
+    <button class="knap knap-fortryd" onclick="fortryd()">Fortryd</button>
+  </div>
 
   <div id="besked" class="besked"></div>
 
@@ -154,8 +200,8 @@
 </div>
 
 <script>
-  // Login-system — version v19.7 — 17. maj 2026
-  // Med PWA-installation + "Husk mig" + altid landing på forsiden
+  // Login-system — version v19.8 — 18. maj 2026
+  // Med PWA + Husk mig + Forstørrelsesglas + Fortryd-knap
 
   // ---- ALTID HOVEDDØREN: Ryd evt. gemt sidste-side ----
   try {
@@ -228,6 +274,32 @@
     besked.className = "besked ok";
     gemAdgang("gaest", "Gæst", "");
     videreTil("forside.html");
+  }
+
+  // ---- FORTRYD: ryd felterne og skjul koden igen ----
+  function fortryd() {
+    document.getElementById("email").value = "";
+    document.getElementById("kode").value = "";
+    document.getElementById("kode").type = "password";
+    document.getElementById("visKodeKnap").textContent = "🔍";
+    document.getElementById("besked").textContent = "Login afbrudt.";
+    document.getElementById("besked").className = "besked";
+    document.getElementById("email").focus();
+  }
+
+  // ---- VIS KODE: forstørrelsesglas-knap ----
+  function visKode() {
+    const kodeFelt = document.getElementById("kode");
+    const knap = document.getElementById("visKodeKnap");
+    if (kodeFelt.type === "password") {
+      kodeFelt.type = "text";
+      knap.textContent = "🙈";
+      knap.title = "Skjul koden";
+    } else {
+      kodeFelt.type = "password";
+      knap.textContent = "🔍";
+      knap.title = "Vis koden";
+    }
   }
 
   function gemAdgang(niveau, navn, email) {
