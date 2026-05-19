@@ -24,6 +24,13 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .god-tone ol { margin-left: 20px; }
 .god-tone li { margin: 4px 0; }
 
+.filter-baand { background: #fff; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.filter-knap { background: #f0ead8; color: #2d5016; border: 1px solid #d4c89a; padding: 6px 14px; border-radius: 20px; font-family: inherit; font-size: 13px; cursor: pointer; text-decoration: none; }
+.filter-knap.aktiv { background: #2d5016; color: #f5e6a8; border-color: #2d5016; }
+.filter-knap:hover { background: #2d5016; color: #f5e6a8; }
+.filter-knap.aktiv:hover { background: #3d6a1f; }
+.filter-label { font-size: 13px; color: #888; margin-right: 6px; }
+
 .skriv-boks { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
 .skriv-boks textarea { width: 100%; min-height: 80px; padding: 12px; border: 1px solid #d4c89a; border-radius: 6px; font-family: inherit; font-size: 15px; resize: vertical; background: #fffef9; }
 .skriv-boks textarea:focus { outline: none; border-color: #2d5016; }
@@ -42,6 +49,8 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .seddel:nth-child(3n) { background: #ffec88; transform: rotate(-0.3deg); }
 .seddel:nth-child(4n) { background: #faf3a3; transform: rotate(0.4deg); }
 .seddel:hover { transform: rotate(0deg) scale(1.02); z-index: 5; }
+
+.seddel.ny::after { content: "NYT"; position: absolute; top: -8px; right: -8px; background: #c0392b; color: #fff; font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 4px; transform: rotate(8deg); box-shadow: 1px 2px 4px rgba(0,0,0,0.2); }
 
 .seddel-top { display: flex; justify-content: space-between; align-items: flex-start; font-size: 12px; color: #6a5a1a; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px dashed rgba(106,90,26,0.3); }
 .seddel-nr { font-weight: bold; }
@@ -100,6 +109,13 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
     </div>
   </div>
 
+  <div class="filter-baand">
+    <span class="filter-label">Vis:</span>
+    <a class="filter-knap" data-filter="alle" href="opslagstavlen.html">📋 Alle</a>
+    <a class="filter-knap" data-filter="nye" href="opslagstavlen.html?filter=nye">🆕 Nye</a>
+    <a class="filter-knap" data-filter="ukommenterede" href="opslagstavlen.html?filter=ukommenterede">💬 Uden kommentar</a>
+  </div>
+
   <div id="fejl-besked" class="fejl-besked"></div>
   <div id="ok-besked" class="ok-besked"></div>
 
@@ -125,7 +141,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp, onSnapshot, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -139,7 +155,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ---- LOGIN-TJEK ----
 let mitNavn = "Anonym";
 let mitNiveau = "gaest";
 let minEmail = "";
@@ -159,14 +174,19 @@ document.getElementById("bruger-navn").textContent = mitNavn + (mitNiveau === "a
 
 const erOlsenBanden = (mitNiveau === "admin" || mitNiveau === "olsenbanden");
 
-// ---- TEGN-TÆLLER ----
+const urlParams = new URLSearchParams(window.location.search);
+const aktivtFilter = urlParams.get("filter") || "alle";
+
+document.querySelectorAll(".filter-knap").forEach(k => {
+  if (k.dataset.filter === aktivtFilter) k.classList.add("aktiv");
+});
+
 const opslagFelt = document.getElementById("nyt-opslag");
 const tegnTal = document.getElementById("tegn-tal");
 opslagFelt.addEventListener("input", () => {
   tegnTal.textContent = opslagFelt.value.length;
 });
 
-// ---- SEND OPSLAG ----
 window.sendOpslag = async function() {
   const tekst = opslagFelt.value.trim();
   if (!tekst) {
@@ -191,6 +211,7 @@ window.sendOpslag = async function() {
       reaktioner: {},
       kommentarer: [],
       flag: [],
+      set_af: [minEmail],
       slettet: false
     });
     opslagFelt.value = "";
@@ -210,29 +231,74 @@ window.rydOpslag = function() {
   tegnTal.textContent = "0";
 };
 
-// ---- LYT TIL OPSLAG ----
 const q = query(collection(db, "opslagstavle"), orderBy("tidspunkt", "desc"));
-onSnapshot(q, (snap) => {
+onSnapshot(q, async (snap) => {
   const tavle = document.getElementById("tavle");
-  if (snap.empty) {
-    tavle.innerHTML = '<div class="tom-tavle"><div class="emoji">📌</div><h3>Tavlen er tom</h3><p>Bliv den første til at hænge et opslag op!</p></div>';
+
+  let synlige = snap.docs.filter(d => !d.data().slettet);
+
+  if (aktivtFilter === "nye") {
+    synlige = synlige.filter(d => {
+      const setAf = d.data().set_af || [];
+      return !setAf.includes(minEmail);
+    });
+  } else if (aktivtFilter === "ukommenterede") {
+    synlige = synlige.filter(d => {
+      const kom = d.data().kommentarer || [];
+      return kom.length === 0;
+    });
+  }
+
+  if (synlige.length === 0) {
+    let besked = "Tavlen er tom";
+    if (aktivtFilter === "nye") besked = "Ingen nye opslag for dig — alt er læst! ✨";
+    if (aktivtFilter === "ukommenterede") besked = "Alle opslag har fået en kommentar 🎉";
+    tavle.innerHTML = '<div class="tom-tavle"><div class="emoji">📌</div><h3>' + besked + '</h3></div>';
     return;
   }
 
   let nr = snap.size;
   tavle.innerHTML = "";
+
+  const opslagAtMarkere = [];
+
   snap.docs.forEach(d => {
     const data = d.data();
     if (data.slettet) {
-      tavle.innerHTML += lavTilbagetrukket(d.id, data, nr);
+      if (aktivtFilter === "alle") {
+        tavle.innerHTML += lavTilbagetrukket(d.id, data, nr);
+      }
     } else {
-      tavle.innerHTML += lavSeddel(d.id, data, nr);
+      const synlig = synlige.find(s => s.id === d.id);
+      if (synlig) {
+        const setAf = data.set_af || [];
+        const erNyt = !setAf.includes(minEmail);
+        if (erNyt) opslagAtMarkere.push(d.id);
+        tavle.innerHTML += lavSeddel(d.id, data, nr, erNyt);
+      }
     }
     nr--;
   });
+
+  if (opslagAtMarkere.length > 0) {
+    setTimeout(async () => {
+      for (const id of opslagAtMarkere) {
+        try {
+          const ref = doc(db, "opslagstavle", id);
+          const docSnap = snap.docs.find(d => d.id === id);
+          if (docSnap) {
+            const setAf = docSnap.data().set_af || [];
+            if (!setAf.includes(minEmail)) {
+              await updateDoc(ref, { set_af: [...setAf, minEmail] });
+            }
+          }
+        } catch(e) { console.error(e); }
+      }
+    }, 2000);
+  }
 });
 
-function lavSeddel(id, data, nr) {
+function lavSeddel(id, data, nr, erNyt) {
   const dato = data.tidspunkt ? new Date(data.tidspunkt.toDate()).toLocaleDateString("da-DK", {day:"numeric", month:"short", year:"numeric"}) : "—";
   const reaktionsListe = ["👍", "❤️", "😂", "🤔"];
   const reaktionerHtml = reaktionsListe.map(r => {
@@ -252,7 +318,7 @@ function lavSeddel(id, data, nr) {
   const kanSlette = erMin || erOlsenBanden;
 
   return `
-    <div class="seddel">
+    <div class="seddel ${erNyt ? 'ny' : ''}">
       <div class="seddel-top">
         <span class="seddel-nr">#${String(nr).padStart(3, '0')}</span>
         <span>${dato}</span>
@@ -287,7 +353,6 @@ function lavTilbagetrukket(id, data, nr) {
   `;
 }
 
-// ---- REAKTIONER ----
 window.reager = async function(id, emoji) {
   if (!minEmail) {
     visFejl("Du skal være logget ind for at reagere.");
@@ -313,7 +378,6 @@ window.reager = async function(id, emoji) {
   }
 };
 
-// ---- KOMMENTARER ----
 window.sendKommentar = async function(id, inputElement) {
   const tekst = inputElement.value.trim();
   if (!tekst) return;
@@ -339,7 +403,6 @@ window.sendKommentar = async function(id, inputElement) {
   }
 };
 
-// ---- FLAG KOMMENTAR ----
 window.flagKommentar = async function(opslagId, kommentarIndex) {
   if (!confirm("Vil du flage denne kommentar som upassende? OlsenBanden vil se det.")) return;
   try {
@@ -360,7 +423,6 @@ window.flagKommentar = async function(opslagId, kommentarIndex) {
   }
 };
 
-// ---- SLET / TRÆK TILBAGE ----
 window.sletOpslag = async function(id, erMit) {
   const tekst = erMit ? "Vil du trække dit opslag tilbage?" : "Vil du slette dette opslag som OlsenBanden?";
   if (!confirm(tekst)) return;
@@ -370,11 +432,10 @@ window.sletOpslag = async function(id, erMit) {
     visOk(erMit ? "Opslaget er trukket tilbage." : "Opslaget er slettet.");
   } catch(e) {
     console.error(e);
-    visFejl("Kunne ikke slette opslaget.");
+    visFejl("Kunne ikke sende kommentaren.");
   }
 };
 
-// ---- HJÆLPE-FUNKTIONER ----
 function escapeHtml(s) {
   if (!s) return "";
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
