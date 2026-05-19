@@ -53,18 +53,19 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
 </style>
 <script>
-  // SIKKERHED: Tjek om bruger er logget ind — ellers send til login
-  try {
-    const niveau = sessionStorage.getItem("ok_niveau");
-    if (!niveau) {
-      window.location.href = "login.html";
-    }
-  } catch(e) {
+// SIKKERHED: Tjek om bruger er logget ind — ellers send til login
+try {
+  const niveau = sessionStorage.getItem("ok_niveau");
+  if (!niveau) {
     window.location.href = "login.html";
   }
+} catch(e) {
+  window.location.href = "login.html";
+}
 </script>
 </head>
 <body>
+
 <div class="topbar">
   <h1>OlsenKlanen · Familieside</h1>
   <div class="user">
@@ -72,37 +73,44 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
     <a class="logout" onclick="logUd()">Log ud</a>
   </div>
 </div>
+
 <div class="layout">
+
   <aside>
     <div class="section-title">OPSLAGSTAVLEN</div>
-    <div class="opslag">
-      <a href="foedselsdage.html">
-        <div class="opslag-emoji">🎂</div>
-        <div class="opslag-titel">Tommy fylder 60!</div>
-        <div class="opslag-info">Om 8 dage · 24. maj</div>
-      </a>
-    </div>
+
+    <a href="fremhaevede.html" class="opslag" style="text-decoration:none;color:inherit;cursor:pointer;display:block;">
+      <div class="opslag-emoji">⭐</div>
+      <div class="opslag-titel">Fremhævede begivenheder</div>
+      <div class="opslag-info">Tommy 60 · Skovtur 2026</div>
+    </a>
+
     <a href="skovtur2026.html" class="opslag" style="text-decoration:none;color:inherit;cursor:pointer;display:block;">
-          <div class="opslag-emoji">🌲</div>
-          <div class="opslag-titel">Skovtur 2026</div>
-          <div class="opslag-info">29.–31. maj · 13 dage</div>
-        </a>
-    <div class="opslag">
-      <div class="opslag-emoji">📹</div>
-      <div class="opslag-titel">Videomøde</div>
-      <div class="opslag-info">Torsdag kl. 20:00</div>
-    </div>
-    <div class="opslag">
+      <div class="opslag-emoji">🌲</div>
+      <div class="opslag-titel">Skovtur 2026</div>
+      <div class="opslag-info">Velkomst · priser · program</div>
+    </a>
+
+    <a href="aarets-billeder.html" class="opslag" style="text-decoration:none;color:inherit;cursor:pointer;display:block;">
       <div class="opslag-emoji">📷</div>
-      <div class="opslag-titel">Nye billeder</div>
-      <div class="opslag-info">Kurt har uploadet 8</div>
-    </div>
-    <div class="opslag">
-      <div class="opslag-emoji">✋</div>
-      <div class="opslag-titel">Afstemning</div>
-      <div class="opslag-info">Sted til skovturen?</div>
-    </div>
+      <div class="opslag-titel">Årets billeder</div>
+      <div class="opslag-info">2026 · senest: Kurt (8 stk.)</div>
+    </a>
+
+    <a href="tidligere-billeder.html" class="opslag" style="text-decoration:none;color:inherit;cursor:pointer;display:block;">
+      <div class="opslag-emoji">🗂️</div>
+      <div class="opslag-titel">Forrige års billeder</div>
+      <div class="opslag-info">Arkiv · efter årstal</div>
+    </a>
+
+    <a href="opslagstavlen.html" class="opslag" style="text-decoration:none;color:inherit;cursor:pointer;display:block;">
+      <div class="opslag-emoji">📌</div>
+      <div class="opslag-titel">Opslagstavlen — her og nu</div>
+      <div class="opslag-info">Skriv et opslag · god tone</div>
+    </a>
+
   </aside>
+
   <main class="mid">
     <div class="billede-boks">
       <img src="billeder/IMG_4390.JPEG" alt="Skovtur maj 2025 — Haderslev">
@@ -111,6 +119,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
         <span>Maj 2025</span>
       </div>
     </div>
+
     <div class="fremh-boks">
       <div class="fremh-header">⭐ FREMHÆVEDE BEGIVENHEDER</div>
       <div class="fremh-row">
@@ -134,6 +143,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
         <div class="fremh-tag tag-jub">Jubilæum</div>
       </div>
     </div>
+
     <div class="kalender-boks">
       <h3>Kalender — Maj 2026</h3>
       <div class="kal-grid">
@@ -146,81 +156,86 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
       </div>
     </div>
   </main>
+
   <aside>
     <div class="section-title">NAVIGATION</div>
     <div class="nav-grp">
+
       <div class="nav-item aktiv">
         <div class="nav-emoji">🏠</div>
         <div class="nav-txt"><div class="nav-titel">Forside</div><div class="nav-info">Du er her</div></div>
       </div>
-      <a class="nav-item" href="foedselsdage.html">
+
+      <a class="nav-item" href="medlemskartotek.html">
         <div class="nav-emoji">👥</div>
         <div class="nav-txt"><div class="nav-titel">Medlemskartotek</div><div class="nav-info">116 personer · ret data</div></div>
       </a>
+
       <a class="nav-item" href="foedselsdage.html">
         <div class="nav-emoji">🎉</div>
         <div class="nav-txt"><div class="nav-titel">Mærkedage</div><div class="nav-info">Fødselsdage · jubilæer</div></div>
       </a>
-      <a class="nav-item" href="#">
-        <div class="nav-emoji">📸</div>
-        <div class="nav-txt"><div class="nav-titel">Arkiv</div><div class="nav-info">Billeder · steder · referater</div></div>
-      </a>
-      <a class="nav-item" href="#">
+
+      <a class="nav-item" href="arrangementer.html">
         <div class="nav-emoji">📅</div>
-        <div class="nav-txt"><div class="nav-titel">Arrangementer</div><div class="nav-info">Skovtur · kalender</div></div>
+        <div class="nav-txt"><div class="nav-titel">Arrangementer</div><div class="nav-info">Skovtur 2027 · kalender</div></div>
       </a>
-      <a class="nav-item" href="#">
+
+      <a class="nav-item" href="mindelunden.html">
         <div class="nav-emoji">🕯️</div>
         <div class="nav-txt"><div class="nav-titel">Mindelunden</div><div class="nav-info">Tidligere medlemmer</div></div>
       </a>
+
       <a class="nav-item" href="admin.html" id="admin-knap">
         <div class="nav-emoji">⚙️</div>
-        <div class="nav-txt"><div class="nav-titel">Administration</div><div class="nav-info">Kommunikation · data</div></div>
+        <div class="nav-txt"><div class="nav-titel">Administration</div><div class="nav-info">Video · kalender · udvikling</div></div>
       </a>
+
     </div>
   </aside>
+
 </div>
 
 <script>
-  // Vis Administration-knappen kun for OlsenBanden + admin
+// Vis Administration-knappen kun for OlsenBanden + admin
+try {
+  const niveau = sessionStorage.getItem("ok_niveau");
+  const navn = sessionStorage.getItem("ok_navn");
+
+  // Opdater brugernavnet øverst
+  if (navn) {
+    const rolleSuffix = niveau === "admin" ? " (admin)"
+                      : niveau === "olsenbanden" ? " (OlsenBanden)"
+                      : niveau === "gaest" ? " (gæst)"
+                      : "";
+    document.getElementById("bruger-navn").textContent = navn + rolleSuffix;
+  }
+
+  // Vis Administration-knappen kun for admin og olsenbanden
+  if (niveau === "admin" || niveau === "olsenbanden") {
+    document.getElementById("admin-knap").style.display = "flex";
+  }
+} catch(e) {
+  console.log("Fejl ved adgangskontrol:", e);
+}
+
+// Log ud — ryd alt, prøv at lukke fanen, ellers blank tavle
+function logUd() {
   try {
-    const niveau = sessionStorage.getItem("ok_niveau");
-    const navn = sessionStorage.getItem("ok_navn");
-    
-    // Opdater brugernavnet øverst
-    if (navn) {
-      const rolleSuffix = niveau === "admin" ? " (admin)" 
-                        : niveau === "olsenbanden" ? " (OlsenBanden)" 
-                        : niveau === "gaest" ? " (gæst)"
-                        : "";
-      document.getElementById("bruger-navn").textContent = navn + rolleSuffix;
-    }
-    
-    // Vis Administration-knappen kun for admin og olsenbanden
-    if (niveau === "admin" || niveau === "olsenbanden") {
-      document.getElementById("admin-knap").style.display = "flex";
-    }
-  } catch(e) {
-    console.log("Fejl ved adgangskontrol:", e);
-  }
-  
-  // Log ud — ryd alt, prøv at lukke fanen, ellers blank tavle
-  function logUd() {
-    try {
-      sessionStorage.clear();
-      localStorage.removeItem("ok_husk_email");
-      localStorage.removeItem("ok_husk_kode");
-    } catch(e) {}
-    
-    // Prøv først at lukke fanen
-    window.open("", "_self");
-    window.close();
-    
-    // Hvis browseren ikke vil lukke fanen → vis blank tavle
-    setTimeout(function() {
-      window.location.href = "about:blank";
-    }, 100);
-  }
+    sessionStorage.clear();
+    localStorage.removeItem("ok_husk_email");
+    localStorage.removeItem("ok_husk_kode");
+  } catch(e) {}
+
+  // Prøv først at lukke fanen
+  window.open("", "_self");
+  window.close();
+
+  // Hvis browseren ikke vil lukke fanen → vis blank tavle
+  setTimeout(function() {
+    window.location.href = "about:blank";
+  }, 100);
+}
 </script>
 
 </body>
