@@ -3,31 +3,26 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Hjælpefunktion: er den indloggede bruger administrator eller redaktør?
     function erAutoriseret() {
       return request.auth != null
         && exists(/databases/$(database)/documents/brugere/$(request.auth.token.email))
         && get(/databases/$(database)/documents/brugere/$(request.auth.token.email)).data.rolle
-             in ['administrator', 'redaktør'];
+           in ['administrator', 'redaktør'];
     }
 
-    // Hjælpefunktion: er den indloggede bruger administrator?
     function erAdministrator() {
       return request.auth != null
         && exists(/databases/$(database)/documents/brugere/$(request.auth.token.email))
         && get(/databases/$(database)/documents/brugere/$(request.auth.token.email)).data.rolle
-             == 'administrator';
+           == 'administrator';
     }
 
-    // Brugerdokumenter – kun administrator må oprette og slette;
-    // administrator og redaktør må læse alle brugere.
     match /brugere/{email} {
       allow read: if erAutoriseret();
       allow create, update: if erAdministrator();
       allow delete: if erAdministrator();
     }
 
-    // Indhold – administrator og redaktør må læse og skrive
     match /nyheder/{id} {
       allow read, write: if erAutoriseret();
     }
@@ -52,13 +47,11 @@ service cloud.firestore {
       allow read, write: if erAutoriseret();
     }
 
-    // Systemindstillinger – kun administrator må ændre
     match /system/{id} {
       allow read: if erAutoriseret();
       allow write: if erAdministrator();
     }
 
-    // Hilsener – alle med koden kan læse og oprette (koden tjekkes i klienten)
     match /hilsener/{id} {
       allow read: if true;
       allow create: if request.resource.data.keys().hasAll(['til','tilNoegle','fra','besked'])
@@ -67,15 +60,26 @@ service cloud.firestore {
       allow update, delete: if erAdministrator();
     }
 
-    // Medlemskartotek – public read/write så familier kan logge ind med PIN og redigere egne data
     match /membres/{id} {
       allow read: if true;
       allow write: if true;
     }
 
-    // Afvis alt andet
+    match /opslagstavle/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['tekst','forfatter'])
+        && request.resource.data.tekst is string
+        && request.resource.data.tekst.size() > 0
+        && request.resource.data.tekst.size() <= 500
+        && request.resource.data.forfatter is string
+        && request.resource.data.forfatter.size() > 0;
+      allow update: if true;
+      allow delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
+
   }
 }
