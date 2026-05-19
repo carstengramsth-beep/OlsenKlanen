@@ -49,29 +49,58 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .medbring-liste li { padding: 6px 0 6px 28px; position: relative; }
 .medbring-liste li:before { content: '✓'; position: absolute; left: 0; color: #2d7a2d; font-weight: bold; font-size: 16px; }
 .footer-note { background: #2d5016; color: #f5e6a8; padding: 20px 30px; border-radius: 8px; text-align: center; margin-top: 25px; font-style: italic; }
+.vedtaegt-toggle { background: #c89e3c; color: #2d5016; padding: 12px 22px; border: none; border-radius: 5px; font-family: inherit; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 10px; }
+.vedtaegt-toggle:hover { background: #d9b04e; }
+.vedtaegt-indhold { display: none; margin-top: 20px; }
+.vedtaegt-indhold.aaben { display: block; }
+.paragraf { margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px dashed #d4cba0; }
+.paragraf:last-child { border-bottom: none; }
+.paragraf-titel { color: #2d5016; font-size: 18px; font-weight: bold; margin-bottom: 10px; display: flex; align-items: baseline; gap: 10px; }
+.paragraf-titel .nummer { background: #2d5016; color: #f5e6a8; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.paragraf-tekst { font-size: 15px; line-height: 1.7; color: #333; text-align: justify; margin-bottom: 10px; }
+.paragraf-tekst:last-child { margin-bottom: 0; }
+.bestyrelse-liste { background: #f5f1e8; border: 1px solid #d4cba0; border-radius: 6px; padding: 12px 18px; margin: 12px 0; }
+.bestyrelse-rolle { display: flex; gap: 12px; padding: 6px 0; border-bottom: 1px solid #e5d9b6; font-size: 14px; }
+.bestyrelse-rolle:last-child { border-bottom: none; }
+.bestyrelse-rolle .rolle-navn { font-weight: bold; color: #2d5016; min-width: 100px; }
+.komite-blok { margin: 12px 0; background: #fff8e1; border-radius: 6px; padding: 14px 18px; border-left: 4px solid #c89e3c; }
+.komite-blok .komite-titel { font-weight: bold; color: #2d5016; margin-bottom: 8px; font-size: 14px; }
+.komite-blok ol { margin-left: 20px; font-size: 14px; }
+.komite-blok ol li { margin: 6px 0; line-height: 1.6; }
+.vedt-dagsorden { background: #fff8e1; border-radius: 6px; padding: 14px 20px; border-left: 4px solid #c89e3c; margin: 12px 0; }
+.vedt-dagsorden ol { margin-left: 20px; font-size: 14px; }
+.vedt-dagsorden ol li { margin: 5px 0; line-height: 1.6; }
+.vedt-dagsorden ol ol { margin-left: 24px; margin-top: 4px; }
+.vedt-dagsorden ol ol li { font-style: italic; color: #555; }
+.vedtaegt-footer { background: #2d5016; color: #f5e6a8; padding: 14px 20px; border-radius: 6px; text-align: center; margin-top: 18px; font-style: italic; font-size: 14px; }
+.vedtaegt-footer strong { color: #c89e3c; font-style: normal; }
 @media (max-width: 600px) {
-  .header h1 { font-size: 24px; }
-  .hero h2 { font-size: 20px; }
-  .hero .dato { font-size: 18px; }
-  .kort { padding: 18px 20px; }
-  .program-tid { flex-direction: column; gap: 4px; }
-  .program-tid .tid { min-width: auto; }
+.header h1 { font-size: 24px; }
+.hero h2 { font-size: 20px; }
+.hero .dato { font-size: 18px; }
+.kort { padding: 18px 20px; }
+.program-tid { flex-direction: column; gap: 4px; }
+.program-tid .tid { min-width: auto; }
 }
 </style>
 </head>
 <body>
+
 <div class="header">
 <h1>OlsenKlanens Skovtur 2026</h1>
 <div class="undertitel">Familietræffet vi alle ser frem til</div>
 <a href="forside.html">← Tilbage til forsiden</a>
 </div>
+
 <div class="container">
+
 <div class="hero">
 <h2>Vi mødes på Eriksminde</h2>
 <div class="dato">29. — 31. maj 2026</div>
 <div class="sted">Eriksmindevej 15, 4581 Rørvig</div>
 <p style="margin-top:14px;font-size:14px;opacity:0.9;">Et gensyn med det velkendte hus i skovbrynet — som vi besøgte i 2014, 2020 og 2022. Ca. 3 km fra Rørvig by og havn, 5 minutter fra vandet.</p>
 </div>
+
 <div class="kort">
 <h2>Hjertelig velkommen</h2>
 <p>Så er der tilmelding til årets festlige skovtur — og vi ser frem til et gensyn med rigtig mange af klanens medlemmer.</p>
@@ -80,6 +109,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 <strong>Vigtigt:</strong> Det er ikke tilladt at medbringe husdyr, tænde lejrbål, eller slå telte/campingvogne op.
 </div>
 </div>
+
 <div class="kort">
 <h2>Priser</h2>
 <table class="priser-tabel">
@@ -96,6 +126,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 <p style="margin-top:14px;font-size:14px;color:#666;"><strong>I prisen er indregnet:</strong> Leje fra fredag kl. 16:30 til søndag, morgenbord lørdag, fælles aktiviteter samt rengøring søndag.</p>
 <p style="margin-top:8px;font-size:14px;color:#666;">Drikkevarer kan købes til familievenlige priser.</p>
 </div>
+
 <div class="kort">
 <h2>Tilmelding</h2>
 <p>Tilmelding og betaling sker via netbank eller på skovturen. Sidste frist: <strong>3. maj 2026</strong> af hensyn til planlægningen.</p>
@@ -111,6 +142,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 <p>Tilmelding kan også ske via hjemmesiden: <a href="https://www.olsenklanen.minisite.dk" target="_blank" style="color:#2d5016;font-weight:bold;">www.olsenklanen.minisite.dk</a></p>
 <p style="font-size:14px;color:#666;">Adgangskode: <strong>oldermand</strong></p>
 </div>
+
 <div class="kort">
 <h2>Generalforsamling — lørdag kl. 9.45</h2>
 <p>Den ordinære generalforsamling afholdes lørdag den 30. maj 2026 kl. 9.45.</p>
@@ -129,15 +161,141 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 <li>Foreløbig information om skovtur 2027</li>
 <li>Eventuelt</li>
 </ol>
+
+<h3 style="margin-top:20px;">📜 Foreningens vedtægter</h3>
+<p>Klik for at se OlsenKlanens vedtægter (vedtaget på generalforsamlingen):</p>
+<button class="vedtaegt-toggle" onclick="visVedtaegter()">📜 Vis vedtægterne</button>
+
+<div class="vedtaegt-indhold" id="vedtaegt-indhold">
+
+<div style="text-align:center;background:#faf3dc;padding:14px;border-radius:6px;margin:18px 0;border:1px solid #d4c89a;">
+<strong style="color:#2d5016;font-size:16px;">Vedtægter for Familieforeningen OlsenKlanen</strong><br>
+<span style="font-size:13px;color:#888;font-style:italic;">Fremlagt og godkendt på generalforsamlingen</span><br>
+<span style="font-size:13px;color:#666;margin-top:6px;display:inline-block;">📅 Udgave: 5. juni 2021</span>
 </div>
+
+<div class="paragraf">
+<div class="paragraf-titel"><span class="nummer">§1</span> Foreningens formål</div>
+<div class="paragraf-tekst">
+Med det formål at fastholde og fremme det sociale samvær mellem foreningens medlemmer, skal foreningen arrangere én årlig familieskovtur afholdt skiftevis øst og vest for Storebælt.
+</div>
+</div>
+
+<div class="paragraf">
+<div class="paragraf-titel"><span class="nummer">§2</span> Foreningens medlemmer</div>
+<div class="paragraf-tekst">
+For at kunne være medlem af foreningen skal man være direkte eller indirekte slægtsligt forbundet til OlsenKlanen — eller gennem nært venskab være knyttet til klanen.
+</div>
+</div>
+
+<div class="paragraf">
+<div class="paragraf-titel"><span class="nummer">§3</span> Bestyrelsen</div>
+<div class="paragraf-tekst">
+Bestyrelsen består af 3 medlemmer som vælges med simpelt stemmeflertal på foreningens generalforsamling. Alle bestyrelsesmedlemmer skal være medlem af Familieforeningen OlsenKlanen.
+</div>
+<div class="bestyrelse-liste">
+<div class="bestyrelse-rolle">
+<span class="rolle-navn">Formanden</span>
+<span>vælges mellem ældste generation.</span>
+</div>
+<div class="bestyrelse-rolle">
+<span class="rolle-navn">Kassereren</span>
+<span>vælges mellem samtlige medlemmer over 18 år.</span>
+</div>
+<div class="bestyrelse-rolle">
+<span class="rolle-navn">Sekretæren</span>
+<span>vælges mellem samtlige medlemmer over 18 år.</span>
+</div>
+</div>
+<div class="paragraf-tekst">
+Formanden kåres som <strong>Oldermand</strong> og er kun på valg ved forfald eller efter eget ønske.
+</div>
+<div class="paragraf-tekst">
+De øvrige bestyrelsesmedlemmer er valgt for 2 år ad gangen — genvalg kan finde sted, og der er ingen begrænsninger for, hvor mange gange genvalg kan ske.
+</div>
+</div>
+
+<div class="paragraf">
+<div class="paragraf-titel"><span class="nummer">§3b</span> Arrangementskomitéer</div>
+<div class="paragraf-tekst">
+Arrangementskomitéen vælges mellem samtlige medlemmer efter indstilling af arrangerende arrangementskomite. Foreningen har 3 typer arrangementskomitéer:
+</div>
+<div class="komite-blok">
+<div class="komite-titel">De 3 komitéer:</div>
+<ol>
+<li><strong>Arrangerende arrangementskomite</strong> — står for indeværende års arrangement. Har bl.a. til opgave at indstille valg af deltagere i følgende års arrangementskomite. Komiteen udarbejder referat af årets skovtur i samarbejde med foreningens bestyrelse — referatet fremsendes skriftligt sammen med invitation til kommende års familieskovtur.</li>
+<li><strong>Kommende års arrangementskomite</strong> — fremlægger foreløbig plan for kommende års arrangement på årets generalforsamling.</li>
+<li><strong>Følgende års komite</strong> — vælges på årets generalforsamling og har til opgave at planlægge følgende års skovtur. Planerne fremlægges på næste års generalforsamling.</li>
+</ol>
+</div>
+</div>
+
+<div class="paragraf">
+<div class="paragraf-titel"><span class="nummer">§4</span> Skovtur og generalforsamling</div>
+<div class="paragraf-tekst">
+Arrangementskomitéen arrangerer den årlige skovtur og generalforsamling. Indkaldelsen skal være skriftlig og fremsendes med mindst 1 måneds varsel.
+</div>
+<div class="paragraf-tekst">
+Generalforsamlingen afholdes i forbindelse med den årlige skovtur og har altid følgende dagsorden:
+</div>
+<div class="vedt-dagsorden">
+<ol>
+<li>Valg af dirigent — indstilles af arrangerende arrangementskomite</li>
+<li>Formandens fremlæggelse af beretning (fremsendt sammen med indkaldelse)</li>
+<li>Fremlæggelse af regnskab og fastlæggelse af årskontingent for det følgende år</li>
+<li>Indkomne forslag</li>
+<li>Valg af bestyrelse:
+<ol>
+<li>Kasserer i lige år</li>
+<li>Sekretær i ulige år</li>
+</ol>
+</li>
+<li>Kommende års arrangementskomite fremlægger plan for kommende års skovtur</li>
+<li>Valg af følgende års arrangementskomite</li>
+<li>Eventuelt</li>
+</ol>
+</div>
+</div>
+
+<div class="paragraf">
+<div class="paragraf-titel"><span class="nummer">§5</span> Kontingent</div>
+<div class="paragraf-tekst">
+Årskontingent pr. husstand til dækning af porto og fotokopiering m.v. fastlægges på den årlige generalforsamling efter indstilling af bestyrelsen.
+</div>
+</div>
+
+<div class="paragraf">
+<div class="paragraf-titel"><span class="nummer">§6</span> Ændring af vedtægter</div>
+<div class="paragraf-tekst">
+Foreningens vedtægter kan ændres med <strong>2/3 flertal</strong>. Hver husstand har én stemme uanset hvor mange personer husstanden tæller.
+</div>
+</div>
+
+<div class="paragraf">
+<div class="paragraf-titel"><span class="nummer">§7</span> Nedlæggelse</div>
+<div class="paragraf-tekst">
+Såfremt foreningen nedlægges, skal en eventuel formue tilfalde <strong>Kræftens Bekæmpelse</strong>.
+</div>
+</div>
+
+<div class="vedtaegt-footer">
+Således vedtaget den <strong>5. juni 2021</strong>.<br>
+🌲 Familieforeningen OlsenKlanen 🌲
+</div>
+
+</div>
+</div>
+
 <div class="kort">
 <h2>Program for weekenden</h2>
+
 <div class="program-dag">
 <h3>🌅 Fredag den 29. maj 2026</h3>
 <div class="program-tid"><div class="tid">Fra 16:30</div><div class="aktivitet">Velkomst og indkvartering</div></div>
 <div class="program-tid"><div class="tid">18:30 — 21:00</div><div class="aktivitet">Køkkenet er åbent — aftensmad (husk bestilling)</div></div>
 <div class="program-tid"><div class="tid">21:00 — ??</div><div class="aktivitet">Hygge og samvær</div></div>
 </div>
+
 <div class="program-dag">
 <h3>☀️ Lørdag den 30. maj 2026</h3>
 <p style="font-size:13px;color:#888;font-style:italic;margin-bottom:10px;">Tiderne er vejledende og kan rykkes begge veje.</p>
@@ -151,12 +309,14 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 <div class="program-tid"><div class="tid">16:30</div><div class="aktivitet">Kaffe/te og kage</div></div>
 <div class="program-tid"><div class="tid">20:00</div><div class="aktivitet">Flaget tages ned — vi spiser pølser</div></div>
 </div>
+
 <div class="program-dag">
 <h3>🌳 Søndag den 31. maj 2026</h3>
 <div class="program-tid"><div class="tid">08:00</div><div class="aktivitet">Morgenmad (husk bestilling)</div></div>
 <div class="program-tid"><div class="tid">09:00</div><div class="aktivitet">Alle hjælper med oprydning — vi gør klar til at forlade lejren</div></div>
 </div>
 </div>
+
 <div class="kort">
 <h2>Praktiske oplysninger</h2>
 <h3>Hvad skal du medbringe?</h3>
@@ -168,12 +328,15 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 <li>Evt. badetøj 🩱</li>
 <li>Spil til inde- og udebrug — til store og små 🎲</li>
 </ul>
+
 <h3>Overnatning</h3>
 <p>54 sengepladser fordelt på 1-, 2- og 4-personers rum.</p>
+
 <h3>Adresse og kørsel</h3>
 <p><strong>Eriksminde</strong><br>Eriksmindevej 15, 4581 Rørvig</p>
 <p style="font-size:14px;color:#666;">Brug GPS, Google Maps eller hvad du nu bruger til navigation.</p>
 </div>
+
 <div class="kort">
 <h2>Kontakt — Arrangementskomitéen</h2>
 <div class="kontakt-grid">
@@ -193,6 +356,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 <div class="tlf">22 74 44 87</div>
 </div>
 </div>
+
 <h3 style="margin-top:20px;">Konsulenter</h3>
 <div class="kontakt-grid">
 <div class="kontakt-kort">
@@ -202,9 +366,27 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 </div>
 </div>
 </div>
+
 <div class="footer-note">
 🌳 Vi glæder os til at se jer alle på Eriksminde! 🌳
 </div>
+
 </div>
+
+<script>
+function visVedtaegter() {
+  const ind = document.getElementById('vedtaegt-indhold');
+  const knap = document.querySelector('.vedtaegt-toggle');
+  if (ind.classList.contains('aaben')) {
+    ind.classList.remove('aaben');
+    knap.textContent = '📜 Vis vedtægterne';
+  } else {
+    ind.classList.add('aaben');
+    knap.textContent = '📜 Skjul vedtægterne';
+    ind.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+</script>
+
 </body>
 </html>
