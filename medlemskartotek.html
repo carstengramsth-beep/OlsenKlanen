@@ -683,9 +683,9 @@ function byggKort(m) {
   const navnVis   = visNavn(m);
   const adrVis    = visAdresse(m);
 
-  const familieHtml = ROLLE_GRUPPER
-    .map(g => byggPersonGruppe((m.familiemedlemmer||[]).filter(p => p.rolle === g.rolle), g.label))
-    .join('');
+ const familieHtml = ROLLE_GRUPPER
+.map(g => byggPersonGruppe((m.familiemedlemmer||[]).filter(p => p.rolle === g.rolle), g.label, m.nr, 1))
+.join('');
 
   const begiHtml = (m.begivenheder || []).length
     ? `<div class="begi-blok">
@@ -738,20 +738,27 @@ function byggKort(m) {
   return el;
 }
 
-function byggPersonGruppe(personer, label) {
-  if (!personer.length) return '';
-  return `<div style="margin-bottom:.8rem">
-    <div class="gruppe-titel">${label}</div>
-    ${personer.map(p => `
-      <div class="person-rad">
-        <span class="person-navn">${p.navn}</span>
-        <div class="person-detaljer">
-          ${p.mobil   ? `<span class="person-detalje">📱 ${p.mobil}</span>` : ''}
-          ${p.email   ? `<span class="person-detalje">✉️ <a href="mailto:${p.email}">${p.email}</a></span>` : ''}
-          ${p.foedselsdato ? `<span class="person-detalje">🎂 ${formatDato(p.foedselsdato)}</span>` : ''}
-        </div>
-      </div>`).join('')}
-  </div>`;
+function byggPersonGruppe(personer, label, husstandsNr, boernStart) {
+if (!personer.length) return '';
+return `<div style="margin-bottom:.8rem">
+<div class="gruppe-titel">${label}</div>
+${personer.map((p, i) => {
+const erBarn = p.rolle === 'barn';
+const personNr = erBarn ? `${husstandsNr}-${boernStart + i}` : husstandsNr;
+return `
+<div class="person-rad">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+<span style="background:var(--guld-lys);color:var(--tekst);padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700">${personNr}</span>
+<span class="person-navn">${p.navn}</span>
+</div>
+<div class="person-detaljer">
+${p.foedselsdato ? `<span class="person-detalje">🎂 ${formatDato(p.foedselsdato)}</span>` : `<span class="person-detalje" style="color:#aaa;font-style:italic">🎂 —</span>`}
+${p.mobil ? `<span class="person-detalje">📱 ${p.mobil}</span>` : `<span class="person-detalje" style="color:#aaa;font-style:italic">📱 ingen mobil</span>`}
+${p.email ? `<span class="person-detalje">✉️ <a href="mailto:${p.email}">${p.email}</a></span>` : `<span class="person-detalje" style="color:#aaa;font-style:italic">✉️ ingen email</span>`}
+</div>
+</div>`;
+}).join('')}
+</div>`;
 }
 
 // ── GRID-RENDER ───────────────────────────────────────────────
