@@ -821,7 +821,7 @@ function renderPersonEdit() {
   el.innerHTML = personListe.map((p, i) => `
     <div class="person-edit-kort">
       <div class="person-edit-hoed">
-        <span class="rolle-badge ${rolleKlasse(p.rolle)}">${p.rolle}</span>
+ <span style="background:var(--guld-lys);color:var(--tekst);padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;margin-right:6px">${p.rolle==='barn' ? `${aktivtNr}-${personListe.filter(x=>x.rolle==='barn').indexOf(p)+1}` : aktivtNr}</span><span class="rolle-badge ${rolleKlasse(p.rolle)}">${p.rolle}</span>
         <span class="person-edit-navn-vis">${p.navn || '(nyt medlem)'}</span>
         <button class="person-slet" data-slet="${i}">×</button>
       </div>
