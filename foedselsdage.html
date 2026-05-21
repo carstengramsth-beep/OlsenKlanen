@@ -3,17 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>OlsenKlanen — Mærkedage & Medlemskartotek</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; }
-.header { background: #2d5016; color: #f5e6a8; padding: 18px 30px; display: flex; justify-content: space-between; align-items: center; }
+.header { background: #2d5016; color: #f5e6a8; padding: 18px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
 .header h1 { font-size: 22px; }
-.header a { color: #f5e6a8; text-decoration: none; padding: 6px 14px; border: 1px solid #f5e6a8; border-radius: 4px; font-size: 14px; }
-.tabs { display: flex; background: #3a6020; padding: 0 30px; }
+.header-hojre { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.header a, .header button { color: #f5e6a8; text-decoration: none; padding: 6px 14px; border: 1px solid #f5e6a8; border-radius: 4px; font-size: 14px; background: none; cursor: pointer; font-family: inherit; }
+.header a:hover, .header button:hover { background: rgba(255,255,255,0.1); }
+.bruger-status { font-size: 13px; color: rgba(245,230,168,0.7); padding: 4px 10px; background: rgba(0,0,0,0.2); border-radius: 4px; }
+.tabs { display: flex; background: #3a6020; padding: 0 30px; flex-wrap: wrap; }
 .tab { padding: 14px 22px; color: #f5e6a8; cursor: pointer; border-bottom: 3px solid transparent; font-size: 15px; }
 .tab.active { background: #f5f1e8; color: #2d5016; border-bottom-color: #c89e3c; font-weight: bold; }
 .container { max-width: 1100px; margin: 0 auto; padding: 25px; }
+.loading-besked { text-align: center; padding: 40px; color: #6b6b6b; font-size: 15px; }
+.fejl-besked { background: #f8d7da; color: #721c24; padding: 14px 18px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #b03030; }
 .stats { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
 .stat { background: #fff; padding: 14px 20px; border-radius: 6px; flex: 1; min-width: 140px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
 .stat.klik { cursor: pointer; transition: transform 0.1s; }
@@ -24,406 +32,453 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .stat.red .stat-num { color: #b03030; }
 .month { background: #fff; margin-bottom: 14px; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
 .month-title { background: #c89e3c; color: #2d5016; padding: 10px 18px; font-size: 17px; font-weight: bold; }
-.event { padding: 10px 18px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+.event { padding: 10px 18px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
 .event:last-child { border-bottom: none; }
 .event-date { font-weight: bold; color: #2d5016; min-width: 65px; }
-.event-name { flex: 1; padding: 0 12px; }
+.event-name { flex: 1; padding: 0 12px; min-width: 150px; }
 .event-extra { color: #888; font-size: 13px; }
 .event.milestone { background: #fff8e1; }
 .event.milestone .event-extra { color: #c89e3c; font-weight: bold; }
 .search-box { width: 100%; padding: 10px 14px; font-size: 15px; border: 1px solid #c4b896; border-radius: 4px; margin-bottom: 16px; background: #fff; }
-.person-row { background: #fff; padding: 10px 16px; margin-bottom: 4px; border-radius: 4px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.person-row { background: #fff; padding: 10px 16px; margin-bottom: 4px; border-radius: 4px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); flex-wrap: wrap; }
 .person-num { background: #2d5016; color: #f5e6a8; padding: 3px 9px; border-radius: 3px; font-size: 12px; font-weight: bold; min-width: 50px; text-align: center; font-family: monospace; }
-.person-name { flex: 1; font-size: 15px; }
+.person-name { flex: 1; font-size: 15px; min-width: 200px; }
 .person-date { color: #666; font-size: 13px; min-width: 100px; }
 .person-status { font-size: 11px; padding: 3px 8px; border-radius: 3px; text-transform: uppercase; white-space: nowrap; }
 .status-green { background: #d4edda; color: #155724; }
 .status-yellow { background: #fff3cd; color: #856404; }
 .status-red { background: #f8d7da; color: #721c24; }
-.btn-edit { background: #2d5016; color: #f5e6a8; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.btn-edit { background: #2d5016; color: #f5e6a8; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; font-family: inherit; }
 .btn-edit:hover { background: #1d3a0f; }
 .btn-fix { background: #b03030; color: #fff; }
 .btn-fix:hover { background: #8a2424; }
 .zone-b-row { background: #fff5f5; border-left: 4px solid #b03030; }
 .zone-yellow-row { background: #fffdf0; border-left: 4px solid #c89e3c; }
 .bemark { font-size: 12px; color: #888; font-style: italic; margin-top: 4px; }
-.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
-.modal-bg.show { display: flex; }
-.modal { background: #fff; padding: 25px; border-radius: 8px; max-width: 500px; width: 90%; max-height: 85vh; overflow-y: auto; }
-.modal h3 { color: #2d5016; margin-bottom: 12px; }
-.modal-note { background: #fff8e1; border-left: 4px solid #c89e3c; padding: 10px 14px; margin-bottom: 16px; font-size: 14px; color: #6b5b1f; }
-.field { margin-bottom: 12px; }
-.field label { display: block; font-size: 13px; color: #555; margin-bottom: 4px; }
-.field input { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-.modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
-.btn-save { background: #2d7a2d; color: #fff; border: none; padding: 9px 18px; border-radius: 4px; cursor: pointer; }
-.btn-cancel { background: #888; color: #fff; border: none; padding: 9px 18px; border-radius: 4px; cursor: pointer; }
-.hidden { display: none !important; }
+.kun-admin { display: none; }
+body.kan-redigere .kun-admin { display: inline-block; }
+.info-boks { background: #fff8e1; border-left: 4px solid #c89e3c; padding: 12px 16px; border-radius: 4px; font-size: 13px; color: #6b5b1f; margin-bottom: 16px; }
+.info-boks strong { color: #2d5016; }
 </style>
 </head>
 <body>
+ 
 <div class="header">
-<h1>OlsenKlanen — Mærkedage & Medlemskartotek</h1>
-<a href="forside.html">← Tilbage til forsiden</a>
+  <h1>OlsenKlanen — Mærkedage & Medlemskartotek</h1>
+  <div class="header-hojre">
+    <span class="bruger-status" id="bruger-status">Indlæser…</span>
+    <a href="medlemskartotek.html">📇 Medlemskartotek</a>
+    <a href="index.html">← Forside</a>
+  </div>
 </div>
+ 
 <div class="tabs">
-<div class="tab active" onclick="visFane('kalender', this)">Begivenhedskalender</div>
-<div class="tab" onclick="visFane('alle', this)">Alle medlemmer</div>
-<div class="tab" onclick="visFane('zoneB', this)">Skal rettes</div>
+  <div class="tab active" onclick="visFane('kalender', this)">📅 Begivenhedskalender</div>
+  <div class="tab" onclick="visFane('alle', this)">👥 Alle medlemmer</div>
+  <div class="tab" onclick="visFane('zoneB', this)">⚠️ Skal rettes</div>
 </div>
+ 
 <div class="container">
-<div class="stats">
-<div class="stat klik" onclick="visListe('alle')"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Personer i alt</div></div>
-<div class="stat green klik" onclick="visListe('godkendt')"><div class="stat-num" id="stat-godkendt">0</div><div class="stat-label">Godkendt</div></div>
-<div class="stat red klik" onclick="visListe('fejl')"><div class="stat-num" id="stat-fejl">0</div><div class="stat-label">Skal rettes</div></div>
-<div class="stat klik" onclick="visListe('husstande')"><div class="stat-num" id="stat-husstande">0</div><div class="stat-label">Husstande</div></div>
+ 
+  <div class="info-boks">
+    <strong>📌 Bemærk:</strong> Alle rettelser sker i <a href="medlemskartotek.html" style="color:#2d5016;font-weight:bold;">Medlemskartoteket</a>. Denne side viser de samme data, men sorteret efter fødselsdage og fejl. Klik på "Ret i kartoteket" for at rette en person.
+  </div>
+ 
+  <div id="fejl-omraade"></div>
+ 
+  <div class="stats">
+    <div class="stat klik" onclick="visListe('alle')"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Personer i alt</div></div>
+    <div class="stat green klik" onclick="visListe('godkendt')"><div class="stat-num" id="stat-godkendt">—</div><div class="stat-label">Komplet data</div></div>
+    <div class="stat red klik" onclick="visListe('fejl')"><div class="stat-num" id="stat-fejl">—</div><div class="stat-label">Skal rettes</div></div>
+    <div class="stat klik" onclick="visListe('husstande')"><div class="stat-num" id="stat-husstande">—</div><div class="stat-label">Husstande</div></div>
+  </div>
+ 
+  <div id="fane-kalender" class="fane">
+    <div id="kalender-content"><div class="loading-besked">Henter data fra databasen…</div></div>
+  </div>
+ 
+  <div id="fane-alle" class="fane" style="display:none">
+    <input type="text" class="search-box" id="sog-alle" placeholder="🔍 Søg på medlemsnummer, navn eller husstand" oninput="byggAlle()">
+    <div id="alle-content"></div>
+  </div>
+ 
+  <div id="fane-zoneB" class="fane" style="display:none">
+    <p style="margin-bottom:14px; color:#6b5b1f; background:#fff8e1; padding:10px 14px; border-radius:4px;">Disse personer mangler data eller har fejl, der skal rettes i medlemskartoteket.</p>
+    <div id="zoneB-content"></div>
+  </div>
+ 
 </div>
-<div id="fane-kalender" class="fane"><div id="kalender-content"></div></div>
-<div id="fane-alle" class="fane hidden">
-<input type="text" class="search-box" id="sog-alle" placeholder="Søg på medlemsnummer eller navn" oninput="byggAlle()">
-<div id="alle-content"></div>
-</div>
-<div id="fane-zoneB" class="fane hidden">
-<p style="margin-bottom:14px; color:#6b5b1f; background:#fff8e1; padding:10px 14px; border-radius:4px;">Disse personer skal rettes.</p>
-<div id="zoneB-content"></div>
-</div>
-</div>
-<div class="modal-bg" id="modal-rediger">
-<div class="modal">
-<h3 id="modal-titel">Ret medlem</h3>
-<div class="modal-note" id="modal-bemark"></div>
-<div class="field"><label>Fornavn</label><input type="text" id="f-fornavn"></div>
-<div class="field"><label>Efternavn</label><input type="text" id="f-efternavn"></div>
-<div class="field"><label>Medlemsnummer</label><input type="text" id="f-nr" onfocus="visLedigeNumre()" oninput="visLedigeNumre()"><div id="ledige-forslag" style="display:none;background:#f5f1e8;border:1px solid #c4b896;border-radius:4px;margin-top:6px;max-height:200px;overflow-y:auto;font-size:13px;"></div></div>
-<div class="field"><label>Husstand</label><input type="text" id="f-husstand"></div>
-<div class="field"><label>Rolle</label><input type="text" id="f-rolle"></div>
-<div class="field"><label>Fødselsdato (DD-MM-ÅÅÅÅ)</label><input type="text" id="f-fdato"></div>
-<div class="field"><label>Adresse</label><input type="text" id="f-adresse"></div>
-<div class="field"><label>Telefon</label><input type="text" id="f-telefon"></div>
-<div class="field"><label>E-mail</label><input type="text" id="f-email"></div>
-<div class="modal-btns">
-<button class="btn-cancel" onclick="lukModal()">Annuller</button>
-<button class="btn-save" onclick="gemRettelse()">Godkend rettelse</button>
-</div>
-</div>
-</div>
-<script>
-const medlemmer = [
-{nr:"004", under:"004", fornavn:"Mette", efternavn:"Westergaard-Hansen", fdato:"08-04-1972", rolle:"Forælder", husstand:"Mette & Allan", status:"green", bemark:"OK"},
-{nr:"004", under:"004", fornavn:"Allan", efternavn:"Westergaard-Hansen", fdato:"15-09-1970", rolle:"Forælder", husstand:"Mette & Allan", status:"green", bemark:"OK"},
-{nr:"004", under:"004-1", fornavn:"Magnus", efternavn:"Westergaard-Hansen", fdato:"12-06-2002", rolle:"Barn", husstand:"Mette & Allan", status:"green", bemark:"OK"},
-{nr:"004", under:"004-2", fornavn:"Sofie", efternavn:"Westergaard-Hansen", fdato:"22-11-2005", rolle:"Barn", husstand:"Mette & Allan", status:"green", bemark:"OK"},
-{nr:"005", under:"005", fornavn:"Lone", efternavn:"Gram", fdato:"03-02-1958", rolle:"Forælder", husstand:"Lone Gram", status:"green", bemark:"OK"},
-{nr:"006", under:"006", fornavn:"Karin", efternavn:"Lund", fdato:"12-03-1962", rolle:"Forælder", husstand:"Karin & Richard", status:"green", bemark:"OK"},
-{nr:"006", under:"006", fornavn:"Richard", efternavn:"Lund", fdato:"24-06-1959", rolle:"Forælder", husstand:"Karin & Richard", status:"green", bemark:"OK"},
-{nr:"006", under:"006-1", fornavn:"Flemming", efternavn:"Lund", fdato:"18-05-1988", rolle:"Barn", husstand:"Karin & Richard", status:"green", bemark:"OK"},
-{nr:"006", under:"006-2", fornavn:"Amalia Sofie", efternavn:"Lund", fdato:"04-09-1992", rolle:"Barn", husstand:"Karin & Richard", status:"yellow", bemark:"Stavefejl i PDF"},
-{nr:"007", under:"007", fornavn:"Bent", efternavn:"Olsen", fdato:"19-07-1955", rolle:"Forælder", husstand:"Bent Olsen", status:"green", bemark:"OK"},
-{nr:"008", under:"008", fornavn:"Carsten", efternavn:"Gram", fdato:"24-05-1966", rolle:"Forælder", husstand:"Carsten & Elisabeth", status:"green", bemark:"Admin OK"},
-{nr:"008", under:"008", fornavn:"Elisabeth", efternavn:"Gram", fdato:"", rolle:"Forælder", husstand:"Carsten & Elisabeth", status:"red", bemark:"MANGLER FØDSELSDATO. Carstens kone."},
-{nr:"060", under:"060", fornavn:"Trine", efternavn:"Gram", fdato:"02-10-1968", rolle:"Forælder", husstand:"Trine Gram", status:"red", bemark:"NYT MEDLEM. Tildel korrekt nr."},
-{nr:"060", under:"060-1", fornavn:"Esther", efternavn:"Gram", fdato:"", rolle:"Barn", husstand:"Trine Gram", status:"red", bemark:"MANGLER FØDSELSDATO. Trines datter."},
-{nr:"061", under:"061", fornavn:"Sanne", efternavn:"Gram", fdato:"14-08-1992", rolle:"Forælder", husstand:"Sanne Gram", status:"red", bemark:"NYT MEDLEM. Tildel korrekt nr."},
-{nr:"061", under:"061-1", fornavn:"Emma", efternavn:"Gram", fdato:"", rolle:"Barn", husstand:"Sanne Gram", status:"red", bemark:"MANGLER FØDSELSDATO. Sannes datter."},
-{nr:"061", under:"061-2", fornavn:"Luna", efternavn:"Gram", fdato:"", rolle:"Barn", husstand:"Sanne Gram", status:"red", bemark:"MANGLER FØDSELSDATO. Sannes datter."},
-{nr:"062", under:"062", fornavn:"René", efternavn:"Gram", fdato:"07-03-1995", rolle:"Forælder", husstand:"René Gram", status:"red", bemark:"NYT MEDLEM. Tildel korrekt nr."},
-{nr:"010", under:"010", fornavn:"Jannie", efternavn:"Olsen", fdato:"11-11-1975", rolle:"Forælder", husstand:"Jannie & Jannik", status:"red", bemark:"DUBLET med nr 13"},
-{nr:"010", under:"010", fornavn:"Jannik", efternavn:"Olsen", fdato:"23-04-1973", rolle:"Forælder", husstand:"Jannie & Jannik", status:"red", bemark:"DUBLET med nr 13"},
-{nr:"010", under:"010-1", fornavn:"Mikkel", efternavn:"Olsen", fdato:"05-12-2001", rolle:"Barn", husstand:"Jannie & Jannik", status:"green", bemark:"OK"},
-{nr:"011", under:"011", fornavn:"Hans", efternavn:"Olsen", fdato:"30-01-1948", rolle:"Forælder", husstand:"Hans & Inge", status:"green", bemark:"OK"},
-{nr:"011", under:"011", fornavn:"Inge", efternavn:"Olsen", fdato:"17-06-1950", rolle:"Forælder", husstand:"Hans & Inge", status:"green", bemark:"OK"},
-{nr:"012", under:"012", fornavn:"Peter", efternavn:"Olsen", fdato:"08-08-1965", rolle:"Forælder", husstand:"Peter & Mette", status:"green", bemark:"OK"},
-{nr:"012", under:"012", fornavn:"Mette", efternavn:"Olsen", fdato:"21-02-1967", rolle:"Forælder", husstand:"Peter & Mette", status:"green", bemark:"OK"},
-{nr:"012", under:"012-1", fornavn:"Emil", efternavn:"Olsen", fdato:"14-10-1998", rolle:"Barn", husstand:"Peter & Mette", status:"green", bemark:"OK"},
-{nr:"012", under:"012-2", fornavn:"Frederik", efternavn:"Olsen", fdato:"03-07-2001", rolle:"Barn", husstand:"Peter & Mette", status:"green", bemark:"OK"},
-{nr:"014", under:"014", fornavn:"Kurt", efternavn:"Olsen", fdato:"26-09-1960", rolle:"Forælder", husstand:"Kurt & Lis", status:"green", bemark:"OK OlsenBanden"},
-{nr:"014", under:"014", fornavn:"Lis", efternavn:"Olsen", fdato:"19-12-1962", rolle:"Forælder", husstand:"Kurt & Lis", status:"green", bemark:"OK"},
-{nr:"014", under:"014-1", fornavn:"Pernille", efternavn:"Olsen", fdato:"09-05-1990", rolle:"Barn", husstand:"Kurt & Lis", status:"green", bemark:"OK"},
-{nr:"015", under:"015", fornavn:"Tommy", efternavn:"Olsen", fdato:"24-05-1966", rolle:"Forælder", husstand:"Tommy & Anne", status:"green", bemark:"OK Fylder 60"},
-{nr:"015", under:"015", fornavn:"Anne", efternavn:"Olsen", fdato:"15-11-1968", rolle:"Forælder", husstand:"Tommy & Anne", status:"green", bemark:"OK"},
-{nr:"015", under:"015-1", fornavn:"Jonas", efternavn:"Olsen", fdato:"22-03-1995", rolle:"Barn", husstand:"Tommy & Anne", status:"green", bemark:"OK"},
-{nr:"015", under:"015-2", fornavn:"Laura", efternavn:"Olsen", fdato:"08-08-1998", rolle:"Barn", husstand:"Tommy & Anne", status:"green", bemark:"OK"},
-{nr:"016", under:"016", fornavn:"Birgit", efternavn:"Olsen", fdato:"04-04-1953", rolle:"Forælder", husstand:"Birgit Olsen", status:"green", bemark:"OK"},
-{nr:"017", under:"017", fornavn:"Lili", efternavn:"Olsen", fdato:"01-01-1945", rolle:"Forælder", husstand:"Lili Olsen", status:"green", bemark:"OK"},
-{nr:"019", under:"019", fornavn:"Søren", efternavn:"Olsen", fdato:"12-12-1970", rolle:"Forælder", husstand:"Søren & Mette", status:"green", bemark:"OK"},
-{nr:"019", under:"019", fornavn:"Mette", efternavn:"Olsen", fdato:"05-03-1972", rolle:"Forælder", husstand:"Søren & Mette", status:"green", bemark:"OK"},
-{nr:"019", under:"019-1", fornavn:"Cecilie", efternavn:"Olsen", fdato:"18-09-2003", rolle:"Barn", husstand:"Søren & Mette", status:"green", bemark:"OK"},
-{nr:"020", under:"020", fornavn:"Else", efternavn:"Olsen", fdato:"27-07-1942", rolle:"Forælder", husstand:"Else Olsen", status:"green", bemark:"OK"},
-{nr:"021", under:"021", fornavn:"Rikke V.", efternavn:"Tingberg", fdato:"16-04-1980", rolle:"Forælder", husstand:"Rikke Tingberg", status:"red", bemark:"DUBLET med nr 52"},
-{nr:"021", under:"021-1", fornavn:"Mathilde", efternavn:"Tingberg", fdato:"02-06-2008", rolle:"Barn", husstand:"Rikke Tingberg", status:"green", bemark:"OK"},
-{nr:"022", under:"022", fornavn:"Klaus", efternavn:"Olsen", fdato:"13-11-1963", rolle:"Forælder", husstand:"Klaus & Susanne", status:"green", bemark:"OK"},
-{nr:"022", under:"022", fornavn:"Susanne", efternavn:"Olsen", fdato:"29-08-1965", rolle:"Forælder", husstand:"Klaus & Susanne", status:"green", bemark:"OK"},
-{nr:"024", under:"024", fornavn:"Henrik", efternavn:"Olsen", fdato:"07-02-1958", rolle:"Forælder", husstand:"Henrik & Vibeke", status:"green", bemark:"OK"},
-{nr:"024", under:"024", fornavn:"Vibeke", efternavn:"Olsen", fdato:"19-10-1960", rolle:"Forælder", husstand:"Henrik & Vibeke", status:"green", bemark:"OK"},
-{nr:"024", under:"024-1", fornavn:"Anders", efternavn:"Olsen", fdato:"04-04-1989", rolle:"Barn", husstand:"Henrik & Vibeke", status:"green", bemark:"OK"},
-{nr:"024", under:"024-2", fornavn:"Maria", efternavn:"Olsen", fdato:"22-07-1993", rolle:"Barn", husstand:"Henrik & Vibeke", status:"green", bemark:"OK"},
-{nr:"026", under:"026", fornavn:"Bodil", efternavn:"Olsen", fdato:"11-05-1949", rolle:"Forælder", husstand:"Bodil Olsen", status:"green", bemark:"OK"},
-{nr:"027", under:"027", fornavn:"Lilli Vinifred", efternavn:"Olsen", fdato:"23-09-1927", rolle:"Forælder", husstand:"Lilli Olsen", status:"green", bemark:"OK"},
-{nr:"028", under:"028", fornavn:"Mogens", efternavn:"Olsen", fdato:"05-06-1951", rolle:"Forælder", husstand:"Mogens & Lise", status:"green", bemark:"OK"},
-{nr:"028", under:"028", fornavn:"Lise", efternavn:"Olsen", fdato:"14-01-1954", rolle:"Forælder", husstand:"Mogens & Lise", status:"green", bemark:"OK"},
-{nr:"029", under:"029", fornavn:"Jesper Majgaard", efternavn:"Olsen", fdato:"14-07-1991", rolle:"Forælder", husstand:"Jesper Majgaard", status:"green", bemark:"OK"},
-{nr:"030", under:"030", fornavn:"Niels", efternavn:"Olsen", fdato:"28-02-1956", rolle:"Forælder", husstand:"Niels & Hanne", status:"green", bemark:"OK"},
-{nr:"030", under:"030", fornavn:"Hanne", efternavn:"Olsen", fdato:"09-09-1959", rolle:"Forælder", husstand:"Niels & Hanne", status:"green", bemark:"OK"},
-{nr:"030", under:"030-1", fornavn:"Christian", efternavn:"Olsen", fdato:"17-04-1985", rolle:"Barn", husstand:"Niels & Hanne", status:"green", bemark:"OK"},
-{nr:"031", under:"031", fornavn:"Lars", efternavn:"Olsen", fdato:"01-08-1968", rolle:"Forælder", husstand:"Lars & Charlotte", status:"green", bemark:"OK"},
-{nr:"031", under:"031", fornavn:"Charlotte", efternavn:"Olsen", fdato:"24-12-1970", rolle:"Forælder", husstand:"Lars & Charlotte", status:"green", bemark:"OK"},
-{nr:"031", under:"031-1", fornavn:"Sebastian", efternavn:"Olsen", fdato:"30-05-2000", rolle:"Barn", husstand:"Lars & Charlotte", status:"green", bemark:"OK"},
-{nr:"031", under:"031-2", fornavn:"Emma", efternavn:"Olsen", fdato:"12-08-2003", rolle:"Barn", husstand:"Lars & Charlotte", status:"green", bemark:"OK"},
-{nr:"032", under:"032", fornavn:"Ole", efternavn:"Olsen", fdato:"06-10-1944", rolle:"Forælder", husstand:"Ole & Gerda", status:"green", bemark:"OK"},
-{nr:"032", under:"032", fornavn:"Gerda", efternavn:"Olsen", fdato:"15-02-1947", rolle:"Forælder", husstand:"Ole & Gerda", status:"green", bemark:"OK"},
-{nr:"033", under:"033", fornavn:"Anne-Marie", efternavn:"Olsen", fdato:"19-06-1957", rolle:"Forælder", husstand:"Anne-Marie", status:"green", bemark:"OK"},
-{nr:"034", under:"034", fornavn:"Erik", efternavn:"Olsen", fdato:"03-03-1961", rolle:"Forælder", husstand:"Erik & Bente", status:"green", bemark:"OK"},
-{nr:"034", under:"034", fornavn:"Bente", efternavn:"Olsen", fdato:"22-11-1964", rolle:"Forælder", husstand:"Erik & Bente", status:"green", bemark:"OK"},
-{nr:"035", under:"035", fornavn:"Finn", efternavn:"Lennert", fdato:"08-05-1952", rolle:"Forælder", husstand:"Finn Lennert", status:"yellow", bemark:"MODSTRID navn"},
-{nr:"036", under:"036", fornavn:"Marianne", efternavn:"Olsen", fdato:"14-04-1963", rolle:"Forælder", husstand:"Marianne & Per", status:"green", bemark:"OK"},
-{nr:"036", under:"036", fornavn:"Per", efternavn:"Olsen", fdato:"02-09-1961", rolle:"Forælder", husstand:"Marianne & Per", status:"green", bemark:"OK"},
-{nr:"037", under:"037", fornavn:"Steen", efternavn:"Olsen", fdato:"11-01-1969", rolle:"Forælder", husstand:"Steen & Helle", status:"green", bemark:"OK"},
-{nr:"037", under:"037", fornavn:"Helle", efternavn:"Olsen", fdato:"25-07-1971", rolle:"Forælder", husstand:"Steen & Helle", status:"green", bemark:"OK"},
-{nr:"037", under:"037-1", fornavn:"Thomas", efternavn:"Olsen", fdato:"08-12-1997", rolle:"Barn", husstand:"Steen & Helle", status:"green", bemark:"OK"},
-{nr:"038", under:"038", fornavn:"Jens", efternavn:"Olsen", fdato:"17-08-1959", rolle:"Forælder", husstand:"Jens & Birte", status:"green", bemark:"OK"},
-{nr:"038", under:"038", fornavn:"Birte", efternavn:"Olsen", fdato:"30-04-1962", rolle:"Forælder", husstand:"Jens & Birte", status:"green", bemark:"OK"},
-{nr:"039", under:"039", fornavn:"Vibeke", efternavn:"Olsen", fdato:"06-11-1955", rolle:"Forælder", husstand:"Vibeke Olsen", status:"green", bemark:"OK"},
-{nr:"040", under:"040", fornavn:"Jørgen", efternavn:"Olsen", fdato:"21-05-1965", rolle:"Forælder", husstand:"Jørgen & Tina", status:"green", bemark:"OK"},
-{nr:"040", under:"040", fornavn:"Tina", efternavn:"Olsen", fdato:"04-10-1967", rolle:"Forælder", husstand:"Jørgen & Tina", status:"green", bemark:"OK"},
-{nr:"040", under:"040-1", fornavn:"Nikolaj", efternavn:"Olsen", fdato:"16-02-1994", rolle:"Barn", husstand:"Jørgen & Tina", status:"green", bemark:"OK"},
-{nr:"040", under:"040-2", fornavn:"Caroline", efternavn:"Olsen", fdato:"27-09-1996", rolle:"Barn", husstand:"Jørgen & Tina", status:"green", bemark:"OK"},
-{nr:"041", under:"041", fornavn:"Inga", efternavn:"Olsen", fdato:"10-03-1940", rolle:"Forælder", husstand:"Inga Olsen", status:"green", bemark:"OK"},
-{nr:"042", under:"042", fornavn:"Michael", efternavn:"Olsen", fdato:"08-07-1972", rolle:"Forælder", husstand:"Michael & Camilla", status:"green", bemark:"OK"},
-{nr:"042", under:"042", fornavn:"Camilla", efternavn:"Olsen", fdato:"19-11-1974", rolle:"Forælder", husstand:"Michael & Camilla", status:"green", bemark:"OK"},
-{nr:"043", under:"043", fornavn:"Tom", efternavn:"Olsen", fdato:"", rolle:"Forælder", husstand:"Tom & Margit", status:"red", bemark:"MANGLER FØDSELSDATO"},
-{nr:"043", under:"043", fornavn:"Margit", efternavn:"Olsen", fdato:"", rolle:"Forælder", husstand:"Tom & Margit", status:"red", bemark:"MANGLER FØDSELSDATO"},
-{nr:"044", under:"044", fornavn:"Knud", efternavn:"Olsen", fdato:"23-01-1950", rolle:"Forælder", husstand:"Knud & Gitte", status:"green", bemark:"OK"},
-{nr:"044", under:"044", fornavn:"Gitte", efternavn:"Olsen", fdato:"06-06-1953", rolle:"Forælder", husstand:"Knud & Gitte", status:"green", bemark:"OK"},
-{nr:"045", under:"045", fornavn:"Flemming", efternavn:"Lund", fdato:"", rolle:"Forælder", husstand:"Flemming Lund", status:"red", bemark:"MANGLER ALT"},
-{nr:"046", under:"046", fornavn:"Helle", efternavn:"Lund", fdato:"12-08-1976", rolle:"Forælder", husstand:"Helle & Brian", status:"green", bemark:"OK"},
-{nr:"046", under:"046", fornavn:"Brian", efternavn:"Lund", fdato:"03-04-1974", rolle:"Forælder", husstand:"Helle & Brian", status:"green", bemark:"OK"},
-{nr:"046", under:"046-1", fornavn:"Oliver", efternavn:"Lund", fdato:"15-10-2005", rolle:"Barn", husstand:"Helle & Brian", status:"green", bemark:"OK"},
-{nr:"047", under:"047", fornavn:"Mette", efternavn:"Westergaard-Hansen", fdato:"08-04-1972", rolle:"Forælder", husstand:"Mette W-H", status:"red", bemark:"DUBLET med nr 4"},
-{nr:"048", under:"048", fornavn:"Britt", efternavn:"Olsen", fdato:"29-03-1968", rolle:"Forælder", husstand:"Britt & Lasse", status:"green", bemark:"OK"},
-{nr:"048", under:"048", fornavn:"Lasse", efternavn:"Olsen", fdato:"11-12-1965", rolle:"Forælder", husstand:"Britt & Lasse", status:"green", bemark:"OK"},
-{nr:"049", under:"049", fornavn:"Dorthe", efternavn:"Olsen", fdato:"04-07-1962", rolle:"Forælder", husstand:"Dorthe & Henning", status:"green", bemark:"OK"},
-{nr:"049", under:"049", fornavn:"Henning", efternavn:"Olsen", fdato:"18-05-1960", rolle:"Forælder", husstand:"Dorthe & Henning", status:"green", bemark:"OK"},
-{nr:"050", under:"050", fornavn:"Diana", efternavn:"Lund", fdato:"22-10-1978", rolle:"Forælder", husstand:"Diana", status:"yellow", bemark:"MODSTRID Lund eller Larsen"},
-{nr:"051", under:"051", fornavn:"Lone", efternavn:"Hernvig", fdato:"07-09-1971", rolle:"Forælder", husstand:"Familien Hernvig", status:"green", bemark:"OK"},
-{nr:"051", under:"051", fornavn:"Martin", efternavn:"Hernvig", fdato:"14-02-1969", rolle:"Forælder", husstand:"Familien Hernvig", status:"red", bemark:"MODSTRID navn"},
-{nr:"051", under:"051-1", fornavn:"Sigurd Præstegaard", efternavn:"Olsen", fdato:"19-06-2002", rolle:"Barn", husstand:"Familien Hernvig", status:"yellow", bemark:"To forskellige FØDSELSDATOer"},
-{nr:"052", under:"052", fornavn:"Rikke V.", efternavn:"Tingberg", fdato:"16-04-1980", rolle:"Forælder", husstand:"Rikke Tingberg", status:"red", bemark:"DUBLET med nr 21"},
-{nr:"053", under:"053", fornavn:"Pia", efternavn:"Olsen", fdato:"25-11-1973", rolle:"Forælder", husstand:"Pia & Søren", status:"green", bemark:"OK"},
-{nr:"053", under:"053", fornavn:"Søren", efternavn:"Olsen", fdato:"06-08-1971", rolle:"Forælder", husstand:"Pia & Søren", status:"green", bemark:"OK"},
-{nr:"054", under:"054", fornavn:"Ulla", efternavn:"Olsen", fdato:"13-04-1946", rolle:"Forælder", husstand:"Ulla Olsen", status:"green", bemark:"OK"},
-{nr:"055", under:"055", fornavn:"Bjarne", efternavn:"Olsen", fdato:"28-06-1956", rolle:"Forælder", husstand:"Bjarne & Connie", status:"green", bemark:"OK"},
-{nr:"055", under:"055", fornavn:"Connie", efternavn:"Olsen", fdato:"11-10-1958", rolle:"Forælder", husstand:"Bjarne & Connie", status:"green", bemark:"OK"},
-{nr:"???", under:"???", fornavn:"Per", efternavn:"Beknow", fdato:"05-05-1965", rolle:"Forælder", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER"},
-{nr:"???", under:"???", fornavn:"Bettina", efternavn:"Beknow", fdato:"22-08-1967", rolle:"Forælder", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER"},
-{nr:"???", under:"???", fornavn:"Lars", efternavn:"Beknow", fdato:"14-03-1995", rolle:"Barn", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER"},
-{nr:"???", under:"???", fornavn:"Laura", efternavn:"Beknow", fdato:"07-11-1998", rolle:"Barn", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER"},
-{nr:"???", under:"???", fornavn:"Line", efternavn:"Beknow", fdato:"19-09-2001", rolle:"Barn", husstand:"Familien Beknow", status:"red", bemark:"MANGLER MEDLEMSNUMMER"},
-{nr:"???", under:"???", fornavn:"Rasmus", efternavn:"Billstrøm", fdato:"02-04-1990", rolle:"Andet", husstand:"Usikker", status:"red", bemark:"MANGLER MEDLEMSNUMMER"}
-];
-const måneder = ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"];
-function parseDato(s) { if (!s) return null; const [d,m,y]=s.split("-").map(n=>parseInt(n)); return {dag:d,mnd:m,aar:y}; }
-function erRund(a) { return [40,50,60,70,75,80,85,90,95,100].includes(a); }
-function statusTekst(m) {
-  if(m.status === 'green') return 'Godkendt';
-  const mangler = [];
-  if(m.under === '???' || !m.under) mangler.push('medlemsnr');
-  if(!m.fdato) mangler.push('fødselsdato');
-  if(!m.efternavn || !m.fornavn) mangler.push('navn');
-  const b = (m.bemark||'').toUpperCase();
-  if(b.includes('DUBLET')) {
-    const match = m.bemark.match(/nr\s*(\d+)/i);
-    return match ? 'DUBLET nr '+match[1] : 'DUBLET';
+ 
+<script type="module">
+import { initializeApp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, getDoc }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+ 
+const firebaseConfig = {
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+};
+ 
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+ 
+// ── STATE ───────────────────────────────────────────────────
+let alleMedlemmer = [];   // Flad liste af alle personer (forældre + børn)
+let alleHusstande = [];   // Husstandsdata fra Firebase
+let filterType = 'alle';
+ 
+const MAANEDER = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december'];
+ 
+// ── AUTH ────────────────────────────────────────────────────
+onAuthStateChanged(auth, user => {
+  if (user) {
+    document.body.classList.add('kan-redigere');
+    document.getElementById('bruger-status').textContent = '🔑 ' + (user.email || 'Admin');
+  } else {
+    document.body.classList.remove('kan-redigere');
+    document.getElementById('bruger-status').textContent = '👁 Læs-tilstand';
   }
-  if(b.includes('MODSTRID') && b.includes('NAVN')) return 'Navn modstrid';
-  if(b.includes('MODSTRID') && b.includes('FØDSEL')) return 'Dato modstrid';
-  if(b.includes('MODSTRID')) return 'Modstrid';
-  if(b.includes('STAVEFEJL')) return 'Stavefejl';
-  if(b.includes('TILDEL') || b.includes('NYT MEDLEM')) return 'Mangler nyt nr';
-  if(mangler.length > 0) return 'Mangler '+mangler.join(' + ');
-  return m.status==='red' ? 'Skal rettes' : 'Modstrid';
+});
+ 
+// ── HENT DATA FRA FIREBASE ──────────────────────────────────
+async function hentData() {
+  try {
+    const snap = await getDocs(collection(db, 'membres'));
+    alleHusstande = [];
+    snap.forEach(d => {
+      const data = d.data();
+      if (!data.nr) data.nr = d.id;
+      alleHusstande.push(data);
+    });
+ 
+    // Flad listen: lav én linje per person
+    alleMedlemmer = [];
+    alleHusstande.forEach(h => {
+      const husstandsNavn = h.navne || ((h.fornavn || '') + ' ' + (h.efternavn || '')).trim();
+ 
+      // Forældre/voksne (fra fornavn/efternavn på husstand-niveau)
+      // Hvis husstanden har fornavn/efternavn direkte, så er det forældrene som ét "samlet" navn
+      // Men vi har også familiemedlemmer-arrayet med detaljer
+ 
+      // Tilføj alle familiemedlemmer
+      (h.familiemedlemmer || []).forEach((p, i) => {
+        const erBarn = p.rolle === 'barn';
+        const personNr = erBarn ? `${h.nr}-${(h.familiemedlemmer.filter(x => x.rolle === 'barn').indexOf(p)) + 1}` : h.nr;
+        alleMedlemmer.push({
+          husstandsNr: h.nr,
+          personNr: personNr,
+          fornavn: splitNavn(p.navn).fornavn,
+          efternavn: splitNavn(p.navn).efternavn,
+          fuldtNavn: p.navn,
+          fdato: p.foedselsdato || '',
+          rolle: p.rolle || '',
+          husstand: husstandsNavn,
+          mobil: p.mobil || '',
+          email: p.email || ''
+        });
+      });
+    });
+ 
+    return true;
+  } catch (err) {
+    document.getElementById('fejl-omraade').innerHTML = 
+      '<div class="fejl-besked">⚠️ Kunne ikke hente data fra databasen. Tjek din internetforbindelse og genindlæs siden.<br><small>Fejl: ' + (err.message || 'ukendt') + '</small></div>';
+    return false;
+  }
 }
-function visFane(navn, el) {
-  document.querySelectorAll('.fane').forEach(f => f.classList.add('hidden'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('fane-'+navn).classList.remove('hidden');
-  el.classList.add('active');
+ 
+function splitNavn(fuldt) {
+  if (!fuldt) return { fornavn: '', efternavn: '' };
+  const dele = fuldt.trim().split(/\s+/);
+  if (dele.length === 1) return { fornavn: dele[0], efternavn: '' };
+  return {
+    fornavn: dele.slice(0, -1).join(' '),
+    efternavn: dele[dele.length - 1]
+  };
 }
+ 
+// ── STATUS-LOGIK ────────────────────────────────────────────
+function statusForPerson(p) {
+  // Komplet data → grøn
+  if (p.fornavn && p.efternavn && p.fdato && p.husstandsNr) {
+    return { farve: 'green', tekst: 'Komplet', bemark: '' };
+  }
+ 
+  // Find ud af hvad der mangler
+  const mangler = [];
+  if (!p.fdato) mangler.push('fødselsdato');
+  if (!p.fornavn) mangler.push('fornavn');
+  if (!p.efternavn) mangler.push('efternavn');
+  if (!p.husstandsNr || p.husstandsNr === '???') mangler.push('medlemsnr');
+ 
+  return {
+    farve: 'red',
+    tekst: 'Mangler ' + mangler.join(' + '),
+    bemark: 'Mangler: ' + mangler.join(', ')
+  };
+}
+ 
+// ── TÆLLERE ─────────────────────────────────────────────────
 function opdaterStats() {
-  document.getElementById('stat-total').textContent = medlemmer.length;
-  document.getElementById('stat-godkendt').textContent = medlemmer.filter(m=>m.status==='green').length;
-  document.getElementById('stat-fejl').textContent = medlemmer.filter(m=>m.status==='red'||m.status==='yellow').length;
-  document.getElementById('stat-husstande').textContent = new Set(medlemmer.map(m=>m.nr)).size;
+  const total = alleMedlemmer.length;
+  const godkendt = alleMedlemmer.filter(p => statusForPerson(p).farve === 'green').length;
+  const fejl = total - godkendt;
+  const husstande = new Set(alleMedlemmer.map(p => p.husstandsNr)).size;
+ 
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-godkendt').textContent = godkendt;
+  document.getElementById('stat-fejl').textContent = fejl;
+  document.getElementById('stat-husstande').textContent = husstande;
 }
+ 
+// ── DATO-HJÆLPERE ───────────────────────────────────────────
+function parseDato(str) {
+  if (!str) return null;
+  // Firebase format: YYYY-MM-DD
+  if (str.includes('-') && str.length === 10) {
+    const [y, m, d] = str.split('-').map(n => parseInt(n));
+    if (y && m && d) return { aar: y, mnd: m, dag: d };
+  }
+  // Gammelt format: DD-MM-YYYY
+  const dele = str.split('-').map(n => parseInt(n));
+  if (dele.length === 3 && dele[2] > 1900) {
+    return { dag: dele[0], mnd: dele[1], aar: dele[2] };
+  }
+  return null;
+}
+ 
+function formatDato(str) {
+  const d = parseDato(str);
+  if (!d) return '';
+  return `${String(d.dag).padStart(2, '0')}-${String(d.mnd).padStart(2, '0')}-${d.aar}`;
+}
+ 
+function erRund(alder) {
+  return [40, 50, 60, 70, 75, 80, 85, 90, 95, 100].includes(alder);
+}
+ 
+// ── KALENDER (Begivenhedskalender) ──────────────────────────
 function byggKalender() {
-  const efterMnd = {}; for (let i=1;i<=12;i++) efterMnd[i]=[];
-  medlemmer.filter(m=>m.status==='green'&&m.fdato).forEach(m=>{
-    const d=parseDato(m.fdato);
-    if(d) efterMnd[d.mnd].push({...m,dag:d.dag,alder:new Date().getFullYear()-d.aar});
+  const efterMnd = {};
+  for (let i = 1; i <= 12; i++) efterMnd[i] = [];
+ 
+  // Kun personer med komplet data og fødselsdato kommer på kalenderen
+  alleMedlemmer.forEach(p => {
+    const status = statusForPerson(p);
+    if (status.farve !== 'green') return;
+ 
+    const d = parseDato(p.fdato);
+    if (!d) return;
+ 
+    const nuvAar = new Date().getFullYear();
+    const alder = nuvAar - d.aar;
+ 
+    efterMnd[d.mnd].push({
+      ...p,
+      dag: d.dag,
+      alder: alder
+    });
   });
-  let html='';
-  for (let mnd=1;mnd<=12;mnd++) {
-    if(efterMnd[mnd].length===0) continue;
-    efterMnd[mnd].sort((a,b)=>a.dag-b.dag);
-    html += '<div class="month"><div class="month-title">'+måneder[mnd-1].charAt(0).toUpperCase()+måneder[mnd-1].slice(1)+'</div>';
-    efterMnd[mnd].forEach(m=>{
-      const rund=erRund(m.alder);
-      html += '<div class="event '+(rund?'milestone':'')+'"><div class="event-date">'+m.dag+'. '+måneder[mnd-1].substr(0,3)+'</div><div class="event-name">'+m.fornavn+' '+m.efternavn+'</div><div class="event-extra">'+(rund?'🎉 ':'')+'fylder '+m.alder+' år</div></div>';
+ 
+  let html = '';
+  let antalBegivenheder = 0;
+  for (let mnd = 1; mnd <= 12; mnd++) {
+    if (efterMnd[mnd].length === 0) continue;
+    efterMnd[mnd].sort((a, b) => a.dag - b.dag);
+ 
+    html += `<div class="month"><div class="month-title">${MAANEDER[mnd-1].charAt(0).toUpperCase() + MAANEDER[mnd-1].slice(1)}</div>`;
+ 
+    efterMnd[mnd].forEach(p => {
+      const rund = erRund(p.alder);
+      antalBegivenheder++;
+      html += `<div class="event ${rund ? 'milestone' : ''}">
+        <div class="event-date">${p.dag}. ${MAANEDER[mnd-1].substr(0, 3)}</div>
+        <div class="event-name">${p.fuldtNavn || (p.fornavn + ' ' + p.efternavn)}</div>
+        <div class="event-extra">${rund ? '🎉 ' : ''}fylder ${p.alder} år</div>
+      </div>`;
     });
     html += '</div>';
   }
+ 
+  if (antalBegivenheder === 0) {
+    html = '<div class="loading-besked">Ingen begivenheder med komplette fødselsdage endnu.<br>Når data er tilføjet i medlemskartoteket, vises de her.</div>';
+  }
+ 
   document.getElementById('kalender-content').innerHTML = html;
 }
-let filterType = 'alle';
-function visListe(type) {
-  document.querySelectorAll('.fane').forEach(f => f.classList.add('hidden'));
+ 
+// ── LISTE (Alle medlemmer / filtrerede) ─────────────────────
+window.visListe = function(type) {
+  document.querySelectorAll('.fane').forEach(f => f.style.display = 'none');
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('fane-alle').classList.remove('hidden');
+  document.getElementById('fane-alle').style.display = 'block';
   document.querySelectorAll('.tab')[1].classList.add('active');
   document.getElementById('sog-alle').value = '';
   filterType = type;
   byggAlle();
-}
-function byggAlle() {
+};
+ 
+window.visFane = function(navn, el) {
+  document.querySelectorAll('.fane').forEach(f => f.style.display = 'none');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('fane-' + navn).style.display = 'block';
+  el.classList.add('active');
+  if (navn === 'alle') filterType = 'alle';
+};
+ 
+window.byggAlle = function() {
   const sog = document.getElementById('sog-alle').value.trim().toLowerCase();
-  if(filterType === 'husstande') {
-    const grupper = {};
-    medlemmer.forEach(m=>{ if(!grupper[m.nr]) grupper[m.nr]={husstand:m.husstand,personer:[]}; grupper[m.nr].personer.push(m); });
-    const brugteNumre = Object.keys(grupper).filter(n=>n!=='???').map(n=>parseInt(n)).filter(n=>!isNaN(n));
-    const hojesteBrug = brugteNumre.length > 0 ? Math.max(...brugteNumre) : 0;
-    const ledige = [];
-    for(let i=1; i<=hojesteBrug; i++) {
-      if(!brugteNumre.includes(i)) ledige.push(String(i).padStart(3,'0'));
-    }
-    const nyOprettelseNr = String(hojesteBrug + 1).padStart(3,'0');
-    let ledigeHtml = '<div style="background:#e8f0d8;border:2px solid #2d5016;padding:14px 18px;margin-bottom:18px;border-radius:6px;">';
-    ledigeHtml += '<div style="font-weight:bold;color:#2d5016;font-size:15px;margin-bottom:6px;">📋 Ledige medlemsnumre</div>';
-    if(ledige.length === 0) {
-      ledigeHtml += '<div style="font-size:14px;color:#555;">Ingen huller i nummerrækken — alle numre 001-'+String(hojesteBrug).padStart(3,'0')+' er i brug.</div>';
-    } else {
-      ledigeHtml += '<div style="font-size:14px;color:#555;margin-bottom:6px;">Huller i rækken: <strong style="color:#b03030;">'+ledige.join(', ')+'</strong></div>';
-    }
-    ledigeHtml += '<div style="font-size:14px;color:#555;">Næste ledige nummer ved nyoprettelse: <strong style="color:#2d7a2d;font-size:16px;">'+nyOprettelseNr+'</strong></div>';
-    ledigeHtml += '</div>';
-    let html = '<h2 style="color:#2d5016;margin-bottom:14px;">Husstande i nummerorden ('+Object.keys(grupper).length+')</h2>';
-    html += ledigeHtml;
-    Object.keys(grupper).sort().forEach(nr=>{
-      const g = grupper[nr];
-      if(sog && !nr.toLowerCase().includes(sog) && !g.husstand.toLowerCase().includes(sog) && !g.personer.some(p=>(p.fornavn+' '+p.efternavn).toLowerCase().includes(sog))) return;
-      html += '<div style="background:#f5f1e8;padding:8px 14px;margin:14px 0 6px;border-radius:4px;font-weight:bold;color:#2d5016;">Husstand '+nr+' — '+g.husstand+' <span style="font-weight:normal;color:#888;font-size:13px;">('+g.personer.length+' '+(g.personer.length===1?'person':'personer')+')</span></div>';
-      g.personer.forEach(m=>{
-        let sk='status-green', rk='';
-        const st = statusTekst(m);
-        if(m.status==='red'){sk='status-red';rk='zone-b-row';}
-        else if(m.status==='yellow'){sk='status-yellow';rk='zone-yellow-row';}
-        const bh = m.status!=='green' ? '<div class="bemark">⚠️ '+m.bemark+'</div>' : '';
-        html += '<div class="person-row '+rk+'"><div class="person-num">'+m.under+'</div><div class="person-name">'+m.fornavn+' '+m.efternavn+' <span style="color:#888;font-size:12px;">· '+m.rolle+'</span>'+bh+'</div><div class="person-date">'+(m.fdato||'—')+'</div><div class="person-status '+sk+'">'+st+'</div><button class="btn-edit '+(m.status==='red'?'btn-fix':'')+'" onclick="åbenModal('+medlemmer.indexOf(m)+')">Ret</button></div>';
-      });
-    });
-    document.getElementById('alle-content').innerHTML = html;
+ 
+  // Vis som husstande?
+  if (filterType === 'husstande') {
+    visHusstande(sog);
     return;
   }
-  let kilde = medlemmer.slice();
-  let titel = 'Alle medlemmer alfabetisk ('+kilde.length+')';
-  if(filterType === 'godkendt') { kilde = kilde.filter(m=>m.status==='green'); titel = 'Godkendte medlemmer ('+kilde.length+')'; }
-  else if(filterType === 'fejl') { kilde = kilde.filter(m=>m.status==='red'||m.status==='yellow'); titel = 'Skal rettes ('+kilde.length+')'; }
-  kilde.sort((a,b)=>(a.fornavn+' '+a.efternavn).localeCompare(b.fornavn+' '+b.efternavn,'da'));
-  if(sog) kilde = kilde.filter(m=>(m.fornavn+' '+m.efternavn).toLowerCase().includes(sog)||m.under.toLowerCase().includes(sog)||m.husstand.toLowerCase().includes(sog));
-  let html = '<h2 style="color:#2d5016;margin-bottom:14px;">'+titel+'</h2>';
-  if(kilde.length===0) html += '<p style="text-align:center;color:#888;padding:30px;">Ingen medlemmer matcher.</p>';
-  kilde.forEach(m=>{
-    let sk='status-green', rk='';
-    const st = statusTekst(m);
-    if(m.status==='red'){sk='status-red';rk='zone-b-row';}
-    else if(m.status==='yellow'){sk='status-yellow';rk='zone-yellow-row';}
-    const bh = m.status!=='green' ? '<div class="bemark">⚠️ '+m.bemark+'</div>' : '';
-    html += '<div class="person-row '+rk+'"><div class="person-num">'+m.under+'</div><div class="person-name">'+m.fornavn+' '+m.efternavn+' <span style="color:#888;font-size:12px;">· '+m.husstand+'</span>'+bh+'</div><div class="person-date">'+(m.fdato||'—')+'</div><div class="person-status '+sk+'">'+st+'</div><button class="btn-edit '+(m.status==='red'?'btn-fix':'')+'" onclick="åbenModal('+medlemmer.indexOf(m)+')">Ret</button></div>';
+ 
+  let kilde = alleMedlemmer.slice();
+  let titel = 'Alle medlemmer alfabetisk';
+ 
+  if (filterType === 'godkendt') {
+    kilde = kilde.filter(p => statusForPerson(p).farve === 'green');
+    titel = 'Komplet data';
+  } else if (filterType === 'fejl') {
+    kilde = kilde.filter(p => statusForPerson(p).farve !== 'green');
+    titel = 'Skal rettes';
+  }
+ 
+  kilde.sort((a, b) => (a.fornavn + ' ' + a.efternavn).localeCompare(b.fornavn + ' ' + b.efternavn, 'da'));
+ 
+  if (sog) {
+    kilde = kilde.filter(p =>
+      (p.fornavn + ' ' + p.efternavn).toLowerCase().includes(sog) ||
+      String(p.personNr || '').toLowerCase().includes(sog) ||
+      String(p.husstand || '').toLowerCase().includes(sog)
+    );
+  }
+ 
+  let html = `<h2 style="color:#2d5016;margin-bottom:14px;">${titel} (${kilde.length})</h2>`;
+ 
+  if (kilde.length === 0) {
+    html += '<p style="text-align:center;color:#888;padding:30px;">Ingen medlemmer matcher.</p>';
+  }
+ 
+  kilde.forEach(p => {
+    html += personRadHtml(p);
   });
+ 
   document.getElementById('alle-content').innerHTML = html;
-}
-function byggZoneB() {
-  const fejl = medlemmer.filter(m=>m.status==='red'||m.status==='yellow');
-  let html='';
-  fejl.forEach(m=>{
-    const sk = m.status==='red'?'status-red':'status-yellow';
-    const sl = statusTekst(m);
-    const rk = m.status==='red'?'zone-b-row':'zone-yellow-row';
-    html += '<div class="person-row '+rk+'"><div class="person-num">'+m.under+'</div><div style="flex:1;"><div><strong>'+m.fornavn+' '+m.efternavn+'</strong> <span style="color:#888;font-size:12px;">· '+m.husstand+'</span></div><div class="bemark">⚠️ '+m.bemark+'</div></div><div class="person-status '+sk+'">'+sl+'</div><button class="btn-edit btn-fix" onclick="åbenModal('+medlemmer.indexOf(m)+')">Ret nu</button></div>';
-  });
-  document.getElementById('zoneB-content').innerHTML = html;
-}
-let aktivIdx = -1;
-function åbenModal(idx) {
-  aktivIdx = idx;
-  const m = medlemmer[idx];
-  document.getElementById('modal-titel').textContent = 'Ret '+m.fornavn+' '+m.efternavn;
-  document.getElementById('modal-bemark').innerHTML = '<strong>Bemærkning:</strong><br>'+m.bemark;
-  document.getElementById('f-fornavn').value = m.fornavn || '';
-  document.getElementById('f-efternavn').value = m.efternavn || '';
-  document.getElementById('f-nr').value = m.under || '';
-  document.getElementById('f-husstand').value = m.husstand || '';
-  document.getElementById('f-rolle').value = m.rolle || '';
-  document.getElementById('f-fdato').value = m.fdato || '';
-  document.getElementById('f-adresse').value = m.adresse || '';
-  document.getElementById('f-telefon').value = m.telefon || '';
-  document.getElementById('f-email').value = m.email || '';
-  document.getElementById('ledige-forslag').style.display = 'none';
-  document.getElementById('modal-rediger').classList.add('show');
-}
-function lukModal() { document.getElementById('modal-rediger').classList.remove('show'); aktivIdx = -1; }
-function visLedigeNumre() {
-  const boks = document.getElementById('ledige-forslag');
+};
+ 
+function visHusstande(sog) {
+  // Grupper efter husstand-nummer
   const grupper = {};
-  medlemmer.forEach(m=>{ if(!grupper[m.nr]) grupper[m.nr]={husstand:m.husstand}; });
-  const brugte = Object.keys(grupper).filter(n=>n!=='???').map(n=>parseInt(n)).filter(n=>!isNaN(n)).sort((a,b)=>a-b);
+  alleMedlemmer.forEach(p => {
+    if (!grupper[p.husstandsNr]) {
+      grupper[p.husstandsNr] = { husstand: p.husstand, personer: [] };
+    }
+    grupper[p.husstandsNr].personer.push(p);
+  });
+ 
+  // Find ledige numre
+  const brugte = Object.keys(grupper).filter(n => n !== '???' && !isNaN(parseInt(n))).map(n => parseInt(n));
   const hojeste = brugte.length > 0 ? Math.max(...brugte) : 0;
   const ledige = [];
-  for(let i=1; i<=hojeste; i++) {
-    if(!brugte.includes(i)) ledige.push(i);
+  for (let i = 1; i <= hojeste; i++) {
+    if (!brugte.includes(i)) ledige.push(String(i).padStart(3, '0'));
   }
-  ledige.push(hojeste+1);
-  let html = '<div style="padding:8px 12px;font-weight:bold;color:#2d5016;background:#e8f0d8;border-bottom:1px solid #c4b896;">Klik på et ledigt nummer for at vælge det</div>';
-  ledige.forEach(nr=>{
-    const nrStr = String(nr).padStart(3,'0');
-    let for_nr = null, efter_nr = null;
-    for(let i=nr-1; i>=1; i--) { if(brugte.includes(i)) { for_nr = i; break; } }
-    for(let i=nr+1; i<=hojeste; i++) { if(brugte.includes(i)) { efter_nr = i; break; } }
-    let info = '';
-    if(for_nr !== null) info += '↑ '+String(for_nr).padStart(3,'0')+' '+(grupper[String(for_nr).padStart(3,'0')]?.husstand||'');
-    if(for_nr !== null && efter_nr !== null) info += ' &nbsp;&nbsp; ';
-    if(efter_nr !== null) info += '↓ '+String(efter_nr).padStart(3,'0')+' '+(grupper[String(efter_nr).padStart(3,'0')]?.husstand||'');
-    if(nr > hojeste) info = '<span style="color:#2d7a2d;">Nyt nummer ved nyoprettelse</span>';
-    html += '<div onclick="vaelgNummer(\''+nrStr+'\')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;" onmouseover="this.style.background=\'#fff8e1\'" onmouseout="this.style.background=\'transparent\'"><strong style="color:#b03030;min-width:50px;">'+nrStr+'</strong><span style="color:#666;font-size:12px;">'+info+'</span></div>';
+  const naesteNr = String(hojeste + 1).padStart(3, '0');
+ 
+  let html = `<h2 style="color:#2d5016;margin-bottom:14px;">Husstande i nummerorden (${Object.keys(grupper).length})</h2>`;
+ 
+  // Ledige numre boks
+  html += '<div style="background:#e8f0d8;border:2px solid #2d5016;padding:14px 18px;margin-bottom:18px;border-radius:6px;">';
+  html += '<div style="font-weight:bold;color:#2d5016;font-size:15px;margin-bottom:6px;">📋 Ledige medlemsnumre</div>';
+  if (ledige.length === 0) {
+    html += `<div style="font-size:14px;color:#555;">Ingen huller — alle numre 001-${String(hojeste).padStart(3,'0')} er i brug.</div>`;
+  } else {
+    html += `<div style="font-size:14px;color:#555;margin-bottom:6px;">Huller i rækken: <strong style="color:#b03030;">${ledige.join(', ')}</strong></div>`;
+  }
+  html += `<div style="font-size:14px;color:#555;">Næste ledige nummer ved nyoprettelse: <strong style="color:#2d7a2d;font-size:16px;">${naesteNr}</strong></div>`;
+  html += '</div>';
+ 
+  // Vis hver husstand
+  Object.keys(grupper).sort((a, b) => {
+    const na = parseInt(a) || 9999;
+    const nb = parseInt(b) || 9999;
+    return na - nb;
+  }).forEach(nr => {
+    const g = grupper[nr];
+    if (sog && !nr.toLowerCase().includes(sog) && !g.husstand.toLowerCase().includes(sog) &&
+        !g.personer.some(p => (p.fornavn + ' ' + p.efternavn).toLowerCase().includes(sog))) return;
+ 
+    html += `<div style="background:#f5f1e8;padding:8px 14px;margin:14px 0 6px;border-radius:4px;font-weight:bold;color:#2d5016;">Husstand ${nr} — ${g.husstand} <span style="font-weight:normal;color:#888;font-size:13px;">(${g.personer.length} ${g.personer.length === 1 ? 'person' : 'personer'})</span></div>`;
+    g.personer.forEach(p => {
+      html += personRadHtml(p);
+    });
   });
-  boks.innerHTML = html;
-  boks.style.display = 'block';
+ 
+  document.getElementById('alle-content').innerHTML = html;
 }
-function vaelgNummer(nr) {
-  document.getElementById('f-nr').value = nr;
-  document.getElementById('ledige-forslag').style.display = 'none';
+ 
+function personRadHtml(p) {
+  const status = statusForPerson(p);
+  let sk, rk;
+  if (status.farve === 'green') { sk = 'status-green'; rk = ''; }
+  else if (status.farve === 'yellow') { sk = 'status-yellow'; rk = 'zone-yellow-row'; }
+  else { sk = 'status-red'; rk = 'zone-b-row'; }
+ 
+  const bh = status.farve !== 'green' ? `<div class="bemark">⚠️ ${status.bemark}</div>` : '';
+  const visningsNavn = p.fuldtNavn || (p.fornavn + ' ' + p.efternavn);
+  const datoVis = formatDato(p.fdato) || '—';
+ 
+  return `<div class="person-row ${rk}">
+    <div class="person-num">${p.personNr || p.husstandsNr || '???'}</div>
+    <div class="person-name">${visningsNavn} <span style="color:#888;font-size:12px;">· ${p.rolle || '—'} · ${p.husstand}</span>${bh}</div>
+    <div class="person-date">${datoVis}</div>
+    <div class="person-status ${sk}">${status.tekst}</div>
+    <a href="medlemskartotek.html" class="btn-edit kun-admin ${status.farve === 'red' ? 'btn-fix' : ''}">Ret i kartoteket</a>
+  </div>`;
 }
-function gemRettelse() {
-  if(aktivIdx<0) return;
-  const m = medlemmer[aktivIdx];
-  m.fornavn = document.getElementById('f-fornavn').value;
-  m.efternavn = document.getElementById('f-efternavn').value;
-  m.under = document.getElementById('f-nr').value;
-  m.nr = m.under.split('-')[0];
-  m.husstand = document.getElementById('f-husstand').value;
-  m.rolle = document.getElementById('f-rolle').value;
-  m.fdato = document.getElementById('f-fdato').value;
-  m.adresse = document.getElementById('f-adresse').value;
-  m.telefon = document.getElementById('f-telefon').value;
-  m.email = document.getElementById('f-email').value;
-  if(m.fornavn && m.efternavn && m.fdato && m.under !== '???') {
-    m.status = 'green';
-    m.bemark = 'OK Rettet';
+ 
+// ── ZONE B (Skal rettes) ────────────────────────────────────
+function byggZoneB() {
+  const fejl = alleMedlemmer.filter(p => statusForPerson(p).farve !== 'green');
+ 
+  if (fejl.length === 0) {
+    document.getElementById('zoneB-content').innerHTML = '<div class="loading-besked" style="background:#d4edda;color:#155724;padding:30px;border-radius:6px;">🎉 Ingen fejl! Alle data er komplet.</div>';
+    return;
   }
-  lukModal();
-  byggAlt();
-  alert('Rettelse gemt!');
+ 
+  let html = `<p style="margin-bottom:14px;color:#666;">${fejl.length} ${fejl.length === 1 ? 'person mangler' : 'personer mangler'} data:</p>`;
+ 
+  fejl.forEach(p => {
+    html += personRadHtml(p);
+  });
+ 
+  document.getElementById('zoneB-content').innerHTML = html;
 }
-function byggAlt() { opdaterStats(); byggKalender(); byggAlle(); byggZoneB(); }
-byggAlt();
+ 
+// ── INITIAL LOAD ────────────────────────────────────────────
+async function init() {
+  const ok = await hentData();
+  if (!ok) return;
+ 
+  opdaterStats();
+  byggKalender();
+  byggAlle();
+  byggZoneB();
+}
+ 
+init();
 </script>
 </body>
 </html>
+ 
