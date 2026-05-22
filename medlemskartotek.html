@@ -415,7 +415,16 @@ body.kan-redigere .historisk-btn-wrapper{display:block}
         </div>
       </div>
  
-      <div class="edit-sek-titel">Adresse</div>
+      <div class="edit-sek-titel">Familiemedlemmer</div>
+      <div id="person-liste-edit"></div>
+      <div class="tilfoej-rad">
+        <button class="tilfoej-knap" id="tilfoej-foraelder">➕ Forælder</button>
+        <button class="tilfoej-knap" id="tilfoej-barn">➕ Barn</button>
+        <button class="tilfoej-knap" id="tilfoej-familiemedlem">➕ Familiemedlem</button>
+        <button class="tilfoej-knap" id="tilfoej-ven">➕ Ven af huset</button>
+      </div>
+ 
+      <div class="edit-sek-titel">Husstandens adresse</div>
       <div class="ef">
         <label>Vej og husnummer *</label>
         <input type="text" id="ef-vej" placeholder="F.eks. Bjælkerupvej 111">
@@ -441,15 +450,6 @@ body.kan-redigere .historisk-btn-wrapper{display:block}
           <label>Email (registreret på medlemmet)</label>
           <input type="email" id="ef-email" placeholder="F.eks. navn@mail.dk">
         </div>
-      </div>
- 
-      <div class="edit-sek-titel">Familiemedlemmer</div>
-      <div id="person-liste-edit"></div>
-      <div class="tilfoej-rad">
-        <button class="tilfoej-knap" id="tilfoej-foraelder">➕ Forælder</button>
-        <button class="tilfoej-knap" id="tilfoej-barn">➕ Barn</button>
-        <button class="tilfoej-knap" id="tilfoej-familiemedlem">➕ Familiemedlem</button>
-        <button class="tilfoej-knap" id="tilfoej-ven">➕ Ven af huset</button>
       </div>
  
       <div class="edit-sek-titel">Begivenheder</div>
@@ -551,7 +551,7 @@ body.kan-redigere .historisk-btn-wrapper{display:block}
  
 <div class="wrapper">
   <div class="soegebar">
-    <input type="search" class="soege-input" id="soege" placeholder="Søg på navn, adresse, telefon…">
+    <input type="search" class="soege-input" id="soege" placeholder="Søg på husstandsnummer, navn, adresse, telefon…">
     <div class="antal-linje" id="antal-linje"></div>
   </div>
   <div class="grid" id="grid"></div>
@@ -738,6 +738,7 @@ function renderGrid() {
   const synlige = data
     .filter(m =>
       !q ||
+      String(m.nr).toLowerCase().includes(q) ||
       visNavn(m).toLowerCase().includes(q) ||
       visAdresse(m).toLowerCase().includes(q) ||
       (m.tlf || '').includes(q) ||
@@ -1485,4 +1486,3 @@ initialiserSide();
 </script>
 </body>
 </html>
- 
