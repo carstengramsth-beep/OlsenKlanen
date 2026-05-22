@@ -610,6 +610,35 @@ function visNavn(m) {
   return dele.length ? dele.join(' ') : (m.navne || '');
 }
  
+// Træk fornavnet ud af et fuldt navn ("Carsten Gram" → "Carsten")
+function fornavnAf(fuldtNavn) {
+  return (fuldtNavn || '').trim().split(/\s+/)[0] || '';
+}
+ 
+// Sortér personer ældst øverst (efter fødselsdato). Personer uden dato kommer til sidst.
+function sorterAEldstOEverst(personer) {
+  return [...personer].sort((a, b) => {
+    const da = a.foedselsdato || '';
+    const db = b.foedselsdato || '';
+    if (da && db) return da < db ? -1 : da > db ? 1 : 0;
+    if (da && !db) return -1;
+    if (!da && db) return 1;
+    return 0;
+  });
+}
+ 
+// Navn til det grønne kort-hoved: fornavne fra familiemedlemmer (ældst først),
+// adskilt med &. Mangler familiemedlemmer → fald tilbage på det gamle navn,
+// så intet kort nogensinde står uden navn.
+function visKortNavn(m) {
+  const personer = (m.familiemedlemmer || []).filter(p => (p.navn || '').trim());
+  if (!personer.length) return visNavn(m);
+  const fornavne = sorterAEldstOEverst(personer)
+    .map(p => fornavnAf(p.navn))
+    .filter(Boolean);
+  return fornavne.length ? fornavne.join(' & ') : visNavn(m);
+}
+ 
 function visAdresse(m) {
   if (m.vej) {
     const linje2 = [m.postnummer, m.by].filter(Boolean).join(' ');
@@ -650,7 +679,7 @@ const ROLLE_GRUPPER = [
 function byggKort(m) {
   const erEgen    = familieSession && familieSession.nr === m.nr;
   const visRed    = kanRedigere(m.nr);
-  const navnVis   = visNavn(m);
+  const navnVis   = visKortNavn(m);
   const adrVis    = visAdresse(m);
  
   const familieHtml = ROLLE_GRUPPER
@@ -710,9 +739,10 @@ function byggKort(m) {
  
 function byggPersonGruppe(personer, label, husstandsNr, boernStart) {
   if (!personer.length) return '';
+  const sorteret = sorterAEldstOEverst(personer);
   return `<div style="margin-bottom:.8rem">
     <div class="gruppe-titel">${label}</div>
-    ${personer.map((p, i) => {
+    ${sorteret.map((p, i) => {
       const erBarn = p.rolle === 'barn';
       const personNr = erBarn ? `${husstandsNr}-${boernStart + i}` : husstandsNr;
       return `
@@ -946,7 +976,7 @@ function aabneEditModal(nr) {
   if (!m) return;
   editDirty   = false;
   aktivtNr    = nr;
-  personListe = (m.familiemedlemmer || []).map(p => ({...p}));
+  personListe = sorterAEldstOEverst((m.familiemedlemmer || []).map(p => ({...p})));
   begiListe   = (m.begivenheder    || []).map(b => ({...b}));
  
   document.getElementById('edit-modal-titel').textContent = `Rediger — ${visNavn(m)}`;
