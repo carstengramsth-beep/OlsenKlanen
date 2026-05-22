@@ -734,17 +734,21 @@ function byggPersonGruppe(personer, label, husstandsNr, boernStart) {
 // ── GRID-RENDER ───────────────────────────────────────────────
 function renderGrid() {
   const grid = document.getElementById('grid');
-  const q = soegeTekst.toLowerCase();
+  const q = soegeTekst.trim().toLowerCase();
+  // Hvis søgningen KUN er tal: find præcis den husstand med det nummer
+  const kunTal = q !== '' && /^\d+$/.test(q);
   const synlige = data
-    .filter(m =>
-      !q ||
-      String(m.nr).toLowerCase().includes(q) ||
-      visNavn(m).toLowerCase().includes(q) ||
-      visAdresse(m).toLowerCase().includes(q) ||
-      (m.tlf || '').includes(q) ||
-      (m.email || '').toLowerCase().includes(q) ||
-      (m.familiemedlemmer || []).some(p => p.navn.toLowerCase().includes(q))
-    )
+    .filter(m => {
+      if (!q) return true;
+      if (kunTal) return String(m.nr) === q;
+      return (
+        visNavn(m).toLowerCase().includes(q) ||
+        visAdresse(m).toLowerCase().includes(q) ||
+        (m.tlf || '').includes(q) ||
+        (m.email || '').toLowerCase().includes(q) ||
+        (m.familiemedlemmer || []).some(p => p.navn.toLowerCase().includes(q))
+      );
+    })
     .sort((a, b) => +a.nr - +b.nr);
  
   document.getElementById('antal-linje').textContent = synlige.length === data.length
@@ -1486,3 +1490,4 @@ initialiserSide();
 </script>
 </body>
 </html>
+ 
