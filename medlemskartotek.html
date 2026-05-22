@@ -389,24 +389,15 @@ body.kan-redigere .historisk-btn-wrapper{display:block}
         <div class="mangler-liste" id="mangler-liste"></div>
       </div>
  
-      <div class="edit-sek-titel">Navn på husstanden</div>
-      <div class="ef-3">
-        <div class="ef">
-          <label>Fornavn(e) *</label>
-          <input type="text" id="ef-fornavn" placeholder="F.eks. Elisabeth og Carsten">
-        </div>
-        <div class="ef">
-          <label>Mellemnavn</label>
-          <input type="text" id="ef-mellemnavn" placeholder="(valgfrit)">
-        </div>
-        <div class="ef">
-          <label>Efternavn *</label>
-          <input type="text" id="ef-efternavn" placeholder="F.eks. Gram">
-        </div>
+      <!-- Husstandens reserve-navn (skjult — bevares som fallback til kort der mangler medlemmer) -->
+      <div style="display:none">
+        <input type="text" id="ef-fornavn">
+        <input type="text" id="ef-mellemnavn">
+        <input type="text" id="ef-efternavn">
       </div>
       <div class="ef-2">
         <div class="ef">
-          <label>Medlemsnummer</label>
+          <label>Husstandens medlemsnummer</label>
           <input type="text" id="ef-nr">
         </div>
         <div class="ef" id="ef-kode-wrapper">
@@ -415,10 +406,10 @@ body.kan-redigere .historisk-btn-wrapper{display:block}
         </div>
       </div>
  
-      <div class="edit-sek-titel">Familiemedlemmer</div>
+      <div class="edit-sek-titel">Husstandens medlemmer</div>
       <div id="person-liste-edit"></div>
       <div class="tilfoej-rad">
-        <button class="tilfoej-knap" id="tilfoej-foraelder">➕ Forælder</button>
+        <button class="tilfoej-knap" id="tilfoej-foraelder">➕ Ægtefælle / forælder</button>
         <button class="tilfoej-knap" id="tilfoej-barn">➕ Barn</button>
         <button class="tilfoej-knap" id="tilfoej-familiemedlem">➕ Familiemedlem</button>
         <button class="tilfoej-knap" id="tilfoej-ven">➕ Ven af huset</button>
@@ -615,6 +606,29 @@ function fornavnAf(fuldtNavn) {
   return (fuldtNavn || '').trim().split(/\s+/)[0] || '';
 }
  
+// Byg en persons fulde navn ud fra fornavn/mellemnavn/efternavn.
+// Falder tilbage på det gamle samlede "navn"-felt hvis delene mangler.
+function visPersonNavn(p) {
+  const dele = [p.fornavn, p.mellemnavn, p.efternavn].filter(Boolean);
+  return dele.length ? dele.join(' ') : (p.navn || '');
+}
+ 
+// Sørg for at en person har fornavn/mellemnavn/efternavn.
+// Hvis kun det gamle "navn" findes, deles det op.
+function sikrPersonNavnedele(p) {
+  if (p.fornavn || p.mellemnavn || p.efternavn) {
+    if (p.fornavn    === undefined) p.fornavn    = '';
+    if (p.mellemnavn === undefined) p.mellemnavn = '';
+    if (p.efternavn  === undefined) p.efternavn  = '';
+    return p;
+  }
+  const ord = (p.navn || '').trim().split(/\s+/).filter(Boolean);
+  if (ord.length === 0)      { p.fornavn = ''; p.mellemnavn = ''; p.efternavn = ''; }
+  else if (ord.length === 1) { p.fornavn = ord[0]; p.mellemnavn = ''; p.efternavn = ''; }
+  else                       { p.fornavn = ord[0]; p.efternavn = ord[ord.length-1]; p.mellemnavn = ord.slice(1,-1).join(' '); }
+  return p;
+}
+ 
 // Sortér personer ældst øverst (efter fødselsdato). Personer uden dato kommer til sidst.
 function sorterAEldstOEverst(personer) {
   return [...personer].sort((a, b) => {
@@ -631,10 +645,10 @@ function sorterAEldstOEverst(personer) {
 // adskilt med &. Mangler familiemedlemmer → fald tilbage på det gamle navn,
 // så intet kort nogensinde står uden navn.
 function visKortNavn(m) {
-  const personer = (m.familiemedlemmer || []).filter(p => (p.navn || '').trim());
+  const personer = (m.familiemedlemmer || []).filter(p => visPersonNavn(p).trim());
   if (!personer.length) return visNavn(m);
   const fornavne = sorterAEldstOEverst(personer)
-    .map(p => fornavnAf(p.navn))
+    .map(p => p.fornavn || fornavnAf(p.navn))
     .filter(Boolean);
   return fornavne.length ? fornavne.join(' & ') : visNavn(m);
 }
@@ -749,7 +763,7 @@ function byggPersonGruppe(personer, label, husstandsNr, boernStart) {
         <div class="person-rad">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
             <span style="background:var(--guld-lys);color:var(--tekst);padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700">${personNr}</span>
-            <span class="person-navn">${p.navn}</span>
+            <span class="person-navn">${visPersonNavn(p)}</span>
           </div>
           <div class="person-detaljer">
             ${p.foedselsdato ? `<span class="person-detalje">🎂 ${formatDato(p.foedselsdato)}</span>` : `<span class="person-detalje" style="color:#aaa;font-style:italic">🎂 —</span>`}
@@ -819,19 +833,28 @@ const editGemKnap    = document.getElementById('edit-gem-knap');
 function renderPersonEdit() {
   const el = document.getElementById('person-liste-edit');
   if (!personListe.length) {
-    el.innerHTML = '<div style="font-size:12px;color:var(--tekst-lys);font-style:italic;margin-bottom:.5rem">Ingen familiemedlemmer endnu — brug knapperne herunder.</div>';
+    el.innerHTML = '<div style="font-size:12px;color:var(--tekst-lys);font-style:italic;margin-bottom:.5rem">Ingen medlemmer endnu — brug knapperne herunder.</div>';
     return;
   }
-  el.innerHTML = personListe.map((p, i) => `
+  // Medlemsnummer: voksne deler husstandsnummeret; børn får 8-1, 8-2 ...
+  let barnTaeller = 0;
+  el.innerHTML = personListe.map((p, i) => {
+    const erBarn = p.rolle === 'barn';
+    if (erBarn) barnTaeller++;
+    const medlemsNr = erBarn ? `${aktivtNr}-${barnTaeller}` : aktivtNr;
+    const visningsNavn = visPersonNavn(p) || '(nyt medlem)';
+    return `
     <div class="person-edit-kort">
       <div class="person-edit-hoed">
-        <span style="background:var(--guld-lys);color:var(--tekst);padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;margin-right:6px">${p.rolle==='barn' ? `${aktivtNr}-${personListe.filter(x=>x.rolle==='barn').indexOf(p)+1}` : aktivtNr}</span>
+        <span style="background:var(--guld-lys);color:var(--tekst);padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;margin-right:6px">${medlemsNr}</span>
         <span class="rolle-badge ${rolleKlasse(p.rolle)}">${p.rolle}</span>
-        <span class="person-edit-navn-vis">${p.navn || '(nyt medlem)'}</span>
+        <span class="person-edit-navn-vis">${visningsNavn}</span>
         <button class="person-slet" data-slet="${i}">×</button>
       </div>
       <div class="person-edit-felter">
-        <input class="fuld" data-pi="${i}" data-felt="navn" placeholder="Fuldt navn" value="${p.navn||''}">
+        <input data-pi="${i}" data-felt="fornavn"    placeholder="Fornavn"    value="${p.fornavn||''}">
+        <input data-pi="${i}" data-felt="mellemnavn" placeholder="Mellemnavn" value="${p.mellemnavn||''}">
+        <input data-pi="${i}" data-felt="efternavn"  placeholder="Efternavn"  value="${p.efternavn||''}">
         <select data-pi="${i}" data-felt="rolle">
           <option value="ægtefælle / partner" ${p.rolle==='ægtefælle / partner'?'selected':''}>Ægtefælle / Partner</option>
           <option value="forælder"            ${p.rolle==='forælder'           ?'selected':''}>Forælder</option>
@@ -839,11 +862,12 @@ function renderPersonEdit() {
           <option value="familiemedlem"       ${p.rolle==='familiemedlem'      ?'selected':''}>Familiemedlem</option>
           <option value="ven af huset"        ${p.rolle==='ven af huset'       ?'selected':''}>Ven af huset</option>
         </select>
-        <input data-pi="${i}" data-felt="mobil"        placeholder="Mobil"        value="${p.mobil||''}">
-        <input data-pi="${i}" data-felt="email"        placeholder="Email"        value="${p.email||''}">
         <input data-pi="${i}" data-felt="foedselsdato" type="date" title="Fødselsdato" value="${p.foedselsdato||''}">
+        <input data-pi="${i}" data-felt="mobil"        placeholder="Mobil"        value="${p.mobil||''}">
+        <input class="fuld" data-pi="${i}" data-felt="email" placeholder="Email" value="${p.email||''}">
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
  
 function renderBegiEdit() {
@@ -872,8 +896,12 @@ document.getElementById('person-liste-edit').addEventListener('click', e => {
 document.getElementById('person-liste-edit').addEventListener('change', e => {
   const t = e.target;
   if (t.dataset.pi !== undefined && t.dataset.felt) {
-    personListe[+t.dataset.pi][t.dataset.felt] = t.value;
-    if (t.dataset.felt === 'navn' || t.dataset.felt === 'rolle') renderPersonEdit();
+    const p = personListe[+t.dataset.pi];
+    p[t.dataset.felt] = t.value;
+    if (['fornavn','mellemnavn','efternavn'].includes(t.dataset.felt)) {
+      p.navn = visPersonNavn(p);
+    }
+    if (t.dataset.felt === 'rolle') renderPersonEdit();
     markDirty();
     opdaterManglerListe();
   }
@@ -881,7 +909,14 @@ document.getElementById('person-liste-edit').addEventListener('change', e => {
 document.getElementById('person-liste-edit').addEventListener('input', e => {
   const t = e.target;
   if (t.dataset.pi !== undefined && t.dataset.felt) {
-    personListe[+t.dataset.pi][t.dataset.felt] = t.value;
+    const p = personListe[+t.dataset.pi];
+    p[t.dataset.felt] = t.value;
+    if (['fornavn','mellemnavn','efternavn'].includes(t.dataset.felt)) {
+      p.navn = visPersonNavn(p);
+      // Opdater navnet i kort-hovedet uden at re-rendere (bevarer fokus)
+      const hoved = t.closest('.person-edit-kort')?.querySelector('.person-edit-navn-vis');
+      if (hoved) hoved.textContent = p.navn || '(nyt medlem)';
+    }
     markDirty();
     opdaterManglerListe();
   }
@@ -907,19 +942,19 @@ document.getElementById('begi-liste-edit').addEventListener('input', e => {
 });
  
 document.getElementById('tilfoej-foraelder').addEventListener('click', () => {
-  personListe.push({ navn:'', rolle:'forælder', mobil:'', email:'', foedselsdato:'' });
+  personListe.push({ navn:'', fornavn:'', mellemnavn:'', efternavn:'', rolle:'forælder', mobil:'', email:'', foedselsdato:'' });
   renderPersonEdit(); markDirty();
 });
 document.getElementById('tilfoej-barn').addEventListener('click', () => {
-  personListe.push({ navn:'', rolle:'barn', mobil:'', email:'', foedselsdato:'' });
+  personListe.push({ navn:'', fornavn:'', mellemnavn:'', efternavn:'', rolle:'barn', mobil:'', email:'', foedselsdato:'' });
   renderPersonEdit(); markDirty();
 });
 document.getElementById('tilfoej-familiemedlem').addEventListener('click', () => {
-  personListe.push({ navn:'', rolle:'familiemedlem', mobil:'', email:'', foedselsdato:'' });
+  personListe.push({ navn:'', fornavn:'', mellemnavn:'', efternavn:'', rolle:'familiemedlem', mobil:'', email:'', foedselsdato:'' });
   renderPersonEdit(); markDirty();
 });
 document.getElementById('tilfoej-ven').addEventListener('click', () => {
-  personListe.push({ navn:'', rolle:'ven af huset', mobil:'', email:'', foedselsdato:'' });
+  personListe.push({ navn:'', fornavn:'', mellemnavn:'', efternavn:'', rolle:'ven af huset', mobil:'', email:'', foedselsdato:'' });
   renderPersonEdit(); markDirty();
 });
 document.getElementById('tilfoej-begi').addEventListener('click', () => {
@@ -939,20 +974,22 @@ function markDirty() {
 function opdaterManglerListe() {
   const mangler = [];
  
-  // Tjek husstandsfelter
-  if (!document.getElementById('ef-fornavn').value.trim())    mangler.push('Fornavn på husstanden');
-  if (!document.getElementById('ef-efternavn').value.trim())  mangler.push('Efternavn på husstanden');
+  // Mindst ét medlem skal være registreret
+  if (!personListe.length) mangler.push('Mindst ét medlem i husstanden');
+ 
+  // Tjek adresse og kontakt
   if (!document.getElementById('ef-vej').value.trim())        mangler.push('Vej og husnummer');
   if (!document.getElementById('ef-postnummer').value.trim()) mangler.push('Postnummer');
   if (!document.getElementById('ef-by').value.trim())         mangler.push('By');
   if (!document.getElementById('ef-tlf').value.trim())        mangler.push('Telefon / mobil');
   if (!document.getElementById('ef-email').value.trim())      mangler.push('Email');
  
-  // Tjek familiemedlemmer
+  // Tjek hvert medlem
   personListe.forEach((p, i) => {
-    const navn = p.navn.trim() || `Person nr. ${i+1}`;
-    if (!p.foedselsdato) mangler.push(`Fødselsdato for ${navn}`);
-    if (!p.navn.trim())  mangler.push(`Navn på person nr. ${i+1}`);
+    const navn = visPersonNavn(p).trim();
+    const visNr = navn || `medlem nr. ${i+1}`;
+    if (!(p.fornavn || '').trim()) mangler.push(`Fornavn på ${visNr}`);
+    if (!p.foedselsdato)           mangler.push(`Fødselsdato for ${visNr}`);
   });
  
   const boks = document.getElementById('mangler-boks');
@@ -976,7 +1013,7 @@ function aabneEditModal(nr) {
   if (!m) return;
   editDirty   = false;
   aktivtNr    = nr;
-  personListe = sorterAEldstOEverst((m.familiemedlemmer || []).map(p => ({...p})));
+  personListe = sorterAEldstOEverst((m.familiemedlemmer || []).map(p => sikrPersonNavnedele({...p})));
   begiListe   = (m.begivenheder    || []).map(b => ({...b}));
  
   document.getElementById('edit-modal-titel').textContent = `Rediger — ${visNavn(m)}`;
@@ -1005,12 +1042,12 @@ function aabneEditModal(nr) {
   renderBegiEdit();
   opdaterManglerListe();
   editModal.classList.add('vis');
-  setTimeout(() => document.getElementById('ef-fornavn').focus(), 80);
+  editModal.scrollTop = 0;
 }
  
 // ── FELTVALIDERING ────────────────────────────────────────────
-const PAAKREEVET_IDS = ['ef-fornavn','ef-efternavn','ef-vej','ef-postnummer','ef-by'];
-const ALLE_EDIT_IDS  = ['ef-fornavn','ef-mellemnavn','ef-efternavn','ef-nr','ef-vej','ef-postnummer','ef-by','ef-tlf','ef-email'];
+const PAAKREEVET_IDS = ['ef-vej','ef-postnummer','ef-by'];
+const ALLE_EDIT_IDS  = ['ef-nr','ef-vej','ef-postnummer','ef-by','ef-tlf','ef-email'];
  
 function opdaterEtFelt(id) {
   const el = document.getElementById(id);
@@ -1055,6 +1092,7 @@ async function gemData() {
   }
  
   const erAdmin    = document.body.classList.contains('kan-redigere');
+  // Husstandens reserve-navn bevares uændret (skjulte felter) — bruges kun som fallback
   const fornavn    = document.getElementById('ef-fornavn').value.trim();
   const mellemnavn = document.getElementById('ef-mellemnavn').value.trim();
   const efternavn  = document.getElementById('ef-efternavn').value.trim();
@@ -1067,6 +1105,12 @@ async function gemData() {
   const adresse = [vej, linje2].filter(Boolean).join('\n');
   const tidl    = data.find(x => x.nr === gammelNr) || {};
  
+  // Ryd op i medlemmer: synkronisér det samlede navn ud fra navnedelene,
+  // og behold kun medlemmer der har et navn.
+  const reneMedlemmer = personListe
+    .map(p => ({ ...p, navn: visPersonNavn(p) }))
+    .filter(p => p.navn.trim());
+ 
   const opdateret = {
     nr: nytNr,
     navne, fornavn, mellemnavn, efternavn,
@@ -1074,7 +1118,7 @@ async function gemData() {
     tlf:   document.getElementById('ef-tlf').value.trim(),
     email: document.getElementById('ef-email').value.trim(),
     kode:  erAdmin ? document.getElementById('ef-kode').value.trim() : tidl.kode || '',
-    familiemedlemmer: personListe.filter(p => p.navn.trim()),
+    familiemedlemmer: reneMedlemmer,
     begivenheder:     begiListe.filter(b => b.dato || b.beskrivelse),
     sidstRedigeret:   new Date().toISOString(),
     sidstRedigeretAf: auth.currentUser?.email || (familieSession ? `Medlem nr. ${familieSession.nr}` : 'ukendt')
@@ -1137,7 +1181,7 @@ function visStatus(type, tekst) {
 editGemKnap.addEventListener('click', () => gemData());
  
 // Lyttere på alle tekstfelter — opdaterer kun mangler-listen og felt-farver
-['ef-fornavn','ef-mellemnavn','ef-efternavn','ef-nr','ef-vej','ef-postnummer','ef-by','ef-tlf','ef-email','ef-kode'].forEach(id => {
+['ef-nr','ef-vej','ef-postnummer','ef-by','ef-tlf','ef-email','ef-kode'].forEach(id => {
   const el = document.getElementById(id);
   if (!el) return;
   el.addEventListener('input', () => {
