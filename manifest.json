@@ -4,7 +4,7 @@
   "description": "Familieside for OlsenKlanen",
   "start_url": "./login.html",
   "scope": "./",
-  "display": "browser",
+  "display": "standalone",
   "orientation": "any",
   "background_color": "#1B4332",
   "theme_color": "#1B4332",
