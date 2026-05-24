@@ -167,6 +167,70 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+ 
+// ===== LYD: ping ved opkald, pling ved besked, + stemme =====
+window.lydCtx = null;
+window.startLyd = function() {
+  try {
+    if(!window.lydCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      window.lydCtx = new AC();
+    }
+    if(window.lydCtx.state === 'suspended') { window.lydCtx.resume(); }
+  } catch(e) {}
+};
+function spilTone(start, freq, slut, glid) {
+  if(!window.lydCtx) return;
+  const ctx = window.lydCtx;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, start);
+  if(glid) { osc.frequency.exponentialRampToValueAtTime(glid, start + 0.08); }
+  gain.gain.setValueAtTime(0, start);
+  gain.gain.linearRampToValueAtTime(0.5, start + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, start + slut);
+  osc.start(start);
+  osc.stop(start + slut + 0.05);
+}
+window.sigTekst = function(tekst) {
+  if(!('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const m = new SpeechSynthesisUtterance(tekst);
+    m.lang = 'da-DK'; m.rate = 0.95; m.pitch = 1.05;
+    const stemmer = window.speechSynthesis.getVoices();
+    const dk = stemmer.find(v => v.lang && v.lang.toLowerCase().indexOf('da') === 0);
+    if(dk) m.voice = dk;
+    window.speechSynthesis.speak(m);
+  } catch(e) {}
+};
+window.lydOpkald = function() {
+  window.startLyd();
+  if(window.lydCtx) {
+    const t = window.lydCtx.currentTime;
+    spilTone(t + 0.0, 880, 0.35);
+    spilTone(t + 0.45, 880, 0.35);
+    spilTone(t + 0.90, 1046, 0.35);
+  }
+  setTimeout(() => { window.sigTekst('Tag videofonen — det er mig der ringer'); }, 1500);
+};
+window.lydBesked = function() {
+  window.startLyd();
+  if(window.lydCtx) {
+    const t = window.lydCtx.currentTime;
+    spilTone(t + 0.0, 1318, 0.5, 1760);
+  }
+  setTimeout(() => { window.sigTekst('Besked'); }, 800);
+};
+if('speechSynthesis' in window) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = function() { window.speechSynthesis.getVoices(); };
+}
+document.addEventListener('click', function() { window.startLyd(); }, { once: true });
+// ===== SLUT LYD =====
+ 
 window.banditter = [
   {id:'Carsten', navn:'Carsten Gram'},
   {id:'Tommy', navn:'Tommy Vormslev Olsen'},
@@ -178,6 +242,7 @@ window.mig = null;
 window.indkommendeOpkald = null;
 window.alleOnline = {};
 window.alleBeskeder = [];
+window.antalBeskederFoer = null;
 window.vaelgMig = function(id) {
   localStorage.setItem('olsen-bandit', id);
   window.mig = window.banditter.find(b => b.id === id);
@@ -213,6 +278,7 @@ function startFirebase() {
       const fraB = window.banditter.find(x => x.id === opkald.fra);
       document.getElementById('ring-fra').textContent = (fraB ? fraB.navn : opkald.fra) + ' ringer til dig';
       document.getElementById('ring-pop').classList.add('show');
+      window.lydOpkald();
     }
   });
 }
@@ -281,6 +347,12 @@ window.sendBesked = function() {
 window.visBeskeder = function() {
   if(!window.mig) return;
   const mine = window.alleBeskeder.filter(b => b.til === window.mig.id).sort((a,b)=>b.tid-a.tid);
+  if(window.antalBeskederFoer === null) {
+    window.antalBeskederFoer = mine.length;
+  } else if(mine.length > window.antalBeskederFoer) {
+    window.antalBeskederFoer = mine.length;
+    window.lydBesked();
+  }
   if(mine.length === 0) {
     document.getElementById('besked-liste').innerHTML = '<p style="color:#888;padding:20px;text-align:center;">Ingen beskeder endnu</p>';
     return;
@@ -322,3 +394,4 @@ if(gemtId) {
 </script>
 </body>
 </html>
+ 
