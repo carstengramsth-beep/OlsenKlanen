@@ -314,7 +314,19 @@ window.visFane = function(navn, knap) {
   document.getElementById('fane-'+navn).classList.add('active');
   knap.classList.add('active');
 };
-window.aabnVideo = function(rumNavn) { window.open('https://meet.jit.si/' + rumNavn, '_blank', 'width=1200,height=800'); };
+window.aabnVideo = function(rumNavn) {
+  var url = 'https://meet.jit.si/' + rumNavn
+    + '#config.prejoinPageEnabled=false'
+    + '&config.requireDisplayName=false'
+    + '&config.disableModeratorIndicator=true'
+    + '&config.enableLobbyChat=false'
+    + '&config.startWithAudioMuted=false'
+    + '&config.startWithVideoMuted=false';
+  if(window.mig) {
+    url += '&userInfo.displayName=' + encodeURIComponent(window.mig.navn);
+  }
+  window.open(url, '_blank', 'width=1200,height=800');
+};
 window.aabnHuskebog = function() { window.open('HUSKEBOG.html', '_blank', 'width=1200,height=800'); };
 window.kaldAlle = function() {
   if(!confirm('Send notifikation til ALLE online banditter om at gå ind i OlsenBanden-mødet?')) return;
@@ -368,7 +380,9 @@ window.visBeskeder = function() {
 };
 window.ringTil = function(id) {
   const b = window.banditter.find(x=>x.id===id);
-  const rum = 'opkald-'+window.mig.id+'-'+id+'-'+Date.now();
+  // Fast fælles rumnavn: de to navne sorteret, så det er ENS uanset hvem der ringer
+  const par = [window.mig.id, id].sort();
+  const rum = 'OlsenKlanen-' + par[0] + '-' + par[1];
   set(ref(db, 'opkald/' + id), {fra: window.mig.id, til: id, tid: Date.now(), rum: rum});
   alert('Ringer til '+b.navn+'... Når '+b.navn+' svarer, går I begge ind i videomødet.');
   window.aabnVideo(rum);
