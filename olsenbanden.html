@@ -321,7 +321,13 @@ window.aabnVideo = function(rumNavn) {
     + '&config.disableModeratorIndicator=true'
     + '&config.enableLobbyChat=false'
     + '&config.startWithAudioMuted=false'
-    + '&config.startWithVideoMuted=false';
+    + '&config.startWithVideoMuted=false'
+    + '&config.p2p.enabled=true'
+    + '&config.startAudioOnly=false'
+    + '&config.resolution=480'
+    + '&config.constraints.video.height.ideal=480'
+    + '&config.constraints.video.height.max=480'
+    + '&config.disableSimulcast=true';
   if(window.mig) {
     url += '&userInfo.displayName=' + encodeURIComponent(window.mig.navn);
   }
@@ -408,4 +414,5 @@ if(gemtId) {
 </script>
 </body>
 </html>
+ 
  
