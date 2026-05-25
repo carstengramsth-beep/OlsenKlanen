@@ -51,6 +51,32 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .besked-tid { font-size: 11px; color: #888; }
 .besked-tekst { margin-top: 6px; font-size: 14px; }
 .info-boks { background: #fff8e1; border-left: 4px solid #c89e3c; padding: 12px; border-radius: 4px; font-size: 13px; color: #6b5b1f; margin-bottom: 14px; }
+
+/* BROADCAST — sort tekst på GUL baggrund */
+.broadcast-stribe { 
+  background: #FFD700; 
+  color: #000; 
+  font-weight: bold;
+  font-size: 15px;
+  padding: 10px 20px; 
+  text-align: center;
+  letter-spacing: 0.5px;
+  border-top: 3px solid #b8a000;
+  border-bottom: 3px solid #b8a000;
+  display: none;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.broadcast-stribe.vis { display: block; }
+.broadcast-tekst {
+  display: inline-block;
+  animation: koel-ticker 18s linear infinite;
+}
+@keyframes koel-ticker {
+  0%   { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+
 .ring-pop { display: none; position: fixed; bottom: 30px; right: 30px; background: #b03030; color: #fff; padding: 22px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 1000; animation: ring 1s infinite; }
 .ring-pop.show { display: block; }
 @keyframes ring { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
@@ -70,6 +96,12 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 </style>
 </head>
 <body>
+
+<!-- BROADCAST STRIBE — gul baggrund, sort tekst -->
+<div class="broadcast-stribe" id="broadcast-stribe">
+  <span class="broadcast-tekst" id="broadcast-tekst"></span>
+</div>
+
 <div id="vaelg-bandit" class="vaelg-bg" style="display:none;">
 <div class="vaelg-boks">
 <h2>OlsenBanden Center</h2>
@@ -146,11 +178,11 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 </div>
 </div>
 <div class="ring-pop" id="ring-pop">
-<h3>Indkommende opkald</h3>
-<div id="ring-fra">...</div>
+<h3>📞 Indkommende opkald</h3>
+<div id="ring-fra" style="font-size:16px;margin-top:6px;">...</div>
 <div class="knaprum">
-<button class="svar" onclick="svarOpkald()">Svar</button>
-<button class="afvis" onclick="afvisOpkald()">Afvis</button>
+<button class="svar" onclick="svarOpkald()">✅ Svar</button>
+<button class="afvis" onclick="afvisOpkald()">❌ Afvis</button>
 </div>
 </div>
 <script type="module">
@@ -167,8 +199,8 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
- 
-// ===== LYD: ping ved opkald, pling ved besked, + stemme =====
+
+// ===== LYD OG STEMME =====
 window.lydCtx = null;
 window.startLyd = function() {
   try {
@@ -206,7 +238,9 @@ window.sigTekst = function(tekst) {
     window.speechSynthesis.speak(m);
   } catch(e) {}
 };
-window.lydOpkald = function() {
+
+// RINGETONE MED NAVN — "Ring ring ring — du har et opkald fra Carsten"
+window.lydOpkaldMedNavn = function(fraNavn) {
   window.startLyd();
   if(window.lydCtx) {
     const t = window.lydCtx.currentTime;
@@ -214,23 +248,38 @@ window.lydOpkald = function() {
     spilTone(t + 0.45, 880, 0.35);
     spilTone(t + 0.90, 1046, 0.35);
   }
-  setTimeout(() => { window.sigTekst('Tag videofonen — det er mig der ringer'); }, 1500);
+  setTimeout(() => {
+    window.sigTekst('Ring ring ring — du har et opkald fra ' + fraNavn);
+  }, 1500);
 };
+
 window.lydBesked = function() {
   window.startLyd();
   if(window.lydCtx) {
     const t = window.lydCtx.currentTime;
     spilTone(t + 0.0, 1318, 0.5, 1760);
   }
-  setTimeout(() => { window.sigTekst('Besked'); }, 800);
+  setTimeout(() => { window.sigTekst('Du har en ny besked'); }, 800);
 };
+
 if('speechSynthesis' in window) {
   window.speechSynthesis.getVoices();
   window.speechSynthesis.onvoiceschanged = function() { window.speechSynthesis.getVoices(); };
 }
 document.addEventListener('click', function() { window.startLyd(); }, { once: true });
-// ===== SLUT LYD =====
- 
+
+// ===== BROADCAST STRIBE =====
+window.visBroadcast = function(tekst, sekunder) {
+  const stribe = document.getElementById('broadcast-stribe');
+  const el = document.getElementById('broadcast-tekst');
+  el.textContent = '🔔 ' + tekst + ' 🔔';
+  stribe.classList.add('vis');
+  if(sekunder) {
+    setTimeout(() => { stribe.classList.remove('vis'); }, sekunder * 1000);
+  }
+};
+
+// ===== BANDITTER =====
 window.banditter = [
   {id:'Carsten', navn:'Carsten Gram'},
   {id:'Tommy', navn:'Tommy Vormslev Olsen'},
@@ -243,15 +292,16 @@ window.indkommendeOpkald = null;
 window.alleOnline = {};
 window.alleBeskeder = [];
 window.antalBeskederFoer = null;
+
 window.vaelgMig = function(id) {
   window.mig = window.banditter.find(b => b.id === id);
   document.getElementById('vaelg-bandit').style.display = 'none';
   document.getElementById('bruger-navn').textContent = window.mig.navn;
   startFirebase();
 };
+
 window.logUd = function() {
   if(window.mig) { remove(ref(db, 'online/' + window.mig.id)); }
-  // Log HELT ud af det fælles login og gå til login-siden
   sessionStorage.removeItem('ok_navn');
   sessionStorage.removeItem('ok_niveau');
   sessionStorage.removeItem('ok_email');
@@ -260,33 +310,44 @@ window.logUd = function() {
   localStorage.removeItem('ok_email');
   window.location.href = 'login.html';
 };
+
 function startFirebase() {
   const migRef = ref(db, 'online/' + window.mig.id);
   set(migRef, {navn: window.mig.navn, tid: serverTimestamp()});
   onDisconnect(migRef).remove();
   setInterval(() => { set(migRef, {navn: window.mig.navn, tid: serverTimestamp()}); }, 20000);
+
+  // Vis velkomst-broadcast når man logger ind
+  window.visBroadcast(new Date().toLocaleTimeString('da-DK', {hour:'2-digit',minute:'2-digit'}) + ' — Velkommen ' + window.mig.navn.split(' ')[0] + ' 👋', 120);
+
   onValue(ref(db, 'online'), (snap) => {
     window.alleOnline = snap.val() || {};
-    document.getElementById('firebase-status').textContent = 'Forbundet - online status virker';
+    document.getElementById('firebase-status').textContent = 'Forbundet — online status virker';
     document.getElementById('firebase-status').classList.add('aktiv');
     visBanditter();
   });
+
   onValue(ref(db, 'beskeder'), (snap) => {
     window.alleBeskeder = [];
     snap.forEach((child) => { window.alleBeskeder.push({...child.val(), key: child.key}); });
     visBeskeder();
   });
+
   onValue(ref(db, 'opkald/' + window.mig.id), (snap) => {
     const opkald = snap.val();
     if(opkald && (Date.now() - opkald.tid) < 30000 && !window.indkommendeOpkald) {
       window.indkommendeOpkald = opkald;
       const fraB = window.banditter.find(x => x.id === opkald.fra);
-      document.getElementById('ring-fra').textContent = (fraB ? fraB.navn : opkald.fra) + ' ringer til dig';
+      const fraNavn = fraB ? fraB.navn : opkald.fra;
+      const forNavn = fraNavn.split(' ')[0]; // Kun fornavn
+      document.getElementById('ring-fra').textContent = fraNavn + ' ringer til dig';
       document.getElementById('ring-pop').classList.add('show');
-      window.lydOpkald();
+      // RINGETONE MED NAVN
+      window.lydOpkaldMedNavn(forNavn);
     }
   });
 }
+
 window.visBanditter = function() {
   let html = '';
   let antal = 0;
@@ -313,12 +374,14 @@ window.visBanditter = function() {
   document.getElementById('bandit-liste').innerHTML = html;
   document.getElementById('antal-online').textContent = antal;
 };
+
 window.visFane = function(navn, knap) {
   document.querySelectorAll('.fane-indhold').forEach(f => f.classList.remove('active'));
   document.querySelectorAll('.fane-knap').forEach(k => k.classList.remove('active'));
   document.getElementById('fane-'+navn).classList.add('active');
   knap.classList.add('active');
 };
+
 window.aabnVideo = function(rumNavn) {
   var url = 'https://meet.ffmuc.net/' + rumNavn
     + '#config.prejoinPageEnabled=false'
@@ -331,7 +394,9 @@ window.aabnVideo = function(rumNavn) {
   }
   window.open(url, '_blank', 'width=1200,height=800');
 };
+
 window.aabnHuskebog = function() { window.open('HUSKEBOG.html', '_blank', 'width=1200,height=800'); };
+
 window.kaldAlle = function() {
   if(!confirm('Send notifikation til ALLE online banditter om at gå ind i OlsenBanden-mødet?')) return;
   window.banditter.forEach(b => {
@@ -341,11 +406,13 @@ window.kaldAlle = function() {
   });
   window.aabnVideo('OlsenBanden-Admin-2026-privat');
 };
+
 window.skrivTil = function(id) {
   document.querySelector('[onclick*=nybesked]').click();
   document.getElementById('til-vaelg').value = id;
   document.getElementById('besked-tekst').focus();
 };
+
 window.sendBesked = function() {
   const til = document.getElementById('til-vaelg').value;
   const tekst = document.getElementById('besked-tekst').value.trim();
@@ -360,6 +427,7 @@ window.sendBesked = function() {
   document.getElementById('besked-tekst').value = '';
   alert('Besked sendt!');
 };
+
 window.visBeskeder = function() {
   if(!window.mig) return;
   const mine = window.alleBeskeder.filter(b => b.til === window.mig.id).sort((a,b)=>b.tid-a.tid);
@@ -382,16 +450,16 @@ window.visBeskeder = function() {
   });
   document.getElementById('besked-liste').innerHTML = html;
 };
+
 window.ringTil = function(id) {
   const b = window.banditter.find(x=>x.id===id);
-  // Fast fælles rumnavn: de to navne sorteret, så det er ENS uanset hvem der ringer
   const par = [window.mig.id, id].sort();
   const rum = 'OlsenKlanen-' + par[0] + '-' + par[1];
-  // Åbn videoen MED DET SAMME (ellers blokerer browseren vinduet)
   window.aabnVideo(rum);
   set(ref(db, 'opkald/' + id), {fra: window.mig.id, til: id, tid: Date.now(), rum: rum});
   setTimeout(() => { remove(ref(db, 'opkald/' + id)); }, 30000);
 };
+
 window.svarOpkald = function() {
   if(!window.indkommendeOpkald) return;
   window.aabnVideo(window.indkommendeOpkald.rum);
@@ -399,29 +467,27 @@ window.svarOpkald = function() {
   remove(ref(db, 'opkald/' + window.mig.id));
   window.indkommendeOpkald = null;
 };
+
 window.afvisOpkald = function() {
   document.getElementById('ring-pop').classList.remove('show');
   if(window.mig) remove(ref(db, 'opkald/' + window.mig.id));
   window.indkommendeOpkald = null;
 };
-// ÉN LOGIN-METODE: Hent hvem man er fra login.html (ok_navn). Ingen "vælg navn"-boks.
+
+// AUTO-LOGIN fra login.html
 (function() {
   var loginNavn = sessionStorage.getItem('ok_navn') || localStorage.getItem('ok_navn');
   if(loginNavn) {
     var fundet = window.banditter.find(b => b.navn === loginNavn);
     if(fundet) {
-      // Skjul "Hvem er du?"-boksen og log automatisk ind som den person login kender
       window.vaelgMig(fundet.id);
     } else {
-      // Logget ind, men navnet kendes ikke her — vis boksen som nødløsning
       document.getElementById('vaelg-bandit').style.display = 'flex';
     }
   } else {
-    // Ikke logget ind → send til login-siden
     window.location.href = 'login.html';
   }
 })();
 </script>
- 
 </body>
 </html>
