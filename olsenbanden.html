@@ -70,7 +70,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 </style>
 </head>
 <body>
-<div id="vaelg-bandit" class="vaelg-bg">
+<div id="vaelg-bandit" class="vaelg-bg" style="display:none;">
 <div class="vaelg-boks">
 <h2>OlsenBanden Center</h2>
 <p>Hvem er du? Klik på dit navn for at logge ind.</p>
@@ -251,8 +251,14 @@ window.vaelgMig = function(id) {
 };
 window.logUd = function() {
   if(window.mig) { remove(ref(db, 'online/' + window.mig.id)); }
-  localStorage.removeItem('olsen-bandit');
-  location.reload();
+  // Log HELT ud af det fælles login og gå til login-siden
+  sessionStorage.removeItem('ok_navn');
+  sessionStorage.removeItem('ok_niveau');
+  sessionStorage.removeItem('ok_email');
+  localStorage.removeItem('ok_navn');
+  localStorage.removeItem('ok_niveau');
+  localStorage.removeItem('ok_email');
+  window.location.href = 'login.html';
 };
 function startFirebase() {
   const migRef = ref(db, 'online/' + window.mig.id);
@@ -398,10 +404,24 @@ window.afvisOpkald = function() {
   if(window.mig) remove(ref(db, 'opkald/' + window.mig.id));
   window.indkommendeOpkald = null;
 };
-// Valg-boksen kommer ALTID frem — alle vælger deres eget navn. Ingen forveksling.
+// ÉN LOGIN-METODE: Hent hvem man er fra login.html (ok_navn). Ingen "vælg navn"-boks.
+(function() {
+  var loginNavn = sessionStorage.getItem('ok_navn') || localStorage.getItem('ok_navn');
+  if(loginNavn) {
+    var fundet = window.banditter.find(b => b.navn === loginNavn);
+    if(fundet) {
+      // Skjul "Hvem er du?"-boksen og log automatisk ind som den person login kender
+      window.vaelgMig(fundet.id);
+    } else {
+      // Logget ind, men navnet kendes ikke her — vis boksen som nødløsning
+      document.getElementById('vaelg-bandit').style.display = 'flex';
+    }
+  } else {
+    // Ikke logget ind → send til login-siden
+    window.location.href = 'login.html';
+  }
+})();
 </script>
+ 
 </body>
 </html>
- 
- 
- 
