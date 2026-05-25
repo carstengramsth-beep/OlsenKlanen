@@ -382,9 +382,9 @@ window.ringTil = function(id) {
   // Fast fælles rumnavn: de to navne sorteret, så det er ENS uanset hvem der ringer
   const par = [window.mig.id, id].sort();
   const rum = 'OlsenKlanen-' + par[0] + '-' + par[1];
-  set(ref(db, 'opkald/' + id), {fra: window.mig.id, til: id, tid: Date.now(), rum: rum});
-  alert('Ringer til '+b.navn+'... Når '+b.navn+' svarer, går I begge ind i videomødet.');
+  // Åbn videoen MED DET SAMME (ellers blokerer browseren vinduet)
   window.aabnVideo(rum);
+  set(ref(db, 'opkald/' + id), {fra: window.mig.id, til: id, tid: Date.now(), rum: rum});
   setTimeout(() => { remove(ref(db, 'opkald/' + id)); }, 30000);
 };
 window.svarOpkald = function() {
