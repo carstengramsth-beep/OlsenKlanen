@@ -6,7 +6,7 @@
 <title>OlsenKlanen · Familieside</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; }
+body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; padding-bottom: 44px; }
 .topbar { background: #2d5016; color: #f5e6a8; padding: 16px 30px; display: flex; justify-content: space-between; align-items: center; }
 .topbar h1 { font-size: 22px; font-weight: normal; }
 .topbar .user { display: flex; align-items: center; gap: 14px; font-style: italic; font-size: 15px; }
@@ -59,6 +59,34 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .nav-titel { font-weight: bold; font-size: 14px; color: #2c3e1f; }
 .nav-info { font-size: 11px; color: #888; }
 #admin-knap { display: none; }
+
+/* NYHEDSBAAND — fast i bunden */
+.nyhedsbaand {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #FFD700;
+  border-top: 2px solid #c8a800;
+  padding: 10px 0;
+  overflow: hidden;
+  z-index: 999;
+  white-space: nowrap;
+}
+.nyhedsbaand-tekst {
+  display: inline-block;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: #000;
+  letter-spacing: 0.3px;
+  animation: baand 30s linear infinite;
+}
+@keyframes baand {
+  0%   { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+
 @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
 </style>
 <script>
@@ -82,7 +110,7 @@ try {
 </script>
 </head>
 <body>
- 
+
 <div class="topbar">
   <h1>OlsenKlanen · Familieside</h1>
   <div class="user">
@@ -90,36 +118,36 @@ try {
     <a class="logout" onclick="logUd()">Log ud</a>
   </div>
 </div>
- 
+
 <div class="layout">
- 
+
   <aside>
     <div class="section-title">OPSLAGSTAVLEN</div>
- 
+
     <a href="fremhaevede.html" class="opslag" style="text-decoration:none;color:inherit;cursor:pointer;display:block;">
       <div class="opslag-emoji">⭐</div>
       <div class="opslag-titel">Fremhævede begivenheder</div>
       <div class="opslag-info">Tommy 60 · Skovtur 2026</div>
     </a>
- 
+
     <a href="skovtur2026.html" class="opslag" style="text-decoration:none;color:inherit;cursor:pointer;display:block;">
       <div class="opslag-emoji">🌲</div>
       <div class="opslag-titel">Skovtur 2026</div>
       <div class="opslag-info">Program · priser · komité · kontakt · vedtægter</div>
     </a>
- 
+
     <a href="aarets-billeder.html" class="opslag" style="text-decoration:none;color:inherit;cursor:pointer;display:block;">
       <div class="opslag-emoji">📷</div>
       <div class="opslag-titel">Årets billeder</div>
       <div class="opslag-info">2026 · senest: Kurt (8 stk.)</div>
     </a>
- 
+
     <a href="tidligere-billeder.html" class="opslag" style="text-decoration:none;color:inherit;cursor:pointer;display:block;">
       <div class="opslag-emoji">🗂️</div>
       <div class="opslag-titel">Forrige års billeder</div>
       <div class="opslag-info">Arkiv · efter årstal</div>
     </a>
- 
+
     <div class="tavle-boks">
       <div class="tavle-titel">📌 Opslagstavlen — her og nu</div>
       <div class="tavle-tal-raekke">
@@ -137,9 +165,9 @@ try {
         </a>
       </div>
     </div>
- 
+
   </aside>
- 
+
   <main class="mid">
     <div class="billede-boks">
       <img src="billeder/IMG_4390.JPEG" alt="Skovtur maj 2025 — Haderslev">
@@ -148,7 +176,7 @@ try {
         <span>Maj 2025</span>
       </div>
     </div>
- 
+
     <div class="fremh-boks">
       <div class="fremh-header">⭐ FREMHÆVEDE BEGIVENHEDER</div>
       <div class="fremh-row">
@@ -172,7 +200,7 @@ try {
         <div class="fremh-tag tag-jub">Jubilæum</div>
       </div>
     </div>
- 
+
     <div class="kalender-boks">
       <h3>Kalender — Maj 2026</h3>
       <div class="kal-grid">
@@ -185,50 +213,55 @@ try {
       </div>
     </div>
   </main>
- 
+
   <aside>
     <div class="section-title">NAVIGATION</div>
     <div class="nav-grp">
- 
+
       <div class="nav-item aktiv">
         <div class="nav-emoji">🏠</div>
         <div class="nav-txt"><div class="nav-titel">Forside</div><div class="nav-info">Du er her</div></div>
       </div>
- 
+
       <a class="nav-item" href="medlemskartotek.html">
         <div class="nav-emoji">👥</div>
         <div class="nav-txt"><div class="nav-titel">Medlemskartotek</div><div class="nav-info">116 personer · ret data</div></div>
       </a>
- 
+
       <a class="nav-item" href="foedselsdage.html">
         <div class="nav-emoji">🎉</div>
         <div class="nav-txt"><div class="nav-titel">Mærkedage</div><div class="nav-info">Fødselsdage · jubilæer</div></div>
       </a>
- 
+
       <a class="nav-item" href="arrangementer.html">
         <div class="nav-emoji">📅</div>
         <div class="nav-txt"><div class="nav-titel">Arrangementer</div><div class="nav-info">Skovtur 2027 · kalender</div></div>
       </a>
- 
+
       <a class="nav-item" href="mindelunden.html">
         <div class="nav-emoji">🕯️</div>
         <div class="nav-txt"><div class="nav-titel">Mindelunden</div><div class="nav-info">Tidligere medlemmer</div></div>
       </a>
- 
+
       <a class="nav-item" href="admin.html" id="admin-knap">
         <div class="nav-emoji">⚙️</div>
         <div class="nav-txt"><div class="nav-titel">Administration</div><div class="nav-info">Video · kalender · udvikling</div></div>
       </a>
- 
+
     </div>
   </aside>
- 
+
 </div>
- 
+
+<!-- NYHEDSBAAND — fast i bunden af siden -->
+<div class="nyhedsbaand">
+  <span class="nyhedsbaand-tekst" id="baand-tekst">Henter nyheder og vejr...</span>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, query, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
- 
+
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
   authDomain: "olsenklanen-familieside.firebaseapp.com",
@@ -237,12 +270,12 @@ const firebaseConfig = {
   messagingSenderId: "640843662410",
   appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
 };
- 
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
- 
+
 const minEmail = sessionStorage.getItem("ok_email") || "";
- 
+
 const q = query(collection(db, "opslagstavle"));
 onSnapshot(q, (snap) => {
   let ialt = 0, nye = 0, ukommenterede = 0;
@@ -261,12 +294,12 @@ onSnapshot(q, (snap) => {
   document.getElementById("tal-ialt").textContent = ialt;
 });
 </script>
- 
+
 <script>
 try {
   const niveau = sessionStorage.getItem("ok_niveau") || localStorage.getItem("ok_niveau");
   const navn = sessionStorage.getItem("ok_navn") || localStorage.getItem("ok_navn");
- 
+
   if (navn) {
     const rolleSuffix = niveau === "admin" ? " (admin)"
                       : niveau === "olsenbanden" ? " (OlsenBanden)"
@@ -274,14 +307,14 @@ try {
                       : "";
     document.getElementById("bruger-navn").textContent = navn + rolleSuffix;
   }
- 
+
   if (niveau === "admin" || niveau === "olsenbanden") {
     document.getElementById("admin-knap").style.display = "flex";
   }
 } catch(e) {
   console.log("Fejl ved adgangskontrol:", e);
 }
- 
+
 function logUd() {
   try {
     sessionStorage.clear();
@@ -291,16 +324,54 @@ function logUd() {
     localStorage.removeItem("ok_husk_email");
     localStorage.removeItem("ok_husk_kode");
   } catch(e) {}
- 
   window.open("", "_self");
   window.close();
- 
-  setTimeout(function() {
-    window.location.href = "about:blank";
-  }, 100);
+  setTimeout(function() { window.location.href = "about:blank"; }, 100);
 }
+
+// NYHEDSBAAND — DR + Vejr
+const CORS = "https://api.allorigins.win/get?url=";
+const DR_RSS = encodeURIComponent("https://www.dr.dk/nyheder/service/feeds/allenyheder");
+let nyheder = [];
+let vejr = "";
+
+function byggBaand() {
+  let tekst = "";
+  if(vejr) tekst += vejr + "     ";
+  nyheder.forEach(n => { tekst += "★  " + n + "     "; });
+  if(tekst) document.getElementById("baand-tekst").textContent = tekst;
+}
+
+fetch("https://api.open-meteo.com/v1/forecast?latitude=55.68&longitude=12.57&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FCopenhagen&forecast_days=1")
+  .then(r => r.json())
+  .then(data => {
+    const max = Math.round(data.daily.temperature_2m_max[0]);
+    const min = Math.round(data.daily.temperature_2m_min[0]);
+    vejr = "☀  Vejret i dag:  " + max + "° / " + min + "°";
+    byggBaand();
+  })
+  .catch(() => { vejr = ""; byggBaand(); });
+
+fetch(CORS + DR_RSS)
+  .then(r => r.json())
+  .then(data => {
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(data.contents, "text/xml");
+    const items = xml.querySelectorAll("item");
+    let count = 0;
+    items.forEach(item => {
+      if(count >= 6) return;
+      const titel = item.querySelector("title")?.textContent || "";
+      if(titel) nyheder.push(titel);
+      count++;
+    });
+    byggBaand();
+  })
+  .catch(() => {
+    nyheder = ["Nyheder fra DR hentes automatisk"];
+    byggBaand();
+  });
 </script>
- 
+
 </body>
 </html>
- 
