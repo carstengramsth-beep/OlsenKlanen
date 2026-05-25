@@ -315,19 +315,12 @@ window.visFane = function(navn, knap) {
   knap.classList.add('active');
 };
 window.aabnVideo = function(rumNavn) {
-  var url = 'https://meet.jit.si/' + rumNavn
+  var url = 'https://meet.ffmuc.net/' + rumNavn
     + '#config.prejoinPageEnabled=false'
     + '&config.requireDisplayName=false'
-    + '&config.disableModeratorIndicator=true'
-    + '&config.enableLobbyChat=false'
     + '&config.startWithAudioMuted=false'
     + '&config.startWithVideoMuted=false'
-    + '&config.p2p.enabled=true'
-    + '&config.startAudioOnly=false'
-    + '&config.resolution=480'
-    + '&config.constraints.video.height.ideal=480'
-    + '&config.constraints.video.height.max=480'
-    + '&config.disableSimulcast=true';
+    + '&config.p2p.enabled=true';
   if(window.mig) {
     url += '&userInfo.displayName=' + encodeURIComponent(window.mig.navn);
   }
@@ -414,5 +407,6 @@ if(gemtId) {
 </script>
 </body>
 </html>
+ 
  
  
