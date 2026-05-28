@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>OlsenKlanen — Udskriv medlemsliste</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gron:#2d5016;--guld:#c8952a;--guld-lys:#f5e6c8;--guld-pale:#fdf8ee;
+  --tekst:#1a1a0e;--tekst-lys:#5a5a40;--border:#d4c9a0;--lys:#fdf8ee;
+}
+body{font-family:'Source Sans 3',Arial,sans-serif;background:#f0eedd;color:var(--tekst)}
+ 
+/* ── VÆRKTØJSLINJE (vises ikke ved print) ── */
+.vaerktoej{
+  background:var(--gron);color:#fff;padding:14px 24px;display:flex;
+  align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)
+}
+.vaerktoej h1{font-size:18px;font-weight:600}
+.vaerktoej .knapper{display:flex;gap:10px;flex-wrap:wrap}
+.knap{
+  background:var(--guld);color:var(--tekst);border:none;padding:10px 20px;
+  font-size:14px;font-weight:700;border-radius:5px;cursor:pointer;
+  font-family:inherit;transition:background .2s
+}
+.knap:hover{background:#b07820;color:#fff}
+.knap.sekundaer{background:rgba(255,255,255,.15);color:#fff}
+.knap.sekundaer:hover{background:rgba(255,255,255,.3)}
+.status{font-size:13px;color:rgba(255,255,255,.85)}
+ 
+/* ── PRINT-OMRÅDE ── */
+.ark-omraade{max-width:210mm;margin:20px auto;padding:0 10px}
+ 
+/* Hvert A4-ark */
+.ark{
+  background:#fff;width:210mm;min-height:297mm;margin:0 auto 20px;
+  padding:16mm 14mm;box-shadow:0 2px 12px rgba(0,0,0,.15);
+  display:flex;flex-direction:column
+}
+.ark-hoved{border-bottom:2px solid var(--guld);padding-bottom:8px;margin-bottom:14px}
+.ark-hoved .titel{font-size:18px;font-weight:700;color:var(--gron)}
+.ark-hoved .under{font-size:11px;color:var(--tekst-lys);margin-top:2px}
+.ark-hoved .arknr{float:right;font-size:11px;color:var(--tekst-lys)}
+ 
+/* Husstands-kort */
+.hus{
+  border:1.5px solid var(--border);border-radius:8px;overflow:hidden;
+  margin-bottom:12px;flex:1;display:flex;flex-direction:column
+}
+.hus-hoved{
+  background:var(--gron);color:#fff;padding:8px 14px;display:flex;
+  align-items:center;gap:12px
+}
+.hus-badge{
+  background:var(--guld);color:var(--tekst);font-size:12px;font-weight:700;
+  padding:3px 10px;border-radius:4px;white-space:nowrap
+}
+.hus-navn{font-size:15px;font-weight:600;flex:1}
+.hus-krop{padding:12px 14px;flex:1}
+.felt-raekke{display:flex;margin-bottom:7px;font-size:12.5px;align-items:baseline}
+.felt-label{
+  width:130px;flex-shrink:0;font-size:9px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;color:var(--tekst-lys);padding-top:2px
+}
+.felt-vaerdi{
+  flex:1;border-bottom:1px dotted var(--border);min-height:18px;
+  padding:0 0 2px 4px;color:var(--tekst)
+}
+.felt-vaerdi.tom{color:#bbb;font-style:italic}
+.personer{margin-top:4px}
+.person-linje{font-size:12px;padding:2px 0 2px 4px;border-bottom:1px dotted #eee}
+.person-linje b{font-weight:600}
+.person-linje .smaa{color:var(--tekst-lys);font-size:11px}
+ 
+/* Rettelser + PIN nederst i kortet */
+.hus-fod{
+  border-top:1px solid var(--border);padding:8px 14px;background:var(--guld-pale);
+  display:flex;gap:12px;align-items:flex-end
+}
+.rettelser{flex:1}
+.rettelser .r-label{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--tekst-lys);margin-bottom:3px}
+.rettelser .r-linje{border-bottom:1px solid var(--border);height:15px;margin-bottom:5px}
+.pin-boks{
+  border:1.5px solid var(--guld);border-radius:5px;background:#fff;
+  padding:6px 12px;text-align:center;min-width:90px
+}
+.pin-boks .p-label{font-size:8px;font-weight:700;color:var(--gron);letter-spacing:.5px}
+.pin-boks .p-kode{font-size:18px;font-weight:700;letter-spacing:3px;color:var(--tekst);margin-top:2px}
+ 
+.indlaeser{text-align:center;padding:60px 20px;font-size:16px;color:var(--tekst-lys)}
+ 
+/* ── PRINT ── */
+@media print{
+  body{background:#fff}
+  .vaerktoej{display:none}
+  .ark-omraade{margin:0;max-width:none;padding:0}
+  .ark{box-shadow:none;margin:0;width:auto;min-height:auto;page-break-after:always;padding:12mm}
+  .ark:last-child{page-break-after:auto}
+}
+@page{size:A4 portrait;margin:0}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+ 
+<div class="vaerktoej">
+  <h1>🌳 OlsenKlanen — Udskriv medlemsliste</h1>
+  <span class="status" id="status">Henter data fra kartoteket…</span>
+  <div class="knapper">
+    <button class="knap" onclick="window.print()">🖨️ Udskriv / Gem som PDF</button>
+    <a class="knap sekundaer" href="medlemskartotek.html">← Tilbage</a>
+  </div>
+</div>
+ 
+<div class="ark-omraade" id="ark-omraade">
+  <div class="indlaeser" id="indlaeser">⏳ Henter alle husstande fra kartoteket…</div>
+</div>
+ 
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+ 
+const firebaseConfig = {
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+ 
+const MAANEDER = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december'];
+ 
+function formatDato(str){
+  if(!str) return '';
+  const [y,m,d] = str.split('-');
+  if(!y||!m||!d) return str;
+  return `${parseInt(d)}. ${MAANEDER[parseInt(m)-1]} ${y}`;
+}
+ 
+function esc(s){
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+ 
+function visNavn(m){
+  const dele = [m.fornavn,m.mellemnavn,m.efternavn].filter(Boolean);
+  return dele.length ? dele.join(' ') : (m.navne||'');
+}
+function visPersonNavn(p){
+  const dele = [p.fornavn,p.mellemnavn,p.efternavn].filter(Boolean);
+  return dele.length ? dele.join(' ') : (p.navn||'');
+}
+function visKortNavn(m){
+  const personer = (m.familiemedlemmer||[]).filter(p=>visPersonNavn(p).trim());
+  if(!personer.length) return visNavn(m) || 'Husstand';
+  const fornavne = personer.map(p=>p.fornavn || (p.navn||'').trim().split(/\s+/)[0]).filter(Boolean);
+  return fornavne.length ? fornavne.join(' & ') : (visNavn(m)||'Husstand');
+}
+function visAdresse(m){
+  if(m.vej){
+    const l2 = [m.postnummer,m.by].filter(Boolean).join(' ');
+    return {vej:m.vej, by:l2};
+  }
+  if(m.adresse){
+    const linjer = m.adresse.split('\n').map(l=>l.trim()).filter(Boolean);
+    return {vej:linjer[0]||'', by:linjer[1]||''};
+  }
+  return {vej:'', by:''};
+}
+ 
+// Byg ét husstands-kort
+function byggHus(m){
+  const navn = esc(visKortNavn(m));
+  const adr = visAdresse(m);
+  const tlf = esc(m.tlf||'');
+  const email = esc(m.email||'');
+ 
+  // Personer med fødselsdato
+  let personerHtml = '';
+  (m.familiemedlemmer||[]).forEach(p=>{
+    const pn = esc(visPersonNavn(p));
+    if(!pn) return;
+    const fd = p.foedselsdato ? formatDato(p.foedselsdato) : '—';
+    const rolle = p.rolle ? ` <span class="smaa">(${esc(p.rolle)})</span>` : '';
+    personerHtml += `<div class="person-linje"><b>${pn}</b>${rolle} <span class="smaa">· 🎂 ${fd}</span></div>`;
+  });
+  if(!personerHtml) personerHtml = '<div class="person-linje smaa">Ingen registrerede personer</div>';
+ 
+  return `
+  <div class="hus">
+    <div class="hus-hoved">
+      <span class="hus-badge">Mdl. nr. ${esc(String(m.nr||''))}</span>
+      <span class="hus-navn">${navn}</span>
+    </div>
+    <div class="hus-krop">
+      <div class="felt-raekke">
+        <div class="felt-label">Adresse</div>
+        <div class="felt-vaerdi ${adr.vej?'':'tom'}">${esc(adr.vej)||'(mangler)'}</div>
+      </div>
+      <div class="felt-raekke">
+        <div class="felt-label">Postnr. og by</div>
+        <div class="felt-vaerdi ${adr.by?'':'tom'}">${esc(adr.by)||'(mangler)'}</div>
+      </div>
+      <div class="felt-raekke">
+        <div class="felt-label">Telefon / mobil</div>
+        <div class="felt-vaerdi ${tlf?'':'tom'}">${tlf||'(mangler)'}</div>
+      </div>
+      <div class="felt-raekke">
+        <div class="felt-label">Email</div>
+        <div class="felt-vaerdi ${email?'':'tom'}">${email||'(mangler)'}</div>
+      </div>
+      <div class="felt-label" style="margin-top:6px">Personer i husstanden</div>
+      <div class="personer">${personerHtml}</div>
+    </div>
+    <div class="hus-fod">
+      <div class="rettelser">
+        <div class="r-label">Rettelser / bemærkninger</div>
+        <div class="r-linje"></div>
+        <div class="r-linje"></div>
+      </div>
+      <div class="pin-boks">
+        <div class="p-label">LOGIN-PIN</div>
+        <div class="p-kode">_ _ _</div>
+      </div>
+    </div>
+  </div>`;
+}
+ 
+(async function(){
+  try{
+    const snap = await getDocs(collection(db,'membres'));
+    let huse = [];
+    snap.forEach(d=>{
+      const fd = {...d.data()};
+      if(!fd.nr) fd.nr = d.id;
+      huse.push(fd);
+    });
+    // Sortér efter nummer
+    huse.sort((a,b)=> (+a.nr||0)-(+b.nr||0));
+ 
+    const omr = document.getElementById('ark-omraade');
+    omr.innerHTML = '';
+    document.getElementById('status').textContent = `${huse.length} husstande hentet · 2 pr. ark`;
+ 
+    // 2 husstande pr. ark
+    const PR_ARK = 2;
+    const antalArk = Math.ceil(huse.length / PR_ARK);
+    for(let a=0; a<antalArk; a++){
+      const ark = document.createElement('div');
+      ark.className = 'ark';
+      const dele = huse.slice(a*PR_ARK, a*PR_ARK+PR_ARK);
+      ark.innerHTML = `
+        <div class="ark-hoved">
+          <span class="arknr">Ark ${a+1} af ${antalArk}</span>
+          <div class="titel">🌳 OlsenKlanen — Skovtur 2026</div>
+          <div class="under">Tjek dine data · ret det der er forkert i feltet · aflever til Carsten · husk din email</div>
+        </div>
+        ${dele.map(byggHus).join('')}
+      `;
+      omr.appendChild(ark);
+    }
+ 
+    if(huse.length === 0){
+      omr.innerHTML = '<div class="indlaeser">Ingen husstande fundet i kartoteket.</div>';
+    }
+  }catch(err){
+    document.getElementById('status').textContent = 'Fejl ved hentning';
+    document.getElementById('ark-omraade').innerHTML =
+      '<div class="indlaeser">⚠️ Kunne ikke hente data fra kartoteket.<br>Tjek din internetforbindelse og genindlæs siden.<br><br><small>'+esc(err.message||'')+'</small></div>';
+  }
+})();
+</script>
+ 
+</body>
+</html>
+ 
