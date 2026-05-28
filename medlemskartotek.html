@@ -118,6 +118,7 @@ body.kan-redigere #admin-bjaelke{display:flex}
 .begi-type{font-size:12px;font-weight:700;color:var(--guld)}
 .begi-dato{font-size:12px;color:var(--tekst-lys)}
 .begi-besk{font-size:12px;color:var(--tekst)}
+.begi-besked{font-size:12px;color:var(--tekst);font-style:italic;margin-top:.2rem;padding-top:.2rem;border-top:1px dashed var(--guld-lys)}
  
 /* Fod */
 .kort-fod{padding:.65rem 1rem;border-top:1px solid var(--border);background:var(--guld-pale);display:flex;align-items:center;justify-content:space-between;gap:.5rem}
@@ -214,6 +215,10 @@ body.familie-session .rediger-knap.egen-rediger{display:inline-block}
 .begi-edit-rad select:focus,.begi-edit-rad input:focus{border-color:var(--gron)}
 .begi-slet{background:none;border:none;color:var(--tekst-lys);font-size:18px;cursor:pointer;padding:0 2px;transition:color .2s}
 .begi-slet:hover{color:var(--fare)}
+.begi-besked-rad{background:#f5f0e4;border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px;padding:.5rem .65rem;margin-top:-.45rem;margin-bottom:.45rem}
+.begi-besked-rad label{display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--tekst-lys);font-weight:700;margin-bottom:3px}
+.begi-besked-rad textarea{width:100%;border:1px solid var(--border);padding:.45rem .6rem;font-size:12.5px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:var(--hvid);outline:none;border-radius:3px;min-height:54px;resize:vertical;line-height:1.45}
+.begi-besked-rad textarea:focus{border-color:var(--gron)}
  
 /* Edit-fod */
 .edit-fod{padding:.9rem 1.5rem;border-top:1px solid var(--border);background:var(--guld-pale);display:flex;align-items:center;gap:.75rem;border-radius:0 0 8px 8px;flex-wrap:wrap}
@@ -708,6 +713,7 @@ function byggKort(m) {
             <div class="begi-type">${begiLabel(b.type)}</div>
             <div class="begi-dato">${formatDato(b.dato)}</div>
             ${b.beskrivelse ? `<div class="begi-besk">${b.beskrivelse}</div>` : ''}
+            ${b.besked ? `<div class="begi-besked">💬 ${b.besked}</div>` : ''}
           </div>`).join('')}
        </div>` : '';
  
@@ -882,9 +888,13 @@ function renderBegiEdit() {
         ${Object.entries(BEGI_TYPE).map(([v,l]) =>
           `<option value="${v}" ${b.type===v?'selected':''}>${l}</option>`).join('')}
       </select>
-      <input data-bi="${i}" data-felt="beskrivelse" placeholder="Beskrivelse" value="${b.beskrivelse||''}">
+      <input data-bi="${i}" data-felt="beskrivelse" placeholder="Kort beskrivelse" value="${b.beskrivelse||''}">
       <input data-bi="${i}" data-felt="dato" type="date" value="${b.dato||''}">
       <button class="begi-slet" data-bslet="${i}">×</button>
+    </div>
+    <div class="begi-besked-rad">
+      <label>💬 Besked til forsiden (vises på mærkedagen)</label>
+      <textarea data-bi="${i}" data-felt="besked" placeholder="F.eks. 'Der er kaffe kl. 9.00 — alle er velkomne' eller 'Vi er ikke hjemme på dagen'">${b.besked||''}</textarea>
     </div>`).join('');
 }
  
@@ -958,7 +968,7 @@ document.getElementById('tilfoej-ven').addEventListener('click', () => {
   renderPersonEdit(); markDirty();
 });
 document.getElementById('tilfoej-begi').addEventListener('click', () => {
-  begiListe.push({ type:'konfirmation', dato:'', beskrivelse:'' });
+  begiListe.push({ type:'konfirmation', dato:'', beskrivelse:'', besked:'' });
   renderBegiEdit(); markDirty();
 });
  
@@ -1119,7 +1129,7 @@ async function gemData() {
     email: document.getElementById('ef-email').value.trim(),
     kode:  erAdmin ? document.getElementById('ef-kode').value.trim() : tidl.kode || '',
     familiemedlemmer: reneMedlemmer,
-    begivenheder:     begiListe.filter(b => b.dato || b.beskrivelse),
+    begivenheder:     begiListe.filter(b => b.dato || b.beskrivelse || b.besked),
     sidstRedigeret:   new Date().toISOString(),
     sidstRedigeretAf: auth.currentUser?.email || (familieSession ? `Medlem nr. ${familieSession.nr}` : 'ukendt')
   };
