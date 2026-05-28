@@ -48,8 +48,19 @@ body{font-family:'Source Sans 3',Arial,sans-serif;background:#f0eedd;color:var(-
 /* Husstands-kort */
 .hus{
   border:1.5px solid var(--border);border-radius:8px;overflow:hidden;
-  margin-bottom:12px;flex:1;display:flex;flex-direction:column
+  margin-bottom:14mm;flex:1;display:flex;flex-direction:column
 }
+.hus:last-child{margin-bottom:0}
+ 
+/* Skillestreg mellem de to husstande */
+.skille{
+  display:flex;align-items:center;justify-content:center;
+  margin:0 0 14mm 0;gap:10px;color:var(--guld)
+}
+.skille::before,.skille::after{
+  content:"";flex:1;max-width:60mm;height:1px;background:var(--border)
+}
+.skille .prik{font-size:14px;color:var(--guld)}
 .hus-hoved{
   background:var(--gron);color:#fff;padding:8px 14px;display:flex;
   align-items:center;gap:12px
@@ -82,7 +93,7 @@ body{font-family:'Source Sans 3',Arial,sans-serif;background:#f0eedd;color:var(-
 }
 .rettelser{flex:1}
 .rettelser .r-label{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--tekst-lys);margin-bottom:3px}
-.rettelser .r-linje{border-bottom:1px solid var(--border);height:15px;margin-bottom:5px}
+.rettelser .r-linje{border-bottom:1px solid var(--border);height:15px;margin-bottom:7px}
 .pin-boks{
   border:1.5px solid var(--guld);border-radius:5px;background:#fff;
   padding:6px 12px;text-align:center;min-width:90px
@@ -222,6 +233,7 @@ function byggHus(m){
         <div class="r-label">Rettelser / bemærkninger</div>
         <div class="r-linje"></div>
         <div class="r-linje"></div>
+        <div class="r-linje"></div>
       </div>
       <div class="pin-boks">
         <div class="p-label">LOGIN-PIN</div>
@@ -260,7 +272,7 @@ function byggHus(m){
           <div class="titel">🌳 OlsenKlanen — Skovtur 2026</div>
           <div class="under">Tjek dine data · ret det der er forkert i feltet · aflever til Carsten · husk din email</div>
         </div>
-        ${dele.map(byggHus).join('')}
+        ${dele.map(byggHus).join('<div class="skille"><span class="prik">✦</span></div>')}
       `;
       omr.appendChild(ark);
     }
