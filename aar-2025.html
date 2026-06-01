@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen · Familieside</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; padding-bottom: 44px; }
+.topbar { background: #2d5016; color: #f5e6a8; padding: 16px 30px; display: flex; justify-content: space-between; align-items: center; }
+.topbar h1 { font-size: 22px; font-weight: normal; }
+.topbar .user { display: flex; align-items: center; gap: 14px; font-style: italic; font-size: 15px; }
+.topbar .logout { color: #f5e6a8; text-decoration: none; padding: 5px 12px; border: 1px solid #f5e6a8; border-radius: 4px; font-size: 13px; font-style: normal; cursor: pointer; }
+.layout { display: grid; grid-template-columns: 260px 1fr 280px; gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto; }
+.section-title { font-size: 12px; color: #888; letter-spacing: 1px; margin-bottom: 12px; padding-left: 4px; }
+.opslag { background: #fff; padding: 14px 16px; margin-bottom: 10px; border-radius: 6px; border-left: 4px solid #2d5016; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.opslag-emoji { font-size: 22px; margin-bottom: 4px; }
+.opslag-titel { font-weight: bold; color: #2c3e1f; font-size: 15px; margin-bottom: 2px; }
+.opslag-info { font-size: 12px; color: #888; }
+.opslag a { color: inherit; text-decoration: none; }
+.opslag a:hover .opslag-titel { color: #2d5016; }
+.tavle-boks { background: #fff; padding: 14px 16px; margin-bottom: 10px; border-radius: 6px; border-left: 4px solid #c89e3c; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.tavle-titel { font-weight: bold; color: #2c3e1f; font-size: 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.tavle-tal-raekke { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.tavle-tal { display: flex; justify-content: space-between; align-items: center; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 13px; color: #444; text-decoration: none; transition: background 0.15s; }
+.tavle-tal:hover { background: #faf3dc; }
+.tavle-tal-tekst { display: flex; align-items: center; gap: 6px; }
+.tavle-tal-tal { background: #2d5016; color: #f5e6a8; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: bold; min-width: 24px; text-align: center; }
+.tavle-tal-tal.ialt { background: #c89e3c; color: #fff; }
+.tavle-tal-tal.nul { background: #ddd; color: #888; }
+.mid { display: flex; flex-direction: column; gap: 16px; }
+.billede-boks { position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+.billede-boks img { width: 100%; display: block; }
+.billede-tekst { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.7)); color: #fff; padding: 20px 16px 12px; display: flex; justify-content: space-between; font-style: italic; }
+.fremh-boks { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.fremh-header { background: #2d5016; color: #c89e3c; padding: 10px 16px; font-weight: bold; font-size: 14px; letter-spacing: 1px; }
+.fremh-row { display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid #f0ead8; }
+.fremh-row:last-child { border-bottom: none; }
+.fremh-dato { font-style: italic; color: #888; min-width: 90px; font-size: 14px; }
+.fremh-tekst { flex: 1; font-size: 15px; }
+.fremh-tag { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+.tag-maerk { background: #fff3cd; color: #856404; }
+.tag-arr { background: #d4edda; color: #155724; }
+.tag-jub { background: #fce4ec; color: #880e4f; }
+.kalender-boks { background: #fff; border-radius: 8px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.kalender-boks h3 { font-size: 15px; color: #2d5016; margin-bottom: 10px; }
+.kal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; font-size: 13px; text-align: center; }
+.kal-head { font-weight: bold; color: #888; padding: 6px 0; font-size: 11px; }
+.kal-dag { padding: 7px 0; border-radius: 3px; cursor: default; }
+.kal-dag.idag { background: #2d5016; color: #f5e6a8; font-weight: bold; }
+.kal-dag.event { background: #fff3cd; color: #856404; font-weight: bold; }
+.kal-dag.tom { color: #ccc; }
+.nav-grp { margin-bottom: 8px; }
+.nav-item { background: #fff; padding: 12px 14px; margin-bottom: 6px; border-radius: 6px; display: flex; align-items: center; gap: 11px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); text-decoration: none; color: inherit; cursor: pointer; transition: background 0.15s; }
+.nav-item:hover { background: #faf3dc; }
+.nav-item.aktiv { background: #e8f0d8; border-left: 4px solid #2d5016; padding-left: 10px; }
+.nav-emoji { font-size: 22px; }
+.nav-txt { flex: 1; }
+.nav-titel { font-weight: bold; font-size: 14px; color: #2c3e1f; }
+.nav-info { font-size: 11px; color: #888; }
+#admin-knap { display: none; }
+ 
+/* NYHEDSBAAND — fast i bunden */
+.nyhedsbaand {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #FFD700;
+  border-top: 2px solid #c8a800;
+  padding: 10px 0;
+  overflow: hidden;
+  z-index: 999;
+  white-space: nowrap;
+}
+.nyhedsbaand-tekst {
+  display: inline-block;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: #000;
+  letter-spacing: 0.3px;
+  animation: baand 30s linear infinite;
+}
+@keyframes baand {
+  0%   { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+ 
+@media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
+</style>
+<script>
+try {
+  let niveau = sessionStorage.getItem("ok_niveau");
+  if (!niveau) {
+    const varigtNiveau = localStorage.getItem("ok_niveau");
+    if (varigtNiveau) {
+      sessionStorage.setItem("ok_niveau", varigtNiveau);
+      sessionStorage.setItem("ok_navn", localStorage.getItem("ok_navn") || "");
+      sessionStorage.setItem("ok_email", localStorage.getItem("ok_email") || "");
+      niveau = varigtNiveau;
+    }
+  }
+  if (!niveau) {
+    window.location.href = "login.html";
+  }
+} catch(e) {
+  window.location.href = "login.html";
+}
+</script>
+</head>
+<body>
+<div style="background:#c89e3c;color:#2d5016;text-align:center;padding:8px;font-family:Georgia,serif;font-weight:bold;font-size:15px;">
+📅 ARKIV — Forsiden som den så ud i 2025 · <a href="forside.html" style="color:#2d5016;">Tilbage til nyeste forside</a>
+</div>
+ 
+<div class="topbar">
+  <h1>OlsenKlanen · Familieside</h1>
+  <div class="user">
+    <span id="bruger-navn">Carsten Gram (admin)</span>
+    <a class="logout" onclick="logUd()">Log ud</a>
+  </div>
+</div>
+ 
+<div class="layout">
+ 
+  <aside>
+    <div class="section-title">OPSLAGSTAVLEN</div>
+ 
+    <a href="fremhaevede.html" class="opslag" style="text-decoration:none;color:inherit;cursor:pointer;display:block;">
+      <div class="opslag-emoji">⭐</div>
+      <div class="opslag-titel">Fremhævede begivenheder</div>
+      <div class="opslag-info" id="opslag-fremh-info">Henter…</div>
+    </a>
+ 
+    <a href="skovtur2026.html" class="opslag" style="text-decoration:none;color:inherit;cursor:pointer;display:block;">
+      <div class="opslag-emoji">🌲</div>
+      <div class="opslag-titel">Skovtur 2026</div>
+      <div class="opslag-info">Program · priser · komité · kontakt · vedtægter</div>
+    </a>
+ 
+    <a href="aarets-billeder.html" class="opslag" style="text-decoration:none;color:inherit;cursor:pointer;display:block;">
+      <div class="opslag-emoji">📷</div>
+      <div class="opslag-titel">Årets billeder</div>
+      <div class="opslag-info">2026 · senest: Kurt (8 stk.)</div>
+    </a>
+ 
+    <a href="tidligere-billeder.html" class="opslag" style="text-decoration:none;color:inherit;cursor:pointer;display:block;">
+      <div class="opslag-emoji">🗂️</div>
+      <div class="opslag-titel">Forrige års billeder</div>
+      <div class="opslag-info">Arkiv · efter årstal</div>
+    </a>
+ 
+    <div class="tavle-boks">
+      <div class="tavle-titel">📌 Opslagstavlen — her og nu</div>
+      <div class="tavle-tal-raekke">
+        <a href="opslagstavlen.html?filter=nye" class="tavle-tal">
+          <span class="tavle-tal-tekst">🆕 Nye opslag</span>
+          <span class="tavle-tal-tal" id="tal-nye">0</span>
+        </a>
+        <a href="opslagstavlen.html?filter=ukommenterede" class="tavle-tal">
+          <span class="tavle-tal-tekst">💬 Uden kommentar</span>
+          <span class="tavle-tal-tal" id="tal-ukommenterede">0</span>
+        </a>
+        <a href="opslagstavlen.html" class="tavle-tal">
+          <span class="tavle-tal-tekst">📋 Opslag i alt</span>
+          <span class="tavle-tal-tal ialt" id="tal-ialt">0</span>
+        </a>
+      </div>
+    </div>
+ 
+  </aside>
+ 
+  <main class="mid">
+    <div class="billede-boks">
+      <img src="billeder/IMG_4390.JPEG" alt="Skovtur maj 2025 — Haderslev">
+      <div class="billede-tekst">
+        <span>Skovtur maj 2025 — Haderslev</span>
+        <span>Maj 2025</span>
+      </div>
+    </div>
+ 
+    <div class="fremh-boks">
+      <div class="fremh-header">⭐ FREMHÆVEDE BEGIVENHEDER</div>
+      <div id="fremh-liste">
+        <div class="fremh-row">
+          <div class="fremh-dato">—</div>
+          <div class="fremh-tekst">Henter mærkedage fra kartoteket…</div>
+          <div class="fremh-tag tag-maerk">Mærkedag</div>
+        </div>
+      </div>
+    </div>
+ 
+    <div class="kalender-boks">
+      <h3>Kalender — Maj 2026</h3>
+      <div class="kal-grid">
+        <div class="kal-head">Ma</div><div class="kal-head">Ti</div><div class="kal-head">On</div><div class="kal-head">To</div><div class="kal-head">Fr</div><div class="kal-head">Lø</div><div class="kal-head">Sø</div>
+        <div class="kal-dag tom"></div><div class="kal-dag tom"></div><div class="kal-dag tom"></div><div class="kal-dag">1</div><div class="kal-dag">2</div><div class="kal-dag">3</div><div class="kal-dag">4</div>
+        <div class="kal-dag">5</div><div class="kal-dag">6</div><div class="kal-dag">7</div><div class="kal-dag">8</div><div class="kal-dag">9</div><div class="kal-dag">10</div><div class="kal-dag">11</div>
+        <div class="kal-dag">12</div><div class="kal-dag">13</div><div class="kal-dag">14</div><div class="kal-dag">15</div><div class="kal-dag idag">16</div><div class="kal-dag">17</div><div class="kal-dag">18</div>
+        <div class="kal-dag">19</div><div class="kal-dag">20</div><div class="kal-dag">21</div><div class="kal-dag">22</div><div class="kal-dag">23</div><div class="kal-dag event">24</div><div class="kal-dag">25</div>
+        <div class="kal-dag">26</div><div class="kal-dag">27</div><div class="kal-dag">28</div><div class="kal-dag event">29</div><div class="kal-dag event">30</div><div class="kal-dag event">31</div><div class="kal-dag tom"></div>
+      </div>
+    </div>
+  </main>
+ 
+  <aside>
+    <div class="section-title">NAVIGATION</div>
+    <div class="nav-grp">
+ 
+      <div class="nav-item aktiv">
+        <div class="nav-emoji">🏠</div>
+        <div class="nav-txt"><div class="nav-titel">Forside</div><div class="nav-info">Du er her</div></div>
+      </div>
+ 
+      <a class="nav-item" href="medlemskartotek.html">
+        <div class="nav-emoji">👥</div>
+        <div class="nav-txt"><div class="nav-titel">Medlemskartotek</div><div class="nav-info">116 personer · ret data</div></div>
+      </a>
+ 
+      <a class="nav-item" href="foedselsdage.html">
+        <div class="nav-emoji">🎉</div>
+        <div class="nav-txt"><div class="nav-titel">Mærkedage</div><div class="nav-info">Fødselsdage · jubilæer</div></div>
+      </a>
+ 
+      <a class="nav-item" href="arrangementer.html">
+        <div class="nav-emoji">📅</div>
+        <div class="nav-txt"><div class="nav-titel">Arrangementer</div><div class="nav-info">Skovtur 2027 · kalender</div></div>
+      </a>
+ 
+      <a class="nav-item" href="mindelunden.html">
+        <div class="nav-emoji">🕯️</div>
+        <div class="nav-txt"><div class="nav-titel">Mindelunden</div><div class="nav-info">Tidligere medlemmer</div></div>
+      </a>
+ 
+      <a class="nav-item" href="videofon-moederum.html">
+        <div class="nav-emoji">📞</div>
+        <div class="nav-txt"><div class="nav-titel">Videofon Møde Rum</div><div class="nav-info">Meld dig til · ring til familien</div></div>
+      </a>
+ 
+      <a class="nav-item" href="admin.html" id="admin-knap">
+        <div class="nav-emoji">⚙️</div>
+        <div class="nav-txt"><div class="nav-titel">Administration</div><div class="nav-info">Video · kalender · udvikling</div></div>
+      </a>
+ 
+    </div>
+  </aside>
+ 
+</div>
+ 
+<!-- NYHEDSBAAND — fast i bunden af siden -->
+<div class="nyhedsbaand">
+  <span class="nyhedsbaand-tekst" id="baand-tekst">Henter nyheder og vejr...</span>
+</div>
+ 
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, query, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+ 
+const firebaseConfig = {
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+};
+ 
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+ 
+const minEmail = sessionStorage.getItem("ok_email") || "";
+ 
+const q = query(collection(db, "opslagstavle"));
+onSnapshot(q, (snap) => {
+  let ialt = 0, nye = 0, ukommenterede = 0;
+  snap.docs.forEach(d => {
+    const data = d.data();
+    if (data.slettet) return;
+    ialt++;
+    const setAf = data.set_af || [];
+    if (!setAf.includes(minEmail)) nye++;
+    if (!data.kommentarer || data.kommentarer.length === 0) ukommenterede++;
+  });
+  document.getElementById("tal-nye").textContent = nye;
+  document.getElementById("tal-nye").className = "tavle-tal-tal" + (nye === 0 ? " nul" : "");
+  document.getElementById("tal-ukommenterede").textContent = ukommenterede;
+  document.getElementById("tal-ukommenterede").className = "tavle-tal-tal" + (ukommenterede === 0 ? " nul" : "");
+  document.getElementById("tal-ialt").textContent = ialt;
+});
+ 
+// ════════════════════════════════════════════════════════════════
+//  MÆRKEDAGE FRA KARTOTEKET — regner ALT ud fra fødselsdatoer
+//  Ingen tal skrevet i hånden. Kartoteket er den sande kilde.
+// ════════════════════════════════════════════════════════════════
+ 
+const MAANEDER = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december'];
+ 
+// Hjælp: lav en Date kun for dag+måned i indeværende år (ignorer fødselsår)
+function naesteForekomst(maaned, dag, fraDato) {
+  let aar = fraDato.getFullYear();
+  let d = new Date(aar, maaned - 1, dag);
+  // hvis datoen allerede er passeret i år, så tag næste år
+  const idagMidnat = new Date(fraDato.getFullYear(), fraDato.getMonth(), fraDato.getDate());
+  if (d < idagMidnat) d = new Date(aar + 1, maaned - 1, dag);
+  return d;
+}
+ 
+// Regn alder personen FYLDER på sin fødselsdag i et givet år
+function alderPaa(foedAar, paaAar) {
+  return paaAar - foedAar;
+}
+ 
+// Hent alle personer fra alle husstande
+async function hentAllePersoner() {
+  const personer = [];
+  const snap = await getDocs(collection(db, "membres"));
+  snap.forEach(docu => {
+    const fam = docu.data();
+    (fam.familiemedlemmer || []).forEach(p => {
+      const navn = (p.fornavn || (p.navn || '').trim().split(/\s+/)[0] || '').trim();
+      if (p.foedselsdato && navn) {
+        const dele = p.foedselsdato.split('-'); // "ÅÅÅÅ-MM-DD"
+        if (dele.length === 3) {
+          personer.push({
+            navn,
+            aar: parseInt(dele[0]),
+            maaned: parseInt(dele[1]),
+            dag: parseInt(dele[2])
+          });
+        }
+      }
+    });
+  });
+  return personer;
+}
+ 
+// Find dem der har fødselsdag I DAG
+function foedselsdageIdag(personer, idag) {
+  const m = idag.getMonth() + 1;
+  const d = idag.getDate();
+  const aar = idag.getFullYear();
+  return personer
+    .filter(p => p.maaned === m && p.dag === d)
+    .map(p => ({ navn: p.navn, alder: alderPaa(p.aar, aar) }));
+}
+ 
+// Byg de næste kommende mærkedage (til "Fremhævede begivenheder")
+function kommendeFoedselsdage(personer, idag, antal) {
+  return personer
+    .map(p => {
+      const naeste = naesteForekomst(p.maaned, p.dag, idag);
+      return {
+        navn: p.navn,
+        dato: naeste,
+        alder: alderPaa(p.aar, naeste.getFullYear())
+      };
+    })
+    .sort((a, b) => a.dato - b.dato)
+    .slice(0, antal);
+}
+ 
+// Render "Fremhævede begivenheder" på midten af forsiden
+function renderFremhaevede(kommende) {
+  const el = document.getElementById('fremh-liste');
+  if (!el) return;
+  let html = '';
+  kommende.forEach(k => {
+    const datoTekst = k.dato.getDate() + '. ' + MAANEDER[k.dato.getMonth()];
+    html += `
+      <div class="fremh-row">
+        <div class="fremh-dato">${datoTekst}</div>
+        <div class="fremh-tekst">${k.navn} fylder ${k.alder} år</div>
+        <div class="fremh-tag tag-maerk">Mærkedag</div>
+      </div>`;
+  });
+  // De faste arrangementer beholdes nederst
+  html += `
+    <div class="fremh-row">
+      <div class="fremh-dato">29. maj</div>
+      <div class="fremh-tekst">Skovtur 2026 starter</div>
+      <div class="fremh-tag tag-arr">Arrangement</div>
+    </div>
+    <div class="fremh-row">
+      <div class="fremh-dato">31. maj</div>
+      <div class="fremh-tekst">Skovtur 2026 slutter</div>
+      <div class="fremh-tag tag-arr">Arrangement</div>
+    </div>`;
+  el.innerHTML = html;
+ 
+  // Opdater også den lille info-tekst i venstre opslag
+  const info = document.getElementById('opslag-fremh-info');
+  if (info && kommende.length) {
+    info.textContent = kommende[0].navn + ' ' + kommende[0].alder + ' · Skovtur 2026';
+  } else if (info) {
+    info.textContent = 'Skovtur 2026';
+  }
+}
+ 
+// Global så nyhedsbåndet kan bruge den
+let foedselsdagsTekst = "";
+ 
+(async function koerMaerkedage() {
+  try {
+    const idag = new Date();
+    const personer = await hentAllePersoner();
+ 
+    // 1) Fødselsdag i dag → tekst til nyhedsbåndet
+    const idagsFoedselsdage = foedselsdageIdag(personer, idag);
+    if (idagsFoedselsdage.length) {
+      foedselsdagsTekst = idagsFoedselsdage
+        .map(f => `🎂 I dag er det ${f.navn}s ${f.alder} års fødselsdag — hurra hurra hurra!`)
+        .join('     ');
+    }
+ 
+    // 2) Kommende mærkedage → Fremhævede begivenheder
+    const kommende = kommendeFoedselsdage(personer, idag, 3);
+    renderFremhaevede(kommende);
+ 
+    // Byg båndet igen nu hvor vi har fødselsdags-info
+    if (typeof byggBaand === 'function') byggBaand();
+  } catch(e) {
+    console.log("Kunne ikke hente mærkedage fra kartoteket:", e);
+    const info = document.getElementById('opslag-fremh-info');
+    if (info) info.textContent = 'Skovtur 2026';
+    const el = document.getElementById('fremh-liste');
+    if (el) el.innerHTML = `
+      <div class="fremh-row">
+        <div class="fremh-dato">29. maj</div>
+        <div class="fremh-tekst">Skovtur 2026 starter</div>
+        <div class="fremh-tag tag-arr">Arrangement</div>
+      </div>
+      <div class="fremh-row">
+        <div class="fremh-dato">31. maj</div>
+        <div class="fremh-tekst">Skovtur 2026 slutter</div>
+        <div class="fremh-tag tag-arr">Arrangement</div>
+      </div>`;
+  }
+  // Gør teksten tilgængelig globalt for nyhedsbåndet
+  window.OLSEN_FOEDSELSDAG = foedselsdagsTekst;
+  if (typeof window.byggBaand === 'function') window.byggBaand();
+})();
+</script>
+ 
+<script>
+try {
+  const niveau = sessionStorage.getItem("ok_niveau") || localStorage.getItem("ok_niveau");
+  const navn = sessionStorage.getItem("ok_navn") || localStorage.getItem("ok_navn");
+ 
+  if (navn) {
+    const rolleSuffix = niveau === "admin" ? " (admin)"
+                      : niveau === "olsenbanden" ? " (OlsenBanden)"
+                      : niveau === "gaest" ? " (gæst)"
+                      : "";
+    document.getElementById("bruger-navn").textContent = navn + rolleSuffix;
+  }
+ 
+  if (niveau === "admin" || niveau === "olsenbanden") {
+    document.getElementById("admin-knap").style.display = "flex";
+  }
+} catch(e) {
+  console.log("Fejl ved adgangskontrol:", e);
+}
+ 
+function logUd() {
+  try {
+    sessionStorage.clear();
+    localStorage.removeItem("ok_niveau");
+    localStorage.removeItem("ok_navn");
+    localStorage.removeItem("ok_email");
+    localStorage.removeItem("ok_husk_email");
+    localStorage.removeItem("ok_husk_kode");
+  } catch(e) {}
+  window.open("", "_self");
+  window.close();
+  setTimeout(function() { window.location.href = "about:blank"; }, 100);
+}
+ 
+// NYHEDSBAAND — Fødselsdag + DR + Vejr
+const CORS = "https://api.allorigins.win/get?url=";
+const DR_RSS = encodeURIComponent("https://www.dr.dk/nyheder/service/feeds/allenyheder");
+let nyheder = [];
+let vejr = "";
+ 
+window.byggBaand = function byggBaand() {
+  let tekst = "";
+  // Fødselsdag FØRST — det er det festlige
+  if (window.OLSEN_FOEDSELSDAG) tekst += window.OLSEN_FOEDSELSDAG + "     ";
+  if (vejr) tekst += vejr + "     ";
+  nyheder.forEach(n => { tekst += "★  " + n + "     "; });
+  if (tekst) document.getElementById("baand-tekst").textContent = tekst;
+};
+ 
+fetch("https://api.open-meteo.com/v1/forecast?latitude=55.68&longitude=12.57&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FCopenhagen&forecast_days=1")
+  .then(r => r.json())
+  .then(data => {
+    const max = Math.round(data.daily.temperature_2m_max[0]);
+    const min = Math.round(data.daily.temperature_2m_min[0]);
+    vejr = "☀  Vejret i dag:  " + max + "° / " + min + "°";
+    window.byggBaand();
+  })
+  .catch(() => { vejr = ""; window.byggBaand(); });
+ 
+fetch(CORS + DR_RSS)
+  .then(r => r.json())
+  .then(data => {
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(data.contents, "text/xml");
+    const items = xml.querySelectorAll("item");
+    let count = 0;
+    items.forEach(item => {
+      if(count >= 6) return;
+      const titel = item.querySelector("title")?.textContent || "";
+      if(titel) nyheder.push(titel);
+      count++;
+    });
+    window.byggBaand();
+  })
+  .catch(() => {
+    nyheder = ["Nyheder fra DR hentes automatisk"];
+    window.byggBaand();
+  });
+</script>
+ 
+</body>
+</html>
+ 
+ 
+ 
