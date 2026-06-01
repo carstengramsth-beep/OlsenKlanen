@@ -30,8 +30,10 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .spom-boks { background: #fff; padding: 30px; border-radius: 8px; max-width: 460px; width: 100%; }
 .spom-boks h2 { color: #2d5016; margin-bottom: 10px; font-size: 20px; }
 .spom-boks p { color: #555; font-size: 15px; margin-bottom: 18px; }
-.spom-boks label { display: block; font-size: 14px; color: #555; margin-bottom: 4px; margin-top: 12px; }
-.spom-boks input { width: 100%; padding: 12px; border: 1px solid #c4b896; border-radius: 4px; font-family: inherit; font-size: 16px; }
+.spom-boks label { display: block; font-size: 15px; color: #2d5016; font-weight: bold; margin-bottom: 6px; }
+.spom-boks input { width: 100%; padding: 14px; border: 2px solid #c4b896; border-radius: 5px; font-family: inherit; font-size: 17px; background: #fffdf6; }
+.spom-boks input:focus { border-color: #2d5016; outline: none; background: #fff; }
+.felt-gruppe { background: #f5f1e8; padding: 14px; border-radius: 6px; margin-bottom: 14px; }
 .spom-knaprum { display: flex; gap: 10px; margin-top: 22px; }
 .knap-ja { flex: 1; padding: 14px; background: #2d7a2d; color: #fff; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; }
 .knap-nej { padding: 14px 18px; background: #fff; color: #888; border: 1px solid #ccc; border-radius: 5px; font-size: 15px; cursor: pointer; }
@@ -100,11 +102,18 @@ Her kan medlemmer melde sig til Videofon Møde Rummet. Når du har meldt dig til
 <div class="spom-bg" id="spom-bg">
 <div class="spom-boks">
 <h2>Vil du deltage?</h2>
-<p>Er du interesseret i at blive kaldt op i Videofon Møde Rummet? Skriv dit navn og medlemsnummer, så melder vi dig til.</p>
-<label for="ind-navn">Dit navn</label>
+<p>Er du interesseret i at blive kaldt op i Videofon Møde Rummet? Udfyld de to felter, så melder vi dig til.</p>
+ 
+<div class="felt-gruppe">
+<label for="ind-navn">1. SKRIV DIT NAVN</label>
 <input type="text" id="ind-navn" placeholder="F.eks. Carsten Gram" autocomplete="name">
-<label for="ind-nummer">Dit medlemsnummer</label>
-<input type="text" id="ind-nummer" placeholder="F.eks. 999" inputmode="numeric">
+</div>
+ 
+<div class="felt-gruppe">
+<label for="ind-nummer">2. SKRIV DIT MEDLEMSNUMMER</label>
+<input type="text" id="ind-nummer" placeholder="F.eks. 8" inputmode="numeric">
+</div>
+ 
 <div class="spom-knaprum">
 <button class="knap-ja" onclick="meldTil()">Ja, meld mig til</button>
 <button class="knap-nej" onclick="lukTilmelding()">Ikke nu</button>
@@ -252,7 +261,24 @@ window.meldFra = function() {
 // Lytter HELE TIDEN på rummet. Hver gang nogen melder sig til eller fra —
 // også dig selv — opdateres listen og knapperne med det samme.
 onValue(ref(db, 'videofon_moederum'), (snap) => {
-  window.alleTilmeldte = snap.val() || {};
+  const raa = snap.val() || {};
+ 
+  // RYD OP: en aktiv tilmelding opdaterer sit tidsstempel hvert 20. sekund.
+  // Alt der er ældre end 2 minutter er "hængt fast" og fjernes automatisk.
+  const nu = Date.now();
+  const GRAENSE = 2 * 60 * 1000; // 2 minutter
+  window.alleTilmeldte = {};
+  Object.keys(raa).forEach(nr => {
+    const d = raa[nr];
+    const tid = (d && typeof d.tid === 'number') ? d.tid : 0;
+    if(tid && (nu - tid) > GRAENSE) {
+      // Gammel/hængende tilmelding — fjern den fra serveren
+      remove(ref(db, 'videofon_moederum/' + nr));
+      set(ref(db, 'medlemmer/' + nr + '/fri_for_kald'), false);
+    } else {
+      window.alleTilmeldte[nr] = d;
+    }
+  });
  
   // Forbindelsen virker — gør linjen grøn (sker uanset om listen er tom)
   const status = document.getElementById('firebase-status');
