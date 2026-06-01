@@ -139,18 +139,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
  
-// ===== HVEM ER JEG (gemmes lokalt så man slipper for at skrive hver gang) =====
+// ===== HVEM ER JEG =====
+// Ingen "husk mig". Man melder sig aktivt til hver gang.
+// Man er IKKE tilmeldt før man trykker Adgang og svarer ja.
 window.mig = null;
 window.alleTilmeldte = {};
 window.indkommendeOpkald = null;
  
-// Prøv at huske tidligere tilmelding fra denne enhed
-(function() {
-  try {
-    const gemt = localStorage.getItem('vmr_mig');
-    if(gemt) { window.mig = JSON.parse(gemt); }
-  } catch(e) {}
-})();
+// Ryd op: hvis en tidligere version af siden har gemt noget lokalt, slettes det,
+// så ingen bliver tilmeldt automatisk.
+try { localStorage.removeItem('vmr_mig'); } catch(e) {}
  
 // ===== LYD (ringetone) =====
 window.lydCtx = null;
@@ -197,11 +195,9 @@ window.visMelding = function(tekst) {
  
 // ===== TILMELDING =====
 window.aabnTilmelding = function() {
-  // Hvis vi allerede ved hvem du er, så meld direkte til
-  if(window.mig && window.mig.navn && window.mig.nummer) {
-    skrivTilmelding(window.mig.navn, window.mig.nummer);
-    return;
-  }
+  // Spørg ALTID om navn og nummer. Ingen automatisk tilmelding.
+  document.getElementById('ind-navn').value = '';
+  document.getElementById('ind-nummer').value = '';
   document.getElementById('spom-bg').classList.add('vis');
   document.getElementById('ind-navn').focus();
 };
@@ -218,7 +214,6 @@ window.meldTil = function() {
  
 function skrivTilmelding(navn, nummer) {
   window.mig = { navn: navn, nummer: nummer, id: nummer };
-  try { localStorage.setItem('vmr_mig', JSON.stringify(window.mig)); } catch(e) {}
  
   // 1) Registrér tilmelding i besøgsrummet (forsvinder hvis enheden lukkes)
   const migRef = ref(db, 'videofon_moederum/' + nummer);
@@ -241,27 +236,45 @@ function skrivTilmelding(navn, nummer) {
  
 window.meldFra = function() {
   if(!window.mig) return;
-  remove(ref(db, 'videofon_moederum/' + window.mig.nummer));
-  set(ref(db, 'medlemmer/' + window.mig.nummer + '/fri_for_kald'), false);
+  const nr = window.mig.nummer;
+  remove(ref(db, 'videofon_moederum/' + nr));
+  set(ref(db, 'medlemmer/' + nr + '/fri_for_kald'), false);
+  remove(ref(db, 'vmr_opkald/' + nr));
+  // Glem hvem jeg var — så man er HELT fri og kan logge ind på ny
+  window.mig = null;
+  window.indkommendeOpkald = null;
   document.getElementById('adgang-kort').style.display = 'block';
   document.getElementById('afmeld-linje').style.display = 'none';
   window.visMelding('Du er meldt fra Videofon Møde Rummet.');
 };
  
 // ===== VIS TILMELDTE =====
+// Lytter HELE TIDEN på rummet. Hver gang nogen melder sig til eller fra —
+// også dig selv — opdateres listen og knapperne med det samme.
 onValue(ref(db, 'videofon_moederum'), (snap) => {
   window.alleTilmeldte = snap.val() || {};
-  document.getElementById('firebase-status').textContent = 'Forbundet — Videofon Møde Rummet virker';
-  document.getElementById('firebase-status').classList.add('aktiv');
-  visDeltagere();
  
-  // Hvis denne enhed allerede er meldt til, vis afmeld-knap
-  if(window.mig && window.alleTilmeldte[window.mig.nummer]) {
-    document.getElementById('adgang-kort').style.display = 'none';
-    document.getElementById('afmeld-linje').style.display = 'block';
-    lytEfterOpkald(window.mig.nummer);
-  }
+  // Forbindelsen virker — gør linjen grøn (sker uanset om listen er tom)
+  const status = document.getElementById('firebase-status');
+  status.textContent = 'Forbundet — Videofon Møde Rummet virker';
+  status.classList.add('aktiv');
+ 
+  visDeltagere();
+  opdaterKnapper();
+}, (fejl) => {
+  // Hvis forbindelsen IKKE kommer igennem, sig det ærligt
+  const status = document.getElementById('firebase-status');
+  status.textContent = 'Kunne ikke forbinde. Prøv at genindlæse siden (F5).';
+  status.classList.remove('aktiv');
 });
+ 
+// Viser den rigtige knap alt efter om DU er meldt til lige nu
+window.opdaterKnapper = function() {
+  const jegErMed = window.mig && window.alleTilmeldte[window.mig.nummer];
+  document.getElementById('adgang-kort').style.display = jegErMed ? 'none' : 'block';
+  document.getElementById('afmeld-linje').style.display = jegErMed ? 'block' : 'none';
+  if(jegErMed) { lytEfterOpkald(window.mig.nummer); }
+};
  
 window.visDeltagere = function() {
   const liste = Object.values(window.alleTilmeldte);
