@@ -5,19 +5,55 @@
       ".read": true,
       ".write": true
     },
-
+ 
     // Gruppechat – OlsenBanden admin-panel
     "chat": {
       ".read": true,
       ".write": true
     },
-
+ 
     // Videomøde-invitationer – OlsenBanden admin-panel
     "invites": {
       ".read": true,
       ".write": true
     },
-
+ 
+    // Online-status – OlsenBanden videofon (olsenbanden.html)
+    "online": {
+      ".read": true,
+      ".write": true
+    },
+ 
+    // Beskeder – OlsenBanden videofon (olsenbanden.html)
+    "beskeder": {
+      ".read": true,
+      ".write": true
+    },
+ 
+    // Opkald – OlsenBanden videofon (olsenbanden.html)
+    "opkald": {
+      ".read": true,
+      ".write": true
+    },
+ 
+    // Videofon Møde Rum – tilmeldte medlemmer (videofon-moederum.html)
+    "videofon_moederum": {
+      ".read": true,
+      ".write": true
+    },
+ 
+    // Videofon Møde Rum – opkald mellem tilmeldte (videofon-moederum.html)
+    "vmr_opkald": {
+      ".read": true,
+      ".write": true
+    },
+ 
+    // Medlemmer – mærket "fri for kald" (klar til kartoteket senere)
+    "medlemmer": {
+      ".read": true,
+      ".write": true
+    },
+ 
     // Hilsener – alle kan læse og oprette nye (kode-tjek sker i klienten)
     "hilsener": {
       "$tilKey": {
@@ -28,19 +64,19 @@
         }
       }
     },
-
+ 
     // Vil ikke forstyrres – OlsenBanden admin-panel
     "dnd": {
       ".read": true,
       ".write": true
     },
-
+ 
     // Ubesvarede opkald – OlsenBanden admin-panel
     "missedCall": {
       ".read": true,
       ".write": true
     },
-
+ 
     // Afvis al anden adgang
     "$other": {
       ".read": false,
@@ -48,3 +84,4 @@
     }
   }
 }
+ 
