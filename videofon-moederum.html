@@ -337,6 +337,10 @@ window.visDeltagere = function() {
  
 // ===== RING OP (åbner Jitsi i par-rum, samme metode som OlsenBanden) =====
 window.aabnVideo = function(rumNavn) {
+  // Spærre: åbn kun ÉT videovindue ad gangen for samme rum.
+  if(window.aabentRum === rumNavn) { return; }
+  window.aabentRum = rumNavn;
+  setTimeout(() => { window.aabentRum = null; }, 8000);
   var url = 'https://meet.ffmuc.net/' + rumNavn
     + '#config.prejoinPageEnabled=false&config.requireDisplayName=false'
     + '&config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.p2p.enabled=true';
@@ -348,15 +352,25 @@ window.ringTil = function(nummer, navn) {
   if(!window.mig) { alert('Du skal være meldt til for at ringe.'); return; }
   const par = [String(window.mig.nummer), String(nummer)].sort();
   const rum = 'OlsenKlanen-VMR-' + par[0] + '-' + par[1];
-  window.aabnVideo(rum);
-  set(ref(db, 'vmr_opkald/' + nummer), { fra: window.mig.nummer, fraNavn: window.mig.navn, tid: Date.now(), rum: rum });
+  // Åbn IKKE video endnu. Vent til modtageren svarer.
+  set(ref(db, 'vmr_opkald/' + nummer), { fra: window.mig.nummer, fraNavn: window.mig.navn, tid: Date.now(), rum: rum, svaret: false });
+  window.venterPaaSvar = { nummer: nummer, rum: rum };
+  window.sigTekst('Ringer op til ' + (navn || 'medlem') + ' ...');
+  // Lyt efter at modtageren svarer — så åbnes videoen hos os begge samtidig.
+  onValue(ref(db, 'vmr_opkald/' + nummer), (snap) => {
+    const o = snap.val();
+    if(o && o.svaret === true && window.venterPaaSvar && window.venterPaaSvar.rum === o.rum) {
+      window.venterPaaSvar = null;
+      window.aabnVideo(o.rum);
+    }
+  });
   setTimeout(() => { remove(ref(db, 'vmr_opkald/' + nummer)); }, 30000);
 };
  
 function lytEfterOpkald(nummer) {
   onValue(ref(db, 'vmr_opkald/' + nummer), (snap) => {
     const opkald = snap.val();
-    if(opkald && (Date.now() - opkald.tid) < 30000 && !window.indkommendeOpkald) {
+    if(opkald && opkald.svaret !== true && (Date.now() - opkald.tid) < 30000 && !window.indkommendeOpkald) {
       window.indkommendeOpkald = opkald;
       const forNavn = (opkald.fraNavn || 'nogen').split(' ')[0];
       document.getElementById('ring-fra').textContent = (opkald.fraNavn || 'Nogen') + ' ringer til dig';
@@ -368,10 +382,16 @@ function lytEfterOpkald(nummer) {
  
 window.svarOpkald = function() {
   if(!window.indkommendeOpkald) return;
-  window.aabnVideo(window.indkommendeOpkald.rum);
+  const opk = window.indkommendeOpkald;
+  // Markér opkaldet som besvaret, så DEN der ringede åbner video samtidig med os.
+  set(ref(db, 'vmr_opkald/' + window.mig.nummer), {
+    fra: opk.fra, fraNavn: opk.fraNavn, tid: opk.tid, rum: opk.rum, svaret: true
+  });
+  window.aabnVideo(opk.rum);
   document.getElementById('ring-pop').classList.remove('show');
-  remove(ref(db, 'vmr_opkald/' + window.mig.nummer));
   window.indkommendeOpkald = null;
+  // Ryd opkaldet kort efter, så ringeren har nået at se "svaret".
+  setTimeout(() => { remove(ref(db, 'vmr_opkald/' + window.mig.nummer)); }, 4000);
 };
 window.afvisOpkald = function() {
   document.getElementById('ring-pop').classList.remove('show');
@@ -382,4 +402,5 @@ window.afvisOpkald = function() {
 </body>
 </html>
  
+
 
