@@ -114,6 +114,11 @@ Her kan medlemmer melde sig til Videofon Møde Rummet. Når du har meldt dig til
 <input type="text" id="ind-nummer" placeholder="F.eks. 8" inputmode="numeric">
 </div>
  
+<div class="felt-gruppe">
+<label for="ind-kode">3. SKRIV ADGANGSKODE</label>
+<input type="password" id="ind-kode" placeholder="Adgangskode">
+</div>
+ 
 <div class="spom-knaprum">
 <button class="knap-ja" onclick="meldTil()">Ja, meld mig til</button>
 <button class="knap-nej" onclick="lukTilmelding()">Ikke nu</button>
@@ -207,6 +212,7 @@ window.aabnTilmelding = function() {
   // Spørg ALTID om navn og nummer. Ingen automatisk tilmelding.
   document.getElementById('ind-navn').value = '';
   document.getElementById('ind-nummer').value = '';
+  document.getElementById('ind-kode').value = '';
   document.getElementById('spom-bg').classList.add('vis');
   document.getElementById('ind-navn').focus();
 };
@@ -215,8 +221,11 @@ window.lukTilmelding = function() { document.getElementById('spom-bg').classList
 window.meldTil = function() {
   const navn = document.getElementById('ind-navn').value.trim();
   const nummer = document.getElementById('ind-nummer').value.trim();
+  const kode = document.getElementById('ind-kode').value.trim();
   if(!navn) { alert('Skriv dit navn først.'); return; }
   if(!nummer) { alert('Skriv dit medlemsnummer først.'); return; }
+  if(!kode) { alert('Skriv adgangskoden først.'); return; }
+  if(kode !== 'Olsen26') { alert('Forkert adgangskode. Prøv igen.'); return; }
   skrivTilmelding(navn, nummer);
   document.getElementById('spom-bg').classList.remove('vis');
 };
@@ -373,3 +382,4 @@ window.afvisOpkald = function() {
 </body>
 </html>
  
+
