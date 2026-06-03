@@ -91,6 +91,10 @@ Her kan medlemmer melde sig til Videofon Møde Rummet. Når du har meldt dig til
 <div class="kort">
 <h2>Tilmeldte lige nu — <span id="antal">0</span></h2>
 <div id="deltager-liste"><p class="tom">Ingen er meldt til endnu</p></div>
+<div id="forstyr-boks" style="display:none; text-align:center; margin-top:14px;">
+<button id="forstyr-knap" onclick="skiftForstyr()" style="padding:12px 22px; border:none; border-radius:6px; font-size:15px; font-weight:bold; cursor:pointer; font-family:inherit; background:#2d7a2d; color:#fff;">🔔 Åben for opkald</button>
+<div id="forstyr-tekst" style="font-size:13px; color:#888; margin-top:6px;">Du kan modtage opkald nu</div>
+</div>
 <div class="afmeld-linje" id="afmeld-linje" style="display:none;">
 <button onclick="meldFra()">Meld mig fra Videofon Møde Rummet</button>
 </div>
@@ -261,6 +265,9 @@ function skrivTilmelding(navn, nummer) {
  
   document.getElementById('adgang-kort').style.display = 'none';
   document.getElementById('afmeld-linje').style.display = 'block';
+  document.getElementById('forstyr-boks').style.display = 'block';
+  window.forstyrIkke = false;
+  window.opdaterForstyrKnap();
   window.visMelding('Du er meldt til som ' + navn + ' (medlem ' + nummer + '). Du kan nu blive kaldt op.');
 }
  
@@ -275,7 +282,32 @@ window.meldFra = function() {
   window.indkommendeOpkald = null;
   document.getElementById('adgang-kort').style.display = 'block';
   document.getElementById('afmeld-linje').style.display = 'none';
+  document.getElementById('forstyr-boks').style.display = 'none';
+  window.forstyrIkke = false;
   window.visMelding('Du er meldt fra Videofon Møde Rummet.');
+};
+
+window.forstyrIkke = false;
+window.opdaterForstyrKnap = function() {
+  const k = document.getElementById('forstyr-knap');
+  const t = document.getElementById('forstyr-tekst');
+  if(!k) return;
+  if(window.forstyrIkke) {
+    k.textContent = '🔕 Vil ikke forstyrres';
+    k.style.background = '#b03030';
+    t.textContent = 'Ingen kan ringe nu — men de kan stadig skrive til dig';
+  } else {
+    k.textContent = '🔔 Åben for opkald';
+    k.style.background = '#2d7a2d';
+    t.textContent = 'Du kan modtage opkald nu';
+  }
+};
+window.skiftForstyr = function() {
+  window.forstyrIkke = !window.forstyrIkke;
+  window.opdaterForstyrKnap();
+  if(window.mig) {
+    set(ref(db, 'medlemmer/' + window.mig.nummer + '/fri_for_kald'), !window.forstyrIkke);
+  }
 };
  
 // ===== VIS TILMELDTE =====
@@ -365,26 +397,19 @@ window.ringTil = function(nummer, navn) {
   if(!window.mig) { alert('Du skal være meldt til for at ringe.'); return; }
   const par = [String(window.mig.nummer), String(nummer)].sort();
   const rum = 'OlsenKlanen-VMR-' + par[0] + '-' + par[1];
-  // Læg opkaldet hos modtageren. Åbn IKKE video endnu.
+  // Læg opkaldet hos modtageren, så det ringer hos dem.
   set(ref(db, 'vmr_opkald/' + nummer), { fra: window.mig.nummer, fraNavn: window.mig.navn, tid: Date.now(), rum: rum });
-  window.venterPaaSvar = { nummer: nummer, rum: rum };
   window.sigTekst('Ringer op til ' + (navn || 'medlem') + ' ...');
-  // Lyt på MIT EGET svar-rum. Når modtageren svarer, skriver de hertil — så åbner jeg.
-  const svarSti = ref(db, 'vmr_svar/' + window.mig.nummer);
-  onValue(svarSti, (snap) => {
-    const s = snap.val();
-    if(s && s.rum && window.venterPaaSvar && window.venterPaaSvar.rum === s.rum) {
-      window.venterPaaSvar = null;
-      window.aabnVideo(s.rum);
-      remove(svarSti);
-    }
-  });
-  setTimeout(() => { remove(ref(db, 'vmr_opkald/' + nummer)); }, 30000);
+  // Åbn rummet MED DET SAMME. Modtageren kommer ind når de svarer.
+  window.aabnVideo(rum);
+  setTimeout(() => { remove(ref(db, 'vmr_opkald/' + nummer)); }, 40000);
 };
  
 function lytEfterOpkald(nummer) {
   onValue(ref(db, 'vmr_opkald/' + nummer), (snap) => {
     const opkald = snap.val();
+    // Hvis "Vil ikke forstyrres" er slået til, ring IKKE.
+    if(window.forstyrIkke) { return; }
     if(opkald && opkald.rum && !window.indkommendeOpkald) {
       window.indkommendeOpkald = opkald;
       const forNavn = (opkald.fraNavn || 'nogen').split(' ')[0];
@@ -399,16 +424,11 @@ window.svarOpkald = function() {
   if(!window.indkommendeOpkald) return;
   window.stopRing();
   const opk = window.indkommendeOpkald;
-  // Send svar til DEN DER RINGEDE (deres eget svar-rum), så de åbner video.
-  set(ref(db, 'vmr_svar/' + opk.fra), { rum: opk.rum, tid: Date.now() });
-  // Åbn min egen video.
+  // Åbn samme rum som den der ringede. Begge ender samme sted.
   window.aabnVideo(opk.rum);
   document.getElementById('ring-pop').classList.remove('show');
   window.indkommendeOpkald = null;
-  // Fjern opkaldet hos mig selv.
   remove(ref(db, 'vmr_opkald/' + window.mig.nummer));
-  // Ryd svar-rummet igen lidt efter (ringeren har nået at åbne).
-  setTimeout(() => { remove(ref(db, 'vmr_svar/' + opk.fra)); }, 8000);
 };
 window.afvisOpkald = function() {
   window.stopRing();
@@ -420,3 +440,4 @@ window.afvisOpkald = function() {
 </body>
 </html>
  
+
