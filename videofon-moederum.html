@@ -178,9 +178,14 @@ function spilTone(start, freq, slut) {
   osc.connect(gain); gain.connect(ctx.destination); osc.type = 'sine';
   osc.frequency.setValueAtTime(freq, start);
   gain.gain.setValueAtTime(0, start);
-  gain.gain.linearRampToValueAtTime(0.5, start + 0.02);
+  gain.gain.linearRampToValueAtTime(0.9, start + 0.02);
   gain.gain.exponentialRampToValueAtTime(0.001, start + slut);
   osc.start(start); osc.stop(start + slut + 0.05);
+}
+function spilEtRing() {
+  if(!window.lydCtx) return;
+  const t = window.lydCtx.currentTime;
+  spilTone(t,880,0.35); spilTone(t+0.45,880,0.35); spilTone(t+0.9,1046,0.40);
 }
 window.sigTekst = function(tekst) {
   if(!('speechSynthesis' in window)) return;
@@ -194,8 +199,15 @@ window.sigTekst = function(tekst) {
 };
 window.lydOpkaldMedNavn = function(fraNavn) {
   window.startLyd();
-  if(window.lydCtx) { const t = window.lydCtx.currentTime; spilTone(t,880,0.35); spilTone(t+0.45,880,0.35); spilTone(t+0.9,1046,0.35); }
-  setTimeout(() => { window.sigTekst('Ring ring ring — du har et opkald fra ' + fraNavn); }, 1500);
+  spilEtRing();
+  setTimeout(() => { window.sigTekst('Opkald fra ' + fraNavn); }, 1400);
+  if(window.ringInterval) clearInterval(window.ringInterval);
+  window.ringInterval = setInterval(() => {
+    if(window.indkommendeOpkald) { spilEtRing(); } else { clearInterval(window.ringInterval); }
+  }, 3000);
+};
+window.stopRing = function() {
+  if(window.ringInterval) { clearInterval(window.ringInterval); window.ringInterval = null; }
 };
 document.addEventListener('click', function() { window.startLyd(); }, { once: true });
 if('speechSynthesis' in window) { window.speechSynthesis.getVoices(); window.speechSynthesis.onvoiceschanged = function(){ window.speechSynthesis.getVoices(); }; }
@@ -371,7 +383,7 @@ window.ringTil = function(nummer, navn) {
 function lytEfterOpkald(nummer) {
   onValue(ref(db, 'vmr_opkald/' + nummer), (snap) => {
     const opkald = snap.val();
-    if(opkald && opkald.svaret !== true && (Date.now() - opkald.tid) < 30000 && !window.indkommendeOpkald) {
+    if(opkald && opkald.svaret !== true && opkald.rum && !window.indkommendeOpkald) {
       window.indkommendeOpkald = opkald;
       const forNavn = (opkald.fraNavn || 'nogen').split(' ')[0];
       document.getElementById('ring-fra').textContent = (opkald.fraNavn || 'Nogen') + ' ringer til dig';
@@ -383,6 +395,7 @@ function lytEfterOpkald(nummer) {
  
 window.svarOpkald = function() {
   if(!window.indkommendeOpkald) return;
+  window.stopRing();
   const opk = window.indkommendeOpkald;
   // Markér opkaldet som besvaret, så DEN der ringede åbner video samtidig med os.
   set(ref(db, 'vmr_opkald/' + window.mig.nummer), {
@@ -395,6 +408,7 @@ window.svarOpkald = function() {
   setTimeout(() => { remove(ref(db, 'vmr_opkald/' + window.mig.nummer)); }, 4000);
 };
 window.afvisOpkald = function() {
+  window.stopRing();
   document.getElementById('ring-pop').classList.remove('show');
   if(window.mig) remove(ref(db, 'vmr_opkald/' + window.mig.nummer));
   window.indkommendeOpkald = null;
@@ -403,6 +417,7 @@ window.afvisOpkald = function() {
 </body>
 </html>
  
+
 
 
 
