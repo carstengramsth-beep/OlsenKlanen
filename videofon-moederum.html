@@ -355,7 +355,7 @@ window.aabnVideo = function(rumNavn) {
   setTimeout(() => { window.aabentRum = null; }, 8000);
   var url = 'https://meet.ffmuc.net/' + rumNavn
     + '#config.prejoinPageEnabled=false&config.requireDisplayName=false'
-    + '&config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.p2p.enabled=true'
+    + '&config.startWithAudioMuted=false&config.startWithVideoMuted=false'
     + '&config.startWithTileView=false&interfaceConfig.TILE_VIEW_MAX_COLUMNS=1';
   if(window.mig) { url += '&userInfo.displayName=' + encodeURIComponent(window.mig.navn); }
   window.open(url, '_blank', 'width=1200,height=800');
@@ -365,16 +365,18 @@ window.ringTil = function(nummer, navn) {
   if(!window.mig) { alert('Du skal være meldt til for at ringe.'); return; }
   const par = [String(window.mig.nummer), String(nummer)].sort();
   const rum = 'OlsenKlanen-VMR-' + par[0] + '-' + par[1];
-  // Åbn IKKE video endnu. Vent til modtageren svarer.
-  set(ref(db, 'vmr_opkald/' + nummer), { fra: window.mig.nummer, fraNavn: window.mig.navn, tid: Date.now(), rum: rum, svaret: false });
+  // Læg opkaldet hos modtageren. Åbn IKKE video endnu.
+  set(ref(db, 'vmr_opkald/' + nummer), { fra: window.mig.nummer, fraNavn: window.mig.navn, tid: Date.now(), rum: rum });
   window.venterPaaSvar = { nummer: nummer, rum: rum };
   window.sigTekst('Ringer op til ' + (navn || 'medlem') + ' ...');
-  // Lyt efter at modtageren svarer — så åbnes videoen hos os begge samtidig.
-  onValue(ref(db, 'vmr_opkald/' + nummer), (snap) => {
-    const o = snap.val();
-    if(o && o.svaret === true && window.venterPaaSvar && window.venterPaaSvar.rum === o.rum) {
+  // Lyt på MIT EGET svar-rum. Når modtageren svarer, skriver de hertil — så åbner jeg.
+  const svarSti = ref(db, 'vmr_svar/' + window.mig.nummer);
+  onValue(svarSti, (snap) => {
+    const s = snap.val();
+    if(s && s.rum && window.venterPaaSvar && window.venterPaaSvar.rum === s.rum) {
       window.venterPaaSvar = null;
-      window.aabnVideo(o.rum);
+      window.aabnVideo(s.rum);
+      remove(svarSti);
     }
   });
   setTimeout(() => { remove(ref(db, 'vmr_opkald/' + nummer)); }, 30000);
@@ -383,7 +385,7 @@ window.ringTil = function(nummer, navn) {
 function lytEfterOpkald(nummer) {
   onValue(ref(db, 'vmr_opkald/' + nummer), (snap) => {
     const opkald = snap.val();
-    if(opkald && opkald.svaret !== true && opkald.rum && !window.indkommendeOpkald) {
+    if(opkald && opkald.rum && !window.indkommendeOpkald) {
       window.indkommendeOpkald = opkald;
       const forNavn = (opkald.fraNavn || 'nogen').split(' ')[0];
       document.getElementById('ring-fra').textContent = (opkald.fraNavn || 'Nogen') + ' ringer til dig';
@@ -397,15 +399,16 @@ window.svarOpkald = function() {
   if(!window.indkommendeOpkald) return;
   window.stopRing();
   const opk = window.indkommendeOpkald;
-  // Markér opkaldet som besvaret, så DEN der ringede åbner video samtidig med os.
-  set(ref(db, 'vmr_opkald/' + window.mig.nummer), {
-    fra: opk.fra, fraNavn: opk.fraNavn, tid: opk.tid, rum: opk.rum, svaret: true
-  });
+  // Send svar til DEN DER RINGEDE (deres eget svar-rum), så de åbner video.
+  set(ref(db, 'vmr_svar/' + opk.fra), { rum: opk.rum, tid: Date.now() });
+  // Åbn min egen video.
   window.aabnVideo(opk.rum);
   document.getElementById('ring-pop').classList.remove('show');
   window.indkommendeOpkald = null;
-  // Ryd opkaldet kort efter, så ringeren har nået at se "svaret".
-  setTimeout(() => { remove(ref(db, 'vmr_opkald/' + window.mig.nummer)); }, 4000);
+  // Fjern opkaldet hos mig selv.
+  remove(ref(db, 'vmr_opkald/' + window.mig.nummer));
+  // Ryd svar-rummet igen lidt efter (ringeren har nået at åbne).
+  setTimeout(() => { remove(ref(db, 'vmr_svar/' + opk.fra)); }, 8000);
 };
 window.afvisOpkald = function() {
   window.stopRing();
@@ -417,7 +420,3 @@ window.afvisOpkald = function() {
 </body>
 </html>
  
-
-
-
-
