@@ -62,6 +62,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .svar { background: #2d7a2d; color: #fff; }
 .afvis { background: #fff; color: #b03030; }
 </style>
+<script src="https://meet.ffmuc.net/external_api.js"></script>
 </head>
 <body>
  
@@ -128,6 +129,12 @@ Her kan medlemmer melde sig til Videofon Møde Rummet. Når du har meldt dig til
 <button class="knap-nej" onclick="lukTilmelding()">Ikke nu</button>
 </div>
 </div>
+</div>
+ 
+<!-- INDBYGGET VIDEOMØDE (fylder hele skærmen når et kald er i gang) -->
+<div id="video-overlay" style="display:none; position:fixed; inset:0; background:#0b0b0b; z-index:4000;">
+  <div id="jitsi-boks" style="position:absolute; inset:0;"></div>
+  <button onclick="laegPaa()" style="position:absolute; top:14px; right:14px; z-index:4100; background:#b03030; color:#fff; border:none; border-radius:8px; padding:12px 20px; font-size:16px; font-weight:bold; cursor:pointer; font-family:inherit;">📴 Læg på</button>
 </div>
  
 <!-- INDKOMMENDE OPKALD -->
@@ -286,10 +293,8 @@ window.meldFra = function() {
   remove(ref(db, 'videofon_moederum/' + nr));
   set(ref(db, 'medlemmer/' + nr + '/fri_for_kald'), false);
   remove(ref(db, 'vmr_opkald/' + nr));
-  // Luk et evt. åbent mødevindue helt, så forbindelsen slippes (ingen ekko/dublet)
-  if(window.vmrVindue && !window.vmrVindue.closed) { try { window.vmrVindue.close(); } catch(e){} }
-  window.vmrVindue = null;
-  window.aabentRum = null;
+  // Luk et evt. igangværende videomøde helt, så forbindelsen slippes (ingen ekko/dublet)
+  if(window.laegPaa) { window.laegPaa(); }
   // Glem hvem jeg var — så man er HELT fri og kan logge ind på ny
   window.mig = null;
   window.indkommendeOpkald = null;
@@ -392,29 +397,47 @@ window.visDeltagere = function() {
   document.getElementById('deltager-liste').innerHTML = html;
 };
  
-// ===== RING OP (åbner Jitsi i par-rum, samme metode som OlsenBanden) =====
+// ===== RING OP (Jitsi bygget ind i siden — starter af sig selv, ingen "Deltag"-knap) =====
+window.jitsiApi = null;
 window.aabnVideo = function(rumNavn) {
-  // Er jeg allerede i ET ANDET rum, lukkes det først, så man aldrig er
-  // forbundet to gange (det fjerner ekko/brummen).
-  if(window.vmrVindue && !window.vmrVindue.closed) {
-    if(window.aabentRum === rumNavn) { return; } // allerede i samme rum: gør intet
-    try { window.vmrVindue.close(); } catch(e){}
-    window.vmrVindue = null; window.aabentRum = null;
-  }
+  // Er der allerede et møde i gang i samme rum: gør intet (ingen dublet).
+  if(window.jitsiApi && window.aabentRum === rumNavn) { return; }
+  // Er der et gammelt møde i et andet rum: luk det helt først (ingen ekko).
+  if(window.jitsiApi) { try { window.jitsiApi.dispose(); } catch(e){} window.jitsiApi = null; }
   window.aabentRum = rumNavn;
-  var url = 'https://meet.ffmuc.net/' + rumNavn
-    + '#config.prejoinPageEnabled=false&config.requireDisplayName=false'
-    + '&config.startWithAudioMuted=false&config.startWithVideoMuted=false'
-    + '&config.p2p.enabled=true'
-    + '&config.startWithTileView=false&interfaceConfig.TILE_VIEW_MAX_COLUMNS=1';
-  if(window.mig) { url += '&userInfo.displayName=' + encodeURIComponent(window.mig.navn); }
-  window.vmrVindue = window.open(url, '_blank', 'width=1200,height=800');
-  // Når mødevinduet lukkes, frigives spærren igen.
-  var tjek = setInterval(function() {
-    if(!window.vmrVindue || window.vmrVindue.closed) {
-      window.aabentRum = null; window.vmrVindue = null; clearInterval(tjek);
+ 
+  document.getElementById('jitsi-boks').innerHTML = '';
+  document.getElementById('video-overlay').style.display = 'block';
+ 
+  var navn = (window.mig && window.mig.navn) ? window.mig.navn : 'Medlem';
+  window.jitsiApi = new JitsiMeetExternalAPI('meet.ffmuc.net', {
+    roomName: rumNavn,
+    parentNode: document.getElementById('jitsi-boks'),
+    userInfo: { displayName: navn },
+    configOverwrite: {
+      prejoinPageEnabled: false,      // ingen "Deltag i mødet"-forgård
+      prejoinConfig: { enabled: false },
+      startWithAudioMuted: false,
+      startWithVideoMuted: false,
+      p2p: { enabled: true },         // direkte forbindelse mellem to PC'er
+      disableDeepLinking: true,
+      startWithTileView: false
+    },
+    interfaceConfigOverwrite: {
+      MOBILE_APP_PROMO: false,
+      SHOW_JITSI_WATERMARK: false
     }
-  }, 1000);
+  });
+  // Når man lægger på inde i Jitsi, lukkes overlayet rent.
+  window.jitsiApi.addEventListener('readyToClose', function() { window.laegPaa(); });
+};
+ 
+// ===== LÆG PÅ — lukker mødet HELT, så ingen hænger og ingen dubletter =====
+window.laegPaa = function() {
+  if(window.jitsiApi) { try { window.jitsiApi.dispose(); } catch(e){} window.jitsiApi = null; }
+  document.getElementById('video-overlay').style.display = 'none';
+  document.getElementById('jitsi-boks').innerHTML = '';
+  window.aabentRum = null;
 };
  
 window.ringTil = function(nummer, navn) {
@@ -468,6 +491,7 @@ window.afvisOpkald = function() {
 </script>
 </body>
 </html>
+ 
  
  
  
