@@ -421,7 +421,14 @@ window.aabnVideo = function(rumNavn) {
       startWithVideoMuted: false,
       p2p: { enabled: true },         // direkte forbindelse mellem to PC'er
       disableDeepLinking: true,
-      startWithTileView: false
+      startWithTileView: false,
+      // Mod boremaskine-lyd/ekko:
+      enableNoisyMicDetection: true,
+      disableAP: false,
+      disableAEC: false,              // ekko-dæmpning TIL
+      disableNS: false,               // støjreduktion TIL
+      disableAGC: false,
+      enableEchoCancellation: true
     },
     interfaceConfigOverwrite: {
       MOBILE_APP_PROMO: false,
@@ -443,7 +450,9 @@ window.laegPaa = function() {
 window.ringTil = function(nummer, navn) {
   if(!window.mig) { alert('Du skal være meldt til for at ringe.'); return; }
   const par = [String(window.mig.nummer), String(nummer)].sort();
-  const rum = 'OlsenKlanen-VMR-' + par[0] + '-' + par[1];
+  // Langt, svært-at-gætte rumnavn (men fast for parret, så begge lander samme sted).
+  // jit.si's "moderator"-mur rammer typisk kun korte/forudsigelige navne.
+  const rum = 'OlsenKlanenVideofon8x9q2v7-' + par[0] + '-' + par[1] + '-mzkpfa';
   // Læg opkaldet hos modtageren, så det ringer hos dem.
   set(ref(db, 'vmr_opkald/' + nummer), { fra: window.mig.nummer, fraNavn: window.mig.navn, tid: Date.now(), rum: rum });
   window.sigTekst('Ringer op til ' + (navn || 'medlem') + ' ...');
@@ -463,11 +472,12 @@ function lytEfterOpkald(nummer) {
       document.getElementById('ring-fra').textContent = (opkald.fraNavn || 'Nogen') + ' ringer til dig';
       document.getElementById('ring-pop').classList.add('show');
       window.lydOpkaldMedNavn(forNavn);
-      // AUTO-SVAR: er man meldt til og IKKE "forstyr ikke", svares kaldet
-      // automatisk efter et kort øjeblik. "Åben for kald" = man har sagt ja på forhånd.
+      // AUTO-SVAR: er man meldt til og IKKE "forstyr ikke", svares kaldet.
+      // Vi venter 6 sek, så OPKALDEREN når at komme ind FØRST og bliver
+      // moderator — så lukkes modtageren automatisk ind (ingen "Log ind").
       setTimeout(function() {
         if(window.indkommendeOpkald && !window.forstyrIkke) { window.svarOpkald(); }
-      }, 1500);
+      }, 6000);
     }
   });
 }
@@ -491,6 +501,7 @@ window.afvisOpkald = function() {
 </script>
 </body>
 </html>
+ 
  
  
  
