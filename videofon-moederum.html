@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="da">
 <head>
@@ -97,7 +98,8 @@ Her kan medlemmer melde sig til Videofon Møde Rummet. Når du har meldt dig til
 <div id="forstyr-tekst" style="font-size:13px; color:#888; margin-top:6px;">Du kan modtage opkald nu</div>
 </div>
 <div class="afmeld-linje" id="afmeld-linje" style="display:none;">
-<button onclick="meldFra()">Meld mig fra Videofon Møde Rummet</button>
+<button onclick="lukNed()" style="background:#b03030; color:#fff; border:none; border-radius:8px; padding:14px 26px; font-size:16px; font-weight:bold; cursor:pointer; font-family:inherit; text-decoration:none;">🔴 Luk videofonen helt ned</button>
+<div style="font-size:13px; color:#888; margin-top:6px;">Lægger på, melder dig fra og lukker for opkald — alt på én gang.</div>
 </div>
 </div>
  
@@ -305,6 +307,25 @@ window.meldFra = function() {
   window.visMelding('Du er meldt fra Videofon Møde Rummet.');
 };
  
+// Stor "luk helt ned"-knap: lægger på, melder fra og lukker for opkald.
+window.lukNed = function() {
+  window.meldFra();
+  window.visMelding('✅ Videofonen er lukket helt ned. Du modtager ikke opkald nu. Du kan bare lukke fanen.');
+};
+ 
+// Hvis man bare lukker fanen/browseren: ryd op, så man ikke hænger som "åben for kald".
+window.addEventListener('beforeunload', function() {
+  try {
+    if(window.mig) {
+      const nr = window.mig.nummer;
+      remove(ref(db, 'videofon_moederum/' + nr));
+      set(ref(db, 'medlemmer/' + nr + '/fri_for_kald'), false);
+      remove(ref(db, 'vmr_opkald/' + nr));
+    }
+    if(window.jitsiApi) { window.jitsiApi.dispose(); }
+  } catch(e) {}
+});
+ 
 window.forstyrIkke = false;
 window.opdaterForstyrKnap = function() {
   const k = document.getElementById('forstyr-knap');
@@ -501,6 +522,7 @@ window.afvisOpkald = function() {
 </script>
 </body>
 </html>
+ 
  
  
  
