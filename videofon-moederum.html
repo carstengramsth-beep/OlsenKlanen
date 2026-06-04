@@ -260,7 +260,16 @@ function skrivTilmelding(navn, nummer) {
   //    krydset på medlemmets linje. Indtil da gemmes mærket sit eget sted.
   set(ref(db, 'medlemmer/' + nummer + '/fri_for_kald'), true);
  
-  // 3) Lyt efter opkald til mig
+  // 3) Varm kamera + mikrofon op NU, mens medlemmet sidder roligt.
+  //    Chrome spørger om lov én gang her — ikke midt i et kald. Vi slukker
+  //    straks igen; Chrome husker tilladelsen til når kaldet kommer.
+  if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+      .then(function(stream) { stream.getTracks().forEach(function(t){ t.stop(); }); })
+      .catch(function() { /* sagde nej eller intet kamera — kaldet spørger så selv senere */ });
+  }
+ 
+  // 4) Lyt efter opkald til mig
   lytEfterOpkald(nummer);
  
   document.getElementById('adgang-kort').style.display = 'none';
@@ -286,7 +295,7 @@ window.meldFra = function() {
   window.forstyrIkke = false;
   window.visMelding('Du er meldt fra Videofon Møde Rummet.');
 };
-
+ 
 window.forstyrIkke = false;
 window.opdaterForstyrKnap = function() {
   const k = document.getElementById('forstyr-knap');
@@ -385,7 +394,7 @@ window.aabnVideo = function(rumNavn) {
   if(window.aabentRum === rumNavn) { return; }
   window.aabentRum = rumNavn;
   setTimeout(() => { window.aabentRum = null; }, 8000);
-  var url = 'https://meet.jit.si/' + rumNavn
+  var url = 'https://meet.ffmuc.net/' + rumNavn
     + '#config.prejoinPageEnabled=false&config.requireDisplayName=false'
     + '&config.startWithAudioMuted=false&config.startWithVideoMuted=false'
     + '&config.p2p.enabled=false'
@@ -417,6 +426,11 @@ function lytEfterOpkald(nummer) {
       document.getElementById('ring-fra').textContent = (opkald.fraNavn || 'Nogen') + ' ringer til dig';
       document.getElementById('ring-pop').classList.add('show');
       window.lydOpkaldMedNavn(forNavn);
+      // AUTO-SVAR: er man meldt til og IKKE "forstyr ikke", svares kaldet
+      // automatisk efter et kort øjeblik. "Åben for kald" = man har sagt ja på forhånd.
+      setTimeout(function() {
+        if(window.indkommendeOpkald && !window.forstyrIkke) { window.svarOpkald(); }
+      }, 1500);
     }
   });
 }
@@ -441,6 +455,7 @@ window.afvisOpkald = function() {
 </body>
 </html>
  
-
-
-
+ 
+ 
+ 
+ 
