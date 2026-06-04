@@ -62,7 +62,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .svar { background: #2d7a2d; color: #fff; }
 .afvis { background: #fff; color: #b03030; }
 </style>
-<script src="https://meet.ffmuc.net/external_api.js"></script>
+<script src="https://meet.jit.si/external_api.js"></script>
 </head>
 <body>
  
@@ -410,7 +410,7 @@ window.aabnVideo = function(rumNavn) {
   document.getElementById('video-overlay').style.display = 'block';
  
   var navn = (window.mig && window.mig.navn) ? window.mig.navn : 'Medlem';
-  window.jitsiApi = new JitsiMeetExternalAPI('meet.ffmuc.net', {
+  window.jitsiApi = new JitsiMeetExternalAPI('meet.jit.si', {
     roomName: rumNavn,
     parentNode: document.getElementById('jitsi-boks'),
     userInfo: { displayName: navn },
@@ -491,8 +491,6 @@ window.afvisOpkald = function() {
 </script>
 </body>
 </html>
- 
- 
  
  
  
