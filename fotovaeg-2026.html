@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen — Test: Fotovæg</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gron:#2d5016;--gron-lys:#4a7c2a;--gron-pale:#c8e6b0;
+  --guld:#c8952a;--guld-lys:#f5e6c8;--guld-pale:#fdf8ee;
+  --hvid:#fefcf8;--tekst:#1a1a0e;--tekst-lys:#5a5a40;--border:#d4c9a0;
+  --baggrund:#fffde0;
+}
+body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var(--tekst);min-height:100vh;padding-bottom:4rem}
+
+.flag-banner{background:var(--gron);text-align:center;padding:.55rem 0;font-size:26px;letter-spacing:6px;border-bottom:3px solid var(--guld);color:#fff}
+
+header{background:var(--gron);color:#fff;text-align:center;padding:2.5rem 1rem 3rem}
+header h1{font-family:'Playfair Display',serif;font-size:2.4rem;font-weight:500}
+header h1 em{color:var(--guld-lys);font-style:italic}
+header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
+
+.test-note{max-width:760px;margin:1.5rem auto 0;padding:.85rem 1.2rem;background:var(--guld-pale);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--tekst-lys);line-height:1.6}
+.test-note strong{color:var(--tekst)}
+
+.wrap{max-width:980px;margin:0 auto;padding:2rem 1.2rem 0}
+
+/* PROGRAMPUNKT / GRUPPE */
+.gruppe{margin-bottom:2.5rem}
+.gruppe-titel{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--gron);border-bottom:2px solid var(--guld);padding-bottom:.4rem;margin-bottom:1.2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem}
+.gruppe-titel .upload-knap{font-family:'Source Sans 3',sans-serif;font-size:13px;background:var(--guld);color:var(--tekst);border:none;padding:.45rem .9rem;border-radius:5px;font-weight:600;cursor:pointer}
+.gruppe-titel .upload-knap:hover{background:#b8842a}
+
+/* BILLED-GRID */
+.galleri-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+@media(max-width:680px){.galleri-grid{grid-template-columns:repeat(2,1fr)}}
+.celle{background:var(--hvid);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);cursor:pointer;transition:transform .2s,box-shadow .2s}
+.celle:hover{transform:translateY(-3px);box-shadow:0 6px 18px rgba(0,0,0,.12)}
+.celle .bil{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--guld-pale)}
+.celle .cap{padding:.6rem .75rem}
+.celle .cap .tekst{font-size:13px;color:var(--tekst);line-height:1.4}
+.celle .cap .navn{font-size:11px;color:var(--tekst-lys);margin-top:.35rem;font-style:italic}
+
+.tom-besked{font-size:13px;color:var(--tekst-lys);font-style:italic;padding:1.5rem;text-align:center;background:var(--hvid);border:1px dashed var(--border);border-radius:8px}
+
+/* MODAL (upload) */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.vis{display:flex}
+.modal{background:var(--hvid);border-radius:12px;max-width:440px;width:100%;padding:1.6rem;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.modal h3{font-family:'Playfair Display',serif;color:var(--gron);font-size:1.3rem;margin-bottom:.3rem}
+.modal .sub{font-size:12px;color:var(--tekst-lys);margin-bottom:1.2rem}
+.modal label{display:block;font-size:12px;font-weight:600;color:var(--tekst-lys);text-transform:uppercase;letter-spacing:.5px;margin:.9rem 0 .35rem}
+.modal input[type=file],.modal input[type=text]{width:100%;padding:.6rem;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:14px}
+.forhaandsvis{margin-top:.8rem;width:100%;max-height:200px;object-fit:contain;border-radius:6px;display:none;background:var(--guld-pale)}
+.modal-knapper{display:flex;gap:.6rem;margin-top:1.4rem}
+.modal-knapper button{flex:1;padding:.7rem;border-radius:6px;border:none;font-weight:600;cursor:pointer;font-size:14px}
+.knap-gem{background:var(--gron);color:#fff}
+.knap-gem:hover{background:var(--gron-lys)}
+.knap-annuller{background:#eee;color:var(--tekst)}
+
+/* STORT BILLEDE (lightbox) */
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:120;align-items:center;justify-content:center;flex-direction:column;padding:2rem;cursor:zoom-out}
+.lightbox.vis{display:flex}
+.lightbox img{max-width:90%;max-height:75vh;border-radius:6px;box-shadow:0 8px 40px rgba(0,0,0,.5)}
+.lightbox .lb-cap{color:#fff;margin-top:1rem;text-align:center;max-width:600px}
+.lightbox .lb-cap .lb-tekst{font-size:1.05rem}
+.lightbox .lb-cap .lb-navn{font-size:.85rem;color:#cfc;margin-top:.4rem;font-style:italic}
+</style>
+</head>
+<body>
+
+<div class="flag-banner">🇩🇰 🇩🇰 🇩🇰 🇩🇰 🇩🇰</div>
+
+<header>
+  <h1>Flag<em>hejsning</em> 2026</h1>
+  <p>Familieskovtur · 29.–31. maj · Fotovæg (TESTUDGAVE)</p>
+</header>
+
+<div class="test-note">
+  <strong>Det her er en testside — ikke den rigtige.</strong> Prøv at trykke på "Læg billede op"
+  ved et programpunkt, vælg et billede fra din computer, skriv en tekst og dit navn.
+  Billedet dukker op på væggen. <strong>Bemærk:</strong> i testen gemmes billederne kun i
+  browseren og forsvinder når du lukker fanen — det er kun for at vise dig oplevelsen.
+</div>
+
+<div class="wrap" id="wrap"></div>
+
+<!-- UPLOAD-MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3 id="modal-titel">Læg billede op</h3>
+    <div class="sub" id="modal-sub"></div>
+    <label>Vælg billede fra din computer</label>
+    <input type="file" id="fil" accept="image/*">
+    <img class="forhaandsvis" id="forhaandsvis">
+    <label>Billedtekst</label>
+    <input type="text" id="tekst" placeholder="F.eks. 'Morgensang ved flagstangen'">
+    <label>Dit navn</label>
+    <input type="text" id="navn" placeholder="F.eks. Carsten (nr. 8)">
+    <div class="modal-knapper">
+      <button class="knap-annuller" onclick="lukModal()">Annullér</button>
+      <button class="knap-gem" onclick="gemBillede()">Læg op på væggen</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="lukLightbox()">
+  <img id="lb-img" src="">
+  <div class="lb-cap">
+    <div class="lb-tekst" id="lb-tekst"></div>
+    <div class="lb-navn" id="lb-navn"></div>
+  </div>
+</div>
+
+<script>
+// Programpunkterne — år for år. Her: skovturen 2026.
+const PROGRAM = [
+  { id:'fre-aftensmad',   titel:'Fredag · Aftensmad og aftenhygge' },
+  { id:'flaghejsning',    titel:'Lørdag · Flaghejsning og morgensang' },
+  { id:'morgenmad',       titel:'Lørdag · Morgenmad og morgenhygge' },
+  { id:'generalfors',     titel:'Lørdag · Generalforsamling' },
+  { id:'faellesfoto',     titel:'Lørdag · Årets fællesfoto' },
+  { id:'tagselvbord',     titel:'Lørdag · Det store tag-selv-bord' },
+  { id:'konkurrencer',    titel:'Lørdag · Konkurrencer, leg og hygge' },
+  { id:'kaffebord',       titel:'Lørdag · Det store kaffebord' },
+  { id:'grill',           titel:'Lørdag · Grillpølser m.m.' },
+  { id:'aftenhygge',      titel:'Lørdag · Aftenhygge til sengetid' },
+  { id:'son-morgenmad',   titel:'Søndag · Morgenmad og morgenhygge' },
+  { id:'pakning',         titel:'Søndag · Pakning og oprydning' },
+  { id:'farvel',          titel:'Søndag · Farvel og afgang' },
+];
+
+// Billeder pr. programpunkt (kun i hukommelsen — testudgave)
+const billeder = {}; // { gruppeId: [ {data, tekst, navn} ] }
+let aktivGruppe = null;
+
+function tegnVaeg() {
+  const wrap = document.getElementById('wrap');
+  wrap.innerHTML = PROGRAM.map(g => {
+    const liste = billeder[g.id] || [];
+    const celler = liste.length
+      ? `<div class="galleri-grid">${liste.map((b,i)=>`
+          <div class="celle" onclick="visStort('${g.id}',${i})">
+            <img class="bil" src="${b.data}">
+            <div class="cap">
+              <div class="tekst">${b.tekst || ''}</div>
+              <div class="navn">📷 ${b.navn || 'ukendt'}</div>
+            </div>
+          </div>`).join('')}</div>`
+      : `<div class="tom-besked">Ingen billeder endnu — vær den første til at lægge et op!</div>`;
+    return `
+      <div class="gruppe">
+        <div class="gruppe-titel">
+          <span>${g.titel}</span>
+          <button class="upload-knap" onclick="aabnModal('${g.id}','${g.titel.replace(/'/g,"")}')">📷 Læg billede op</button>
+        </div>
+        ${celler}
+      </div>`;
+  }).join('');
+}
+
+function aabnModal(gruppeId, gruppeTitel) {
+  aktivGruppe = gruppeId;
+  document.getElementById('modal-sub').textContent = gruppeTitel;
+  document.getElementById('fil').value = '';
+  document.getElementById('tekst').value = '';
+  document.getElementById('navn').value = '';
+  const fv = document.getElementById('forhaandsvis');
+  fv.style.display = 'none'; fv.src = '';
+  document.getElementById('modal').classList.add('vis');
+}
+function lukModal(){ document.getElementById('modal').classList.remove('vis'); }
+
+// Forhåndsvisning når man vælger en fil
+document.getElementById('fil').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    const fv = document.getElementById('forhaandsvis');
+    fv.src = ev.target.result; fv.style.display = 'block';
+  };
+  r.readAsDataURL(f);
+});
+
+function gemBillede() {
+  const f = document.getElementById('fil').files[0];
+  const tekst = document.getElementById('tekst').value.trim();
+  const navn = document.getElementById('navn').value.trim();
+  if (!f) { alert('Vælg et billede først.'); return; }
+  if (!navn) { alert('Skriv dit navn, så man kan se hvem der har lagt billedet op.'); return; }
+  const r = new FileReader();
+  r.onload = ev => {
+    if (!billeder[aktivGruppe]) billeder[aktivGruppe] = [];
+    billeder[aktivGruppe].push({ data: ev.target.result, tekst, navn });
+    lukModal();
+    tegnVaeg();
+  };
+  r.readAsDataURL(f);
+}
+
+function visStort(gruppeId, i) {
+  const b = billeder[gruppeId][i];
+  document.getElementById('lb-img').src = b.data;
+  document.getElementById('lb-tekst').textContent = b.tekst || '';
+  document.getElementById('lb-navn').textContent = '📷 Lagt op af ' + (b.navn || 'ukendt');
+  document.getElementById('lightbox').classList.add('vis');
+}
+function lukLightbox(){ document.getElementById('lightbox').classList.remove('vis'); }
+
+tegnVaeg();
+</script>
+</body>
+</html>
