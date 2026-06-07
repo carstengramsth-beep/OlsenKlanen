@@ -932,8 +932,13 @@ document.getElementById('person-liste-edit').addEventListener('change', e => {
   if (t.dataset.pi !== undefined && t.dataset.felt === 'dataansvarlig') {
     const p = personListe[+t.dataset.pi];
     if (t.checked) {
-      const antalNu = personListe.filter(x => x.dataansvarlig).length;
-      if (antalNu >= 2) {
+      // Tæl FAKTISK afkrydsede felter på skærmen lige nu (undtagen dette)
+      const alle = document.querySelectorAll('#person-liste-edit input[data-felt="dataansvarlig"]');
+      let antalAndreKrydset = 0;
+      alle.forEach(box => {
+        if (box !== t && box.checked) antalAndreKrydset++;
+      });
+      if (antalAndreKrydset >= 2) {
         t.checked = false;
         alert('Der kan højst være 2 dataansvarlige pr. husstand. Fjern et kryds først.');
         return;
