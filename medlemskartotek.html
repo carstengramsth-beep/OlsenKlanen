@@ -326,7 +326,10 @@ body.kan-redigere .historisk-btn-wrapper{display:block}
  
 <div id="admin-bjaelke">
   <span>🔑 Du er logget ind som <strong id="admin-bjaelke-rolle">Administrator</strong> — <span id="admin-bjaelke-navn"></span></span>
-  <button id="admin-log-ud">Log ud</button>
+  <div style="display:flex;gap:.5rem;align-items:center">
+    <button id="ret-alle-ind-knap" style="background:var(--guld);color:var(--tekst);border:none;padding:.4rem .8rem;border-radius:4px;font-weight:600;cursor:pointer;font-size:12px">🛡️ Sæt dataansvarlige automatisk</button>
+    <button id="admin-log-ud">Log ud</button>
+  </div>
 </div>
  
 <div id="familie-banner">
@@ -1415,6 +1418,86 @@ document.getElementById('login-knap').addEventListener('click', () => {
   loginModal.classList.add('vis');
 });
 document.getElementById('admin-log-ud').addEventListener('click', () => signOut(auth));
+
+// ── SÆT DATAANSVARLIGE AUTOMATISK (engangs-knap for OlsenBanden) ──
+document.getElementById('ret-alle-ind-knap').addEventListener('click', async () => {
+  if (!document.body.classList.contains('kan-redigere')) {
+    alert('Kun OlsenBanden kan gøre dette.');
+    return;
+  }
+
+  // Find familier der mangler dataansvarlig
+  const manglende = data.filter(m => {
+    const voksne = (m.familiemedlemmer || []).filter(p => p.rolle !== 'barn');
+    const harAnsvarlig = voksne.some(p => p.dataansvarlig);
+    return voksne.length > 0 && !harAnsvarlig;
+  });
+
+  if (!manglende.length) {
+    alert('Alle familier har allerede mindst én dataansvarlig. Intet at gøre.');
+    return;
+  }
+
+  const ok = confirm(
+    `${manglende.length} familier mangler en dataansvarlig.\n\n` +
+    `Systemet sætter de ÆLDSTE voksne (op til 2 pr. husstand) som dataansvarlige. ` +
+    `Du kan altid ændre det manuelt bagefter.\n\nVil du fortsætte?`
+  );
+  if (!ok) return;
+
+  const knap = document.getElementById('ret-alle-ind-knap');
+  knap.disabled = true;
+  knap.textContent = '⏳ Arbejder…';
+
+  let opdateret = 0;
+  let fejl = 0;
+
+  for (const m of manglende) {
+    try {
+      // Find voksne, sortér ældste først (efter fødselsdato)
+      const voksne = (m.familiemedlemmer || [])
+        .map((p, idx) => ({ p, idx }))
+        .filter(x => x.p.rolle !== 'barn');
+
+      const medDato = voksne.filter(x => x.p.foedselsdato);
+      let valgte;
+      if (medDato.length > 0) {
+        // Sortér efter fødselsdato (ældst = tidligste dato)
+        medDato.sort((a, b) => (a.p.foedselsdato < b.p.foedselsdato ? -1 : 1));
+        valgte = medDato.slice(0, 2);
+      } else {
+        // Ingen fødselsdatoer: tag de første op til 2 voksne
+        valgte = voksne.slice(0, 2);
+      }
+
+      // Sæt dataansvarlig på de valgte
+      const nyMedlemmer = m.familiemedlemmer.map((p, idx) => {
+        const skalVaere = valgte.some(v => v.idx === idx);
+        return { ...p, dataansvarlig: skalVaere ? true : !!p.dataansvarlig };
+      });
+
+      const opdateretFamilie = { ...m, familiemedlemmer: nyMedlemmer };
+      await setDoc(doc(db, 'membres', m.nr), opdateretFamilie);
+
+      // Opdatér lokalt data
+      const i = data.findIndex(x => x.nr === m.nr);
+      if (i >= 0) data[i] = opdateretFamilie;
+      opdateret++;
+    } catch (e) {
+      fejl++;
+    }
+  }
+
+  knap.disabled = false;
+  knap.textContent = '🛡️ Sæt dataansvarlige automatisk';
+  renderGrid();
+
+  alert(
+    `Færdig!\n\n` +
+    `${opdateret} familier fik sat dataansvarlige.` +
+    (fejl ? `\n${fejl} familier kunne ikke opdateres (prøv igen).` : '')
+  );
+});
 document.getElementById('modal-luk').addEventListener('click', () => loginModal.classList.remove('vis'));
 loginModal.addEventListener('click', e => { if (e.target === loginModal) loginModal.classList.remove('vis'); });
  
