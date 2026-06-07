@@ -682,8 +682,25 @@ const BEGI_TYPE = {
 function begiLabel(type) { return BEGI_TYPE[type] || type; }
  
 function kanRedigere(nr) {
+  // OlsenBanden (admin) må alt
   if (document.body.classList.contains('kan-redigere')) return true;
-  return familieSession && familieSession.nr === nr;
+  // Skal være logget ind på netop denne husstand
+  if (!familieSession || familieSession.nr !== nr) return false;
+
+  // Find husstandens data for at vurdere dataansvarlige
+  const m = data.find(x => x.nr === nr);
+  const voksne = (m && m.familiemedlemmer || []).filter(p => p.rolle !== 'barn');
+  const dataansvarlige = voksne.filter(p => p.dataansvarlig);
+
+  // Hvis nogen er markeret dataansvarlig: kun de(n) valgte dataansvarlige må rette
+  if (dataansvarlige.length > 0) {
+    return familieSession.dataansvarlig === true;
+  }
+
+  // Blødt fald-tilbage: ingen kryds sat endnu →
+  // alle voksne (ikke børn) må rette indtil OlsenBanden sætter krydser
+  if (familieSession.rolle && familieSession.rolle === 'barn') return false;
+  return true;
 }
  
 // ── KORTRENDERER ─────────────────────────────────────────────
@@ -872,6 +889,13 @@ function renderPersonEdit() {
         <input data-pi="${i}" data-felt="mobil"        placeholder="Mobil"        value="${p.mobil||''}">
         <input class="fuld" data-pi="${i}" data-felt="email" placeholder="Email" value="${p.email||''}">
       </div>
+      ${(p.rolle==='barn') ? '' : `
+      <div class="person-dataansvarlig">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="checkbox" data-pi="${i}" data-felt="dataansvarlig" ${p.dataansvarlig ? 'checked' : ''}>
+          <span>🛡️ Dataansvarlig (må redigere husstandens data)</span>
+        </label>
+      </div>`}
     </div>`;
   }).join('');
 }
@@ -905,6 +929,22 @@ document.getElementById('person-liste-edit').addEventListener('click', e => {
 });
 document.getElementById('person-liste-edit').addEventListener('change', e => {
   const t = e.target;
+  if (t.dataset.pi !== undefined && t.dataset.felt === 'dataansvarlig') {
+    const p = personListe[+t.dataset.pi];
+    if (t.checked) {
+      const antalNu = personListe.filter(x => x.dataansvarlig).length;
+      if (antalNu >= 2) {
+        t.checked = false;
+        alert('Der kan højst være 2 dataansvarlige pr. husstand. Fjern et kryds først.');
+        return;
+      }
+      p.dataansvarlig = true;
+    } else {
+      p.dataansvarlig = false;
+    }
+    markDirty();
+    return;
+  }
   if (t.dataset.pi !== undefined && t.dataset.felt) {
     const p = personListe[+t.dataset.pi];
     p[t.dataset.felt] = t.value;
@@ -1355,9 +1395,18 @@ window.addEventListener('beforeunload', e => {
  
 // ── LOGIN MODAL ───────────────────────────────────────────────
 const loginModal = document.getElementById('login-modal');
- 
+
+// Gem den oprindelige familie-panel-HTML så vi kan gendanne den
+// efter person-valg (som ellers ville fjerne login-felterne).
+const familiePanelOriginalHTML = document.getElementById('panel-familie').innerHTML;
+function gendanFamiliePanel() {
+  document.getElementById('panel-familie').innerHTML = familiePanelOriginalHTML;
+  kobFamilieLoginKnap();
+}
+
 document.getElementById('login-knap').addEventListener('click', () => {
   if (document.body.classList.contains('kan-redigere') || familieSession) return;
+  gendanFamiliePanel();
   loginModal.classList.add('vis');
 });
 document.getElementById('admin-log-ud').addEventListener('click', () => signOut(auth));
@@ -1374,35 +1423,103 @@ document.querySelectorAll('.login-tab').forEach(tab => {
 });
  
 // Familie-login
-document.getElementById('fam-login-knap').addEventListener('click', async () => {
+function kobFamilieLoginKnap() {
+  const knap = document.getElementById('fam-login-knap');
+  if (!knap) return;
+  knap.addEventListener('click', haandterFamilieLogin);
+  const kodeFelt = document.getElementById('fam-kode');
+  if (kodeFelt) {
+    kodeFelt.addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('fam-login-knap').click();
+    });
+  }
+}
+
+async function haandterFamilieLogin() {
   const nr   = document.getElementById('fam-nr').value.trim();
   const kode = document.getElementById('fam-kode').value.trim();
   const fejl = document.getElementById('fam-fejl');
   fejl.className = 'modal-fejl';
   fejl.textContent = '';
- 
+
   if (!nr || !kode) {
     fejl.className = 'modal-fejl roed';
     fejl.textContent = 'Udfyld både medlemsnummer og PIN-kode.';
     return;
   }
- 
+
   try {
     const snap = await getDoc(doc(db, 'membres', nr));
     if (!snap.exists()) throw new Error('Ukendt medlemsnummer.');
     const md = snap.data();
     if (!md.kode || md.kode !== kode) throw new Error('Forkert PIN-kode.');
- 
-    familieSession = { nr, navne: md.navne };
-    sessionStorage.setItem('familieSession', JSON.stringify(familieSession));
-    visFamilieSession();
-    loginModal.classList.remove('vis');
-    renderGrid();
+
+    // Korrekt login — vis valg af hvem man er
+    visPersonValg(nr, md);
   } catch (err) {
     fejl.className = 'modal-fejl roed';
     fejl.textContent = err.message || 'Kunne ikke logge ind.';
   }
-});
+}
+
+// Knyt login-knappen ved opstart
+kobFamilieLoginKnap();
+
+// ── PERSON-VALG VED FAMILIE-LOGIN ─────────────────────────────
+// Efter korrekt nummer+PIN vælger man hvem man er i husstanden.
+function visPersonValg(nr, md) {
+  const fejl = document.getElementById('fam-fejl');
+  fejl.className = 'modal-fejl';
+  fejl.textContent = '';
+
+  // Voksne (ikke børn) kan vælges som "den der er logget ind"
+  const voksne = (md.familiemedlemmer || [])
+    .map((p, idx) => ({ p, idx }))
+    .filter(x => x.p.rolle !== 'barn' && (x.p.navn || visPersonNavn(x.p)).trim());
+
+  const panel = document.getElementById('panel-familie');
+
+  // Hvis ingen voksne kan identificeres, log ind på husstands-niveau (som før)
+  if (!voksne.length) {
+    saetFamilieSession(nr, md, null);
+    return;
+  }
+
+  const knapper = voksne.map(x => {
+    const navn = (x.p.navn || visPersonNavn(x.p)).trim();
+    return `<button class="login-knap-stor" style="margin-bottom:8px"
+              data-personidx="${x.idx}">${navn}</button>`;
+  }).join('');
+
+  panel.innerHTML = `
+    <div class="modal-panel-titel">Hvem er du?</div>
+    <p style="font-size:12px;color:var(--tekst-lys);margin-bottom:.75rem">
+      Vælg dit navn, så ved siden hvem der er logget ind.
+    </p>
+    ${knapper}
+    <div class="modal-fejl" id="fam-fejl"></div>`;
+
+  panel.querySelectorAll('[data-personidx]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const valgt = md.familiemedlemmer[+btn.dataset.personidx];
+      saetFamilieSession(nr, md, valgt);
+    });
+  });
+}
+
+function saetFamilieSession(nr, md, valgtPerson) {
+  familieSession = {
+    nr,
+    navne: md.navne,
+    personNavn: valgtPerson ? (valgtPerson.navn || visPersonNavn(valgtPerson)).trim() : null,
+    dataansvarlig: valgtPerson ? !!valgtPerson.dataansvarlig : false,
+    rolle: valgtPerson ? valgtPerson.rolle : null
+  };
+  sessionStorage.setItem('familieSession', JSON.stringify(familieSession));
+  visFamilieSession();
+  loginModal.classList.remove('vis');
+  renderGrid();
+}
 document.getElementById('fam-kode').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('fam-login-knap').click();
 });
@@ -1460,10 +1577,14 @@ function visFamilieSession() {
   document.body.classList.add('familie-session');
   document.getElementById('bruger-rolle-badge').textContent = 'Familie';
   document.getElementById('bruger-rolle-badge').className = 'bruger-rolle-badge familie';
-  document.getElementById('bruger-navn').textContent = familieSession.navne;
+  const visNavn = familieSession.personNavn || familieSession.navne;
+  document.getElementById('bruger-navn').textContent = visNavn;
   document.getElementById('bruger-info').style.display = 'flex';
   document.getElementById('login-knap').style.display = 'none';
-  document.getElementById('familie-banner-navn').textContent = familieSession.navne;
+  document.getElementById('familie-banner-navn').textContent =
+    familieSession.personNavn
+      ? `Velkommen: ${familieSession.personNavn}`
+      : familieSession.navne;
   document.getElementById('familie-banner').style.display = 'block';
 }
  
