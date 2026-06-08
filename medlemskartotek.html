@@ -675,6 +675,7 @@ function rolleKlasse(rolle) {
  
 const BEGI_TYPE = {
   'konfirmation':  '🙏 Konfirmation',
+  'bryllupsdag':  '💐 Bryllupsdag',
   'sølvbryllup':  '🥂 Sølvbryllup (25 år)',
   'guldbryllup':  '💍 Guldbryllup (50 år)',
   'diamantbryllup':'💎 Diamantbryllup (60 år)',
@@ -863,11 +864,26 @@ function renderPersonEdit() {
     return;
   }
   // Medlemsnummer: voksne deler husstandsnummeret; børn får 8-1, 8-2 ...
-  let barnTaeller = 0;
+  // Tillægsnummer tildeles efter ALDER: ældste barn = -1, næstældste = -2 osv.
+  // (uanset hvilken rækkefølge børnene er tastet ind i)
+  const boernSorteret = personListe
+    .filter(pp => pp.rolle === 'barn')
+    .slice()
+    .sort((a, b) => {
+      const da = a.foedselsdato || '';
+      const db = b.foedselsdato || '';
+      if (da && db) return da < db ? -1 : (da > db ? 1 : 0); // tidligst født = ældst = først
+      if (da && !db) return -1; // barn med dato før barn uden dato
+      if (!da && db) return 1;
+      return 0;
+    });
+  function barnTillaegsNr(person) {
+    const idx = boernSorteret.indexOf(person);
+    return idx === -1 ? '?' : (idx + 1);
+  }
   el.innerHTML = personListe.map((p, i) => {
     const erBarn = p.rolle === 'barn';
-    if (erBarn) barnTaeller++;
-    const medlemsNr = erBarn ? `${aktivtNr}-${barnTaeller}` : aktivtNr;
+    const medlemsNr = erBarn ? `${aktivtNr}-${barnTillaegsNr(p)}` : aktivtNr;
     const visningsNavn = visPersonNavn(p) || '(nyt medlem)';
     return `
     <div class="person-edit-kort">
