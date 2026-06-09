@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen — Gæste-administration</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --mos:#3a5a2e;--mos-mork:#243b1c;--mos-lys:#5a7f4a;
+  --guld:#b8892a;--guld-lys:#d4a84b;--guld-pale:#f5e9cc;
+  --creme:#faf6ee;--creme-mork:#f0e8d8;
+  --tekst:#2a2015;--tekst-mid:#5a4f3a;--tekst-lys:#8a7d65;
+  --hvid:#fffdf8;--skygge:rgba(36,27,12,0.12);
+  --fare:#c0392b;--fare-lys:#fdf0ef;--ok:#2d6e2d;--ok-lys:#e8f5e9;
+  --kant:rgba(184,137,42,.2);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--tekst);line-height:1.6;min-height:100vh}
+
+/* Topbar */
+.topbar{background:var(--mos-mork);border-bottom:3px solid var(--guld);height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem}
+.topbar-logo{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;color:var(--hvid);letter-spacing:1px}
+.topbar-logo em{font-style:italic;color:var(--guld-lys)}
+.topbar-badge{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--guld);border:1px solid rgba(184,137,42,.4);padding:2px 8px;margin-left:10px}
+.tilbage-link{color:var(--guld-lys);font-size:12px;letter-spacing:1px;text-decoration:none;text-transform:uppercase}
+.tilbage-link:hover{color:var(--hvid)}
+
+/* Indhold */
+.wrap{max-width:1000px;margin:0 auto;padding:2rem 1.5rem}
+.side-titel{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:400;color:var(--mos-mork)}
+.side-sub{font-size:13px;color:var(--tekst-lys);margin-bottom:2rem}
+
+/* Adgangsspærre */
+#spaerre{display:none;align-items:center;justify-content:center;min-height:70vh;text-align:center;padding:2rem}
+#spaerre .boks{background:var(--hvid);max-width:440px;padding:2.5rem;box-shadow:0 20px 50px var(--skygge);border-top:3px solid var(--fare)}
+#spaerre h2{font-family:'Cormorant Garamond',serif;color:var(--fare);font-size:24px;margin-bottom:1rem}
+#spaerre p{color:var(--tekst-mid);font-size:14px;margin-bottom:1.5rem}
+#spaerre a{display:inline-block;background:var(--mos-mork);color:var(--hvid);text-decoration:none;padding:11px 24px;font-size:11px;letter-spacing:2px;text-transform:uppercase}
+
+#indhold{display:none}
+
+/* Kort */
+.kort{background:var(--hvid);box-shadow:0 4px 20px var(--skygge);margin-bottom:2rem;border:1px solid var(--kant)}
+.kort-header{background:var(--mos-mork);padding:1rem 1.5rem;border-bottom:2px solid var(--guld)}
+.kort-titel{font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--hvid);font-weight:400}
+.kort-body{padding:1.5rem}
+
+/* Form */
+.felt-gruppe{margin-bottom:1.25rem}
+.felt-label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--tekst-lys);font-weight:600;margin-bottom:6px}
+.felt-input,select.felt-input{width:100%;border:1px solid rgba(184,137,42,.3);padding:11px 14px;font-size:14px;font-family:'Jost',sans-serif;color:var(--tekst);background:var(--creme);outline:none}
+.felt-input:focus{border-color:var(--mos);background:var(--hvid)}
+.felt-raekke{display:flex;gap:1rem;flex-wrap:wrap}
+.felt-raekke .felt-gruppe{flex:1;min-width:160px}
+.felt-hjaelp{font-size:11px;color:var(--tekst-lys);margin-top:4px}
+
+.knap{background:var(--mos-mork);color:var(--hvid);border:none;padding:13px 28px;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-family:'Jost',sans-serif;font-weight:600;cursor:pointer;transition:background .2s}
+.knap:hover{background:var(--mos-lys)}
+.knap:disabled{background:var(--tekst-lys);cursor:wait}
+.knap-fare{background:var(--fare)}
+.knap-fare:hover{background:#a93226}
+.knap-lille{padding:7px 14px;font-size:10px}
+
+.besked{padding:11px 14px;font-size:13px;margin-bottom:1rem;display:none;border-left:3px solid}
+.besked.fejl{background:var(--fare-lys);color:var(--fare);border-color:var(--fare)}
+.besked.ok{background:var(--ok-lys);color:var(--ok);border-color:var(--ok)}
+.besked.vis{display:block}
+
+/* Gæste-tabel */
+.gaest-kort{border:1px solid var(--kant);background:var(--creme);padding:1.25rem;margin-bottom:1rem;display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.gaest-kort.aktiv{border-left:4px solid var(--ok)}
+.gaest-kort.udloebet{border-left:4px solid var(--tekst-lys);opacity:.7}
+.gaest-info{flex:1;min-width:220px}
+.gaest-nr{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--mos-mork);font-weight:600}
+.gaest-navn{font-size:15px;font-weight:500;color:var(--tekst)}
+.gaest-detalje{font-size:12px;color:var(--tekst-mid);margin-top:2px}
+.gaest-status{display:inline-block;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;margin-top:6px}
+.status-aktiv{background:var(--ok-lys);color:var(--ok)}
+.status-udloebet{background:var(--creme-mork);color:var(--tekst-lys)}
+.gaest-handlinger{display:flex;flex-direction:column;gap:8px;justify-content:center;min-width:120px}
+.nedtaelling{font-size:13px;font-weight:600;color:var(--guld);text-align:center}
+
+.tom{text-align:center;padding:2rem;color:var(--tekst-lys);font-size:14px}
+
+/* Modal bekræft */
+.modal-baggrund{display:none;position:fixed;inset:0;background:rgba(36,27,12,.5);z-index:200;align-items:center;justify-content:center;padding:1rem}
+.modal-baggrund.vis{display:flex}
+.modal{background:var(--hvid);max-width:400px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.4)}
+.modal-header{background:var(--mos-mork);padding:1.25rem 1.5rem;border-bottom:2px solid var(--guld)}
+.modal-titel{font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--hvid)}
+.modal-body{padding:1.5rem;font-size:14px;color:var(--tekst-mid)}
+.modal-fod{padding:1rem 1.5rem;display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--guld-pale)}
+.knap-graa{background:var(--creme-mork);color:var(--tekst-mid)}
+.knap-graa:hover{background:var(--guld-pale)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center">
+    <span class="topbar-logo">Olsen<em>Klanen</em></span>
+    <span class="topbar-badge">Gæster</span>
+  </div>
+  <a href="forside.html" class="tilbage-link">← Tilbage til forsiden</a>
+</div>
+
+<!-- Adgangsspærre (vises hvis ikke admin) -->
+<div id="spaerre">
+  <div class="boks">
+    <h2>Kun for OlsenBanden</h2>
+    <p id="spaerre-tekst">Du skal være logget ind som administrator for at styre gæsteadgange.</p>
+    <a href="login.html">Til login</a>
+  </div>
+</div>
+
+<!-- Selve siden -->
+<div id="indhold">
+<div class="wrap">
+
+  <div class="side-titel">Gæste-administration</div>
+  <div class="side-sub">Opret tidsbegrænset adgang til gæster · numrene 996–999</div>
+
+  <!-- OPRET GÆST -->
+  <div class="kort">
+    <div class="kort-header"><div class="kort-titel">Opret ny gæst</div></div>
+    <div class="kort-body">
+      <div id="opret-besked" class="besked"></div>
+
+      <div class="felt-raekke">
+        <div class="felt-gruppe">
+          <label class="felt-label">Gæstenummer</label>
+          <select id="f-nr" class="felt-input"></select>
+          <div class="felt-hjaelp">Kun ledige numre vises</div>
+        </div>
+        <div class="felt-gruppe">
+          <label class="felt-label">Varighed</label>
+          <select id="f-timer" class="felt-input">
+            <option value="1">1 time</option>
+            <option value="2">2 timer</option>
+            <option value="3">3 timer</option>
+            <option value="4">4 timer</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="felt-gruppe">
+        <label class="felt-label">Gæstens navn *</label>
+        <input type="text" id="f-navn" class="felt-input" placeholder="F.eks. Lars Hansen, IT-konsulent">
+      </div>
+
+      <div class="felt-raekke">
+        <div class="felt-gruppe">
+          <label class="felt-label">Email *</label>
+          <input type="email" id="f-email" class="felt-input" placeholder="lars@eksempel.dk">
+        </div>
+        <div class="felt-gruppe">
+          <label class="felt-label">Telefon *</label>
+          <input type="tel" id="f-tlf" class="felt-input" placeholder="12 34 56 78">
+        </div>
+      </div>
+
+      <div class="felt-gruppe">
+        <label class="felt-label">Årsag til adgang *</label>
+        <select id="f-aarsag" class="felt-input" onchange="aarsagSkift()">
+          <option value="">— vælg årsag —</option>
+          <option value="Programudvikling">1 · Programudvikling</option>
+          <option value="Demo af system">2 · Demo af system</option>
+          <option value="Udviklingshjælp">3 · Udviklingshjælp</option>
+          <option value="Andet">4 · Andet</option>
+        </select>
+      </div>
+
+      <div class="felt-gruppe" id="andet-gruppe" style="display:none">
+        <label class="felt-label">Beskriv årsagen *</label>
+        <input type="text" id="f-andet" class="felt-input" placeholder="Skriv kort hvad gæsten skal bruge adgangen til">
+      </div>
+
+      <button class="knap" id="opret-knap" onclick="opretGaest()">Opret gæsteadgang</button>
+    </div>
+  </div>
+
+  <!-- AKTIVE GÆSTER -->
+  <div class="kort">
+    <div class="kort-header"><div class="kort-titel">Gæster · oversigt</div></div>
+    <div class="kort-body">
+      <div id="liste"><div class="tom">Henter gæster...</div></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- Bekræft-modal -->
+<div class="modal-baggrund" id="bekraeft-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-titel" id="modal-titel">Bekræft</div></div>
+    <div class="modal-body" id="modal-tekst">Er du sikker?</div>
+    <div class="modal-fod">
+      <button class="knap knap-graa knap-lille" onclick="lukModal()">Fortryd</button>
+      <button class="knap knap-fare knap-lille" id="modal-ja" onclick="bekraeftJa()">Ja, gør det</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, getDoc, setDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const GAESTENUMRE = ["996", "997", "998", "999"];
+
+// ---- Adgangskontrol: kun admin må se siden ----
+const niveau = sessionStorage.getItem("ok_niveau");
+const minNr  = sessionStorage.getItem("ok_nr");
+if (niveau !== "admin") {
+  document.getElementById("spaerre").style.display = "flex";
+  if (niveau) {
+    document.getElementById("spaerre-tekst").textContent =
+      "Du er logget ind, men kun OlsenBanden (administratorer) kan styre gæsteadgange.";
+  }
+} else {
+  document.getElementById("indhold").style.display = "block";
+  start();
+}
+
+let nedtaellingTimer = null;
+
+async function start() {
+  await indlaesListe();
+}
+
+// ---- Vis/skjul 'Andet'-felt ----
+window.aarsagSkift = function() {
+  const v = document.getElementById("f-aarsag").value;
+  document.getElementById("andet-gruppe").style.display = (v === "Andet") ? "block" : "none";
+};
+
+function visBesked(type, tekst) {
+  const b = document.getElementById("opret-besked");
+  b.textContent = tekst;
+  b.className = "besked vis " + type;
+  if (type === "ok") setTimeout(() => { b.className = "besked"; }, 5000);
+}
+
+// ---- Opret gæst ----
+window.opretGaest = async function() {
+  const nr     = document.getElementById("f-nr").value;
+  const timer  = Number(document.getElementById("f-timer").value);
+  const navn   = document.getElementById("f-navn").value.trim();
+  const email  = document.getElementById("f-email").value.trim();
+  const tlf    = document.getElementById("f-tlf").value.trim();
+  let   aarsag = document.getElementById("f-aarsag").value;
+  const andet  = document.getElementById("f-andet").value.trim();
+  const knap   = document.getElementById("opret-knap");
+
+  if (!nr)     { visBesked("fejl", "Vælg et gæstenummer."); return; }
+  if (!navn)   { visBesked("fejl", "Skriv gæstens navn."); return; }
+  if (!email)  { visBesked("fejl", "Skriv gæstens email."); return; }
+  if (!tlf)    { visBesked("fejl", "Skriv gæstens telefonnummer."); return; }
+  if (!aarsag) { visBesked("fejl", "Vælg en årsag til adgangen."); return; }
+  if (aarsag === "Andet") {
+    if (!andet) { visBesked("fejl", "Beskriv årsagen i tekstfeltet."); return; }
+    aarsag = "Andet: " + andet;
+  }
+
+  knap.disabled = true;
+  visBesked("ok", "Opretter...");
+
+  const nu = Date.now();
+  const udloeber = nu + timer * 60 * 60 * 1000;
+
+  const gaestData = {
+    aktiv: true,
+    navn: navn,
+    email: email,
+    tlf: tlf,
+    aarsag: aarsag,
+    timer: timer,
+    oprettet: nu,
+    udloeber: udloeber,
+    oprettetAf: sessionStorage.getItem("ok_navn") || ("nr. " + minNr)
+  };
+
+  try {
+    // Gæstenummeret findes som dokument i 'membres'. Vi sætter PIN + navn + gæste-blok.
+    // PIN er fast: Olsen-996 osv.
+    await setDoc(doc(db, "membres", nr), {
+      nr: nr,
+      navn: navn + " (gæst)",
+      kode: "Olsen-" + nr,
+      rettighed: "medlem",
+      erGaest: true,
+      gaest: gaestData
+    }, { merge: true });
+
+    visBesked("ok", "Gæst " + nr + " oprettet · adgang i " + timer + " time(r). PIN-kode: Olsen-" + nr);
+    // ryd felter
+    document.getElementById("f-navn").value = "";
+    document.getElementById("f-email").value = "";
+    document.getElementById("f-tlf").value = "";
+    document.getElementById("f-aarsag").value = "";
+    document.getElementById("f-andet").value = "";
+    document.getElementById("andet-gruppe").style.display = "none";
+    await indlaesListe();
+  } catch(err) {
+    console.log(err);
+    visBesked("fejl", "Kunne ikke oprette gæst: " + err.message);
+    knap.disabled = false;
+  }
+  knap.disabled = false;
+};
+
+// ---- Hent og vis alle gæster ----
+async function indlaesListe() {
+  const liste = document.getElementById("liste");
+  const ledige = [];
+  const gaester = [];
+
+  for (const nr of GAESTENUMRE) {
+    try {
+      const snap = await getDoc(doc(db, "membres", nr));
+      if (snap.exists() && snap.data().gaest && snap.data().gaest.aktiv) {
+        gaester.push({ nr: nr, ...snap.data().gaest });
+      } else {
+        ledige.push(nr);
+      }
+    } catch(e) {
+      ledige.push(nr);
+    }
+  }
+
+  // Udfyld dropdown med ledige numre
+  const dd = document.getElementById("f-nr");
+  dd.innerHTML = "";
+  if (ledige.length === 0) {
+    dd.innerHTML = '<option value="">Ingen ledige numre</option>';
+    document.getElementById("opret-knap").disabled = true;
+  } else {
+    document.getElementById("opret-knap").disabled = false;
+    ledige.forEach(nr => {
+      const o = document.createElement("option");
+      o.value = nr; o.textContent = "Nr. " + nr;
+      dd.appendChild(o);
+    });
+  }
+
+  // Vis aktive/udløbne gæster
+  if (gaester.length === 0) {
+    liste.innerHTML = '<div class="tom">Ingen gæster oprettet. Alle fire numre er ledige.</div>';
+  } else {
+    liste.innerHTML = "";
+    gaester.forEach(g => liste.appendChild(byggGaestKort(g)));
+  }
+
+  startNedtaelling();
+}
+
+function fmtTid(ms) {
+  const d = new Date(ms);
+  return d.toLocaleString("da-DK", { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" });
+}
+
+function byggGaestKort(g) {
+  const udloebet = Date.now() > Number(g.udloeber);
+  const div = document.createElement("div");
+  div.className = "gaest-kort " + (udloebet ? "udloebet" : "aktiv");
+  div.innerHTML = `
+    <div class="gaest-info">
+      <div class="gaest-nr">Nr. ${g.nr}</div>
+      <div class="gaest-navn">${esc(g.navn)}</div>
+      <div class="gaest-detalje">✉ ${esc(g.email)} · ☎ ${esc(g.tlf)}</div>
+      <div class="gaest-detalje">Årsag: ${esc(g.aarsag)}</div>
+      <div class="gaest-detalje">Oprettet: ${fmtTid(g.oprettet)} · af ${esc(g.oprettetAf || "—")}</div>
+      <div class="gaest-detalje">Udløber: ${fmtTid(g.udloeber)}</div>
+      <span class="gaest-status ${udloebet ? "status-udloebet" : "status-aktiv"}">
+        ${udloebet ? "Udløbet" : "Aktiv"}
+      </span>
+    </div>
+    <div class="gaest-handlinger">
+      ${udloebet ? "" : `<div class="nedtaelling" data-udloeber="${g.udloeber}"></div>`}
+      ${udloebet
+        ? `<button class="knap knap-graa knap-lille" onclick="ryddGaest('${g.nr}')">Ryd plads</button>`
+        : `<button class="knap knap-fare knap-lille" onclick="spoergLuk('${g.nr}','${esc(g.navn)}')">Luk nu</button>`}
+    </div>`;
+  return div;
+}
+
+function esc(s) {
+  return String(s || "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+
+// ---- Levende nedtælling ----
+function startNedtaelling() {
+  if (nedtaellingTimer) clearInterval(nedtaellingTimer);
+  opdaterNedtaelling();
+  nedtaellingTimer = setInterval(opdaterNedtaelling, 1000);
+}
+function opdaterNedtaelling() {
+  let nogetUdloeb = false;
+  document.querySelectorAll(".nedtaelling").forEach(el => {
+    const ms = Number(el.dataset.udloeber) - Date.now();
+    if (ms <= 0) { el.textContent = "Udløbet"; nogetUdloeb = true; return; }
+    const m = Math.floor(ms / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    el.textContent = "⏳ " + m + " min " + (s < 10 ? "0" : "") + s + " sek";
+  });
+  if (nogetUdloeb) indlaesListe();
+}
+
+// ---- Luk en gæst nu (sæt udløb til nu) ----
+let modalNr = null, modalHandling = null;
+window.spoergLuk = function(nr, navn) {
+  modalNr = nr;
+  modalHandling = "luk";
+  document.getElementById("modal-titel").textContent = "Luk gæst nu";
+  document.getElementById("modal-tekst").textContent =
+    "Vil du lukke adgangen for " + navn + " (nr. " + nr + ") med det samme? Gæsten kan ikke længere bruge systemet.";
+  document.getElementById("bekraeft-modal").classList.add("vis");
+};
+window.ryddGaest = function(nr) {
+  modalNr = nr;
+  modalHandling = "ryd";
+  document.getElementById("modal-titel").textContent = "Ryd plads";
+  document.getElementById("modal-tekst").textContent =
+    "Vil du frigøre nr. " + nr + ", så det kan bruges til en ny gæst?";
+  document.getElementById("bekraeft-modal").classList.add("vis");
+};
+window.lukModal = function() {
+  document.getElementById("bekraeft-modal").classList.remove("vis");
+  modalNr = null; modalHandling = null;
+};
+window.bekraeftJa = async function() {
+  if (!modalNr) return;
+  const nr = modalNr;
+  try {
+    if (modalHandling === "luk") {
+      // Sæt udløb til nu — gæsten er straks lukket ude
+      await updateDoc(doc(db, "membres", nr), { "gaest.udloeber": Date.now() });
+    } else if (modalHandling === "ryd") {
+      // Deaktiver gæsten, frigør pladsen
+      await updateDoc(doc(db, "membres", nr), { "gaest.aktiv": false });
+    }
+    lukModal();
+    await indlaesListe();
+  } catch(err) {
+    alert("Fejl: " + err.message);
+    lukModal();
+  }
+};
+</script>
+
+</body>
+</html>
