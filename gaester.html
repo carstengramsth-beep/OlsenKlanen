@@ -106,12 +106,35 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
   <a href="forside.html" class="tilbage-link">← Tilbage til forsiden</a>
 </div>
 
-<!-- Adgangsspærre (vises hvis ikke admin) -->
+<!-- Login med email + password (giver Firebase-stempel) -->
+<div id="login-boks" style="display:none;align-items:center;justify-content:center;min-height:75vh;padding:2rem">
+  <div style="background:var(--hvid);max-width:420px;width:100%;box-shadow:0 20px 50px var(--skygge);border-top:3px solid var(--guld)">
+    <div style="background:var(--mos-mork);padding:1.5rem;text-align:center;border-bottom:2px solid var(--guld)">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--hvid)">Gæste-administration</div>
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--guld);margin-top:4px">Kun for OlsenBanden</div>
+    </div>
+    <div style="padding:2rem">
+      <div id="login-besked" class="besked"></div>
+      <div class="felt-gruppe">
+        <label class="felt-label">Email</label>
+        <input type="email" id="login-email" class="felt-input" placeholder="din@email.dk" autocomplete="email">
+      </div>
+      <div class="felt-gruppe">
+        <label class="felt-label">Adgangskode</label>
+        <input type="password" id="login-kode" class="felt-input" placeholder="Din adgangskode" autocomplete="current-password">
+      </div>
+      <button class="knap" id="login-knap" onclick="loginFirebase()" style="width:100%">Log ind</button>
+      <p style="font-size:11px;color:var(--tekst-lys);margin-top:1rem;text-align:center">Brug din OlsenBanden-email og adgangskode<br>(samme som administrationen)</p>
+    </div>
+  </div>
+</div>
+
+<!-- Adgangsspærre (vises hvis logget ind men ikke admin) -->
 <div id="spaerre">
   <div class="boks">
-    <h2>Kun for OlsenBanden</h2>
-    <p id="spaerre-tekst">Du skal være logget ind som administrator for at styre gæsteadgange.</p>
-    <a href="login.html">Til login</a>
+    <h2>Ingen adgang</h2>
+    <p id="spaerre-tekst">Din konto har ikke administrator-rettigheder. Kontakt Carsten.</p>
+    <a href="forside.html">Til forsiden</a>
   </div>
 </div>
 
@@ -206,7 +229,8 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, getDoc, setDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, getDoc, setDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -217,29 +241,61 @@ const firebaseConfig = {
   appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
 };
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
 
 const GAESTENUMRE = ["996", "997", "998", "999"];
-
-// ---- Adgangskontrol: kun admin må se siden ----
-const niveau = sessionStorage.getItem("ok_niveau");
-const minNr  = sessionStorage.getItem("ok_nr");
-if (niveau !== "admin") {
-  document.getElementById("spaerre").style.display = "flex";
-  if (niveau) {
-    document.getElementById("spaerre-tekst").textContent =
-      "Du er logget ind, men kun OlsenBanden (administratorer) kan styre gæsteadgange.";
-  }
-} else {
-  document.getElementById("indhold").style.display = "block";
-  start();
-}
-
 let nedtaellingTimer = null;
+let aktivAdmin = null;
 
-async function start() {
-  await indlaesListe();
-}
+// ---- Firebase-login: giver det stempel vagten stoler på ----
+window.loginFirebase = async function() {
+  const email = document.getElementById("login-email").value.trim();
+  const kode  = document.getElementById("login-kode").value;
+  const b = document.getElementById("login-besked");
+  const knap = document.getElementById("login-knap");
+  if (!email || !kode) { b.textContent = "Udfyld email og adgangskode."; b.className = "besked vis fejl"; return; }
+  knap.disabled = true; b.textContent = "Logger ind..."; b.className = "besked vis";
+  try {
+    await signInWithEmailAndPassword(auth, email, kode);
+    // onAuthStateChanged tager over herfra
+  } catch(e) {
+    b.textContent = "Forkert email eller adgangskode.";
+    b.className = "besked vis fejl";
+    knap.disabled = false;
+  }
+};
+
+// ---- Reagér på login-status ----
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    // Ikke logget ind → vis login-boks
+    document.getElementById("login-boks").style.display = "flex";
+    document.getElementById("spaerre").style.display = "none";
+    document.getElementById("indhold").style.display = "none";
+    return;
+  }
+  // Logget ind → tjek at brugeren er administrator
+  try {
+    const snap = await getDoc(doc(db, "brugere", user.email.toLowerCase()));
+    const rolle = snap.exists() ? snap.data().rolle : null;
+    if (rolle === "administrator" || rolle === "redaktør") {
+      aktivAdmin = { email: user.email, navn: snap.data().navn || user.email };
+      document.getElementById("login-boks").style.display = "none";
+      document.getElementById("spaerre").style.display = "none";
+      document.getElementById("indhold").style.display = "block";
+      await indlaesListe();
+    } else {
+      document.getElementById("login-boks").style.display = "none";
+      document.getElementById("spaerre").style.display = "flex";
+      document.getElementById("indhold").style.display = "none";
+    }
+  } catch(e) {
+    document.getElementById("login-boks").style.display = "none";
+    document.getElementById("spaerre").style.display = "flex";
+    document.getElementById("indhold").style.display = "none";
+  }
+});
 
 // ---- Vis/skjul 'Andet'-felt ----
 window.aarsagSkift = function() {
@@ -290,7 +346,7 @@ window.opretGaest = async function() {
     timer: timer,
     oprettet: nu,
     udloeber: udloeber,
-    oprettetAf: sessionStorage.getItem("ok_navn") || ("nr. " + minNr)
+    oprettetAf: aktivAdmin ? aktivAdmin.navn : "ukendt"
   };
 
   try {
