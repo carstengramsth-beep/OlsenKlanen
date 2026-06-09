@@ -186,10 +186,6 @@
 
   <div id="besked" class="besked"></div>
 
-  <div class="gaest-link">
-    <a onclick="logIndSomGaest()">Log ind som gæst</a>
-  </div>
-
   <button id="installerKnap" class="installer-knap" onclick="installerApp()">
     📲 Installer OlsenKlanen som app
   </button>
@@ -225,6 +221,9 @@
   // Ekstra sikkerheds-bagstopper: nr. 8 (Carsten) er ALTID admin,
   // så administrator aldrig kan låse sig selv ude.
   const ALTID_ADMIN = ["8"];
+
+  // ---- Gæstenumre (styres af OlsenBanden i gæste-administrationen) ----
+  const GAESTENUMRE = ["996", "997", "998", "999"];
 
   // ---- ALTID HOVEDDØREN: ryd evt. gemt sidste-side ----
   try { sessionStorage.removeItem("ok_sidste_side"); } catch(e) {}
@@ -279,6 +278,31 @@
         return;
       }
 
+      // ---- GÆSTE-TJEK (numrene 996-999) ----
+      // En gæst kan kun komme ind hvis OlsenBanden har oprettet adgang
+      // og udløbstiden ikke er passeret.
+      if (GAESTENUMRE.includes(nr)) {
+        const g = d.gaest || null;
+
+        if (!g || !g.aktiv) {
+          besked.textContent = "Denne gæsteadgang er ikke aktiv. Kontakt OlsenBanden.";
+          besked.className = "besked";
+          knap.disabled = false;
+          return;
+        }
+
+        const udloeber = Number(g.udloeber || 0);
+        if (!udloeber || Date.now() > udloeber) {
+          besked.textContent = "Gæsteadgangen er udløbet. Kontakt OlsenBanden for ny adgang.";
+          besked.className = "besked";
+          knap.disabled = false;
+          return;
+        }
+
+        // Gem hvornår denne gæstesession udløber (bruges af forsiden m.fl.)
+        try { sessionStorage.setItem("ok_gaest_udloeber", String(udloeber)); } catch(e) {}
+      }
+
       // ---- Login lykkedes ----
       const navn = d.navn || ("Medlem " + nr);
       // Rettighed hentes fra kartoteket. Nr. 8 er altid admin (bagstopper).
@@ -304,15 +328,6 @@
     }
   }
 
-  function logIndSomGaest() {
-    const besked = document.getElementById("besked");
-    besked.textContent = "Velkommen — du er logget ind som gæst.";
-    besked.className = "besked ok";
-    gemAdgang("gaest", "Gæst", "");
-    videreTil("forside.html");
-  }
-
-  // ---- FORTRYD: ryd felterne og skjul PIN igen ----
   function fortryd() {
     document.getElementById("nr").value = "";
     document.getElementById("kode").value = "";
@@ -364,7 +379,6 @@
 
   // ---- Gør funktioner tilgængelige for knapperne i HTML ----
   window.logInd = logInd;
-  window.logIndSomGaest = logIndSomGaest;
   window.fortryd = fortryd;
   window.visKode = visKode;
 
