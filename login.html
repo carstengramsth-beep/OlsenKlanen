@@ -199,7 +199,7 @@
 <script type="module">
   // ============================================================
   //  OlsenKlanen — SAMLET LOGIN  (medlemsnr. + PIN for ALLE)
-  //  Version v20.0 — 9. juni 2026
+  //  Version v20.1 — 10. juni 2026
   //  Erstatter det gamle email + fælleskode-system.
   // ============================================================
 
@@ -219,20 +219,25 @@
 
   // ---- Admin styres i KARTOTEKET (feltet 'rettighed' = "admin") ----
   // Ekstra sikkerheds-bagstopper: nr. 8 (Carsten) er ALTID admin,
-  // så administrator aldrig kan låse sig selv ude.
+  // saa administrator aldrig kan laase sig selv ude.
   const ALTID_ADMIN = ["8"];
 
-  // ---- Gæstenumre (styres af OlsenBanden i gæste-administrationen) ----
+  // ---- Gaestenumre (styres af OlsenBanden i gaeste-administrationen) ----
   const GAESTENUMRE = ["996", "997", "998", "999"];
 
-  // ---- ALTID HOVEDDØREN: ryd evt. gemt sidste-side ----
+  // ---- ALTID HOVEDDOEREN: ryd evt. gemt sidste-side ----
   try { sessionStorage.removeItem("ok_sidste_side"); } catch(e) {}
 
-  // ---- HUSK MIG: udfyld medlemsnummer hvis vi har gemt før ----
+  // ---- HUSK MIG: udfyld medlemsnummer hvis vi har gemt foer ----
   try {
     const gemtNr = localStorage.getItem("ok_husk_nr");
     if (gemtNr) document.getElementById("nr").value = gemtNr;
   } catch(e) {}
+
+  // Traek fornavnet ud af et fuldt navn ("Carsten Gram" -> "Carsten")
+  function fornavnAf(fuldtNavn) {
+    return (fuldtNavn || "").trim().split(/\s+/)[0] || "";
+  }
 
   async function logInd() {
     const nr     = document.getElementById("nr").value.trim();
@@ -278,9 +283,7 @@
         return;
       }
 
-      // ---- GÆSTE-TJEK (numrene 996-999) ----
-      // En gæst kan kun komme ind hvis OlsenBanden har oprettet adgang
-      // og udløbstiden ikke er passeret.
+      // ---- GAESTE-TJEK (numrene 996-999) ----
       if (GAESTENUMRE.includes(nr)) {
         const g = d.gaest || null;
 
@@ -299,12 +302,22 @@
           return;
         }
 
-        // Gem hvornår denne gæstesession udløber (bruges af forsiden m.fl.)
         try { sessionStorage.setItem("ok_gaest_udloeber", String(udloeber)); } catch(e) {}
       }
 
       // ---- Login lykkedes ----
-      const navn = d.navn || ("Medlem " + nr);
+      // Find et rigtigt navn: foerst kortets 'navne', ellers foerste voksne medlem.
+      let navn = (d.navne || "").trim();
+      if (!navn) {
+        const voksne = (d.familiemedlemmer || []).filter(p => p.rolle !== "barn");
+        const foerste = voksne.find(p => (p.fornavn || p.navn || "").trim());
+        if (foerste) {
+          const dele = [foerste.fornavn, foerste.efternavn].filter(Boolean);
+          navn = dele.length ? dele.join(" ") : (foerste.navn || "");
+        }
+      }
+      const fornavn = fornavnAf(navn);
+
       // Rettighed hentes fra kartoteket. Nr. 8 er altid admin (bagstopper).
       let rettighed = String(d.rettighed || "medlem").trim().toLowerCase();
       if (ALTID_ADMIN.includes(nr)) rettighed = "admin";
@@ -315,9 +328,13 @@
         else      localStorage.removeItem("ok_husk_nr");
       } catch(e) {}
 
-      besked.textContent = "Velkommen, " + navn + "!";
+      // ---- HAANDTRYK: "Velkommen medlem 8 Carsten" ----
+      besked.textContent = fornavn
+        ? ("Velkommen medlem " + nr + " " + fornavn)
+        : ("Velkommen medlem " + nr);
       besked.className = "besked ok";
-      gemAdgang(rettighed, navn, nr);
+
+      gemAdgang(rettighed, navn || ("Medlem " + nr), nr);
       videreTil("forside.html");
 
     } catch(err) {
@@ -338,7 +355,7 @@
     document.getElementById("nr").focus();
   }
 
-  // ---- VIS KODE: forstørrelsesglas-knap ----
+  // ---- VIS KODE: forstoerrelsesglas-knap ----
   function visKode() {
     const kodeFelt = document.getElementById("kode");
     const knap = document.getElementById("visKodeKnap");
@@ -366,7 +383,8 @@
   }
 
   function videreTil(side) {
-    setTimeout(function() { window.location.href = side; }, 800);
+    // Vent 2,5 sek. saa haandtryk-beskeden kan naa at blive laest
+    setTimeout(function() { window.location.href = side; }, 2500);
   }
 
   // ---- Enter-tast ----
@@ -377,7 +395,7 @@
     if (e.key === "Enter") document.getElementById("kode").focus();
   });
 
-  // ---- Gør funktioner tilgængelige for knapperne i HTML ----
+  // ---- Goer funktioner tilgaengelige for knapperne i HTML ----
   window.logInd = logInd;
   window.fortryd = fortryd;
   window.visKode = visKode;
