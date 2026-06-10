@@ -389,7 +389,9 @@
     if (valgtPerson && valgtPerson.rettighed) rettighed = String(valgtPerson.rettighed);
     else if (d.rettighed) rettighed = String(d.rettighed);
     rettighed = rettighed.trim().toLowerCase();
-    if (ALTID_ADMIN.includes(nr)) rettighed = "admin";
+    // Bagstopper: KUN Carsten (nr. 8) er altid admin — ikke andre voksne på nr. 8.
+    // Tjekker fornavnet på den valgte person, så fx Elisabeth IKKE bliver admin.
+    if (ALTID_ADMIN.includes(nr) && fornavnAf(navn).toLowerCase() === "carsten") rettighed = "admin";
 
     try {
       if (husk) localStorage.setItem("ok_husk_nr", nr);
