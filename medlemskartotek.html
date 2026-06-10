@@ -1790,9 +1790,38 @@ function migrerFamilie(fd) {
 }
  
 async function initialiserSide() {
+  // ── FÆLLES LOGIN (fordøren): genkend hvem der er logget ind ad hoveddøren ──
+  // login.html gemmer ok_nr / ok_navn / ok_niveau. Er man admin (eller nr. 8),
+  // får kartoteket fuld redigeringsadgang — uden det gamle email-login.
+  try {
+    const okNr     = sessionStorage.getItem('ok_nr')     || localStorage.getItem('ok_nr');
+    const okNavn   = sessionStorage.getItem('ok_navn')   || localStorage.getItem('ok_navn');
+    const okNiveau = (sessionStorage.getItem('ok_niveau')|| localStorage.getItem('ok_niveau') || '').trim().toLowerCase();
+    if (okNr) {
+      if (okNiveau === 'admin' || String(okNr) === '8') {
+        // Admin via fordøren → fuld adgang (som OlsenBanden)
+        document.body.classList.add('kan-redigere');
+        familieSession = null;
+        const visN = okNavn || ('Medlem ' + okNr);
+        const bj = document.getElementById('admin-bjaelke-navn'); if (bj) bj.textContent = visN;
+        const br = document.getElementById('admin-bjaelke-rolle'); if (br) br.textContent = 'Administrator';
+        const bi = document.getElementById('bruger-info'); if (bi) bi.style.display = 'flex';
+        const bn = document.getElementById('bruger-navn'); if (bn) bn.textContent = visN;
+        const lk = document.getElementById('login-knap'); if (lk) lk.style.display = 'none';
+        const ob = document.getElementById('olsenbanden-knap'); if (ob) ob.style.display = 'inline-block';
+      } else {
+        // Almindeligt medlem via fordøren → familie-session på eget nummer
+        familieSession = { nr: String(okNr), navne: okNavn || ('Medlem ' + okNr),
+          personNavn: okNavn || null, dataansvarlig: true, rolle: null };
+        try { sessionStorage.setItem('familieSession', JSON.stringify(familieSession)); } catch(e){}
+        visFamilieSession();
+      }
+    }
+  } catch(e) {}
+
   try {
     const gem = sessionStorage.getItem('familieSession');
-    if (gem) { familieSession = JSON.parse(gem); visFamilieSession(); }
+    if (gem && !familieSession) { familieSession = JSON.parse(gem); visFamilieSession(); }
   } catch { familieSession = null; }
  
   // Vis tom grid mens vi henter — IKKE standarddata
