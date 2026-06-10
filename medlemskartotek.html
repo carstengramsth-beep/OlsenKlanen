@@ -1738,6 +1738,16 @@ onAuthStateChanged(auth, async user => {
     return;
   }
   document.body.classList.remove('kan-redigere');
+  // MEN: hvis man er logget ind ad fordøren som admin (nr. 8 eller rettighed=admin),
+  // skal den adgang bevares — det gamle email-login må ikke fjerne den.
+  try {
+    const fNr = sessionStorage.getItem('ok_nr') || localStorage.getItem('ok_nr');
+    const fNiv = (sessionStorage.getItem('ok_niveau') || localStorage.getItem('ok_niveau') || '').trim().toLowerCase();
+    if (fNr && (fNiv === 'admin' || String(fNr) === '8')) {
+      document.body.classList.add('kan-redigere');
+      return;
+    }
+  } catch(e) {}
   if (!familieSession) {
     document.getElementById('bruger-info').style.display = 'none';
     document.getElementById('login-knap').style.display = 'inline-block';
