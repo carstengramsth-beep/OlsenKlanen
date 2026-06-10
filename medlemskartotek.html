@@ -1743,7 +1743,7 @@ onAuthStateChanged(auth, async user => {
   try {
     const fNr = sessionStorage.getItem('ok_nr') || localStorage.getItem('ok_nr');
     const fNiv = (sessionStorage.getItem('ok_niveau') || localStorage.getItem('ok_niveau') || '').trim().toLowerCase();
-    if (fNr && (fNiv === 'admin' || String(fNr) === '8')) {
+    if (fNr && fNiv === 'admin') {
       document.body.classList.add('kan-redigere');
       return;
     }
@@ -1808,7 +1808,7 @@ async function initialiserSide() {
     const okNavn   = sessionStorage.getItem('ok_navn')   || localStorage.getItem('ok_navn');
     const okNiveau = (sessionStorage.getItem('ok_niveau')|| localStorage.getItem('ok_niveau') || '').trim().toLowerCase();
     if (okNr) {
-      if (okNiveau === 'admin' || String(okNr) === '8') {
+      if (okNiveau === 'admin') {
         // Admin via fordøren → fuld adgang (som OlsenBanden)
         document.body.classList.add('kan-redigere');
         familieSession = null;
