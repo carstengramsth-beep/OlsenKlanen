@@ -71,8 +71,9 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
 
 <div class="test-note">
   <strong>Sådan gør du:</strong> Tryk "📷 Læg et billede op", vælg hvilken del af dagen eller
-  begivenhed billedet hører til, vælg et billede fra din enhed, og skriv en billedtekst.
-  Billederne gemmes nu rigtigt og bliver liggende, så hele familien kan se dem.
+  begivenhed billedet hører til, og vælg et billede fra din enhed. Dit navn sættes automatisk,
+  når du er logget ind, så alle kan se hvem der har lagt billedet op. Billederne bliver liggende,
+  så hele familien kan se dem.
 </div>
 
 <div class="wrap">
@@ -128,6 +129,18 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
+
+// Hent navn + nummer fra login (sat af login.html). Så stemples billeder
+// automatisk med den der er logget ind — uden at skulle skrive navnet selv.
+function loginNavn(){
+  try{
+    const navn = sessionStorage.getItem('ok_navn') || localStorage.getItem('ok_navn') || '';
+    const nr   = sessionStorage.getItem('ok_nr')   || localStorage.getItem('ok_nr')   || '';
+    if(navn && nr) return navn + ' (nr. ' + nr + ')';
+    if(navn) return navn;
+    return '';
+  }catch(e){ return ''; }
+}
 
 // Programpunkter — år for år (her: skovturen 2026)
 const PROGRAM = [
@@ -213,7 +226,19 @@ function fyldDropdown(valgtId){
 function nulstil(){
   document.getElementById('fil').value='';
   document.getElementById('tekst').value='';
-  document.getElementById('navn').value='';
+  // Auto-udfyld navn fra login. Er man logget ind, låses feltet (ægte stempel).
+  const navnFelt = document.getElementById('navn');
+  const fraLogin = loginNavn();
+  if(fraLogin){
+    navnFelt.value = fraLogin;
+    navnFelt.readOnly = true;
+    navnFelt.style.background = '#f0ece0';
+    navnFelt.title = 'Dit navn hentes automatisk fra dit login';
+  } else {
+    navnFelt.value = '';
+    navnFelt.readOnly = false;
+    navnFelt.style.background = '#fff';
+  }
   document.getElementById('upload-status').textContent='';
   const fv=document.getElementById('forhaandsvis'); fv.style.display='none'; fv.src='';
 }
