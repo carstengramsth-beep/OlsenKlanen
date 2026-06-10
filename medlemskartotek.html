@@ -413,6 +413,10 @@ body.kan-redigere .historisk-btn-wrapper{display:block}
           <input type="text" id="ef-kode" placeholder="F.eks. 1234" maxlength="10">
         </div>
       </div>
+      <div class="ef" id="ef-rettighed-wrapper" style="display:none">
+        <div style="font-size:11px;color:var(--tekst-lys)">🔑 Status sættes nu på hver enkelt person nedenfor.</div>
+        <select id="ef-rettighed" style="display:none"></select>
+      </div>
  
       <div class="edit-sek-titel">Husstandens medlemmer</div>
       <div id="person-liste-edit"></div>
@@ -915,7 +919,17 @@ function renderPersonEdit() {
           <input type="checkbox" data-pi="${i}" data-felt="dataansvarlig" ${p.dataansvarlig ? 'checked' : ''}>
           <span>🛡️ Dataansvarlig (må redigere husstandens data)</span>
         </label>
-      </div>`}
+      </div>
+      ${document.body.classList.contains('kan-redigere') ? `
+      <div class="person-rettighed" style="margin-top:.5rem">
+        <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--tekst-lys);margin-bottom:3px">🔑 Status / rettighed</label>
+        <select data-pi="${i}" data-felt="rettighed" style="width:100%;border:1px solid var(--border);padding:.4rem .6rem;font-size:12.5px;font-family:'Source Sans 3',sans-serif;background:var(--hvid);border-radius:3px">
+          <option value="medlem"   ${(p.rettighed||'medlem')==='medlem'   ?'selected':''}>Medlem (almindelig adgang)</option>
+          <option value="udvikler" ${(p.rettighed||'')==='udvikler'       ?'selected':''}>Udvikler (se og foreslå — efter aftale)</option>
+          <option value="admin"    ${(p.rettighed||'')==='admin'          ?'selected':''}>Administrator (OlsenBanden)</option>
+          <option value="gaest"    ${(p.rettighed||'')==='gaest'          ?'selected':''}>Gæst (midlertidig)</option>
+        </select>
+      </div>` : ''}`}
     </div>`;
   }).join('');
 }
@@ -1105,6 +1119,9 @@ function aabneEditModal(nr) {
   const visKode = document.body.classList.contains('kan-redigere');
   document.getElementById('ef-kode-wrapper').style.display = visKode ? '' : 'none';
   document.getElementById('ef-kode').value = visKode ? (m.kode || '') : '';
+  // Status sættes nu pr. person (i medlemslisten). Vis blot en lille note for admin.
+  const rettWrap = document.getElementById('ef-rettighed-wrapper');
+  if (rettWrap) rettWrap.style.display = visKode ? '' : 'none';
   document.getElementById('ef-nr').readOnly = !document.body.classList.contains('kan-redigere');
  
   editStatusEl.textContent = '';
@@ -1193,6 +1210,7 @@ async function gemData() {
     tlf:   document.getElementById('ef-tlf').value.trim(),
     email: document.getElementById('ef-email').value.trim(),
     kode:  erAdmin ? document.getElementById('ef-kode').value.trim() : tidl.kode || '',
+    rettighed: (String(nytNr) === '8') ? 'admin' : String(tidl.rettighed || 'medlem'),
     familiemedlemmer: reneMedlemmer,
     begivenheder:     begiListe.filter(b => b.dato || b.beskrivelse || b.besked),
     sidstRedigeret:   new Date().toISOString(),
