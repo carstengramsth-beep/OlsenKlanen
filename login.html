@@ -306,21 +306,9 @@
       }
 
       // ---- Login lykkedes ----
-      // Find et rigtigt navn: foerst kortets 'navne', ellers foerste voksne medlem.
-      let navn = (d.navne || "").trim();
-      if (!navn) {
-        const voksne = (d.familiemedlemmer || []).filter(p => p.rolle !== "barn");
-        const foerste = voksne.find(p => (p.fornavn || p.navn || "").trim());
-        if (foerste) {
-          const dele = [foerste.fornavn, foerste.efternavn].filter(Boolean);
-          navn = dele.length ? dele.join(" ") : (foerste.navn || "");
-        }
-      }
-      const fornavn = fornavnAf(navn);
-
-      // Rettighed hentes fra kartoteket. Nr. 8 er altid admin (bagstopper).
-      let rettighed = String(d.rettighed || "medlem").trim().toLowerCase();
-      if (ALTID_ADMIN.includes(nr)) rettighed = "admin";
+      // Gæster (996-999) og kort uden flere voksne logger direkte ind.
+      // Kort med flere voksne: vis "Hvem er du?"-valg, så rettigheden følger PERSONEN.
+      const voksne = (d.familiemedlemmer || []).filter(p => p.rolle !== "barn" && (p.fornavn || p.navn || "").trim());
 
       // Husk medlemsnummer (aldrig PIN-koden)
       try {
@@ -328,14 +316,16 @@
         else      localStorage.removeItem("ok_husk_nr");
       } catch(e) {}
 
-      // ---- HAANDTRYK: "Velkommen medlem 8 Carsten" ----
-      besked.textContent = fornavn
-        ? ("Velkommen medlem " + nr + " " + fornavn)
-        : ("Velkommen medlem " + nr);
-      besked.className = "besked ok";
+      if (voksne.length >= 2 && !GAESTENUMRE.includes(nr)) {
+        // Flere voksne -> lad personen vælge sig selv
+        knap.disabled = false;
+        visPersonValg(nr, d, voksne, husk);
+        return;
+      }
 
-      gemAdgang(rettighed, navn || ("Medlem " + nr), nr);
-      videreTil("forside.html");
+      // Kun én voksen (eller gæst): find navn + rettighed direkte
+      let valgtPerson = voksne.length === 1 ? voksne[0] : null;
+      fuldfoerLogin(nr, d, valgtPerson, husk);
 
     } catch(err) {
       console.log("Login-fejl:", err);
@@ -345,6 +335,80 @@
     }
   }
 
+  // ---- HVEM ER DU? (kort med flere voksne) ----
+  // Viser en knap pr. voksen. Den valgte persons rettighed foelger med.
+  function personNavnAf(p) {
+    const dele = [p.fornavn, p.efternavn].filter(Boolean);
+    if (dele.length) return dele.join(" ");
+    return (p.navn || "").trim();
+  }
+
+  function visPersonValg(nr, d, voksne, husk) {
+    const besked = document.getElementById("besked");
+    besked.textContent = "";
+    besked.className = "besked";
+
+    // Byg knapper under login-felterne
+    let boks = document.getElementById("hvem-er-du");
+    if (boks) boks.remove();
+    boks = document.createElement("div");
+    boks.id = "hvem-er-du";
+    boks.style.marginTop = "18px";
+
+    const titel = document.createElement("div");
+    titel.textContent = "Hvem logger ind?";
+    titel.style.cssText = "color:#f5d76e;font-size:1rem;margin-bottom:10px;letter-spacing:1px";
+    boks.appendChild(titel);
+
+    voksne.forEach(p => {
+      const navn = personNavnAf(p);
+      const b = document.createElement("button");
+      b.className = "knap";
+      b.style.cssText = "width:100%;margin-bottom:8px";
+      b.textContent = navn;
+      b.onclick = function() {
+        fuldfoerLogin(nr, d, p, husk);
+      };
+      boks.appendChild(b);
+    });
+
+    document.querySelector(".login-boks").appendChild(boks);
+  }
+
+  function fuldfoerLogin(nr, d, valgtPerson, husk) {
+    const besked = document.getElementById("besked");
+
+    // Navn: fra valgt person, ellers kortets 'navne'
+    let navn = valgtPerson ? personNavnAf(valgtPerson) : (d.navne || "").trim();
+    if (!navn) navn = "Medlem " + nr;
+    const fornavn = fornavnAf(navn);
+
+    // RETTIGHED: foerst personens egen, ellers kortets, ellers 'medlem'.
+    // Nr. 8 er altid admin (bagstopper).
+    let rettighed = "medlem";
+    if (valgtPerson && valgtPerson.rettighed) rettighed = String(valgtPerson.rettighed);
+    else if (d.rettighed) rettighed = String(d.rettighed);
+    rettighed = rettighed.trim().toLowerCase();
+    if (ALTID_ADMIN.includes(nr)) rettighed = "admin";
+
+    try {
+      if (husk) localStorage.setItem("ok_husk_nr", nr);
+      else      localStorage.removeItem("ok_husk_nr");
+    } catch(e) {}
+
+    // ---- HAANDTRYK: "Velkommen medlem 8 Carsten" ----
+    besked.textContent = fornavn
+      ? ("Velkommen medlem " + nr + " " + fornavn)
+      : ("Velkommen medlem " + nr);
+    besked.className = "besked ok";
+
+    const boks = document.getElementById("hvem-er-du");
+    if (boks) boks.remove();
+
+    gemAdgang(rettighed, navn, nr);
+    videreTil("forside.html");
+  }
+
   function fortryd() {
     document.getElementById("nr").value = "";
     document.getElementById("kode").value = "";
@@ -352,6 +416,8 @@
     document.getElementById("visKodeKnap").textContent = "🔍";
     document.getElementById("besked").textContent = "Login afbrudt.";
     document.getElementById("besked").className = "besked";
+    const boks = document.getElementById("hvem-er-du");
+    if (boks) boks.remove();
     document.getElementById("nr").focus();
   }
 
