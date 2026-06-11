@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>OlsenKlanen — Musik</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gron:#2d5016;--gron-lys:#4a7c2a;--gron-pale:#c8e6b0;
+  --guld:#c8952a;--guld-lys:#f5e6c8;--guld-pale:#fdf8ee;
+  --hvid:#fefcf8;--tekst:#1a1a0e;--tekst-lys:#5a5a40;--border:#d4c9a0;
+  --baggrund:#fffde0;
+}
+body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var(--tekst);min-height:100vh;padding-bottom:6rem}
+.flag-banner{background:var(--gron);text-align:center;padding:.55rem 0;font-size:26px;letter-spacing:6px;border-bottom:3px solid var(--guld);color:#fff}
+header{background:var(--gron);color:#fff;text-align:center;padding:2.2rem 1rem 2.6rem}
+header h1{font-family:'Playfair Display',serif;font-size:2.3rem;font-weight:500}
+header h1 em{color:var(--guld-lys);font-style:italic}
+header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
+.kredit{max-width:680px;margin:1.5rem auto 0;padding:1rem 1.4rem;background:var(--guld-pale);border:1px solid var(--border);border-radius:10px;text-align:center;font-size:.95rem;color:var(--tekst-lys)}
+.kredit strong{color:var(--gron)}
+.wrap{max-width:760px;margin:0 auto;padding:2rem 1.2rem}
+.vaerktoej{text-align:center;margin-bottom:1.5rem}
+.upload-knap{font-family:'Source Sans 3',sans-serif;font-size:14px;background:var(--guld);color:var(--tekst);border:none;padding:.6rem 1.2rem;border-radius:8px;font-weight:600;cursor:pointer}
+.upload-knap:hover{background:#b8842a}
+.sang-liste{list-style:none}
+.sang{display:flex;align-items:center;gap:1rem;padding:1rem 1.2rem;background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:.7rem;transition:box-shadow .15s}
+.sang:hover{box-shadow:0 3px 12px rgba(0,0,0,.08)}
+.sang.spiller{border-color:var(--guld);background:var(--guld-pale)}
+.sang-play{flex-shrink:0;width:46px;height:46px;border-radius:50%;background:var(--gron);color:#fff;border:none;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.sang-play:hover{background:var(--gron-lys)}
+.sang-info{flex:1;min-width:0}
+.sang-titel{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--gron)}
+.sang-meta{font-size:.8rem;color:var(--tekst-lys);margin-top:.15rem}
+.sang-slet{flex-shrink:0;background:none;border:none;color:#a33;cursor:pointer;font-size:14px;padding:.3rem}
+.tom{text-align:center;color:var(--tekst-lys);padding:2rem;font-style:italic}
+/* Afspiller nederst */
+.afspiller{position:fixed;bottom:0;left:0;right:0;background:var(--gron);color:#fff;padding:.8rem 1.2rem;box-shadow:0 -2px 12px rgba(0,0,0,.25);display:none;z-index:100}
+.afspiller.vis{display:block}
+.afspiller-indhold{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:1rem}
+.afspiller-titel{flex:1;font-family:'Playfair Display',serif;font-size:1.05rem}
+.afspiller audio{width:100%;max-width:340px}
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:200;padding:1rem}
+.modal-overlay.vis{display:flex}
+.modal{background:#fff;border-radius:14px;padding:1.6rem;max-width:440px;width:100%;max-height:90vh;overflow-y:auto}
+.modal h3{font-family:'Playfair Display',serif;color:var(--gron);font-size:1.4rem;margin-bottom:.3rem}
+.modal .sub{font-size:.85rem;color:var(--tekst-lys);margin-bottom:1rem}
+.modal label{display:block;font-size:13px;font-weight:600;margin:.8rem 0 .3rem;color:var(--tekst-lys)}
+.modal input{width:100%;padding:.6rem;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:15px}
+.modal-knapper{display:flex;gap:.6rem;margin-top:1.3rem}
+.knap-annuller{flex:1;padding:.7rem;border:1px solid var(--border);background:#fff;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit}
+.knap-gem{flex:1;padding:.7rem;border:none;background:var(--gron);color:#fff;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit}
+.upload-status{font-size:13px;color:var(--gron);margin-top:.6rem;min-height:16px}
+.hjem-knap{position:fixed;top:.6rem;left:.8rem;z-index:90;background:#fff;color:var(--gron);border:2px solid var(--guld);padding:.5rem .9rem;border-radius:8px;font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+</style>
+</head>
+<body>
+
+<div class="flag-banner">🇩🇰 🇩🇰 🇩🇰 🇩🇰 🇩🇰</div>
+<a href="forside.html" class="hjem-knap">🏠 Til forsiden</a>
+
+<header>
+  <h1>OlsenKlanens <em>Sange</em></h1>
+  <p>Familiens egne melodier</p>
+</header>
+
+<div class="kredit">
+  🎵 Tekst af <strong>Inger Olsen</strong> · Musik af <strong>René</strong>
+</div>
+
+<div class="wrap">
+  <div class="vaerktoej">
+    <button class="upload-knap" id="upload-knap" onclick="aabnModal()" style="display:none">🎵 Læg en sang op</button>
+  </div>
+  <ul class="sang-liste" id="sang-liste">
+    <li class="tom" id="loader">Henter sange…</li>
+  </ul>
+</div>
+
+<!-- Afspiller nederst -->
+<div class="afspiller" id="afspiller">
+  <div class="afspiller-indhold">
+    <div class="afspiller-titel" id="afspiller-titel"></div>
+    <audio id="audio" controls></audio>
+  </div>
+</div>
+
+<!-- Upload-modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>Læg en sang op</h3>
+    <div class="sub">Vælg en MP3-fil og giv den en titel</div>
+    <label>Sangens titel</label>
+    <input type="text" id="m-titel" placeholder="F.eks. 'Forårslængsel'">
+    <label>Vælg MP3-fil</label>
+    <input type="file" id="m-fil" accept="audio/mpeg,.mp3">
+    <div class="upload-status" id="m-status"></div>
+    <div class="modal-knapper">
+      <button class="knap-annuller" onclick="lukModal()">Annullér</button>
+      <button class="knap-gem" id="m-gem" onclick="gemSang()">Læg op</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getStorage, ref, uploadBytes, getDownloadURL, listAll, getMetadata, deleteObject }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+};
+const app = initializeApp(firebaseConfig);
+const storage = getStorage(app);
+
+// Login-tjek
+function mitNr(){
+  try{ return (sessionStorage.getItem('ok_nr') || localStorage.getItem('ok_nr') || '').trim(); }
+  catch(e){ return ''; }
+}
+function erAdmin(){
+  try{
+    const r = (sessionStorage.getItem('ok_niveau') || localStorage.getItem('ok_niveau') || '').trim().toLowerCase();
+    return r === 'admin';
+  }catch(e){ return false; }
+}
+
+// Lav web-sikkert filnavn af en titel
+function sikkertNavn(titel){
+  return (titel||'sang')
+    .replace(/ø/g,'o').replace(/Ø/g,'o')
+    .replace(/æ/g,'ae').replace(/Æ/g,'ae')
+    .replace(/å/g,'aa').replace(/Å/g,'aa')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/^-+|-+$/g,'') || 'sang';
+}
+// Lav pæn titel af et filnavn (hvis metadata mangler)
+function paenTitel(filnavn){
+  return filnavn.replace(/\.mp3$/i,'')
+    .replace(/-/g,' ')
+    .replace(/\b\w/g, c=>c.toUpperCase());
+}
+
+let sange = []; // { url, titel, sti, navn }
+let aktivSang = null;
+const audio = document.getElementById('audio');
+
+async function hentSange(){
+  try{
+    const mappe = ref(storage, 'musik/');
+    const res = await listAll(mappe);
+    const items = await Promise.all(res.items.map(async it=>{
+      const [url, meta] = await Promise.all([getDownloadURL(it), getMetadata(it)]);
+      const c = (meta.customMetadata)||{};
+      return { url, titel: c.titel || paenTitel(it.name), navn: c.navn||'', sti: it.fullPath };
+    }));
+    items.sort((a,b)=> a.titel.localeCompare(b.titel,'da'));
+    sange = items;
+    visListe();
+  }catch(err){
+    document.getElementById('sang-liste').innerHTML =
+      `<li class="tom">Kunne ikke hente sange: ${err.message||err}</li>`;
+  }
+}
+
+function visListe(){
+  const liste = document.getElementById('sang-liste');
+  if(sange.length===0){
+    liste.innerHTML = '<li class="tom">Der er ingen sange endnu.</li>';
+    return;
+  }
+  liste.innerHTML = sange.map((s,i)=>`
+    <li class="sang" id="sang-${i}">
+      <button class="sang-play" onclick="spilSang(${i})">▶</button>
+      <div class="sang-info">
+        <div class="sang-titel">${s.titel}</div>
+        <div class="sang-meta">🎵 OlsenKlanens egne sange</div>
+      </div>
+      ${erAdmin() ? `<button class="sang-slet" onclick="sletSang(${i})">🗑️ Slet</button>` : ''}
+    </li>
+  `).join('');
+}
+
+window.spilSang = function(i){
+  const s = sange[i];
+  if(!s) return;
+  aktivSang = i;
+  audio.src = s.url;
+  audio.play();
+  document.getElementById('afspiller-titel').textContent = '🎵 ' + s.titel;
+  document.getElementById('afspiller').classList.add('vis');
+  // marker aktiv
+  document.querySelectorAll('.sang').forEach(el=>el.classList.remove('spiller'));
+  const el = document.getElementById('sang-'+i);
+  if(el) el.classList.add('spiller');
+  document.querySelectorAll('.sang-play').forEach(b=>b.textContent='▶');
+  const b = el ? el.querySelector('.sang-play') : null;
+  if(b) b.textContent='⏸';
+};
+
+// Når en sang slutter: spil den næste
+audio.addEventListener('ended', ()=>{
+  if(aktivSang===null) return;
+  const naeste = (aktivSang+1) % sange.length;
+  spilSang(naeste);
+});
+
+window.sletSang = async function(i){
+  const s = sange[i];
+  if(!s || !erAdmin()) return;
+  if(!confirm(`Slet sangen "${s.titel}"? Det kan ikke fortrydes.`)) return;
+  try{
+    await deleteObject(ref(storage, s.sti));
+    await hentSange();
+  }catch(err){
+    alert('Kunne ikke slette: ' + (err.message||err));
+  }
+};
+
+// Upload (kun admin)
+window.aabnModal = function(){
+  document.getElementById('m-titel').value='';
+  document.getElementById('m-fil').value='';
+  document.getElementById('m-status').textContent='';
+  document.getElementById('modal').classList.add('vis');
+};
+window.lukModal = function(){ document.getElementById('modal').classList.remove('vis'); };
+
+window.gemSang = async function(){
+  const titel = document.getElementById('m-titel').value.trim();
+  const f = document.getElementById('m-fil').files[0];
+  const status = document.getElementById('m-status');
+  const knap = document.getElementById('m-gem');
+  if(!titel){ alert('Skriv en titel.'); return; }
+  if(!f){ alert('Vælg en MP3-fil.'); return; }
+  knap.disabled=true; knap.textContent='Lægger op…'; status.textContent='Uploader…';
+  try{
+    const filnavn = sikkertNavn(titel) + '.mp3';
+    const sti = ref(storage, 'musik/' + filnavn);
+    await uploadBytes(sti, f, { contentType:'audio/mpeg', customMetadata:{ titel, navn: mitNr() } });
+    lukModal();
+    await hentSange();
+  }catch(err){
+    status.textContent = 'Kunne ikke uploade: ' + (err.message||err);
+  }finally{
+    knap.disabled=false; knap.textContent='Læg op';
+  }
+};
+
+// Vis upload-knap kun for admin
+if(erAdmin()){
+  document.getElementById('upload-knap').style.display='inline-block';
+}
+
+hentSange();
+</script>
+</body>
+</html>
