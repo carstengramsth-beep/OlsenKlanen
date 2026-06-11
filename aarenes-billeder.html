@@ -97,21 +97,33 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
 <!-- UPLOAD-MODAL -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
-    <h3>Læg billede op</h3>
+    <h3>Læg billeder op</h3>
     <div class="sub" id="modal-sub"></div>
-    <label>Begivenhed</label>
+    <label>Begivenhed (ramme)</label>
     <select id="gruppe-vaelger-modal"></select>
-    <label>Vælg billede</label>
-    <input type="file" id="fil" accept="image/*">
-    <img class="forhaandsvis" id="forhaandsvis">
-    <label>Billedtekst</label>
-    <input type="text" id="tekst" placeholder="F.eks. 'Morgensang ved flagstangen'">
+    <label>År</label>
+    <select id="aar-vaelger-modal"></select>
     <label>Dit navn</label>
     <input type="text" id="navn" placeholder="F.eks. Carsten (nr. 8)">
+    <label>Vælg ét eller flere billeder</label>
+    <input type="file" id="fil" accept="image/*" multiple>
+
+    <!-- Navngivning ét billede ad gangen -->
+    <div id="navngiv-boks" style="display:none;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
+      <div style="font-size:13px;font-weight:600;color:var(--gron)" id="navngiv-tael"></div>
+      <img class="forhaandsvis" id="forhaandsvis" style="display:block;margin:.6rem 0">
+      <label>Billedtekst (kan også skrives senere)</label>
+      <input type="text" id="tekst" placeholder="F.eks. 'Onkel Jens ved grillen'">
+      <div style="display:flex;gap:.5rem;margin-top:.7rem">
+        <button type="button" id="forrige-knap" onclick="navngivSkift(-1)" style="flex:1;padding:.6rem;border-radius:6px;border:1px solid var(--border);background:#fff;font-weight:600;cursor:pointer">← Forrige</button>
+        <button type="button" id="naeste-knap" onclick="navngivSkift(1)" style="flex:1;padding:.6rem;border-radius:6px;border:none;background:var(--guld);color:var(--tekst);font-weight:600;cursor:pointer">Næste →</button>
+      </div>
+    </div>
+
     <div class="upload-status" id="upload-status"></div>
     <div class="modal-knapper">
       <button class="knap-annuller" onclick="lukModal()">Annullér</button>
-      <button class="knap-gem" id="gem-knap" onclick="gemBillede()">Læg op</button>
+      <button class="knap-gem" id="gem-knap" onclick="gemBillede()">Læg alle op</button>
     </div>
   </div>
 </div>
@@ -124,13 +136,25 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
     <div class="lb-tekst" id="lb-tekst"></div>
     <div class="lb-navn" id="lb-navn"></div>
     <div id="lb-handlinger" style="margin-top:1rem;display:none">
-      <button id="lb-flyt-knap" onclick="visFlytValg(event)" style="background:var(--guld);color:var(--tekst);border:none;padding:.55rem 1.1rem;border-radius:6px;font-family:'Source Sans 3',sans-serif;font-weight:600;cursor:pointer;font-size:13px;margin:.25rem">➡️ Flyt til anden ramme</button>
+      <button id="lb-rettekst-knap" onclick="visRetTekst(event)" style="background:#4a7c2a;color:#fff;border:none;padding:.55rem 1.1rem;border-radius:6px;font-family:'Source Sans 3',sans-serif;font-weight:600;cursor:pointer;font-size:13px;margin:.25rem">✏️ Ret tekst</button>
+      <button id="lb-flyt-knap" onclick="visFlytValg(event)" style="background:var(--guld);color:var(--tekst);border:none;padding:.55rem 1.1rem;border-radius:6px;font-family:'Source Sans 3',sans-serif;font-weight:600;cursor:pointer;font-size:13px;margin:.25rem">➡️ Flyt til andet år / ramme</button>
       <button id="lb-slet-knap" onclick="sletBillede(event)" style="background:#a33;color:#fff;border:none;padding:.55rem 1.1rem;border-radius:6px;font-family:'Source Sans 3',sans-serif;font-weight:600;cursor:pointer;font-size:13px;margin:.25rem">🗑️ Slet billede</button>
       <div id="lb-flyt-boks" style="display:none;margin-top:.8rem;background:rgba(255,255,255,.1);padding:.8rem;border-radius:8px">
+        <div style="font-size:12px;color:#cfc;margin-bottom:.3rem;text-align:left">Vælg år:</div>
+        <select id="lb-flyt-aar" onclick="event.stopPropagation()" style="padding:.5rem;border-radius:6px;border:none;font-family:inherit;font-size:13px;width:100%;max-width:340px;margin-bottom:.6rem"></select>
+        <div style="font-size:12px;color:#cfc;margin-bottom:.3rem;text-align:left">Vælg ramme:</div>
         <select id="lb-flyt-vaelger" onclick="event.stopPropagation()" style="padding:.5rem;border-radius:6px;border:none;font-family:inherit;font-size:13px;width:100%;max-width:340px"></select>
         <div style="margin-top:.6rem">
           <button onclick="udfoerFlyt(event)" style="background:var(--gron-lys,#4a7c2a);color:#fff;border:none;padding:.5rem 1rem;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px;margin:.2rem">Flyt nu</button>
           <button onclick="visFlytValg(event)" style="background:#666;color:#fff;border:none;padding:.5rem 1rem;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px;margin:.2rem">Fortryd</button>
+        </div>
+      </div>
+      <div id="lb-rettekst-boks" style="display:none;margin-top:.8rem;background:rgba(255,255,255,.1);padding:.8rem;border-radius:8px">
+        <div style="font-size:12px;color:#cfc;margin-bottom:.3rem;text-align:left">Ny billedtekst:</div>
+        <input type="text" id="lb-rettekst-felt" onclick="event.stopPropagation()" style="padding:.5rem;border-radius:6px;border:none;font-family:inherit;font-size:13px;width:100%;max-width:340px">
+        <div style="margin-top:.6rem">
+          <button onclick="gemRetTekst(event)" style="background:var(--gron-lys,#4a7c2a);color:#fff;border:none;padding:.5rem 1rem;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px;margin:.2rem">Gem tekst</button>
+          <button onclick="visRetTekst(event)" style="background:#666;color:#fff;border:none;padding:.5rem 1rem;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px;margin:.2rem">Fortryd</button>
         </div>
       </div>
       <div id="lb-status" style="color:#cfc;font-size:13px;margin-top:.6rem;min-height:16px"></div>
@@ -140,7 +164,7 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getStorage, ref, uploadBytes, getDownloadURL, listAll, getMetadata, deleteObject, getBlob }
+import { getStorage, ref, uploadBytes, getDownloadURL, listAll, getMetadata, deleteObject, getBlob, updateMetadata }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -329,51 +353,92 @@ document.getElementById('gruppe-vaelger-nav').addEventListener('change', e=>{
   valgtGruppe = e.target.value; visValg();
 });
 
-// Upload-modal
+// Upload-modal — flere billeder ad gangen
+let valgteFiler = [];   // de valgte billedfiler
+let billedTekster = []; // tekst pr. billede (samme rækkefølge)
+let aktuelIndex = 0;    // hvilket billede vi navngiver lige nu
+
 window.aabnModal = function(){
   const startGruppe = (valgtGruppe === 'ALLE') ? GRUPPER[0].id : valgtGruppe;
-  document.getElementById('modal-sub').textContent =
-    (valgtGruppe === 'ALLE') ? `${valgtAar} · vælg begivenhed nedenfor` : `${valgtAar} · ${titelFor(valgtGruppe)}`;
+  document.getElementById('modal-sub').textContent = 'Vælg år, ramme og dine billeder';
   fyldGruppeDropdown(document.getElementById('gruppe-vaelger-modal'), startGruppe);
+  // År-dropdown med nuværende år forvalgt
+  document.getElementById('aar-vaelger-modal').innerHTML =
+    AAR_LISTE.map(a=>`<option value="${a}" ${a===valgtAar?'selected':''}>${a}</option>`).join('');
   document.getElementById('fil').value='';
-  document.getElementById('tekst').value='';
   document.getElementById('navn').value='';
+  document.getElementById('tekst').value='';
   document.getElementById('upload-status').textContent='';
-  const fv=document.getElementById('forhaandsvis'); fv.style.display='none'; fv.src='';
+  document.getElementById('navngiv-boks').style.display='none';
+  valgteFiler=[]; billedTekster=[]; aktuelIndex=0;
   document.getElementById('modal').classList.add('vis');
 };
 window.lukModal = function(){ document.getElementById('modal').classList.remove('vis'); };
 
+// Når man vælger filer: gem dem og vis det første til navngivning
 document.getElementById('fil').addEventListener('change', e=>{
-  const f=e.target.files[0]; if(!f) return;
+  valgteFiler = Array.from(e.target.files||[]);
+  billedTekster = valgteFiler.map(()=> '');
+  aktuelIndex = 0;
+  if(valgteFiler.length===0){ document.getElementById('navngiv-boks').style.display='none'; return; }
+  document.getElementById('navngiv-boks').style.display='block';
+  visAktueltTilNavngivning();
+});
+
+// Vis det aktuelle billede + dets tekstfelt
+function visAktueltTilNavngivning(){
+  const f = valgteFiler[aktuelIndex];
+  if(!f) return;
+  document.getElementById('navngiv-tael').textContent =
+    `Billede ${aktuelIndex+1} af ${valgteFiler.length}`;
   const r=new FileReader();
   r.onload=ev=>{ const fv=document.getElementById('forhaandsvis'); fv.src=ev.target.result; fv.style.display='block'; };
   r.readAsDataURL(f);
-});
+  document.getElementById('tekst').value = billedTekster[aktuelIndex] || '';
+  document.getElementById('forrige-knap').style.visibility = aktuelIndex===0 ? 'hidden':'visible';
+  document.getElementById('naeste-knap').style.visibility = aktuelIndex===valgteFiler.length-1 ? 'hidden':'visible';
+}
+
+// Skift mellem billeder (gemmer teksten på vej)
+window.navngivSkift = function(retning){
+  billedTekster[aktuelIndex] = document.getElementById('tekst').value.trim();
+  const ny = aktuelIndex + retning;
+  if(ny<0 || ny>=valgteFiler.length) return;
+  aktuelIndex = ny;
+  visAktueltTilNavngivning();
+};
 
 window.gemBillede = async function(){
-  const f=document.getElementById('fil').files[0];
-  const tekst=document.getElementById('tekst').value.trim();
+  // Gem teksten på det billede der vises lige nu
+  if(valgteFiler.length>0) billedTekster[aktuelIndex] = document.getElementById('tekst').value.trim();
   const navn=document.getElementById('navn').value.trim();
   const gid=document.getElementById('gruppe-vaelger-modal').value;
+  const aar=document.getElementById('aar-vaelger-modal').value;
   const status=document.getElementById('upload-status');
   const knap=document.getElementById('gem-knap');
-  if(!f){ alert('Vælg et billede først.'); return; }
-  if(!navn){ alert('Skriv dit navn, så man kan se hvem der har lagt billedet op.'); return; }
-  knap.disabled=true; knap.textContent='Lægger op…'; status.textContent='Uploader…';
+  if(valgteFiler.length===0){ alert('Vælg mindst ét billede først.'); return; }
+  if(!navn){ alert('Skriv dit navn, så man kan se hvem der har lagt billederne op.'); return; }
+  knap.disabled=true;
   try{
-    const sikkert=(f.name||'foto').replace(/[^a-zA-Z0-9._-]/g,'_');
-    const sti=ref(storage, `fotovaeg/${valgtAar}/${gid}/${Date.now()}_${sikkert}`);
-    await uploadBytes(sti, f, { customMetadata:{ tekst, navn, uploaderNr: mitNr() } });
+    for(let i=0;i<valgteFiler.length;i++){
+      knap.textContent=`Lægger op… (${i+1}/${valgteFiler.length})`;
+      status.textContent=`Uploader billede ${i+1} af ${valgteFiler.length}…`;
+      const f=valgteFiler[i];
+      const sikkert=(f.name||'foto').replace(/[^a-zA-Z0-9._-]/g,'_');
+      const sti=ref(storage, `fotovaeg/${aar}/${gid}/${Date.now()}_${i}_${sikkert}`);
+      await uploadBytes(sti, f, { customMetadata:{ tekst: billedTekster[i]||'', navn, uploaderNr: mitNr() } });
+    }
     lukModal();
-    // Skift til den gruppe billedet blev lagt i, og vis
+    // Skift til det år + den ramme billederne blev lagt i
+    valgtAar = aar;
+    document.getElementById('aar-vaelger').value = aar;
     valgtGruppe = gid;
     fyldNavDropdown(valgtGruppe);
     await visValg();
   }catch(err){
     status.textContent='Kunne ikke uploade: '+(err.message||err);
   }finally{
-    knap.disabled=false; knap.textContent='Læg op';
+    knap.disabled=false; knap.textContent='Læg alle op';
   }
 };
 
@@ -388,6 +453,7 @@ window.visStort = function(i){
   const handlinger = document.getElementById('lb-handlinger');
   handlinger.style.display = maaRedigere(b) ? 'block' : 'none';
   document.getElementById('lb-flyt-boks').style.display = 'none';
+  document.getElementById('lb-rettekst-boks').style.display = 'none';
   document.getElementById('lb-status').textContent = '';
   document.getElementById('lightbox').classList.add('vis');
 };
@@ -419,6 +485,8 @@ window.visFlytValg = function(e){
   const vis = boks.style.display === 'none';
   if(vis){
     const naaGid = aabentBillede ? aabentBillede.b.gruppe : '';
+    document.getElementById('lb-flyt-aar').innerHTML =
+      AAR_LISTE.map(a=>`<option value="${a}" ${a===valgtAar?'selected':''}>${a}</option>`).join('');
     document.getElementById('lb-flyt-vaelger').innerHTML =
       GRUPPER.filter(g=>g.id!==naaGid).map(g=>`<option value="${g.id}">${g.titel}</option>`).join('');
     boks.style.display = 'block';
@@ -428,13 +496,48 @@ window.visFlytValg = function(e){
 };
 
 // UDFØR flyt: kopiér til ny ramme, slet fra gammel
+// Vis/skjul ret-tekst-boks
+window.visRetTekst = function(e){
+  if(e) e.stopPropagation();
+  const boks = document.getElementById('lb-rettekst-boks');
+  const vis = boks.style.display === 'none';
+  if(vis){
+    document.getElementById('lb-rettekst-felt').value = aabentBillede ? (aabentBillede.b.tekst||'') : '';
+    boks.style.display = 'block';
+  } else {
+    boks.style.display = 'none';
+  }
+};
+
+// Gem ny billedtekst (opdaterer metadata uden at flytte filen)
+window.gemRetTekst = async function(e){
+  if(e) e.stopPropagation();
+  if(!aabentBillede) return;
+  const b = aabentBillede.b;
+  if(!maaRedigere(b)) return;
+  const nyTekst = document.getElementById('lb-rettekst-felt').value.trim();
+  const status = document.getElementById('lb-status');
+  status.textContent = 'Gemmer tekst…';
+  try{
+    await updateMetadata(ref(storage, b.sti), { customMetadata:{ tekst: nyTekst, navn: b.navn||'', uploaderNr: b.uploaderNr||'' } });
+    document.getElementById('lightbox').classList.remove('vis');
+    aabentBillede = null;
+    await visValg();
+  }catch(err){
+    status.textContent = 'Kunne ikke gemme tekst: ' + (err.message||err);
+  }
+};
+
 window.udfoerFlyt = async function(e){
   if(e) e.stopPropagation();
   if(!aabentBillede) return;
   const b = aabentBillede.b;
   if(!maaRedigere(b)) return;
   const nyGid = document.getElementById('lb-flyt-vaelger').value;
+  const nyAar = document.getElementById('lb-flyt-aar').value || valgtAar;
   if(!nyGid) return;
+  // Hvis intet ændres (samme år OG samme ramme) — gør ingenting
+  if(nyAar === valgtAar && nyGid === b.gruppe){ document.getElementById('lb-status').textContent='Billedet er der allerede.'; return; }
   const status = document.getElementById('lb-status');
   status.textContent = 'Flytter…';
   try{
@@ -448,7 +551,7 @@ window.udfoerFlyt = async function(e){
       blob = await svar.blob();
     }
     const gammeltNavn = b.sti.split('/').pop();
-    const nySti = ref(storage, `fotovaeg/${valgtAar}/${nyGid}/${gammeltNavn}`);
+    const nySti = ref(storage, `fotovaeg/${nyAar}/${nyGid}/${gammeltNavn}`);
     await uploadBytes(nySti, blob, { customMetadata:{ tekst:b.tekst||'', navn:b.navn||'', uploaderNr:b.uploaderNr||'' } });
     await deleteObject(ref(storage, b.sti));
     document.getElementById('lightbox').classList.remove('vis');
