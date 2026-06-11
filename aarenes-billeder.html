@@ -179,10 +179,10 @@ function mitNr(){
   try{ return (sessionStorage.getItem('ok_nr') || localStorage.getItem('ok_nr') || '').trim(); }
   catch(e){ return ''; }
 }
-// Er jeg admin? (login.html sætter ok_rettighed = admin)
+// Er jeg admin? (login.html gemmer rettigheden under 'ok_niveau')
 function erAdmin(){
   try{
-    const r = (sessionStorage.getItem('ok_rettighed') || localStorage.getItem('ok_rettighed') || '').trim().toLowerCase();
+    const r = (sessionStorage.getItem('ok_niveau') || localStorage.getItem('ok_niveau') || '').trim().toLowerCase();
     return r === 'admin';
   }catch(e){ return false; }
 }
