@@ -107,6 +107,7 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
 
 <!-- LIGHTBOX -->
 <div class="lightbox" id="lightbox" onclick="lukLightbox(event)">
+  <span onclick="lukLightbox()" style="position:fixed;top:1rem;right:1rem;background:#fff;color:#222;font-size:1.6rem;cursor:pointer;line-height:1;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.4);z-index:130;font-weight:700">✕</span>
   <img id="lb-img" src="">
   <div class="lb-cap">
     <div class="lb-tekst" id="lb-tekst"></div>
@@ -128,7 +129,7 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getStorage, ref, uploadBytes, getDownloadURL, listAll, getMetadata, deleteObject }
+import { getStorage, ref, uploadBytes, getDownloadURL, listAll, getMetadata, deleteObject, getBlob }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -388,9 +389,14 @@ window.udfoerFlyt = async function(e){
   const status = document.getElementById('lb-status');
   status.textContent = 'Flytter…';
   try{
-    // 1) Hent billedfilen ned som data
-    const svar = await fetch(b.url);
-    const blob = await svar.blob();
+    // Hent filen via Firebase SDK (undgår CORS-problem på Mac/Safari)
+    let blob;
+    try{
+      blob = await getBlob(ref(storage, b.sti));
+    }catch(e1){
+      const svar = await fetch(b.url);
+      blob = await svar.blob();
+    }
     // 2) Læg op i ny gruppe med samme tekst/navn/nummer
     const gammeltNavn = b.sti.split('/').pop();
     const nySti = ref(storage, `fotovaeg/${AAR}/${nyGid}/${gammeltNavn}`);
