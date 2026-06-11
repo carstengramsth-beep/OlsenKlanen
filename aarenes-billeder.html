@@ -65,7 +65,7 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
 .lightbox .lb-cap{color:#fff;margin-top:1rem;text-align:center;max-width:600px}
 .lightbox .lb-cap .lb-tekst{font-size:1.05rem}
 .lightbox .lb-cap .lb-navn{font-size:.85rem;color:#cfc;margin-top:.4rem;font-style:italic}
-.lightbox .lb-luk{position:absolute;top:1.5rem;right:2rem;color:#fff;font-size:2rem;cursor:pointer;line-height:1}
+.lightbox .lb-luk{position:fixed;top:1rem;right:1rem;background:#fff;color:#222;font-size:1.6rem;cursor:pointer;line-height:1;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.4);z-index:130;font-weight:700}
 </style>
 </head>
 <body>
@@ -138,7 +138,7 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getStorage, ref, uploadBytes, getDownloadURL, listAll, getMetadata, deleteObject }
+import { getStorage, ref, uploadBytes, getDownloadURL, listAll, getMetadata, deleteObject, getBlob }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -436,8 +436,15 @@ window.udfoerFlyt = async function(e){
   const status = document.getElementById('lb-status');
   status.textContent = 'Flytter…';
   try{
-    const svar = await fetch(b.url);
-    const blob = await svar.blob();
+    // Hent filen via Firebase SDK (undgår CORS-problem på Mac/Safari)
+    let blob;
+    try{
+      blob = await getBlob(ref(storage, b.sti));
+    }catch(e1){
+      // Reserveløsning hvis getBlob ikke kan
+      const svar = await fetch(b.url);
+      blob = await svar.blob();
+    }
     const gammeltNavn = b.sti.split('/').pop();
     const nySti = ref(storage, `fotovaeg/${valgtAar}/${nyGid}/${gammeltNavn}`);
     await uploadBytes(nySti, blob, { customMetadata:{ tekst:b.tekst||'', navn:b.navn||'', uploaderNr:b.uploaderNr||'' } });
