@@ -30,8 +30,16 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 .aar-valg label{display:block;color:var(--guld-lys);font-size:13px;letter-spacing:1px;text-transform:uppercase;margin-bottom:.6rem;font-weight:600}
 .aar-valg select{padding:.7rem 1.2rem;border-radius:10px;border:2px solid var(--guld);background:var(--guld-pale);font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--gron);cursor:pointer;text-align:center}
 /* Døren */
-.doer{width:170px;height:250px;background:linear-gradient(170deg,#6b4a2a,#503418);border:5px solid #3d2812;border-radius:8px 8px 4px 4px;position:relative;cursor:pointer;box-shadow:0 12px 30px rgba(0,0,0,.4);transition:transform .25s}
-.doer:hover{transform:scale(1.03)}
+/* Dørkarm med "rum bagved" der ses når døren åbner */
+.doer-karm{width:180px;height:260px;position:relative;cursor:pointer;perspective:900px;margin:0 auto}
+/* Det man ser ind i når døren åbner */
+.doer-rum{position:absolute;inset:6px;border-radius:6px;background:linear-gradient(180deg,#3a3320,#1a1710);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.doer-rum span{color:var(--guld-lys);font-family:'Playfair Display',serif;font-style:italic;font-size:1.1rem;opacity:0;transition:opacity .6s ease .5s}
+.doer-karm.aabner .doer-rum span{opacity:1}
+/* Selve dørbladet der svinger op om venstre kant */
+.doer{position:absolute;inset:0;background:linear-gradient(100deg,#6b4a2a,#503418);border:5px solid #3d2812;border-radius:8px 8px 4px 4px;box-shadow:0 12px 30px rgba(0,0,0,.4);transform-origin:left center;transform:rotateY(0deg);transition:transform 1.6s cubic-bezier(.45,.05,.3,1)}
+.doer-karm:hover .doer{transform:rotateY(-8deg)}
+.doer-karm.aabner .doer{transform:rotateY(-105deg)}
 .doer::before{content:'';position:absolute;inset:14px;border:2px solid rgba(0,0,0,.25);border-radius:4px}
 .doer-haandtag{position:absolute;right:18px;top:50%;width:14px;height:14px;border-radius:50%;background:var(--guld);box-shadow:0 0 0 3px rgba(0,0,0,.2)}
 .doer-tekst{position:absolute;bottom:-2.6rem;left:50%;transform:translateX(-50%);white-space:nowrap;color:#fff;font-weight:600;font-size:1rem}
@@ -101,8 +109,11 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
     <label>Vælg år</label>
     <select id="aar-foer"></select>
   </div>
-  <div class="doer" id="doer" onclick="gaaInd()">
-    <div class="doer-haandtag"></div>
+  <div class="doer-karm" id="doer-karm" onclick="gaaInd()">
+    <div class="doer-rum"><span>Træd ind…</span></div>
+    <div class="doer">
+      <div class="doer-haandtag"></div>
+    </div>
     <div class="doer-tekst" id="doer-tekst">Gå ind →</div>
   </div>
   <div class="doer-hint">Klik på døren for at træde ind</div>
@@ -199,16 +210,28 @@ const audioSlam  = new Audio(SLAM_LYD);
 function knirk(){ try{ audioKnirk.currentTime=0; audioKnirk.play(); }catch(e){} }
 function slam(){  try{ audioSlam.currentTime=0;  audioSlam.play();  }catch(e){} }
 
+let doerAabner = false;
 window.gaaInd = async function(){
+  if(doerAabner) return;
+  doerAabner = true;
   valgtAar = aarFoer.value;
   knirk();
+  // Døren svinger langsomt op
+  document.getElementById('doer-karm').classList.add('aabner');
+  // Hent billeder imens døren åbner
+  const hentning = hentVaeg();
+  // Vent til døren er åbnet (samme tid som animationen)
+  await new Promise(r=>setTimeout(r,1700));
   document.getElementById('forhal').style.display='none';
   document.getElementById('rum').classList.add('aaben');
   document.getElementById('farvel').classList.remove('vis');
   document.getElementById('rum-aar').textContent = valgtAar;
   document.getElementById('velkomst-titel').textContent = 'Velkommen til ' + valgtAar;
   window.scrollTo(0,0);
-  await hentVaeg();
+  await hentning;
+  // Nulstil døren så den er lukket næste gang
+  document.getElementById('doer-karm').classList.remove('aabner');
+  doerAabner = false;
 };
 
 window.gaaUd = function(){
