@@ -63,7 +63,12 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 .dag-streg{width:60px;height:3px;background:var(--guld);margin:0 auto 1.4rem;border-radius:2px}
 
 /* Billedrækken man "går langs" */
-.vaeg-spor{display:flex;gap:1.2rem;overflow-x:auto;padding:1rem 1.4rem 1.6rem;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+.vaeg-spor{display:flex;gap:1.2rem;overflow-x:auto;padding:1rem 1.4rem 1.6rem;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+.spor-hylster{position:relative}
+.spor-pil{position:absolute;top:50%;transform:translateY(-50%);z-index:10;width:46px;height:46px;border-radius:50%;border:none;background:rgba(45,80,22,.85);color:#fff;font-size:1.8rem;line-height:1;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center}
+.spor-pil:hover{background:var(--gron)}
+.spor-pil.venstre{left:6px}
+.spor-pil.hoejre{right:6px}
 .vaeg-spor::-webkit-scrollbar{height:8px}
 .vaeg-spor::-webkit-scrollbar-thumb{background:var(--guld);border-radius:4px}
 .ramme{flex:0 0 auto;scroll-snap-align:center;width:min(78vw,340px);background:var(--vaeg);padding:.7rem .7rem 1rem;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.18);transition:transform .3s ease, box-shadow .3s ease;cursor:pointer;border:1px solid rgba(0,0,0,.06)}
@@ -124,6 +129,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
   <div class="rum-top">
     <div class="titel">Fotovæggen · <em id="rum-aar"></em></div>
     <div style="display:flex;gap:.5rem;align-items:center">
+      <button class="ud-knap" id="musik-knap" onclick="skiftMusik()" style="background:#3a6320;color:#fff">🔊 Musik til</button>
       <a href="aarenes-billeder.html" class="ud-knap" style="background:#4a7c2a;color:#fff;text-decoration:none">📷 Læg billeder op</a>
       <button class="ud-knap" onclick="gaaUd()">🚪 Gå ud</button>
     </div>
@@ -223,6 +229,7 @@ window.gaaInd = async function(){
   document.getElementById('doer-karm').classList.add('aabner');
   // Hent billeder imens døren åbner
   const hentning = hentVaeg();
+  hentMusik();
   // Vent til døren er åbnet (samme tid som animationen)
   await new Promise(r=>setTimeout(r,1700));
   document.getElementById('forhal').style.display='none';
@@ -231,6 +238,7 @@ window.gaaInd = async function(){
   document.getElementById('rum-aar').textContent = valgtAar;
   document.getElementById('velkomst-titel').textContent = 'Velkommen til ' + valgtAar;
   window.scrollTo(0,0);
+  startMusik();
   await hentning;
   // Nulstil døren så den er lukket næste gang
   document.getElementById('doer-karm').classList.remove('aabner');
@@ -239,6 +247,7 @@ window.gaaInd = async function(){
 
 window.gaaUd = function(){
   slam();
+  stopMusik();
   document.getElementById('rum').classList.remove('aaben');
   document.getElementById('farvel').classList.add('vis');
 };
@@ -276,18 +285,22 @@ async function hentVaeg(){
       ud.innerHTML = `<div class="dag-tom">Der er endnu ingen billeder på væggen for ${valgtAar}.<br>Læg nogle op via Årenes Billeder, så dukker de op her.</div>`;
       return;
     }
-    ud.innerHTML = dele.map(d=>`
+    ud.innerHTML = dele.map((d,di)=>`
       <div class="dag">
         <div class="dag-navn">${d.titel}</div>
         <div class="dag-streg"></div>
-        <div class="vaeg-spor">
-          ${d.items.map(b=>`
-            <div class="ramme" onclick="visStort('${encodeURIComponent(b.url)}','${escapeHtml(b.tekst)}','${escapeHtml(b.navn)}')">
-              <img src="${b.url}" loading="lazy">
-              <div class="tekst">${b.tekst||''}</div>
-              <div class="navn">${b.navn?('📷 '+b.navn):''}</div>
-            </div>
-          `).join('')}
+        <div class="spor-hylster">
+          <button class="spor-pil venstre" onclick="bladr(${di},-1)" aria-label="Forrige">‹</button>
+          <div class="vaeg-spor" id="spor-${di}">
+            ${d.items.map(b=>`
+              <div class="ramme" onclick="visStort('${encodeURIComponent(b.url)}','${escapeHtml(b.tekst)}','${escapeHtml(b.navn)}')">
+                <img src="${b.url}" loading="lazy">
+                <div class="tekst">${b.tekst||''}</div>
+                <div class="navn">${b.navn?('📷 '+b.navn):''}</div>
+              </div>
+            `).join('')}
+          </div>
+          <button class="spor-pil hoejre" onclick="bladr(${di},1)" aria-label="Næste">›</button>
         </div>
       </div>
     `).join('');
@@ -297,6 +310,74 @@ async function hentVaeg(){
 }
 
 function escapeHtml(s){ return (s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Bladr i en billedrække med pilene
+window.bladr = function(raekke, retning){
+  const spor = document.getElementById('spor-'+raekke);
+  if(!spor) return;
+  // ryk ca. en billedbredde + mellemrum
+  const skridt = Math.min(spor.clientWidth*0.8, 380);
+  spor.scrollBy({ left: skridt*retning, behavior:'smooth' });
+};
+
+// ===== MUSIK i rummet (starter lavt ved indgang, kan slukkes) =====
+let musikListe = [];
+let musikIndex = 0;
+const baggrundsMusik = new Audio();
+baggrundsMusik.volume = 0.45;
+let musikTaendt = false;
+
+baggrundsMusik.addEventListener('ended', ()=>{
+  if(musikListe.length===0) return;
+  musikIndex = (musikIndex+1) % musikListe.length;
+  baggrundsMusik.src = musikListe[musikIndex];
+  baggrundsMusik.play().catch(()=>{});
+});
+
+async function hentMusik(){
+  try{
+    const mappe = ref(storage, 'musik/');
+    const res = await listAll(mappe);
+    const urls = await Promise.all(res.items.map(it=>getDownloadURL(it)));
+    // bland så det ikke altid er samme sang først
+    urls.sort(()=>Math.random()-0.5);
+    musikListe = urls;
+  }catch(e){ musikListe = []; }
+}
+
+function startMusik(){
+  if(musikListe.length===0) return;
+  musikIndex = 0;
+  baggrundsMusik.src = musikListe[0];
+  baggrundsMusik.play().then(()=>{
+    musikTaendt = true;
+    opdaterMusikKnap();
+  }).catch(()=>{ /* browseren blokerede auto-afspilning — knappen tænder den */ });
+}
+
+window.skiftMusik = function(){
+  if(musikTaendt){
+    baggrundsMusik.pause();
+    musikTaendt = false;
+  }else{
+    if(!baggrundsMusik.src && musikListe.length>0){
+      baggrundsMusik.src = musikListe[0];
+    }
+    baggrundsMusik.play().then(()=>{ musikTaendt=true; opdaterMusikKnap(); }).catch(()=>{});
+    musikTaendt = true;
+  }
+  opdaterMusikKnap();
+};
+
+function opdaterMusikKnap(){
+  const k = document.getElementById('musik-knap');
+  if(k) k.textContent = musikTaendt ? '🔊 Musik til' : '🔇 Musik fra';
+}
+
+function stopMusik(){
+  baggrundsMusik.pause();
+  musikTaendt = false;
+}
 
 window.visStort = function(urlEnc, tekst, navn){
   document.getElementById('lup-img').src = decodeURIComponent(urlEnc);
