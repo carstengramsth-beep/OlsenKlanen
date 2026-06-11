@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>OlsenKlanen — Fotovæg</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gron:#2d5016;--gron-lys:#4a7c2a;--gron-pale:#c8e6b0;
+  --guld:#c8952a;--guld-lys:#f5e6c8;--guld-pale:#fdf8ee;
+  --hvid:#fefcf8;--tekst:#1a1a0e;--tekst-lys:#5a5a40;--border:#d4c9a0;
+  --baggrund:#fffde0;
+  --rum:#e9e2cc;        /* gulvet i rummet */
+  --vaeg:#f4eeda;       /* selve væggen */
+}
+body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var(--tekst);overflow-x:hidden}
+
+.hjem-knap{position:fixed;top:.6rem;left:.8rem;z-index:300;background:#fff;color:var(--gron);border:2px solid var(--guld);padding:.5rem .9rem;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+
+/* ===== FORHAL (vælg år + dør) ===== */
+.forhal{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;
+  background:linear-gradient(180deg,#2d5016 0%,#3a6320 40%,#4a7c2a 100%)}
+.forhal h1{font-family:'Playfair Display',serif;color:#fff;font-size:2.6rem;font-weight:500;margin-bottom:.4rem}
+.forhal h1 em{color:var(--guld-lys);font-style:italic}
+.forhal p{color:var(--gron-pale);font-size:1.05rem;margin-bottom:2.4rem;max-width:420px;line-height:1.5}
+.aar-valg{margin-bottom:2rem}
+.aar-valg label{display:block;color:var(--guld-lys);font-size:13px;letter-spacing:1px;text-transform:uppercase;margin-bottom:.6rem;font-weight:600}
+.aar-valg select{padding:.7rem 1.2rem;border-radius:10px;border:2px solid var(--guld);background:var(--guld-pale);font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--gron);cursor:pointer;text-align:center}
+/* Døren */
+.doer{width:170px;height:250px;background:linear-gradient(170deg,#6b4a2a,#503418);border:5px solid #3d2812;border-radius:8px 8px 4px 4px;position:relative;cursor:pointer;box-shadow:0 12px 30px rgba(0,0,0,.4);transition:transform .25s}
+.doer:hover{transform:scale(1.03)}
+.doer::before{content:'';position:absolute;inset:14px;border:2px solid rgba(0,0,0,.25);border-radius:4px}
+.doer-haandtag{position:absolute;right:18px;top:50%;width:14px;height:14px;border-radius:50%;background:var(--guld);box-shadow:0 0 0 3px rgba(0,0,0,.2)}
+.doer-tekst{position:absolute;bottom:-2.6rem;left:50%;transform:translateX(-50%);white-space:nowrap;color:#fff;font-weight:600;font-size:1rem}
+.doer-hint{margin-top:3.6rem;color:var(--gron-pale);font-size:.9rem;font-style:italic}
+
+/* ===== RUMMET (galleriet) ===== */
+.rum{display:none;min-height:100vh;background:linear-gradient(180deg,var(--rum) 0%,#ded5b8 100%);padding:0 0 4rem}
+.rum.aaben{display:block}
+.rum-top{position:sticky;top:0;z-index:120;background:rgba(45,80,22,.96);color:#fff;padding:.7rem 1rem;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.rum-top .titel{font-family:'Playfair Display',serif;font-size:1.2rem}
+.rum-top .titel em{color:var(--guld-lys);font-style:italic}
+.rum-top .ud-knap{background:var(--guld);color:var(--tekst);border:none;padding:.5rem 1rem;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px}
+
+.velkomst{text-align:center;padding:2.4rem 1rem 1rem}
+.velkomst h2{font-family:'Playfair Display',serif;color:var(--gron);font-size:2rem;font-weight:500}
+.velkomst p{color:var(--tekst-lys);margin-top:.3rem}
+
+/* Hver dag = en sektion af væggen */
+.dag{padding:1.6rem 0 .5rem}
+.dag-navn{font-family:'Playfair Display',serif;color:var(--gron);font-size:1.5rem;text-align:center;margin-bottom:.2rem}
+.dag-streg{width:60px;height:3px;background:var(--guld);margin:0 auto 1.4rem;border-radius:2px}
+
+/* Billedrækken man "går langs" */
+.vaeg-spor{display:flex;gap:1.2rem;overflow-x:auto;padding:1rem 1.4rem 1.6rem;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+.vaeg-spor::-webkit-scrollbar{height:8px}
+.vaeg-spor::-webkit-scrollbar-thumb{background:var(--guld);border-radius:4px}
+.ramme{flex:0 0 auto;scroll-snap-align:center;width:min(78vw,340px);background:var(--vaeg);padding:.7rem .7rem 1rem;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.18);transition:transform .3s ease, box-shadow .3s ease;cursor:pointer;border:1px solid rgba(0,0,0,.06)}
+.ramme:hover{transform:scale(1.06) translateY(-6px);box-shadow:0 16px 36px rgba(0,0,0,.3);z-index:5}
+.ramme img{width:100%;height:230px;object-fit:cover;border-radius:3px;display:block;background:#cabf9a}
+.ramme .tekst{margin-top:.6rem;font-size:.92rem;color:var(--tekst);text-align:center;min-height:1.2em}
+.ramme .navn{font-size:.75rem;color:var(--tekst-lys);text-align:center;margin-top:.2rem}
+.dag-tom{text-align:center;color:var(--tekst-lys);font-style:italic;padding:1rem;font-size:.9rem}
+
+.afslut{text-align:center;padding:3rem 1rem 1rem}
+.afslut .ud-stor{background:var(--gron);color:#fff;border:none;padding:.9rem 2rem;border-radius:10px;font-family:'Playfair Display',serif;font-size:1.2rem;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.2)}
+
+/* Stort billede (peg/klik) */
+.lup{position:fixed;inset:0;background:rgba(20,18,8,.92);display:none;align-items:center;justify-content:center;z-index:400;padding:1rem;flex-direction:column}
+.lup.vis{display:flex}
+.lup img{max-width:95vw;max-height:80vh;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+.lup .lup-tekst{color:#fff;font-family:'Playfair Display',serif;font-size:1.3rem;margin-top:1rem;text-align:center;padding:0 1rem}
+.lup .lup-navn{color:var(--gron-pale);font-size:.9rem;margin-top:.3rem}
+.lup-luk{position:fixed;top:1rem;right:1rem;background:#fff;color:#222;width:48px;height:48px;border-radius:50%;border:none;font-size:1.4rem;cursor:pointer;font-weight:700;box-shadow:0 3px 12px rgba(0,0,0,.4)}
+
+/* Tak-for-besøget skærm */
+.farvel{display:none;position:fixed;inset:0;z-index:500;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;
+  background:linear-gradient(180deg,#3a6320 0%,#2d5016 100%)}
+.farvel.vis{display:flex}
+.farvel h2{font-family:'Playfair Display',serif;color:#fff;font-size:2.4rem;font-weight:500;margin-bottom:.6rem}
+.farvel h2 em{color:var(--guld-lys);font-style:italic}
+.farvel p{color:var(--gron-pale);font-size:1.05rem;margin-bottom:2rem}
+.farvel .igen{background:var(--guld);color:var(--tekst);border:none;padding:.8rem 1.6rem;border-radius:10px;font-weight:600;cursor:pointer;font-size:15px;margin:.3rem}
+.farvel a.hjem{color:var(--gron-pale);text-decoration:underline;margin-top:1rem;font-size:.95rem}
+
+.henter{text-align:center;padding:2rem;color:var(--tekst-lys);font-style:italic}
+</style>
+</head>
+<body>
+
+<a href="forside.html" class="hjem-knap">🏠 Til forsiden</a>
+
+<!-- ===== FORHAL ===== -->
+<div class="forhal" id="forhal">
+  <h1>OlsenKlanens <em>Fotovæg</em></h1>
+  <p>Træd ind og gå en tur langs væggen — fra fredag til søndag, år for år.</p>
+  <div class="aar-valg">
+    <label>Vælg år</label>
+    <select id="aar-foer"></select>
+  </div>
+  <div class="doer" id="doer" onclick="gaaInd()">
+    <div class="doer-haandtag"></div>
+    <div class="doer-tekst" id="doer-tekst">Gå ind →</div>
+  </div>
+  <div class="doer-hint">Klik på døren for at træde ind</div>
+</div>
+
+<!-- ===== RUMMET ===== -->
+<div class="rum" id="rum">
+  <div class="rum-top">
+    <div class="titel">Fotovæggen · <em id="rum-aar"></em></div>
+    <button class="ud-knap" onclick="gaaUd()">🚪 Gå ud</button>
+  </div>
+  <div class="velkomst">
+    <h2 id="velkomst-titel">Velkommen til 2026</h2>
+    <p>Gå langs væggen — peg på et billede for at se det stort</p>
+  </div>
+  <div id="vaeg-indhold">
+    <div class="henter">Henter billeder fra væggen…</div>
+  </div>
+  <div class="afslut">
+    <button class="ud-stor" onclick="gaaUd()">🚪 Gå ud af rummet</button>
+  </div>
+</div>
+
+<!-- Stort billede -->
+<div class="lup" id="lup" onclick="lukLup(event)">
+  <button class="lup-luk" onclick="lukLup()">✕</button>
+  <img id="lup-img" src="">
+  <div class="lup-tekst" id="lup-tekst"></div>
+  <div class="lup-navn" id="lup-navn"></div>
+</div>
+
+<!-- Tak for besøget -->
+<div class="farvel" id="farvel">
+  <h2>Tak for <em>besøget</em></h2>
+  <p>Kig forbi igen — der kommer hele tiden nye billeder på væggen</p>
+  <button class="igen" onclick="komIgen()">Gå ind igen</button>
+  <a href="forside.html" class="hjem">Til forsiden</a>
+</div>
+
+<!-- Knirkelyd (laves med lyd i koden, ingen fil nødvendig) -->
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getStorage, ref, getDownloadURL, listAll, getMetadata }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+};
+const app = initializeApp(firebaseConfig);
+const storage = getStorage(app);
+
+const AAR_LISTE = ['2026','2025','2024','2023','2022','2021','2020','2019','2018','2017','2016','2015'];
+
+// Rækkefølgen man går langs væggen: fredag → lørdag → søndag → fri leg
+const GRUPPER = [
+  { id:'fre-aftensmad',   titel:'Fredag · Aftensmad og aftenhygge' },
+  { id:'flaghejsning',    titel:'Lørdag · Flaghejsning og morgensang' },
+  { id:'morgenmad',       titel:'Lørdag · Morgenmad og morgenhygge' },
+  { id:'generalfors',     titel:'Lørdag · Generalforsamling' },
+  { id:'faellesfoto',     titel:'Lørdag · Årets fællesfoto' },
+  { id:'tagselvbord',     titel:'Lørdag · Det store tag-selv-bord' },
+  { id:'konkurrencer',    titel:'Lørdag · Konkurrencer, leg og hygge' },
+  { id:'kaffebord',       titel:'Lørdag · Det store kaffebord' },
+  { id:'grill',           titel:'Lørdag · Grillpølser m.m.' },
+  { id:'aftenhygge',      titel:'Lørdag · Aftenhygge til sengetid' },
+  { id:'son-morgenmad',   titel:'Søndag · Morgenmad og morgenhygge' },
+  { id:'pakning',         titel:'Søndag · Pakning og oprydning' },
+  { id:'farvel',          titel:'Søndag · Farvel og afgang' },
+  { id:'fri-leg',         titel:'Fri leg · Andre familiebegivenheder' },
+];
+
+let valgtAar = '2026';
+
+// Fyld år-dropdown
+const aarFoer = document.getElementById('aar-foer');
+aarFoer.innerHTML = AAR_LISTE.map(a=>`<option value="${a}">${a}</option>`).join('');
+aarFoer.addEventListener('change', e=>{
+  document.getElementById('doer-tekst').textContent = 'Gå ind →';
+});
+
+// Knirkelyd lavet med web-lyd (ingen fil nødvendig)
+function knirk(){
+  try{
+    const ac = new (window.AudioContext||window.webkitAudioContext)();
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.type='sawtooth';
+    o.frequency.setValueAtTime(70, ac.currentTime);
+    o.frequency.exponentialRampToValueAtTime(40, ac.currentTime+0.5);
+    g.gain.setValueAtTime(0.0001, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.12, ac.currentTime+0.08);
+    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+0.55);
+    o.connect(g); g.connect(ac.destination);
+    o.start(); o.stop(ac.currentTime+0.6);
+  }catch(e){ /* lyd er ekstra, ikke afgørende */ }
+}
+
+window.gaaInd = async function(){
+  valgtAar = aarFoer.value;
+  knirk();
+  document.getElementById('forhal').style.display='none';
+  document.getElementById('rum').classList.add('aaben');
+  document.getElementById('farvel').classList.remove('vis');
+  document.getElementById('rum-aar').textContent = valgtAar;
+  document.getElementById('velkomst-titel').textContent = 'Velkommen til ' + valgtAar;
+  window.scrollTo(0,0);
+  await hentVaeg();
+};
+
+window.gaaUd = function(){
+  knirk();
+  document.getElementById('rum').classList.remove('aaben');
+  document.getElementById('farvel').classList.add('vis');
+};
+
+window.komIgen = function(){
+  document.getElementById('farvel').classList.remove('vis');
+  document.getElementById('forhal').style.display='flex';
+  window.scrollTo(0,0);
+};
+
+async function hentVaeg(){
+  const ud = document.getElementById('vaeg-indhold');
+  ud.innerHTML = '<div class="henter">Henter billeder fra væggen…</div>';
+  try{
+    // Hent billeder for hver gruppe i rækkefølge
+    const dele = [];
+    for(const g of GRUPPER){
+      let items = [];
+      try{
+        const mappe = ref(storage, `fotovaeg/${valgtAar}/${g.id}`);
+        const res = await listAll(mappe);
+        items = await Promise.all(res.items.map(async it=>{
+          const [url, meta] = await Promise.all([getDownloadURL(it), getMetadata(it)]);
+          const c=(meta.customMetadata)||{};
+          return { url, tekst:c.tekst||'', navn:c.navn||'' };
+        }));
+      }catch(e){ items=[]; }
+      if(items.length>0){
+        // bland billederne lidt så væggen ser ny ud hver gang
+        items.sort(()=>Math.random()-0.5);
+        dele.push({ titel:g.titel, items });
+      }
+    }
+    if(dele.length===0){
+      ud.innerHTML = `<div class="dag-tom">Der er endnu ingen billeder på væggen for ${valgtAar}.<br>Læg nogle op via Årenes Billeder, så dukker de op her.</div>`;
+      return;
+    }
+    ud.innerHTML = dele.map(d=>`
+      <div class="dag">
+        <div class="dag-navn">${d.titel}</div>
+        <div class="dag-streg"></div>
+        <div class="vaeg-spor">
+          ${d.items.map(b=>`
+            <div class="ramme" onclick="visStort('${encodeURIComponent(b.url)}','${escapeHtml(b.tekst)}','${escapeHtml(b.navn)}')">
+              <img src="${b.url}" loading="lazy">
+              <div class="tekst">${b.tekst||''}</div>
+              <div class="navn">${b.navn?('📷 '+b.navn):''}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+  }catch(err){
+    ud.innerHTML = `<div class="dag-tom">Kunne ikke hente billeder: ${err.message||err}</div>`;
+  }
+}
+
+function escapeHtml(s){ return (s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+window.visStort = function(urlEnc, tekst, navn){
+  document.getElementById('lup-img').src = decodeURIComponent(urlEnc);
+  document.getElementById('lup-tekst').textContent = tekst||'';
+  document.getElementById('lup-navn').textContent = navn?('📷 Lagt op af '+navn):'';
+  document.getElementById('lup').classList.add('vis');
+};
+window.lukLup = function(e){
+  if(e && e.target && e.target.id!=='lup' && e.target.className!=='lup-luk') return;
+  document.getElementById('lup').classList.remove('vis');
+};
+</script>
+</body>
+</html>
