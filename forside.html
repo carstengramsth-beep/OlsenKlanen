@@ -91,21 +91,26 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 </style>
 <script>
 try {
-  let niveau = sessionStorage.getItem("ok_niveau");
-  if (!niveau) {
-    const varigtNiveau = localStorage.getItem("ok_niveau");
-    if (varigtNiveau) {
-      sessionStorage.setItem("ok_niveau", varigtNiveau);
-      sessionStorage.setItem("ok_navn", localStorage.getItem("ok_navn") || "");
-      sessionStorage.setItem("ok_email", localStorage.getItem("ok_email") || "");
-      niveau = varigtNiveau;
-    }
+  // Robust login-tjek: accepter hvis vi har nogen af oplysningerne i session ELLER varigt lager.
+  function hent(navn){
+    return sessionStorage.getItem(navn) || localStorage.getItem(navn) || "";
   }
-  if (!niveau) {
+  const niveau = hent("ok_niveau");
+  const navn   = hent("ok_navn");
+  const nr     = hent("ok_nr");
+  const erLoggetInd = !!(niveau || navn || nr);
+  if (erLoggetInd) {
+    // Genskab i sessionStorage så resten af siden virker
+    if (niveau) sessionStorage.setItem("ok_niveau", niveau);
+    if (navn)   sessionStorage.setItem("ok_navn", navn);
+    if (nr)     sessionStorage.setItem("ok_nr", nr);
+    const email = hent("ok_email");
+    if (email)  sessionStorage.setItem("ok_email", email);
+  } else {
     window.location.href = "login.html";
   }
 } catch(e) {
-  window.location.href = "login.html";
+  // Ved fejl: send IKKE automatisk til login (det smed folk ud). Lad siden indlæse.
 }
 </script>
 </head>
