@@ -47,6 +47,8 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
 .doer-haandtag{position:absolute;right:18px;top:50%;width:14px;height:14px;border-radius:50%;background:var(--guld);box-shadow:0 0 0 3px rgba(0,0,0,.2)}
 .doer-tekst{position:absolute;bottom:-2.6rem;left:50%;transform:translateX(-50%);white-space:nowrap;color:#fff;font-weight:600;font-size:1rem}
 .doer-hint{margin-top:3.6rem;color:var(--gron-pale);font-size:.9rem;font-style:italic}
+.forhal-upload{display:inline-block;margin-top:1.6rem;background:var(--guld);color:var(--tekst);text-decoration:none;padding:.7rem 1.4rem;border-radius:10px;font-weight:700;font-size:15px;box-shadow:0 3px 10px rgba(0,0,0,.25)}
+.forhal-upload:hover{background:#b8842a}
 
 /* ===== RUMMET (galleriet) ===== */
 .rum{display:none;min-height:100vh;background:linear-gradient(180deg,var(--rum) 0%,#ded5b8 100%);padding:0 0 4rem}
@@ -132,6 +134,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
     <div class="doer-tekst" id="doer-tekst">Gå ind →</div>
   </div>
   <div class="doer-hint">Klik på døren for at træde ind</div>
+  <a href="aarenes-billeder.html" class="forhal-upload">📷 Læg billeder op</a>
 </div>
 
 <!-- ===== RUMMET ===== -->
@@ -434,3 +437,4 @@ document.addEventListener('keydown', e=>{
 </script>
 </body>
 </html>
+
