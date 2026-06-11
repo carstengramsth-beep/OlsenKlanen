@@ -69,7 +69,7 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
 </header>
 
 <div class="kredit">
-  🎵 Tekst af <strong>Inger Olsen</strong> · Musik af <strong>René</strong>
+  🎵 Tekst af <strong>Birthe Haugaard</strong> · Musik af <strong>René Gram</strong>
 </div>
 
 <div class="wrap">
@@ -92,16 +92,14 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
 <!-- Upload-modal -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
-    <h3>Læg en sang op</h3>
-    <div class="sub">Vælg en MP3-fil og giv den en titel</div>
-    <label>Sangens titel</label>
-    <input type="text" id="m-titel" placeholder="F.eks. 'Forårslængsel'">
-    <label>Vælg MP3-fil</label>
-    <input type="file" id="m-fil" accept="audio/mpeg,.mp3">
+    <h3>Læg sange op</h3>
+    <div class="sub">Vælg én eller flere MP3-filer — titlen tages automatisk fra filnavnet</div>
+    <label>Vælg MP3-filer (du kan vælge mange på én gang)</label>
+    <input type="file" id="m-fil" accept="audio/mpeg,.mp3" multiple>
     <div class="upload-status" id="m-status"></div>
     <div class="modal-knapper">
       <button class="knap-annuller" onclick="lukModal()">Annullér</button>
-      <button class="knap-gem" id="m-gem" onclick="gemSang()">Læg op</button>
+      <button class="knap-gem" id="m-gem" onclick="gemSang()">Læg alle op</button>
     </div>
   </div>
 </div>
@@ -229,7 +227,6 @@ window.sletSang = async function(i){
 
 // Upload (kun admin)
 window.aabnModal = function(){
-  document.getElementById('m-titel').value='';
   document.getElementById('m-fil').value='';
   document.getElementById('m-status').textContent='';
   document.getElementById('modal').classList.add('vis');
@@ -237,23 +234,29 @@ window.aabnModal = function(){
 window.lukModal = function(){ document.getElementById('modal').classList.remove('vis'); };
 
 window.gemSang = async function(){
-  const titel = document.getElementById('m-titel').value.trim();
-  const f = document.getElementById('m-fil').files[0];
+  const filer = Array.from(document.getElementById('m-fil').files||[]);
   const status = document.getElementById('m-status');
   const knap = document.getElementById('m-gem');
-  if(!titel){ alert('Skriv en titel.'); return; }
-  if(!f){ alert('Vælg en MP3-fil.'); return; }
-  knap.disabled=true; knap.textContent='Lægger op…'; status.textContent='Uploader…';
+  if(filer.length===0){ alert('Vælg mindst én MP3-fil.'); return; }
+  knap.disabled=true;
   try{
-    const filnavn = sikkertNavn(titel) + '.mp3';
-    const sti = ref(storage, 'musik/' + filnavn);
-    await uploadBytes(sti, f, { contentType:'audio/mpeg', customMetadata:{ titel, navn: mitNr() } });
+    for(let i=0;i<filer.length;i++){
+      const f = filer[i];
+      // Titel = filnavn uden .mp3, med stort begyndelsesbogstav
+      const raaTitel = (f.name||'sang').replace(/\.mp3$/i,'');
+      const titel = paenTitel(raaTitel + '.mp3');
+      knap.textContent = `Lægger op… (${i+1}/${filer.length})`;
+      status.textContent = `Uploader "${titel}" (${i+1} af ${filer.length})…`;
+      const filnavn = sikkertNavn(titel) + '.mp3';
+      const sti = ref(storage, 'musik/' + filnavn);
+      await uploadBytes(sti, f, { contentType:'audio/mpeg', customMetadata:{ titel, navn: mitNr() } });
+    }
     lukModal();
     await hentSange();
   }catch(err){
     status.textContent = 'Kunne ikke uploade: ' + (err.message||err);
   }finally{
-    knap.disabled=false; knap.textContent='Læg op';
+    knap.disabled=false; knap.textContent='Læg alle op';
   }
 };
 
