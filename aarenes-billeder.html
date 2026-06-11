@@ -121,12 +121,24 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
   <div class="lb-cap">
     <div class="lb-tekst" id="lb-tekst"></div>
     <div class="lb-navn" id="lb-navn"></div>
+    <div id="lb-handlinger" style="margin-top:1rem;display:none">
+      <button id="lb-flyt-knap" onclick="visFlytValg(event)" style="background:var(--guld);color:var(--tekst);border:none;padding:.55rem 1.1rem;border-radius:6px;font-family:'Source Sans 3',sans-serif;font-weight:600;cursor:pointer;font-size:13px;margin:.25rem">➡️ Flyt til anden ramme</button>
+      <button id="lb-slet-knap" onclick="sletBillede(event)" style="background:#a33;color:#fff;border:none;padding:.55rem 1.1rem;border-radius:6px;font-family:'Source Sans 3',sans-serif;font-weight:600;cursor:pointer;font-size:13px;margin:.25rem">🗑️ Slet billede</button>
+      <div id="lb-flyt-boks" style="display:none;margin-top:.8rem;background:rgba(255,255,255,.1);padding:.8rem;border-radius:8px">
+        <select id="lb-flyt-vaelger" onclick="event.stopPropagation()" style="padding:.5rem;border-radius:6px;border:none;font-family:inherit;font-size:13px;width:100%;max-width:340px"></select>
+        <div style="margin-top:.6rem">
+          <button onclick="udfoerFlyt(event)" style="background:var(--gron-lys,#4a7c2a);color:#fff;border:none;padding:.5rem 1rem;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px;margin:.2rem">Flyt nu</button>
+          <button onclick="visFlytValg(event)" style="background:#666;color:#fff;border:none;padding:.5rem 1rem;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px;margin:.2rem">Fortryd</button>
+        </div>
+      </div>
+      <div id="lb-status" style="color:#cfc;font-size:13px;margin-top:.6rem;min-height:16px"></div>
+    </div>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getStorage, ref, uploadBytes, getDownloadURL, listAll, getMetadata }
+import { getStorage, ref, uploadBytes, getDownloadURL, listAll, getMetadata, deleteObject }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -162,6 +174,25 @@ const GRUPPER = [
 ];
 const titelFor = id => (GRUPPER.find(g=>g.id===id)||{}).titel || id;
 
+// Mit medlemsnummer fra login (sat af login.html) — til ejerskab af billeder
+function mitNr(){
+  try{ return (sessionStorage.getItem('ok_nr') || localStorage.getItem('ok_nr') || '').trim(); }
+  catch(e){ return ''; }
+}
+// Er jeg admin? (login.html sætter ok_rettighed = admin)
+function erAdmin(){
+  try{
+    const r = (sessionStorage.getItem('ok_rettighed') || localStorage.getItem('ok_rettighed') || '').trim().toLowerCase();
+    return r === 'admin';
+  }catch(e){ return false; }
+}
+// Må JEG flytte/slette dette billede? Ejer (mit nr.) ELLER admin.
+function maaRedigere(b){
+  if(erAdmin()) return true;
+  const mit = mitNr();
+  return mit && b.uploaderNr && (mit === String(b.uploaderNr).trim());
+}
+
 let valgtAar = AAR_LISTE[0];
 let valgtGruppe = 'ALLE'; // 'ALLE' = hele weekenden
 let aktuelleBilleder = []; // billeder i den viste gruppe (når enkelt gruppe)
@@ -191,7 +222,7 @@ async function hentGruppe(gid){
     const items = await Promise.all(res.items.map(async it=>{
       const [url, meta] = await Promise.all([getDownloadURL(it), getMetadata(it)]);
       const c=(meta.customMetadata)||{};
-      return { url, tekst:c.tekst||'', navn:c.navn||'ukendt', tid:meta.timeCreated||'', gruppe:gid };
+      return { url, tekst:c.tekst||'', navn:c.navn||'ukendt', uploaderNr:c.uploaderNr||'', tid:meta.timeCreated||'', gruppe:gid, sti:it.fullPath };
     }));
     items.sort((a,b)=>(a.tid<b.tid?1:-1));
     return items;
@@ -331,7 +362,7 @@ window.gemBillede = async function(){
   try{
     const sikkert=(f.name||'foto').replace(/[^a-zA-Z0-9._-]/g,'_');
     const sti=ref(storage, `fotovaeg/${valgtAar}/${gid}/${Date.now()}_${sikkert}`);
-    await uploadBytes(sti, f, { customMetadata:{ tekst, navn } });
+    await uploadBytes(sti, f, { customMetadata:{ tekst, navn, uploaderNr: mitNr() } });
     lukModal();
     // Skift til den gruppe billedet blev lagt i, og vis
     valgtGruppe = gid;
@@ -344,14 +375,80 @@ window.gemBillede = async function(){
   }
 };
 
+let aabentBillede = null; // { i, b } billedet i lightbox lige nu
+
 window.visStort = function(i){
   const b=visListe[i];
+  aabentBillede = { i, b };
   document.getElementById('lb-img').src=b.url;
   document.getElementById('lb-tekst').textContent=b.tekst||'';
   document.getElementById('lb-navn').textContent='📷 Lagt op af '+(b.navn||'ukendt');
+  const handlinger = document.getElementById('lb-handlinger');
+  handlinger.style.display = maaRedigere(b) ? 'block' : 'none';
+  document.getElementById('lb-flyt-boks').style.display = 'none';
+  document.getElementById('lb-status').textContent = '';
   document.getElementById('lightbox').classList.add('vis');
 };
-window.lukLightbox = function(){ document.getElementById('lightbox').classList.remove('vis'); };
+window.lukLightbox = function(){ document.getElementById('lightbox').classList.remove('vis'); aabentBillede=null; };
+
+// SLET (kun ejer/admin — knappen vises ellers ikke)
+window.sletBillede = async function(e){
+  if(e) e.stopPropagation();
+  if(!aabentBillede) return;
+  const b = aabentBillede.b;
+  if(!maaRedigere(b)) return;
+  if(!confirm('Vil du slette dette billede? Det kan ikke fortrydes.')) return;
+  const status = document.getElementById('lb-status');
+  status.textContent = 'Sletter…';
+  try{
+    await deleteObject(ref(storage, b.sti));
+    document.getElementById('lightbox').classList.remove('vis');
+    aabentBillede = null;
+    await visValg();
+  }catch(err){
+    status.textContent = 'Kunne ikke slette: ' + (err.message||err);
+  }
+};
+
+// Vis/skjul flyt-dropdown (alle rammer undtagen den nuværende)
+window.visFlytValg = function(e){
+  if(e) e.stopPropagation();
+  const boks = document.getElementById('lb-flyt-boks');
+  const vis = boks.style.display === 'none';
+  if(vis){
+    const naaGid = aabentBillede ? aabentBillede.b.gruppe : '';
+    document.getElementById('lb-flyt-vaelger').innerHTML =
+      GRUPPER.filter(g=>g.id!==naaGid).map(g=>`<option value="${g.id}">${g.titel}</option>`).join('');
+    boks.style.display = 'block';
+  } else {
+    boks.style.display = 'none';
+  }
+};
+
+// UDFØR flyt: kopiér til ny ramme, slet fra gammel
+window.udfoerFlyt = async function(e){
+  if(e) e.stopPropagation();
+  if(!aabentBillede) return;
+  const b = aabentBillede.b;
+  if(!maaRedigere(b)) return;
+  const nyGid = document.getElementById('lb-flyt-vaelger').value;
+  if(!nyGid) return;
+  const status = document.getElementById('lb-status');
+  status.textContent = 'Flytter…';
+  try{
+    const svar = await fetch(b.url);
+    const blob = await svar.blob();
+    const gammeltNavn = b.sti.split('/').pop();
+    const nySti = ref(storage, `fotovaeg/${valgtAar}/${nyGid}/${gammeltNavn}`);
+    await uploadBytes(nySti, blob, { customMetadata:{ tekst:b.tekst||'', navn:b.navn||'', uploaderNr:b.uploaderNr||'' } });
+    await deleteObject(ref(storage, b.sti));
+    document.getElementById('lightbox').classList.remove('vis');
+    aabentBillede = null;
+    await visValg();
+  }catch(err){
+    status.textContent = 'Kunne ikke flytte: ' + (err.message||err);
+  }
+};
 
 // Start
 visValg();
