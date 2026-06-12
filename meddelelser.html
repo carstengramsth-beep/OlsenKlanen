@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen · OlsenPost</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; padding-bottom: 60px; }
+
+/* Topbar — samme stil som forsiden */
+.topbar { background: #2d5016; color: #f5e6a8; padding: 16px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.topbar h1 { font-size: 22px; font-weight: normal; }
+.topbar .user { display: flex; align-items: center; gap: 14px; font-style: italic; font-size: 15px; }
+.hjem-knap { color: #f5e6a8; text-decoration: none; padding: 6px 14px; border: 1px solid #f5e6a8; border-radius: 4px; font-size: 14px; font-style: normal; cursor: pointer; background: transparent; }
+.hjem-knap:hover { background: rgba(245,230,168,0.15); }
+
+.wrap { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+/* Faneblade */
+.faner { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #d8cfae; }
+.fane { background: none; border: none; font-family: inherit; font-size: 16px; color: #888; padding: 10px 18px; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; display: flex; align-items: center; gap: 8px; }
+.fane.aktiv { color: #2d5016; font-weight: bold; border-bottom-color: #2d5016; }
+.fane .badge { background: #c0392b; color: #fff; border-radius: 10px; font-size: 12px; padding: 1px 8px; min-width: 20px; text-align: center; }
+
+.kort { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 18px 20px; margin-bottom: 16px; }
+.kort h2 { font-size: 17px; color: #2d5016; margin-bottom: 14px; font-weight: bold; }
+
+label { display: block; font-size: 14px; color: #555; margin-bottom: 6px; }
+
+/* Modtager-vælger */
+.sog-felt { width: 100%; padding: 10px 12px; font-family: inherit; font-size: 15px; border: 1px solid #c8bfa0; border-radius: 6px; background: #fdfbf5; }
+.modtager-liste { max-height: 220px; overflow-y: auto; border: 1px solid #e0d8bd; border-radius: 6px; margin-top: 8px; background: #fdfbf5; }
+.modtager-rk { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f0ead8; font-size: 15px; }
+.modtager-rk:last-child { border-bottom: none; }
+.modtager-rk:hover { background: #faf3dc; }
+.modtager-rk input { width: 18px; height: 18px; cursor: pointer; }
+.modtager-navn { flex: 1; }
+.modtager-nr { background: #2d5016; color: #f5e6a8; padding: 2px 9px; border-radius: 10px; font-size: 13px; font-weight: bold; }
+.valgte { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { background: #e8f0d8; border: 1px solid #b9c99a; border-radius: 14px; padding: 4px 10px 4px 12px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.chip button { background: none; border: none; color: #2d5016; cursor: pointer; font-size: 15px; line-height: 1; padding: 0; }
+
+textarea { width: 100%; min-height: 90px; padding: 10px 12px; font-family: inherit; font-size: 15px; border: 1px solid #c8bfa0; border-radius: 6px; background: #fdfbf5; resize: vertical; }
+.tegn-info { font-size: 12px; color: #999; margin-top: 4px; text-align: right; }
+
+.knap { background: #2d5016; color: #f5e6a8; border: none; font-family: inherit; font-size: 16px; padding: 11px 26px; border-radius: 6px; cursor: pointer; margin-top: 14px; }
+.knap:hover { background: #3a6b1d; }
+.knap:disabled { background: #b5b5a5; cursor: default; }
+.knap.lille { font-size: 13px; padding: 6px 14px; margin-top: 0; }
+.knap.grå { background: #e8e2cd; color: #555; }
+.knap.grå:hover { background: #ddd6bd; }
+
+.status { margin-top: 12px; font-size: 14px; padding: 10px 14px; border-radius: 6px; display: none; }
+.status.ok { display: block; background: #d4edda; color: #155724; }
+.status.fejl { display: block; background: #f8d7da; color: #721c24; }
+
+/* Besked-bokse i indbakke/sendt */
+.besked { border-left: 4px solid #c89e3c; background: #fff; border-radius: 6px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.besked.ulaest { border-left-color: #c0392b; background: #fffdf6; }
+.besked.fdag { border-left-color: #e08a2c; background: #fff8ec; }
+.besked-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+.besked-fra { font-weight: bold; color: #2c3e1f; font-size: 15px; }
+.besked-tid { font-size: 12px; color: #999; font-style: italic; white-space: nowrap; }
+.besked-tekst { font-size: 15px; color: #333; margin: 6px 0; white-space: pre-wrap; }
+.besked-set { font-size: 12px; color: #777; font-style: italic; margin-top: 8px; }
+.besked-set.set { color: #2d7a2d; }
+
+/* Hurtig-svar */
+.svar-omr { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ddd6bd; }
+.svar-knapper { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 8px; }
+.svar-knap { background: #eef3e3; border: 1px solid #c3d3a6; border-radius: 16px; font-family: inherit; font-size: 13px; padding: 6px 13px; cursor: pointer; color: #2d5016; }
+.svar-knap:hover { background: #e0ebcd; }
+.svar-fri { display: flex; gap: 8px; align-items: flex-start; }
+.svar-fri input { flex: 1; padding: 8px 11px; font-family: inherit; font-size: 14px; border: 1px solid #c8bfa0; border-radius: 6px; background: #fdfbf5; }
+
+.tom { text-align: center; color: #999; font-style: italic; padding: 40px 20px; }
+.indlaeser { text-align: center; color: #888; padding: 30px; font-style: italic; }
+
+.hint { font-size: 13px; color: #888; margin-bottom: 14px; font-style: italic; }
+
+/* Nyhedsbånd i bunden — samme som forsiden */
+.bund { position: fixed; bottom: 0; left: 0; right: 0; background: #2d5016; color: #f5e6a8; text-align: center; padding: 8px; font-size: 13px; font-style: italic; }
+</style>
+
+<script>
+/* ── Robust login-tjek (samme mønster som forsiden) ── */
+try {
+  function hent(navn){ return sessionStorage.getItem(navn) || localStorage.getItem(navn) || ""; }
+  const niveau = hent("ok_niveau"), navn = hent("ok_navn"), nr = hent("ok_nr");
+  if (niveau || navn || nr) {
+    if (niveau) sessionStorage.setItem("ok_niveau", niveau);
+    if (navn)   sessionStorage.setItem("ok_navn", navn);
+    if (nr)     sessionStorage.setItem("ok_nr", nr);
+  } else {
+    window.location.href = "login.html";
+  }
+} catch(e) {}
+</script>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>📬 OlsenPost</h1>
+  <div class="user">
+    <span id="mit-navn"></span>
+    <a class="hjem-knap" href="forside.html">🏠 Til forsiden</a>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="faner">
+    <button class="fane aktiv" id="fane-skriv" onclick="visFane('skriv')">✍️ Skriv besked</button>
+    <button class="fane" id="fane-indbakke" onclick="visFane('indbakke')">📥 Indbakke <span class="badge" id="badge-ny" style="display:none">0</span></button>
+    <button class="fane" id="fane-sendt" onclick="visFane('sendt')">📤 Sendt</button>
+  </div>
+
+  <!-- ════════ SKRIV ════════ -->
+  <div id="omr-skriv">
+    <div class="kort">
+      <h2>Skriv en besked</h2>
+      <p class="hint">Vælg én eller flere modtagere på listen — søg på navn eller nummer.</p>
+
+      <label for="sog">Til hvem?</label>
+      <input type="text" id="sog" class="sog-felt" placeholder="Søg på navn eller nummer …" oninput="filtrer()" autocomplete="off">
+      <div class="modtager-liste" id="modtager-liste">
+        <div class="indlaeser">Henter medlemmer fra kartoteket …</div>
+      </div>
+      <div class="valgte" id="valgte"></div>
+
+      <div style="margin-top:16px">
+        <label for="tekst">Din besked</label>
+        <textarea id="tekst" placeholder="Skriv din besked her …" maxlength="500" oninput="taelTegn()"></textarea>
+        <div class="tegn-info"><span id="tegn">0</span> / 500 tegn</div>
+      </div>
+
+      <button class="knap" id="send-knap" onclick="sendBesked()">📨 Send besked</button>
+      <div class="status" id="send-status"></div>
+    </div>
+  </div>
+
+  <!-- ════════ INDBAKKE ════════ -->
+  <div id="omr-indbakke" style="display:none">
+    <div id="indbakke-liste"><div class="indlaeser">Henter din post …</div></div>
+  </div>
+
+  <!-- ════════ SENDT ════════ -->
+  <div id="omr-sendt" style="display:none">
+    <div id="sendt-liste"><div class="indlaeser">Henter sendte beskeder …</div></div>
+  </div>
+
+</div>
+
+<div class="bund">OlsenPost · klanens egen postkasse</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc,
+         query, where, orderBy, onSnapshot, serverTimestamp, arrayUnion }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+/* ── Hvem er jeg? ── */
+function hent(n){ return sessionStorage.getItem(n) || localStorage.getItem(n) || ""; }
+const MIT_NR   = hent("ok_nr");
+const MIT_NAVN = hent("ok_navn") || ("Medlem " + MIT_NR);
+document.getElementById("mit-navn").textContent = MIT_NAVN + " (nr. " + MIT_NR + ")";
+
+/* ── Faste hurtig-svar ── */
+const HURTIGSVAR = [
+  "Jeg er optaget lige nu — jeg vender tilbage",
+  "Jeg ringer dig op på din mobil",
+  "Jeg kommer om lidt",
+  "Modtaget, tak 👍"
+];
+
+/* ════════ MODTAGER-LISTE FRA KARTOTEKET ════════ */
+/* Bygger én linje pr. person: navn + kaldenummer (husstand eller barn-nr som 44-1). */
+let alleModtagere = [];   // {nr, navn, soegetekst}
+const valgte = new Map(); // nr -> navn
+
+async function hentModtagere() {
+  try {
+    const snap = await getDocs(collection(db, "membres"));
+    const liste = [];
+    snap.forEach(d => {
+      const husstandNr = d.id;
+      const data = d.data();
+      const medlemmer = data.familiemedlemmer || [];
+      let barnTael = 0;
+      medlemmer.forEach(p => {
+        const fornavn = (p.fornavn || (p.navn || "").trim().split(/\s+/)[0] || "").trim();
+        const efternavn = (p.efternavn || "").trim();
+        const fuldt = [fornavn, efternavn].filter(Boolean).join(" ") || ("Medlem " + husstandNr);
+        let nr;
+        if (p.rolle === "barn") { barnTael++; nr = husstandNr + "-" + barnTael; }
+        else { nr = husstandNr; }
+        liste.push({ nr, navn: fuldt, soegetekst: (fuldt + " " + nr).toLowerCase() });
+      });
+    });
+    // Alfabetisk efter navn
+    liste.sort((a,b) => a.navn.localeCompare(b.navn, "da"));
+    alleModtagere = liste;
+    tegnModtagere(liste);
+  } catch(e) {
+    document.getElementById("modtager-liste").innerHTML =
+      '<div class="tom">Kunne ikke hente medlemslisten. Prøv at genindlæse.</div>';
+    console.log("Modtager-fejl:", e);
+  }
+}
+
+function tegnModtagere(liste) {
+  const el = document.getElementById("modtager-liste");
+  if (!liste.length) { el.innerHTML = '<div class="tom">Ingen match.</div>'; return; }
+  el.innerHTML = liste.map(m => `
+    <label class="modtager-rk">
+      <input type="checkbox" data-nr="${m.nr}" data-navn="${enc(m.navn)}" ${valgte.has(m.nr)?"checked":""}>
+      <span class="modtager-navn">${m.navn}</span>
+      <span class="modtager-nr">nr. ${m.nr}</span>
+    </label>`).join("");
+  el.querySelectorAll("input").forEach(cb => {
+    cb.addEventListener("change", e => {
+      const nr = e.target.dataset.nr, navn = e.target.dataset.navn;
+      if (e.target.checked) valgte.set(nr, navn); else valgte.delete(nr);
+      tegnValgte();
+    });
+  });
+}
+
+function tegnValgte() {
+  const el = document.getElementById("valgte");
+  if (!valgte.size) { el.innerHTML = ""; return; }
+  let html = "";
+  valgte.forEach((navn, nr) => {
+    html += `<span class="chip">${navn} (nr. ${nr}) <button onclick="fjernValgt('${nr}')" title="Fjern">✕</button></span>`;
+  });
+  el.innerHTML = html;
+}
+
+window.fjernValgt = function(nr){
+  valgte.delete(nr);
+  tegnValgte();
+  const cb = document.querySelector(`#modtager-liste input[data-nr="${nr}"]`);
+  if (cb) cb.checked = false;
+};
+
+window.filtrer = function(){
+  const s = document.getElementById("sog").value.trim().toLowerCase();
+  if (!s) { tegnModtagere(alleModtagere); return; }
+  tegnModtagere(alleModtagere.filter(m => m.soegetekst.includes(s)));
+};
+
+function enc(s){ return String(s).replace(/"/g,"&quot;"); }
+window.taelTegn = function(){ document.getElementById("tegn").textContent = document.getElementById("tekst").value.length; };
+
+/* ════════ SEND BESKED ════════ */
+window.sendBesked = async function(){
+  const tekst = document.getElementById("tekst").value.trim();
+  const status = document.getElementById("send-status");
+  const knap = document.getElementById("send-knap");
+
+  if (!valgte.size) { vis(status, "fejl", "Vælg mindst én modtager."); return; }
+  if (!tekst)       { vis(status, "fejl", "Skriv en besked først."); return; }
+
+  knap.disabled = true;
+  try {
+    const modtagere = [...valgte.keys()];
+    await addDoc(collection(db, "olsenpost"), {
+      fra_nr: MIT_NR,
+      fra_navn: MIT_NAVN,
+      til: modtagere,            // liste af numre — gør flere-modtagere muligt
+      til_navne: [...valgte.values()],
+      tekst: tekst,
+      type: "besked",
+      sendt: serverTimestamp(),
+      set_af: [],               // numre der har åbnet beskeden
+      svar: []                  // svar tilbage til afsender
+    });
+    vis(status, "ok", "📨 Beskeden er sendt til " + modtagere.length + (modtagere.length===1?" modtager.":" modtagere."));
+    document.getElementById("tekst").value = "";
+    taelTegn();
+    valgte.clear(); tegnValgte();
+    document.querySelectorAll('#modtager-liste input').forEach(cb => cb.checked = false);
+  } catch(e) {
+    vis(status, "fejl", "Kunne ikke sende. Tjek din forbindelse og prøv igen.");
+    console.log("Send-fejl:", e);
+  }
+  knap.disabled = false;
+};
+
+function vis(el, type, tekst){ el.className = "status " + type; el.textContent = tekst; }
+
+/* ════════ INDBAKKE (beskeder TIL mig) ════════ */
+function tidTekst(ts){
+  if (!ts || !ts.toDate) return "";
+  const d = ts.toDate();
+  const nu = new Date();
+  const samme = d.toDateString() === nu.toDateString();
+  const kl = d.toLocaleTimeString("da-DK", {hour:"2-digit", minute:"2-digit"});
+  if (samme) return "i dag " + kl;
+  return d.toLocaleDateString("da-DK", {day:"numeric", month:"short"}) + " " + kl;
+}
+
+let indbakkeData = [];
+function lytIndbakke(){
+  const qy = query(collection(db, "olsenpost"), where("til", "array-contains", MIT_NR));
+  onSnapshot(qy, snap => {
+    indbakkeData = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    indbakkeData.sort((a,b) => (b.sendt?.seconds||0) - (a.sendt?.seconds||0));
+    const nye = indbakkeData.filter(m => !(m.set_af||[]).includes(MIT_NR)).length;
+    const badge = document.getElementById("badge-ny");
+    if (nye > 0) { badge.style.display = "inline-block"; badge.textContent = nye; }
+    else badge.style.display = "none";
+    if (document.getElementById("omr-indbakke").style.display !== "none") tegnIndbakke();
+  }, e => console.log("Indbakke-fejl:", e));
+}
+
+function tegnIndbakke(){
+  const el = document.getElementById("indbakke-liste");
+  if (!indbakkeData.length) { el.innerHTML = '<div class="tom">Din indbakke er tom.</div>'; return; }
+  el.innerHTML = indbakkeData.map(m => {
+    const ulaest = !(m.set_af||[]).includes(MIT_NR);
+    const fdag = m.type === "fodselsdag";
+    const svarTaget = (m.svar||[]).some(s => s.fra_nr === MIT_NR);
+    return `
+      <div class="besked ${ulaest?'ulaest':''} ${fdag?'fdag':''}" data-id="${m.id}">
+        <div class="besked-top">
+          <span class="besked-fra">${fdag?'🎂 ':''}${m.fra_navn} (nr. ${m.fra_nr})</span>
+          <span class="besked-tid">${tidTekst(m.sendt)}</span>
+        </div>
+        <div class="besked-tekst">${escHtml(m.tekst)}</div>
+        ${ulaest ? `<button class="knap lille" onclick="markerSet('${m.id}')">✓ Marker som set</button>` : ''}
+        ${!ulaest && !svarTaget ? svarOmraade(m.id) : ''}
+        ${svarTaget ? `<div class="besked-set set">✓ Du har svaret afsenderen.</div>` : ''}
+      </div>`;
+  }).join("");
+}
+
+function svarOmraade(id){
+  const knapper = HURTIGSVAR.map(s =>
+    `<button class="svar-knap" onclick="sendSvar('${id}', this.textContent)">${s}</button>`).join("");
+  return `
+    <div class="svar-omr">
+      <div class="svar-knapper">${knapper}</div>
+      <div class="svar-fri">
+        <input type="text" id="fri-${id}" placeholder="… eller skriv dit eget korte svar" maxlength="80">
+        <button class="knap lille" onclick="sendFriSvar('${id}')">Send svar</button>
+      </div>
+    </div>`;
+}
+
+window.markerSet = async function(id){
+  try {
+    await updateDoc(doc(db, "olsenpost", id), { set_af: arrayUnion(MIT_NR) });
+  } catch(e){ console.log("Set-fejl:", e); }
+};
+
+window.sendSvar = async function(id, tekst){
+  try {
+    await updateDoc(doc(db, "olsenpost", id), {
+      set_af: arrayUnion(MIT_NR),
+      svar: arrayUnion({ fra_nr: MIT_NR, fra_navn: MIT_NAVN, tekst: tekst, tid: Date.now() })
+    });
+  } catch(e){ console.log("Svar-fejl:", e); }
+};
+
+window.sendFriSvar = function(id){
+  const inp = document.getElementById("fri-" + id);
+  const t = (inp.value||"").trim();
+  if (!t) return;
+  window.sendSvar(id, t);
+};
+
+function escHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+/* ════════ SENDT (beskeder FRA mig) — med set/svar-status ════════ */
+let sendtData = [];
+function lytSendt(){
+  const qy = query(collection(db, "olsenpost"), where("fra_nr", "==", MIT_NR));
+  onSnapshot(qy, snap => {
+    sendtData = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    sendtData.sort((a,b) => (b.sendt?.seconds||0) - (a.sendt?.seconds||0));
+    if (document.getElementById("omr-sendt").style.display !== "none") tegnSendt();
+  }, e => console.log("Sendt-fejl:", e));
+}
+
+function tegnSendt(){
+  const el = document.getElementById("sendt-liste");
+  if (!sendtData.length) { el.innerHTML = '<div class="tom">Du har ikke sendt nogen beskeder endnu.</div>'; return; }
+  el.innerHTML = sendtData.map(m => {
+    const til = (m.til||[]);
+    const setAf = (m.set_af||[]).filter(nr => til.includes(nr));
+    // status pr. modtager
+    const linjer = til.map((nr,i) => {
+      const navn = (m.til_navne && m.til_navne[i]) ? m.til_navne[i] : ("nr. " + nr);
+      const set = setAf.includes(nr);
+      return `<div class="besked-set ${set?'set':''}">${set?'✓ Set':'• Ikke set endnu'} — ${navn} (nr. ${nr})</div>`;
+    }).join("");
+    const svar = (m.svar||[]).map(s =>
+      `<div class="besked-set set">↩ ${s.fra_navn}: ${escHtml(s.tekst)}</div>`).join("");
+    return `
+      <div class="besked">
+        <div class="besked-top">
+          <span class="besked-fra">Til ${til.length} modtager${til.length===1?'':'e'}</span>
+          <span class="besked-tid">${tidTekst(m.sendt)}</span>
+        </div>
+        <div class="besked-tekst">${escHtml(m.tekst)}</div>
+        ${linjer}
+        ${svar}
+      </div>`;
+  }).join("");
+}
+
+/* ════════ FANER ════════ */
+window.visFane = function(navn){
+  ["skriv","indbakke","sendt"].forEach(f => {
+    document.getElementById("omr-"+f).style.display = (f===navn)?"block":"none";
+    document.getElementById("fane-"+f).classList.toggle("aktiv", f===navn);
+  });
+  if (navn === "indbakke") tegnIndbakke();
+  if (navn === "sendt") tegnSendt();
+};
+
+/* ── Start ── */
+hentModtagere();
+lytIndbakke();
+lytSendt();
+</script>
+
+</body>
+</html>
