@@ -109,21 +109,16 @@ Her kan medlemmer melde sig til Videofon Møde Rummet. Når du har meldt dig til
 <div class="spom-bg" id="spom-bg">
 <div class="spom-boks">
 <h2>Vil du deltage?</h2>
-<p>Er du interesseret i at blive kaldt op i Videofon Møde Rummet? Udfyld de to felter, så melder vi dig til.</p>
+<p>Du er logget ind som vist herunder. Tryk "Ja, meld mig til", så kan du blive kaldt op.</p>
  
 <div class="felt-gruppe">
-<label for="ind-navn">1. SKRIV DIT NAVN</label>
-<input type="text" id="ind-navn" placeholder="F.eks. Carsten Gram" autocomplete="name">
+<label>DIT NAVN</label>
+<input type="text" id="ind-navn" readonly style="background:#f0f0e8;">
 </div>
  
 <div class="felt-gruppe">
-<label for="ind-nummer">2. SKRIV DIT MEDLEMSNUMMER</label>
-<input type="text" id="ind-nummer" placeholder="F.eks. 8" inputmode="numeric">
-</div>
- 
-<div class="felt-gruppe">
-<label for="ind-kode">3. SKRIV ADGANGSKODE</label>
-<input type="password" id="ind-kode" placeholder="Adgangskode">
+<label>DIT MEDLEMSNUMMER</label>
+<input type="text" id="ind-nummer" readonly style="background:#f0f0e8;">
 </div>
  
 <div class="spom-knaprum">
@@ -172,6 +167,25 @@ const db = getDatabase(app);
 window.mig = null;
 window.alleTilmeldte = {};
 window.indkommendeOpkald = null;
+ 
+// ===== LOGIN-TJEK =====
+// Man skal vaere logget ind (via login.html med medlemsnr. + PIN) for at bruge
+// moederummet. Vi henter navn og nummer fra det aktive login — INGEN saerskilt
+// adgangskode mere. Er man ikke logget ind, sendes man til login.html.
+(function tjekLogin() {
+  function hent(navn) {
+    try { return sessionStorage.getItem(navn) || localStorage.getItem(navn) || ""; }
+    catch(e) { return ""; }
+  }
+  const navn = hent("ok_navn");
+  const nr   = hent("ok_nr");
+  if (!navn && !nr) {
+    window.location.href = "login.html";
+    return;
+  }
+  window.minNavn = navn || ("Medlem " + nr);
+  window.minNr   = nr;
+})();
  
 // Ryd op: hvis en tidligere version af siden har gemt noget lokalt, slettes det,
 // så ingen bliver tilmeldt automatisk.
@@ -234,23 +248,17 @@ window.visMelding = function(tekst) {
  
 // ===== TILMELDING =====
 window.aabnTilmelding = function() {
-  // Spørg ALTID om navn og nummer. Ingen automatisk tilmelding.
-  document.getElementById('ind-navn').value = '';
-  document.getElementById('ind-nummer').value = '';
-  document.getElementById('ind-kode').value = '';
+  // Navn og nummer hentes automatisk fra det indloggede medlem.
+  document.getElementById('ind-navn').value = window.minNavn || '';
+  document.getElementById('ind-nummer').value = window.minNr || '';
   document.getElementById('spom-bg').classList.add('vis');
-  document.getElementById('ind-navn').focus();
 };
 window.lukTilmelding = function() { document.getElementById('spom-bg').classList.remove('vis'); };
  
 window.meldTil = function() {
-  const navn = document.getElementById('ind-navn').value.trim();
-  const nummer = document.getElementById('ind-nummer').value.trim();
-  const kode = document.getElementById('ind-kode').value.trim();
-  if(!navn) { alert('Skriv dit navn først.'); return; }
-  if(!nummer) { alert('Skriv dit medlemsnummer først.'); return; }
-  if(!kode) { alert('Skriv adgangskoden først.'); return; }
-  if(kode !== 'Olsen26') { alert('Forkert adgangskode. Prøv igen.'); return; }
+  const navn = window.minNavn || document.getElementById('ind-navn').value.trim();
+  const nummer = window.minNr || document.getElementById('ind-nummer').value.trim();
+  if(!navn || !nummer) { alert('Der opstod en fejl med dit login. Prøv at logge ind igen.'); return; }
   skrivTilmelding(navn, nummer);
   document.getElementById('spom-bg').classList.remove('vis');
 };
