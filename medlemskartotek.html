@@ -726,8 +726,18 @@ function byggKort(m) {
   const navnVis   = visKortNavn(m);
   const adrVis    = visAdresse(m);
  
+  // Voksen-bogstav (A/B/C...) beregnes SAMLET på tværs af alle voksne i
+  // husstanden, så det matcher login uanset hvilken rollegruppe de står i.
+  const alleVoksne = sorterAEldstOEverst(
+    (m.familiemedlemmer || []).filter(p => p.rolle !== 'barn')
+  );
+  function voksenBogstavKort(p) {
+    const idx = alleVoksne.indexOf(p);
+    return idx === -1 ? '' : String.fromCharCode('A'.charCodeAt(0) + idx);
+  }
+
   const familieHtml = ROLLE_GRUPPER
-    .map(g => byggPersonGruppe((m.familiemedlemmer||[]).filter(p => p.rolle === g.rolle), g.label, m.nr, 1))
+    .map(g => byggPersonGruppe((m.familiemedlemmer||[]).filter(p => p.rolle === g.rolle), g.label, m.nr, 1, voksenBogstavKort))
     .join('');
  
   const begiHtml = (m.begivenheder || []).length
@@ -782,14 +792,20 @@ function byggKort(m) {
   return el;
 }
  
-function byggPersonGruppe(personer, label, husstandsNr, boernStart) {
+function byggPersonGruppe(personer, label, husstandsNr, boernStart, voksenBogstavKort) {
   if (!personer.length) return '';
   const sorteret = sorterAEldstOEverst(personer);
   return `<div style="margin-bottom:.8rem">
     <div class="gruppe-titel">${label}</div>
     ${sorteret.map((p, i) => {
       const erBarn = p.rolle === 'barn';
-      const personNr = erBarn ? `${husstandsNr}-${boernStart + i}` : husstandsNr;
+      let personNr = husstandsNr;
+      if (erBarn) {
+        personNr = `${husstandsNr}-${boernStart + i}`;
+      } else if (voksenBogstavKort) {
+        const bg = voksenBogstavKort(p);
+        personNr = bg ? `${husstandsNr}-${bg}` : husstandsNr;
+      }
       return `
         <div class="person-rad">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
@@ -885,9 +901,48 @@ function renderPersonEdit() {
     const idx = boernSorteret.indexOf(person);
     return idx === -1 ? '?' : (idx + 1);
   }
-  el.innerHTML = personListe.map((p, i) => {
+
+  // Voksne (ikke børn) får bogstav efter ALDER: ældste = A, næste = B, C, D ...
+  // Samme regel som login: nummeret 8-A / 8-B identificerer personen entydigt.
+  const voksneSorteret = personListe
+    .filter(pp => pp.rolle !== 'barn')
+    .slice()
+    .sort((a, b) => {
+      const da = a.foedselsdato || '';
+      const db = b.foedselsdato || '';
+      if (da && db) return da < db ? -1 : (da > db ? 1 : 0); // ældst først
+      if (da && !db) return -1;
+      if (!da && db) return 1;
+      return 0;
+    });
+  function voksenBogstav(person) {
+    const idx = voksneSorteret.indexOf(person);
+    return idx === -1 ? '' : String.fromCharCode('A'.charCodeAt(0) + idx);
+  }
+
+  // VISNINGSRÆKKEFØLGE: voksne øverst (ældst først), derefter børn (ældst først).
+  // Vi beholder personens OPRINDELIGE index i personListe (origIndex), så
+  // data-pi/data-slet stadig peger på den rigtige person ved redigering/sletning.
+  const visningsRaekke = personListe
+    .map((p, origIndex) => ({ p, origIndex }))
+    .sort((a, b) => {
+      const aBarn = a.p.rolle === 'barn' ? 1 : 0;
+      const bBarn = b.p.rolle === 'barn' ? 1 : 0;
+      if (aBarn !== bBarn) return aBarn - bBarn; // voksne (0) før børn (1)
+      const da = a.p.foedselsdato || '';
+      const db = b.p.foedselsdato || '';
+      if (da && db) return da < db ? -1 : (da > db ? 1 : 0); // ældst først inden for gruppen
+      if (da && !db) return -1;
+      if (!da && db) return 1;
+      return 0;
+    });
+
+  el.innerHTML = visningsRaekke.map(({ p, origIndex }) => {
+    const i = origIndex; // bevarer korrekt reference til data-felter og sletning
     const erBarn = p.rolle === 'barn';
-    const medlemsNr = erBarn ? `${aktivtNr}-${barnTillaegsNr(p)}` : aktivtNr;
+    const medlemsNr = erBarn
+      ? `${aktivtNr}-${barnTillaegsNr(p)}`
+      : `${aktivtNr}${voksenBogstav(p) ? '-' + voksenBogstav(p) : ''}`;
     const visningsNavn = visPersonNavn(p) || '(nyt medlem)';
     return `
     <div class="person-edit-kort">
