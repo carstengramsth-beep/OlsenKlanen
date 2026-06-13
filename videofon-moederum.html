@@ -63,7 +63,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .svar { background: #2d7a2d; color: #fff; }
 .afvis { background: #fff; color: #b03030; }
 </style>
-<script src="https://meet.jit.si/external_api.js"></script>
+<script src="https://8x8.vc/vpaas-magic-cookie-8b6db568c63b497eb1c63b23154d8aad/external_api.js"></script>
 </head>
 <body>
  
@@ -439,8 +439,12 @@ window.aabnVideo = function(rumNavn) {
   document.getElementById('video-overlay').style.display = 'block';
  
   var navn = (window.mig && window.mig.navn) ? window.mig.navn : 'Medlem';
-  window.jitsiApi = new JitsiMeetExternalAPI('meet.jit.si', {
-    roomName: rumNavn,
+  // JaaS kræver at rumnavnet får dit AppID som forstavelse:
+  // "<AppID>/<rumnavn>". Var rummet allerede med forstavelse, bruges det som det er.
+  var APP_ID = 'vpaas-magic-cookie-8b6db568c63b497eb1c63b23154d8aad';
+  var fuldtRum = (rumNavn.indexOf(APP_ID + '/') === 0) ? rumNavn : (APP_ID + '/' + rumNavn);
+  window.jitsiApi = new JitsiMeetExternalAPI('8x8.vc', {
+    roomName: fuldtRum,
     parentNode: document.getElementById('jitsi-boks'),
     userInfo: { displayName: navn },
     configOverwrite: {
@@ -537,3 +541,4 @@ window.afvisOpkald = function() {
  
  
  
+
