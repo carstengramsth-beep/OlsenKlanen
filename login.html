@@ -167,7 +167,7 @@
   <h1>OlsenKlanen</h1>
   <div class="undertekst">Familieside</div>
 
-  <input type="text" id="nr" class="felt" inputmode="numeric" placeholder="Dit medlemsnummer" autofocus autocomplete="off">
+  <input type="text" id="nr" class="felt" placeholder="Dit medlemsnummer (fx 8-B)" autofocus autocomplete="off">
 
   <div class="kode-wrapper">
     <input type="password" id="kode" class="felt" inputmode="numeric" placeholder="Din PIN-kode" autocomplete="off">
@@ -239,18 +239,81 @@
     return (fuldtNavn || "").trim().split(/\s+/)[0] || "";
   }
 
+  // ---- DEL MEDLEMSNUMMER OP: "8-B" -> { hus:"8", del:"B" } ----
+  // Accepterer baade "8-B", "8B", "48-2", og bart "8" (del = "").
+  // Bindestreg, mellemrum eller direkte sammensat virker alt sammen.
+  function delNummer(raat) {
+    const t = (raat || "").trim().toUpperCase();
+    // Match: tal-del (husstand) efterfulgt af valgfri adskiller + bogstav/tal-del
+    const m = t.match(/^(\d+)\s*[-\s]?\s*([A-ZÆØÅ]|\d+)?$/);
+    if (!m) return { hus: t, del: "" };
+    return { hus: m[1], del: (m[2] || "").trim() };
+  }
+
+  // ---- LAES FOEDSELSDATO ROBUST -> tal man kan sortere paa ----
+  // Haandterer baade dansk "dd-mm-aaaa" og ISO "aaaa-mm-dd".
+  // Returnerer aaaammdd som tal (mindre tal = aeldre). Ukendt = stort tal (yngst).
+  function foedselsTal(p) {
+    const r = String((p && (p.foedselsdato || p.fodselsdato || p.foed || p.dato)) || "").trim();
+    if (!r) return 99999999;
+    // ISO: 1974-03-06
+    let m = r.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return Number(m[1] + m[2] + m[3]);
+    // Dansk: 06-03-1974  (dd-mm-aaaa)
+    m = r.match(/^(\d{2})-(\d{2})-(\d{4})/);
+    if (m) return Number(m[3] + m[2] + m[1]);
+    // Dansk med punktum/skraastreg: 06.03.1974 eller 06/03/1974
+    m = r.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);
+    if (m) return Number(m[3] + m[2].padStart(2,"0") + m[1].padStart(2,"0"));
+    return 99999999;
+  }
+
+  // ---- SORTER VOKSNE EFTER ALDER: aeldst foerst (= A, B, C, D ...) ----
+  function voksneEfterAlder(d) {
+    return (d.familiemedlemmer || [])
+      .filter(p => p.rolle !== "barn" && (p.fornavn || p.navn || "").trim())
+      .slice()
+      .sort((a, b) => foedselsTal(a) - foedselsTal(b));
+  }
+
+  // ---- FIND PERSON UD FRA BOGSTAV/TAL-DEL ----
+  // "A"/"B"/"C"... -> voksen nr. 1/2/3 efter alder (aeldst = A).
+  // "1"/"2"...      -> barn med medlemsnummer hus-1, hus-2 (som hidtil).
+  // Returnerer personobjektet, eller null hvis ikke fundet.
+  function findPerson(d, hus, del) {
+    if (!del) return null;
+    // Bogstav -> voksen efter alder
+    if (/^[A-ZÆØÅ]$/.test(del)) {
+      const index = del.charCodeAt(0) - "A".charCodeAt(0); // A=0, B=1, C=2 ...
+      const voksne = voksneEfterAlder(d);
+      return voksne[index] || null;
+    }
+    // Tal -> barn (matcher paa medlemsnummer hus-tal, ellers position i barn-listen)
+    const boern = (d.familiemedlemmer || []).filter(p => p.rolle === "barn");
+    // Foersoeg at matche eksplicit medlemsnummer hvis det findes paa personen
+    const eksplicit = (d.familiemedlemmer || []).find(p =>
+      String(p.medlemsnummer || p.nr || "").trim().toUpperCase() === (hus + "-" + del).toUpperCase());
+    if (eksplicit) return eksplicit;
+    const bIndex = Number(del) - 1;
+    return boern[bIndex] || null;
+  }
+
   async function logInd() {
-    const nr     = document.getElementById("nr").value.trim();
+    const nrRaa  = document.getElementById("nr").value.trim();
     const kode   = document.getElementById("kode").value.trim();
     const husk   = document.getElementById("huskMig").checked;
     const besked = document.getElementById("besked");
     const knap   = document.getElementById("logIndKnap");
 
-    if (!nr || !kode) {
+    if (!nrRaa || !kode) {
       besked.textContent = "Skriv både medlemsnummer og PIN-kode.";
       besked.className = "besked";
       return;
     }
+
+    // Del "8-B" op i husstand ("8") og person-del ("B").
+    const { hus, del } = delNummer(nrRaa);
+    const nr = hus; // husstandsnummeret bruges til opslag i kartoteket
 
     knap.disabled = true;
     besked.textContent = "Tjekker...";
@@ -306,15 +369,28 @@
       }
 
       // ---- Login lykkedes ----
-      // Gæster (996-999) og kort uden flere voksne logger direkte ind.
-      // Kort med flere voksne: vis "Hvem er du?"-valg, så rettigheden følger PERSONEN.
-      const voksne = (d.familiemedlemmer || []).filter(p => p.rolle !== "barn" && (p.fornavn || p.navn || "").trim());
-
-      // Husk medlemsnummer (aldrig PIN-koden)
+      // Husk medlemsnummer (hele det indtastede, fx "8-B" — aldrig PIN-koden)
       try {
-        if (husk) localStorage.setItem("ok_husk_nr", nr);
+        if (husk) localStorage.setItem("ok_husk_nr", nrRaa);
         else      localStorage.removeItem("ok_husk_nr");
       } catch(e) {}
+
+      // Er der tastet en person-del (bogstav/tal)? Saa er personen entydig.
+      if (del && !GAESTENUMRE.includes(nr)) {
+        const valgtPerson = findPerson(d, nr, del);
+        if (!valgtPerson) {
+          besked.textContent = "Personen \"" + nrRaa + "\" blev ikke fundet i husstanden. Tjek bogstav/nummer.";
+          besked.className = "besked";
+          knap.disabled = false;
+          return;
+        }
+        fuldfoerLogin(nr, d, valgtPerson, husk);
+        return;
+      }
+
+      // Intet bogstav tastet (bart "8"): som hidtil.
+      // Kort med flere voksne: vis "Hvem logger ind?".
+      const voksne = voksneEfterAlder(d);
 
       if (voksne.length >= 2 && !GAESTENUMRE.includes(nr)) {
         // Flere voksne -> lad personen vælge sig selv
@@ -360,12 +436,14 @@
     titel.style.cssText = "color:#f5d76e;font-size:1rem;margin-bottom:10px;letter-spacing:1px";
     boks.appendChild(titel);
 
-    voksne.forEach(p => {
+    // voksne er allerede sorteret aeldst-foerst, saa index 0 = A, 1 = B ...
+    voksne.forEach((p, i) => {
+      const bogstav = String.fromCharCode("A".charCodeAt(0) + i);
       const navn = personNavnAf(p);
       const b = document.createElement("button");
       b.className = "knap";
       b.style.cssText = "width:100%;margin-bottom:8px";
-      b.textContent = navn;
+      b.textContent = nr + "-" + bogstav + "  —  " + navn;
       b.onclick = function() {
         fuldfoerLogin(nr, d, p, husk);
       };
@@ -373,6 +451,16 @@
     });
 
     document.querySelector(".login-boks").appendChild(boks);
+  }
+
+  // ---- Find bogstavet (A/B/C...) for en valgt voksen ud fra alder ----
+  function bogstavForPerson(d, valgtPerson) {
+    if (!valgtPerson) return "";
+    if (valgtPerson.rolle === "barn") return ""; // boern bruger tal, ikke bogstav
+    const voksne = voksneEfterAlder(d);
+    const i = voksne.findIndex(p => p === valgtPerson
+      || (personNavnAf(p) === personNavnAf(valgtPerson) && foedselsTal(p) === foedselsTal(valgtPerson)));
+    return i >= 0 ? String.fromCharCode("A".charCodeAt(0) + i) : "";
   }
 
   function fuldfoerLogin(nr, d, valgtPerson, husk) {
@@ -383,31 +471,43 @@
     if (!navn) navn = "Medlem " + nr;
     const fornavn = fornavnAf(navn);
 
+    // Fuldt medlemsnummer med bogstav/tal, fx "8-B" eller "48-1".
+    let fuldtNr = nr;
+    if (valgtPerson) {
+      if (valgtPerson.rolle === "barn") {
+        // Barn: brug eksplicit medlemsnummer hvis sat, ellers position
+        const eksplicit = String(valgtPerson.medlemsnummer || valgtPerson.nr || "").trim();
+        fuldtNr = eksplicit || nr;
+      } else {
+        const bogstav = bogstavForPerson(d, valgtPerson);
+        fuldtNr = bogstav ? (nr + "-" + bogstav) : nr;
+      }
+    }
+
     // RETTIGHED: foerst personens egen, ellers kortets, ellers 'medlem'.
-    // Nr. 8 er altid admin (bagstopper).
     let rettighed = "medlem";
     if (valgtPerson && valgtPerson.rettighed) rettighed = String(valgtPerson.rettighed);
     else if (d.rettighed) rettighed = String(d.rettighed);
     rettighed = rettighed.trim().toLowerCase();
-    // Bagstopper: KUN Carsten (nr. 8) er altid admin — ikke andre voksne på nr. 8.
-    // Tjekker fornavnet på den valgte person, så fx Elisabeth IKKE bliver admin.
+    // Bagstopper: KUN Carsten (nr. 8) er altid admin — uanset om han er 8-A eller 8-B.
+    // Tjekker fornavnet paa den valgte person, saa fx Elisabeth IKKE bliver admin.
     if (ALTID_ADMIN.includes(nr) && fornavnAf(navn).toLowerCase() === "carsten") rettighed = "admin";
 
     try {
-      if (husk) localStorage.setItem("ok_husk_nr", nr);
+      if (husk) localStorage.setItem("ok_husk_nr", fuldtNr);
       else      localStorage.removeItem("ok_husk_nr");
     } catch(e) {}
 
-    // ---- HAANDTRYK: "Velkommen medlem 8 Carsten" ----
+    // ---- HAANDTRYK: "Velkommen medlem 8-B Carsten" ----
     besked.textContent = fornavn
-      ? ("Velkommen medlem " + nr + " " + fornavn)
-      : ("Velkommen medlem " + nr);
+      ? ("Velkommen medlem " + fuldtNr + " " + fornavn)
+      : ("Velkommen medlem " + fuldtNr);
     besked.className = "besked ok";
 
     const boks = document.getElementById("hvem-er-du");
     if (boks) boks.remove();
 
-    gemAdgang(rettighed, navn, nr);
+    gemAdgang(rettighed, navn, fuldtNr);
     videreTil("forside.html");
   }
 
@@ -500,3 +600,4 @@
 
 </body>
 </html>
+
