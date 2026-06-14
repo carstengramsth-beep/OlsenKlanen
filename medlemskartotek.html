@@ -126,6 +126,18 @@ body.kan-redigere #admin-bjaelke{display:flex}
 .kort.udvidet .klik-hint{opacity:0;pointer-events:none}
 .rediger-knap{background:var(--gron);color:var(--hvid);border:none;font-size:13px;font-weight:700;letter-spacing:.5px;padding:9px 20px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:background .2s,box-shadow .2s;display:none;flex-shrink:0;box-shadow:0 2px 8px rgba(45,80,22,.4)}
 .rediger-knap:hover{background:var(--gron-lys);box-shadow:0 4px 12px rgba(45,80,22,.5)}
+.bekraeft-boks{margin-top:.8rem;padding:14px;border-radius:6px}
+.bekraeft-spoerg{background:var(--guld-pale);border:1px solid var(--guld)}
+.bekraeft-bekraeftet{background:var(--gron-pale);border:1px solid var(--gron-lys);display:flex;align-items:center;gap:12px}
+.bekraeft-titel{font-weight:700;font-size:15px;color:var(--gron);margin-bottom:3px}
+.bekraeft-under{font-size:13px;color:var(--tekst-lys);margin-bottom:10px}
+.bekraeftet .bekraeft-under{margin-bottom:0}
+.bekraeft-ikon{width:34px;height:34px;border-radius:50%;background:var(--gron-lys);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0}
+.bekraeft-medlemmer{font-size:13px;color:var(--tekst);margin-bottom:10px;line-height:1.5}
+.bekraeft-email-label{display:block;font-size:12px;color:var(--tekst-lys);margin-bottom:4px;font-weight:600}
+.bekraeft-email-input{width:100%;padding:9px;border:1px solid var(--border);border-radius:4px;font-family:inherit;font-size:14px;margin-bottom:10px;background:#fff}
+.bekraeft-knap{background:var(--gron);color:#fff;border:none;padding:10px 18px;border-radius:4px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit}
+.bekraeft-knap:hover{background:var(--gron-lys)}
 body.kan-redigere .rediger-knap{display:inline-block}
 body.familie-session .rediger-knap.egen-rediger{display:inline-block}
  
@@ -755,6 +767,9 @@ function byggKort(m) {
   const emailHtml = (m.email || '').split('/').map(e => e.trim()).filter(Boolean)
     .map(e => `<a href="mailto:${e}">${e}</a>`).join('<br>');
  
+  // ── MEDLEMSKABS-BEKRÆFTELSE (kun husstandens eget kort + dataansvarlig/admin) ──
+  const bekraeftHtml = byggBekraeftBoks(m, erEgen, visRed);
+
   const el = document.createElement('div');
   el.className = 'kort' + (erEgen ? ' egen' : '');
   el.dataset.nr = m.nr;
@@ -782,6 +797,7 @@ function byggKort(m) {
     <div class="udvidet-sektion">
       <div class="familie-blok">${familieHtml}</div>
       ${begiHtml}
+      ${bekraeftHtml}
     </div>
     <div class="kort-fod">
       <span class="klik-hint">▾ Se familiemedlemmer</span>
@@ -792,6 +808,69 @@ function byggKort(m) {
   return el;
 }
  
+// ── Byg medlemskabs-bekræftelsesboks ──
+function byggBekraeftBoks(m, erEgen, visRed) {
+  // Vises kun på husstandens EGET kort, og kun for dataansvarlig/admin
+  if (!erEgen || !visRed) return '';
+
+  // Allerede bekræftet?
+  if (m.medlemskab_bekraeftet) {
+    const d = m.medlemskab_bekraeftet;
+    const dato = d.dato ? formatDato(d.dato) : '';
+    return `
+      <div class="bekraeft-boks bekraeftet">
+        <div class="bekraeft-ikon">✓</div>
+        <div>
+          <div class="bekraeft-titel">I er med i klanen</div>
+          <div class="bekraeft-under">Bekræftet ${dato}${d.email ? ' · ' + d.email : ''}</div>
+        </div>
+      </div>`;
+  }
+
+  // Ikke bekræftet endnu → vis boks med medlemmer + email-felt + knap
+  const navne = (m.familiemedlemmer || [])
+    .map(p => visPersonNavn(p)).filter(Boolean).join(', ');
+  const gemtEmail = (m.email || '').split('/')[0].trim();
+
+  return `
+    <div class="bekraeft-boks bekraeft-spoerg" data-nr="${m.nr}">
+      <div class="bekraeft-titel">🤝 Er I med i klanen?</div>
+      <div class="bekraeft-under">Bekræft jeres medlemskab på familiens vegne.</div>
+      <div class="bekraeft-medlemmer"><strong>Husstand nr. ${m.nr}:</strong> ${navne || 'ingen registreret'}</div>
+      <label class="bekraeft-email-label">Jeres e-mail (bekræft eller ret):</label>
+      <input type="email" class="bekraeft-email-input" id="bekraeft-email-${m.nr}" value="${gemtEmail}" placeholder="navn@mail.dk">
+      <button class="bekraeft-knap" data-nr="${m.nr}">✓ Bekræft medlemskab</button>
+    </div>`;
+}
+
+// ── Gem bekræftelsen ──
+async function bekraeftMedlemskab(nr) {
+  const m = data.find(x => x.nr === nr);
+  if (!m) return;
+  const input = document.getElementById('bekraeft-email-' + nr);
+  const email = (input ? input.value : '').trim();
+  if (!email || email.indexOf('@') === -1) {
+    alert('Skriv venligst en gyldig e-mail, før du bekræfter.');
+    return;
+  }
+  const idag = new Date().toISOString().slice(0,10);
+  const medlemmer = (m.familiemedlemmer || []).map(p => visPersonNavn(p)).filter(Boolean);
+
+  m.medlemskab_bekraeftet = { dato: idag, email: email, medlemmer: medlemmer, nr: nr };
+  // Opdater også husstandens email hvis den blev rettet
+  if (email && (m.email || '').split('/')[0].trim() !== email) {
+    m.email = email;
+  }
+  try {
+    await setDoc(doc(db, 'membres', nr), m);
+    alert('Tak! Jeres medlemskab er bekræftet. ✓');
+    renderGrid();
+  } catch(e) {
+    alert('Kunne ikke gemme bekræftelsen. Prøv igen.');
+    m.medlemskab_bekraeftet = null;
+  }
+}
+
 function byggPersonGruppe(personer, label, husstandsNr, boernStart, voksenBogstavKort) {
   if (!personer.length) return '';
   const sorteret = sorterAEldstOEverst(personer);
@@ -859,6 +938,16 @@ document.getElementById('grid').addEventListener('click', e => {
   if (e.target.closest('.rediger-knap')) {
     e.stopPropagation();
     aabneEditModal(e.target.closest('.rediger-knap').dataset.nr);
+    return;
+  }
+  if (e.target.closest('.bekraeft-knap')) {
+    e.stopPropagation();
+    bekraeftMedlemskab(e.target.closest('.bekraeft-knap').dataset.nr);
+    return;
+  }
+  // Klik inde i bekræft-boksen (fx email-feltet) må ikke folde kortet sammen
+  if (e.target.closest('.bekraeft-boks')) {
+    e.stopPropagation();
     return;
   }
   if (e.target.closest('a')) return;
@@ -1271,6 +1360,11 @@ async function gemData() {
     sidstRedigeret:   new Date().toISOString(),
     sidstRedigeretAf: auth.currentUser?.email || (familieSession ? `Medlem nr. ${familieSession.nr}` : 'ukendt')
   };
+
+  // Bevar medlemskabs-bekræftelsen hvis den allerede findes (må ikke slettes ved redigering)
+  if (tidl.medlemskab_bekraeftet) {
+    opdateret.medlemskab_bekraeftet = tidl.medlemskab_bekraeftet;
+  }
  
   editGemKnap.disabled = true;
   visStatus('gemmer', '⏳ Gemmer i database…');
