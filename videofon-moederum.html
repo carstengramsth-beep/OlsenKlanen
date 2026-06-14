@@ -38,6 +38,32 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 #video-overlay { display:none; position:fixed; inset:0; background:#0b0b0b; z-index:4000; }
 #jitsi-boks { position:absolute; inset:0; }
 .knap-laegpaa { position:absolute; top:14px; left:14px; z-index:4100; background:#b03030; color:#fff; border:none; border-radius:8px; padding:12px 20px; font-size:16px; font-weight:bold; cursor:pointer; font-family:inherit; }
+.knap-inviter { position:absolute; top:14px; left:170px; z-index:4100; background:#2d7a2d; color:#fff; border:none; border-radius:8px; padding:12px 20px; font-size:16px; font-weight:bold; cursor:pointer; font-family:inherit; }
+
+/* Invitér-medlem boks (popup) */
+.inv-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); align-items:center; justify-content:center; z-index:5000; padding:16px; }
+.inv-bg.vis { display:flex; }
+.inv-boks { background:#fff; padding:26px; border-radius:8px; max-width:460px; width:100%; max-height:80vh; display:flex; flex-direction:column; }
+.inv-boks h2 { color:#2d5016; margin-bottom:8px; font-size:20px; }
+.inv-boks p { color:#555; font-size:14px; margin-bottom:14px; }
+.inv-soeg { width:100%; padding:12px; border:2px solid #c4b896; border-radius:5px; font-family:inherit; font-size:15px; margin-bottom:12px; background:#fffdf6; }
+.inv-liste { overflow-y:auto; flex:1; border:1px solid #eee; border-radius:6px; }
+.inv-person { display:flex; align-items:center; gap:10px; padding:11px 12px; border-bottom:1px solid #f0ece0; cursor:pointer; }
+.inv-person:hover { background:#f5f1e8; }
+.inv-person:last-child { border-bottom:none; }
+.inv-person .nr { font-size:12px; color:#888; }
+.inv-luk { margin-top:14px; padding:12px; background:#fff; color:#888; border:1px solid #ccc; border-radius:5px; font-size:15px; cursor:pointer; font-family:inherit; }
+
+/* "Banker på" popup (indkommende invitation) */
+.bank-pop { display:none; position:fixed; bottom:30px; right:30px; background:#2d5016; color:#fff; padding:22px; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.3); z-index:6000; max-width:320px; animation:bankpuls 1.4s infinite; }
+.bank-pop.vis { display:block; }
+@keyframes bankpuls { 0%,100%{transform:scale(1);} 50%{transform:scale(1.03);} }
+.bank-pop h3 { margin-bottom:8px; font-size:18px; }
+.bank-pop p { font-size:14px; margin-bottom:14px; opacity:0.95; }
+.bank-pop .knaprum { display:flex; gap:10px; }
+.bank-pop button { padding:11px 18px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:inherit; font-size:15px; }
+.bank-kom { background:#c89e3c; color:#2d5016; flex:1; }
+.bank-afvis { background:#fff; color:#b03030; }
 </style>
 <script src="https://8x8.vc/vpaas-magic-cookie-8b6db568c63b497eb1c63b23154d8aad/external_api.js"></script>
 </head>
@@ -66,12 +92,36 @@ Her er tre møderum. Du kan se om et rum er ledigt eller optaget, og hvem der er
 <div id="video-overlay">
   <div id="jitsi-boks"></div>
   <button onclick="forladRum()" class="knap-laegpaa">📴 Forlad rum</button>
+  <button onclick="aabnInviter()" class="knap-inviter" id="inviter-knap">➕ Invitér medlem</button>
+</div>
+
+<!-- INVITÉR MEDLEM (popup) -->
+<div class="inv-bg" id="inv-bg">
+  <div class="inv-boks">
+    <h2>➕ Invitér et medlem</h2>
+    <p>Vælg hvem du vil invitere ind i rummet. De får en besked og kan vælge at komme ind.</p>
+    <input type="text" class="inv-soeg" id="inv-soeg" placeholder="Søg efter navn eller nummer..." oninput="filtrerMedlemmer()">
+    <div class="inv-liste" id="inv-liste"><p style="padding:14px; color:#888;">Henter medlemmer...</p></div>
+    <button class="inv-luk" onclick="lukInviter()">Luk</button>
+  </div>
+</div>
+
+<!-- "BANKER PÅ" (indkommende invitation) -->
+<div class="bank-pop" id="bank-pop">
+  <h3>🔔 Du er inviteret</h3>
+  <p id="bank-tekst">...</p>
+  <div class="knaprum">
+    <button class="bank-kom" onclick="komIndIRum()">✅ Kom ind</button>
+    <button class="bank-afvis" onclick="afvisInvitation()">Ikke nu</button>
+  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, set, onValue, onDisconnect, serverTimestamp, remove }
   from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getFirestore, collection, getDocs }
+  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -84,6 +134,7 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const fs = getFirestore(app);
 
 const APPID = "vpaas-magic-cookie-8b6db568c63b497eb1c63b23154d8aad";
 const MAKS_PR_RUM = 5;
@@ -256,6 +307,130 @@ window.addEventListener('beforeunload', function() {
     try { remove(ref(db, 'vmr_rum/' + window.aktivtRum + '/' + window.minNr)); } catch(e){}
   }
 });
+
+// ============================================================
+// TRIN 2a: INVITÉR MEDLEM + LUK-IND
+// ============================================================
+
+window.alleMedlemmer = []; // [{nr, navn}]
+
+// Byg fuldt navn fra fornavn/mellemnavn/efternavn (samme regel som kartoteket)
+function fuldtNavn(p) {
+  const dele = [p.fornavn, p.mellemnavn, p.efternavn].filter(Boolean);
+  if (dele.length) return dele.join(' ');
+  return p.navn || p.navne || ('Medlem ' + (p.nr || '?'));
+}
+
+// Hent medlemslisten fra Firestore (membres)
+async function hentMedlemmer() {
+  try {
+    const snap = await getDocs(collection(fs, 'membres'));
+    const liste = [];
+    snap.forEach(d => {
+      const p = d.data();
+      const nr = p.nr || d.id;
+      liste.push({ nr: String(nr), navn: fuldtNavn(p) });
+    });
+    // Sortér efter nummer
+    liste.sort((a,b) => (parseInt(a.nr)||0) - (parseInt(b.nr)||0));
+    window.alleMedlemmer = liste;
+  } catch(e) {
+    window.alleMedlemmer = [];
+  }
+}
+hentMedlemmer();
+
+// Åbn invitér-popup (kun muligt når man er i et rum)
+window.aabnInviter = function() {
+  if (!window.aktivtRum) { alert("Du skal være inde i et rum for at invitere."); return; }
+  document.getElementById('inv-bg').classList.add('vis');
+  document.getElementById('inv-soeg').value = '';
+  tegnMedlemmer('');
+};
+window.lukInviter = function() {
+  document.getElementById('inv-bg').classList.remove('vis');
+};
+window.filtrerMedlemmer = function() {
+  tegnMedlemmer(document.getElementById('inv-soeg').value);
+};
+
+function tegnMedlemmer(soeg) {
+  const liste = document.getElementById('inv-liste');
+  soeg = (soeg || '').toLowerCase().trim();
+  const personer = window.alleMedlemmer.filter(p => {
+    if (p.nr === window.minNr) return false; // ikke mig selv
+    if (!soeg) return true;
+    return p.navn.toLowerCase().includes(soeg) || p.nr.includes(soeg);
+  });
+  if (window.alleMedlemmer.length === 0) {
+    liste.innerHTML = '<p style="padding:14px; color:#888;">Kunne ikke hente medlemslisten.</p>';
+    return;
+  }
+  if (personer.length === 0) {
+    liste.innerHTML = '<p style="padding:14px; color:#888;">Ingen match.</p>';
+    return;
+  }
+  let html = '';
+  for (const p of personer) {
+    const sikkertNavn = p.navn.replace(/'/g, "\\'");
+    html += '<div class="inv-person" onclick="sendInvitation(\'' + p.nr + '\', \'' + sikkertNavn + '\')">';
+    html += '<span style="flex:1;">' + p.navn + '</span>';
+    html += '<span class="nr">nr. ' + p.nr + '</span>';
+    html += '</div>';
+  }
+  liste.innerHTML = html;
+}
+
+// Send en invitation til et medlem
+window.sendInvitation = function(tilNr, tilNavn) {
+  if (!window.aktivtRum) return;
+  set(ref(db, 'vmr_invitation/' + tilNr), {
+    fraNavn: window.minNavn,
+    fraNr: window.minNr,
+    rum: window.aktivtRum,
+    tid: Date.now()
+  });
+  // Invitationen udløber af sig selv efter 60 sek hvis ikke besvaret
+  setTimeout(() => {
+    remove(ref(db, 'vmr_invitation/' + tilNr));
+  }, 60000);
+  lukInviter();
+  alert(tilNavn + " er inviteret til rum " + window.aktivtRum + ".");
+};
+
+// LYT efter invitationer til MIG
+window.minInvitation = null;
+onValue(ref(db, 'vmr_invitation/' + window.minNr), (snap) => {
+  const inv = snap.val();
+  const pop = document.getElementById('bank-pop');
+  if (inv && inv.rum) {
+    window.minInvitation = inv;
+    document.getElementById('bank-tekst').textContent =
+      inv.fraNavn + " inviterer dig til Møderum " + inv.rum + ".";
+    pop.classList.add('vis');
+  } else {
+    window.minInvitation = null;
+    pop.classList.remove('vis');
+  }
+});
+
+// Tag imod invitationen og gå ind i rummet
+window.komIndIRum = function() {
+  if (!window.minInvitation) return;
+  const rum = window.minInvitation.rum;
+  // Fjern invitationen
+  remove(ref(db, 'vmr_invitation/' + window.minNr));
+  document.getElementById('bank-pop').classList.remove('vis');
+  window.minInvitation = null;
+  // Gå ind i rummet (samme funktion som "Gå ind"-knappen)
+  window.gaaIndIRum(rum);
+};
+
+window.afvisInvitation = function() {
+  remove(ref(db, 'vmr_invitation/' + window.minNr));
+  document.getElementById('bank-pop').classList.remove('vis');
+  window.minInvitation = null;
+};
 </script>
 
 </body>
