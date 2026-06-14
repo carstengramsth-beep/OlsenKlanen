@@ -194,14 +194,9 @@ try {
     </div>
  
     <div class="kalender-boks">
-      <h3>Kalender — Juni 2026</h3>
-      <div class="kal-grid">
+      <h3 id="kal-titel">Kalender</h3>
+      <div class="kal-grid" id="kal-grid">
         <div class="kal-head">Ma</div><div class="kal-head">Ti</div><div class="kal-head">On</div><div class="kal-head">To</div><div class="kal-head">Fr</div><div class="kal-head">Lø</div><div class="kal-head">Sø</div>
-        <div class="kal-dag">1</div><div class="kal-dag">2</div><div class="kal-dag">3</div><div class="kal-dag">4</div><div class="kal-dag">5</div><div class="kal-dag">6</div><div class="kal-dag">7</div>
-        <div class="kal-dag idag">8</div><div class="kal-dag">9</div><div class="kal-dag">10</div><div class="kal-dag">11</div><div class="kal-dag">12</div><div class="kal-dag">13</div><div class="kal-dag">14</div>
-        <div class="kal-dag">15</div><div class="kal-dag">16</div><div class="kal-dag">17</div><div class="kal-dag">18</div><div class="kal-dag">19</div><div class="kal-dag">20</div><div class="kal-dag">21</div>
-        <div class="kal-dag">22</div><div class="kal-dag">23</div><div class="kal-dag">24</div><div class="kal-dag">25</div><div class="kal-dag">26</div><div class="kal-dag">27</div><div class="kal-dag">28</div>
-        <div class="kal-dag">29</div><div class="kal-dag">30</div><div class="kal-dag tom"></div><div class="kal-dag tom"></div><div class="kal-dag tom"></div><div class="kal-dag tom"></div><div class="kal-dag tom"></div>
       </div>
     </div>
   </main>
@@ -534,6 +529,51 @@ fetch(CORS + DR_RSS)
   });
 </script>
  
+<script>
+// ── SELV-OPDATERENDE KALENDER ──
+// Bygger altid kalenderen ud fra dagens rigtige dato og fremhæver i dag.
+(function bygKalender(){
+  const MAANEDER = ["januar","februar","marts","april","maj","juni","juli",
+                    "august","september","oktober","november","december"];
+  const idag = new Date();
+  const aar = idag.getFullYear();
+  const maaned = idag.getMonth(); // 0-11
+  const dagIdag = idag.getDate();
+
+  const titel = document.getElementById('kal-titel');
+  const grid  = document.getElementById('kal-grid');
+  if (!grid) return;
+
+  // Stort forbogstav i månedsnavn
+  const mNavn = MAANEDER[maaned].charAt(0).toUpperCase() + MAANEDER[maaned].slice(1);
+  if (titel) titel.textContent = "Kalender — " + mNavn + " " + aar;
+
+  // Fjern gamle dage (behold de 7 ugedags-overskrifter)
+  grid.querySelectorAll('.kal-dag').forEach(el => el.remove());
+
+  // Hvilken ugedag er den 1.? (gør mandag = 0)
+  let foersteDag = new Date(aar, maaned, 1).getDay(); // 0=søndag
+  foersteDag = (foersteDag === 0) ? 6 : foersteDag - 1; // mandag-først
+
+  // Antal dage i måneden
+  const antalDage = new Date(aar, maaned + 1, 0).getDate();
+
+  let html = '';
+  // Tomme felter før den 1.
+  for (let i = 0; i < foersteDag; i++) html += '<div class="kal-dag tom"></div>';
+  // Selve dagene
+  for (let d = 1; d <= antalDage; d++) {
+    const erIdag = (d === dagIdag);
+    html += '<div class="kal-dag' + (erIdag ? ' idag' : '') + '">' + d + '</div>';
+  }
+  // Fyld resten af sidste uge med tomme felter
+  const ialt = foersteDag + antalDage;
+  const rest = (7 - (ialt % 7)) % 7;
+  for (let i = 0; i < rest; i++) html += '<div class="kal-dag tom"></div>';
+
+  grid.insertAdjacentHTML('beforeend', html);
+})();
+</script>
 </body>
 </html>
  
