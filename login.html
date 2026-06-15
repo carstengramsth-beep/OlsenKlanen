@@ -138,6 +138,19 @@
     color:#8a7d4a;
     line-height:1.5;
   }
+  /* NY: velkomst-/kontaktboks til familiemedlemmer uden adgang */
+  .ny-adresse {
+    margin-top:22px;
+    padding:16px;
+    border:1px solid #4a7a5a;
+    border-radius:6px;
+    background:rgba(255,255,255,0.04);
+    font-size:0.85rem;
+    color:#c9b96e;
+    line-height:1.6;
+  }
+  .ny-adresse strong { color:#f5d76e; }
+  .ny-adresse a { color:#f5d76e; text-decoration:underline; }
   .installer-knap {
     display:none;
     margin-top:20px;
@@ -191,16 +204,24 @@
   </button>
 
   <div class="hjaelp">
-    Log ind med dit medlemsnummer og din PIN-kode.<br>
-    Kender du ikke din kode? Spørg OlsenBanden.
+    Log ind med dit medlemsnummer og din PIN-kode.
+  </div>
+
+  <!-- NY: velkomst- og kontaktbesked til familiemedlemmer der mangler adgang -->
+  <div class="ny-adresse">
+    <strong>OlsenKlanen har fået ny hjemmeside!</strong><br>
+    Kender du ikke din kode, eller mangler du adgang? Kontakt Kurt eller Carsten og få dit medlemsnummer og din PIN-kode:<br><br>
+    Kurt Olsen — <a href="mailto:kurt@vormslev.dk">kurt@vormslev.dk</a> · tlf. 40 74 57 67<br>
+    Carsten Gram — <a href="mailto:cg@gallerieg.dk">cg@gallerieg.dk</a> · tlf. 20 73 25 25
   </div>
 </div>
 
 <script type="module">
   // ============================================================
   //  OlsenKlanen — SAMLET LOGIN  (medlemsnr. + PIN for ALLE)
-  //  Version v20.1 — 10. juni 2026
+  //  Version v20.2 — 15. juni 2026
   //  Erstatter det gamle email + fælleskode-system.
+  //  v20.2: Tilføjet velkomst-/kontaktbesked til nye medlemmer.
   // ============================================================
 
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -600,4 +621,3 @@
 
 </body>
 </html>
-
