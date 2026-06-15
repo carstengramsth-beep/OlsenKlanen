@@ -185,8 +185,26 @@ const HURTIGSVAR = [
   "Modtaget, tak 👍"
 ];
 
+/* ════════ HJÆLP: SAMME ALDERS-REGEL SOM LOGIN-SIDEN ════════ */
+/* Læser fødselsdato robust -> tal man kan sortere på (mindre = ældre). */
+function foedselsTal(p) {
+  const r = String((p && (p.foedselsdato || p.fodselsdato || p.foed || p.dato)) || "").trim();
+  if (!r) return 99999999;
+  let m = r.match(/^(\d{4})-(\d{2})-(\d{2})/);              // ISO: 1974-03-06
+  if (m) return Number(m[1] + m[2] + m[3]);
+  m = r.match(/^(\d{2})-(\d{2})-(\d{4})/);                  // dansk: 06-03-1974
+  if (m) return Number(m[3] + m[2] + m[1]);
+  m = r.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);      // 06.03.1974 / 06/03/1974
+  if (m) return Number(m[3] + m[2].padStart(2,"0") + m[1].padStart(2,"0"));
+  return 99999999;
+}
+
 /* ════════ MODTAGER-LISTE FRA KARTOTEKET ════════ */
-/* Bygger én linje pr. person: navn + kaldenummer (husstand eller barn-nr som 44-1). */
+/* Bygger én linje pr. person med PERSONLIGT nummer, så det matcher login:
+   - Voksne: husstand + bogstav efter alder (ældst = A, så B, C ...) -> "8-A", "8-B".
+   - Børn:   husstand + tal (1, 2, 3 ...) som hidtil               -> "55-1".
+   Dette er PRÆCIS samme regel som login-siden bruger, så brev og
+   postkasse altid får samme nummer. */
 let alleModtagere = [];   // {nr, navn, soegetekst}
 const valgte = new Map(); // nr -> navn
 
@@ -198,14 +216,30 @@ async function hentModtagere() {
       const husstandNr = d.id;
       const data = d.data();
       const medlemmer = data.familiemedlemmer || [];
-      let barnTael = 0;
-      medlemmer.forEach(p => {
+
+      // Voksne sorteret ældst-først, så bogstav A/B/C følger alder (som login).
+      const voksne = medlemmer
+        .filter(p => p.rolle !== "barn" && (p.fornavn || p.navn || "").trim())
+        .slice()
+        .sort((a, b) => foedselsTal(a) - foedselsTal(b));
+
+      voksne.forEach((p, i) => {
         const fornavn = (p.fornavn || (p.navn || "").trim().split(/\s+/)[0] || "").trim();
         const efternavn = (p.efternavn || "").trim();
         const fuldt = [fornavn, efternavn].filter(Boolean).join(" ") || ("Medlem " + husstandNr);
-        let nr;
-        if (p.rolle === "barn") { barnTael++; nr = husstandNr + "-" + barnTael; }
-        else { nr = husstandNr; }
+        const bogstav = String.fromCharCode("A".charCodeAt(0) + i);   // 0=A, 1=B ...
+        const nr = husstandNr + "-" + bogstav;                        // fx "8-B"
+        liste.push({ nr, navn: fuldt, soegetekst: (fuldt + " " + nr).toLowerCase() });
+      });
+
+      // Børn: tal-nummer som hidtil (virker allerede).
+      let barnTael = 0;
+      medlemmer.filter(p => p.rolle === "barn").forEach(p => {
+        barnTael++;
+        const fornavn = (p.fornavn || (p.navn || "").trim().split(/\s+/)[0] || "").trim();
+        const efternavn = (p.efternavn || "").trim();
+        const fuldt = [fornavn, efternavn].filter(Boolean).join(" ") || ("Medlem " + husstandNr);
+        const nr = husstandNr + "-" + barnTael;                       // fx "55-1"
         liste.push({ nr, navn: fuldt, soegetekst: (fuldt + " " + nr).toLowerCase() });
       });
     });
@@ -440,3 +474,4 @@ lytSendt();
 
 </body>
 </html>
+
