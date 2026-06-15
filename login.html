@@ -219,9 +219,11 @@
 <script type="module">
   // ============================================================
   //  OlsenKlanen — SAMLET LOGIN  (medlemsnr. + PIN for ALLE)
-  //  Version v20.2 — 15. juni 2026
+  //  Version v20.3 — 15. juni 2026
   //  Erstatter det gamle email + fælleskode-system.
   //  v20.2: Tilføjet velkomst-/kontaktbesked til nye medlemmer.
+  //  v20.3: RETTELSE — barn gemmes nu med fuldt nummer (fx "55-1"),
+  //         ikke bare husstanden ("55"). Så post lander rigtigt.
   // ============================================================
 
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -405,7 +407,8 @@
           knap.disabled = false;
           return;
         }
-        fuldfoerLogin(nr, d, valgtPerson, husk);
+        // Send den tastede del med, saa barnets tal (fx "1") bevares -> "55-1".
+        fuldfoerLogin(nr, d, valgtPerson, husk, del);
         return;
       }
 
@@ -422,7 +425,7 @@
 
       // Kun én voksen (eller gæst): find navn + rettighed direkte
       let valgtPerson = voksne.length === 1 ? voksne[0] : null;
-      fuldfoerLogin(nr, d, valgtPerson, husk);
+      fuldfoerLogin(nr, d, valgtPerson, husk, "");
 
     } catch(err) {
       console.log("Login-fejl:", err);
@@ -466,7 +469,8 @@
       b.style.cssText = "width:100%;margin-bottom:8px";
       b.textContent = nr + "-" + bogstav + "  —  " + navn;
       b.onclick = function() {
-        fuldfoerLogin(nr, d, p, husk);
+        // Voksen valgt via knap: send bogstavet med som del.
+        fuldfoerLogin(nr, d, p, husk, bogstav);
       };
       boks.appendChild(b);
     });
@@ -484,7 +488,9 @@
     return i >= 0 ? String.fromCharCode("A".charCodeAt(0) + i) : "";
   }
 
-  function fuldfoerLogin(nr, d, valgtPerson, husk) {
+  // tastetDel = det bogstav/tal personen tastede (fx "1" for barn, "B" for voksen).
+  // Den bruges saa barnets tal bevares hele vejen og gemmes som "55-1".
+  function fuldfoerLogin(nr, d, valgtPerson, husk, tastetDel) {
     const besked = document.getElementById("besked");
 
     // Navn: fra valgt person, ellers kortets 'navne'
@@ -492,13 +498,24 @@
     if (!navn) navn = "Medlem " + nr;
     const fornavn = fornavnAf(navn);
 
-    // Fuldt medlemsnummer med bogstav/tal, fx "8-B" eller "48-1".
+    // Fuldt medlemsnummer med bogstav/tal, fx "8-B" eller "55-1".
     let fuldtNr = nr;
     if (valgtPerson) {
       if (valgtPerson.rolle === "barn") {
-        // Barn: brug eksplicit medlemsnummer hvis sat, ellers position
+        // BARN: gem fuldt nummer.
+        // 1) eksplicit medlemsnummer hvis sat i kartoteket
+        // 2) ellers husstand + det tal barnet tastede (fx "55" + "1" = "55-1")
+        // 3) ellers (intet tal tastet) barnets position i barn-listen
         const eksplicit = String(valgtPerson.medlemsnummer || valgtPerson.nr || "").trim();
-        fuldtNr = eksplicit || nr;
+        if (eksplicit) {
+          fuldtNr = eksplicit;
+        } else if (tastetDel && /^\d+$/.test(tastetDel)) {
+          fuldtNr = nr + "-" + tastetDel;
+        } else {
+          const boern = (d.familiemedlemmer || []).filter(p => p.rolle === "barn");
+          const pos = boern.indexOf(valgtPerson);
+          fuldtNr = pos >= 0 ? (nr + "-" + (pos + 1)) : nr;
+        }
       } else {
         const bogstav = bogstavForPerson(d, valgtPerson);
         fuldtNr = bogstav ? (nr + "-" + bogstav) : nr;
