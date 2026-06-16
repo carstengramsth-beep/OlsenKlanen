@@ -363,6 +363,12 @@ function lytIndbakke(){
 function tegnIndbakke(){
   const el = document.getElementById("indbakke-liste");
   if (!indbakkeData.length) { el.innerHTML = '<div class="tom">Din indbakke er tom.</div>'; return; }
+  // Marker automatisk alle ulæste som set, så afsenderen får kvittering uden knap-tryk.
+  indbakkeData.forEach(m => {
+    if (!(m.set_af||[]).includes(MIT_NR)) {
+      updateDoc(doc(db, "olsenpost", m.id), { set_af: arrayUnion(MIT_NR) }).catch(()=>{});
+    }
+  });
   el.innerHTML = indbakkeData.map(m => {
     const ulaest = !(m.set_af||[]).includes(MIT_NR);
     const fdag = m.type === "fodselsdag";
@@ -374,7 +380,6 @@ function tegnIndbakke(){
           <span class="besked-tid">${tidTekst(m.sendt)}</span>
         </div>
         <div class="besked-tekst">${escHtml(m.tekst)}</div>
-        ${ulaest ? `<button class="knap lille" onclick="markerSet('${m.id}')">✓ Marker som set</button>` : ''}
         ${!ulaest && !svarTaget ? svarOmraade(m.id) : ''}
         ${svarTaget ? `<div class="besked-set set">✓ Du har svaret afsenderen.</div>` : ''}
       </div>`;
