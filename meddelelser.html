@@ -326,6 +326,7 @@ window.sendBesked = async function(){
       tekst: tekst,
       type: "besked",
       sendt: serverTimestamp(),
+      sendt_lokal: Date.now(),  // lokal tid som backup til sortering
       set_af: [],               // numre der har åbnet beskeden
       svar: []                  // svar tilbage til afsender
     });
@@ -370,7 +371,11 @@ function lytIndbakke(){
   const qy = query(collection(db, "olsenpost"), where("til", "array-contains", MIT_NR));
   onSnapshot(qy, snap => {
     indbakkeData = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-    indbakkeData.sort((a,b) => (b.sendt?.seconds||0) - (a.sendt?.seconds||0));
+    indbakkeData.sort((a,b) => {
+      const ta = (a.sendt?.seconds ? a.sendt.seconds*1000 : 0) || a.sendt_lokal || 0;
+      const tb = (b.sendt?.seconds ? b.sendt.seconds*1000 : 0) || b.sendt_lokal || 0;
+      return tb - ta;
+    });
     const nye = indbakkeData.filter(m => !(m.set_af||[]).includes(MIT_NR)).length;
     const badge = document.getElementById("badge-ny");
     if (nye > 0) { badge.style.display = "inline-block"; badge.textContent = nye; }
@@ -454,7 +459,11 @@ function lytSendt(){
   const qy = query(collection(db, "olsenpost"), where("fra_nr", "==", MIT_NR));
   onSnapshot(qy, snap => {
     sendtData = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-    sendtData.sort((a,b) => (b.sendt?.seconds||0) - (a.sendt?.seconds||0));
+    sendtData.sort((a,b) => {
+      const ta = (a.sendt?.seconds ? a.sendt.seconds*1000 : 0) || a.sendt_lokal || 0;
+      const tb = (b.sendt?.seconds ? b.sendt.seconds*1000 : 0) || b.sendt_lokal || 0;
+      return tb - ta;
+    });
     if (document.getElementById("omr-sendt").style.display !== "none") tegnSendt();
   }, e => console.log("Sendt-fejl:", e));
 }
