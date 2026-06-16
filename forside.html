@@ -124,6 +124,17 @@ try {
   </div>
 </div>
  
+<!-- POST-VARSEL — vises kun når der er ulæst OlsenPost -->
+<a href="meddelelser.html" id="post-varsel" style="display:none; text-decoration:none;">
+  <div style="max-width:1400px; margin:14px auto 0; padding:0 20px;">
+    <div style="background:#fff8e1; border:2px solid #c89e3c; border-left:8px solid #c89e3c; border-radius:8px; padding:14px 18px; display:flex; align-items:center; gap:14px; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+      <span style="font-size:30px;">📬</span>
+      <span id="post-varsel-tekst" style="font-size:17px; color:#5a4a1f; font-weight:bold;"></span>
+      <span style="margin-left:auto; font-size:14px; color:#8a7a3f; font-style:italic;">Klik for at læse →</span>
+    </div>
+  </div>
+</a>
+ 
 <div class="layout">
  
   <aside>
@@ -262,7 +273,7 @@ try {
  
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, query, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, query, onSnapshot, getDocs, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
  
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -446,6 +457,46 @@ let foedselsdagsTekst = "";
   // Gør teksten tilgængelig globalt for nyhedsbåndet
   window.OLSEN_FOEDSELSDAG = foedselsdagsTekst;
   if (typeof window.byggBaand === 'function') window.byggBaand();
+})();
+
+/* ════════ OLSENPOST — varsel om ulæst post ════════ */
+(function(){
+  const MIT_NR = sessionStorage.getItem("ok_nr") || localStorage.getItem("ok_nr") || "";
+  if (!MIT_NR) return;
+
+  // Kort brevkasse-lyd (lille bip), spilles når der ER ny post ved indlæsning
+  function spilLyd(){
+    try {
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.type = "sine"; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.25, ac.currentTime + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.45);
+      o.start(); o.stop(ac.currentTime + 0.5);
+    } catch(e){}
+  }
+
+  let harSpillet = false;
+  const qy = query(collection(db, "olsenpost"), where("til", "array-contains", MIT_NR));
+  onSnapshot(qy, snap => {
+    const beskeder = snap.docs.map(d => d.data());
+    const ulaeste = beskeder.filter(m => !(m.set_af||[]).includes(MIT_NR));
+    const boks = document.getElementById("post-varsel");
+    const tekst = document.getElementById("post-varsel-tekst");
+    if (ulaeste.length > 0) {
+      const afsendere = [...new Set(ulaeste.map(m => m.fra_navn).filter(Boolean))];
+      let besk;
+      if (ulaeste.length === 1) besk = "Du har 1 ny besked i OlsenPost fra " + (afsendere[0]||"et medlem");
+      else besk = "Du har " + ulaeste.length + " nye beskeder i OlsenPost fra " + afsendere.join(", ");
+      tekst.textContent = besk;
+      boks.style.display = "block";
+      if (!harSpillet) { spilLyd(); harSpillet = true; }
+    } else {
+      boks.style.display = "none";
+    }
+  }, e => console.log("Post-varsel-fejl:", e));
 })();
 </script>
  
