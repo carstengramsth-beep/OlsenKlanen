@@ -71,7 +71,7 @@ function start(){
     </a>`;
   document.body.appendChild(wrap);
 
-  const app = initializeApp(firebaseConfig);
+  const app = initializeApp(firebaseConfig, "okPostVarsel");
   const db  = getFirestore(app);
 
   let antalUlaeste = 0;
