@@ -30,12 +30,12 @@ function start(){
   const css = document.createElement("style");
   css.textContent = `
     #ok-postvarsel {
-      position: fixed; top: -120px; left: 0; right: 0; z-index: 9999;
-      transition: top 0.5s ease;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 2147483647;
+      transform: translateY(-140px); transition: transform 0.5s ease;
       display: flex; justify-content: center; pointer-events: none;
       font-family: Georgia, 'Times New Roman', serif;
     }
-    #ok-postvarsel.frem { top: 0; }
+    #ok-postvarsel.frem { transform: translateY(0); }
     #ok-postvarsel .indhold {
       pointer-events: auto;
       margin: 12px 20px; max-width: 1100px; width: 100%;
