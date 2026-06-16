@@ -773,5 +773,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay=>{overlay.addEventLi
 function fejlTekst(kode){return({'auth/user-not-found':'Denne email er ikke registreret.','auth/wrong-password':'Forkert adgangskode.','auth/invalid-credential':'Forkert email eller adgangskode.','auth/invalid-email':'Email-adressen ser ikke rigtig ud.','auth/too-many-requests':'For mange forsøg — prøv igen om lidt.','auth/user-disabled':'Denne bruger er deaktiveret.',}[kode]||'Der opstod en fejl. Prøv igen.');}
 function visLoginBesked(type,tekst){const el=document.getElementById('login-besked');el.textContent=tekst;el.className='login-besked '+type+' vis';}
 </script>
+<script type="module" src="post-varsel.js"></script>
 </body>
 </html>
+
