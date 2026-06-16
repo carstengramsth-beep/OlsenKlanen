@@ -346,6 +346,17 @@ function tidTekst(ts){
   return d.toLocaleDateString("da-DK", {day:"numeric", month:"short"}) + " " + kl;
 }
 
+/* Tidspunkt fra et almindeligt tal (Date.now) — bruges til Set og svar */
+function tidTal(ms){
+  if (!ms) return "";
+  const d = new Date(ms);
+  const nu = new Date();
+  const samme = d.toDateString() === nu.toDateString();
+  const kl = d.toLocaleTimeString("da-DK", {hour:"2-digit", minute:"2-digit"});
+  if (samme) return "i dag " + kl;
+  return d.toLocaleDateString("da-DK", {day:"numeric", month:"short"}) + " " + kl;
+}
+
 let indbakkeData = [];
 function lytIndbakke(){
   const qy = query(collection(db, "olsenpost"), where("til", "array-contains", MIT_NR));
@@ -366,7 +377,9 @@ function tegnIndbakke(){
   // Marker automatisk alle ulæste som set, så afsenderen får kvittering uden knap-tryk.
   indbakkeData.forEach(m => {
     if (!(m.set_af||[]).includes(MIT_NR)) {
-      updateDoc(doc(db, "olsenpost", m.id), { set_af: arrayUnion(MIT_NR) }).catch(()=>{});
+      const setTid = Object.assign({}, m.set_tid || {});
+      setTid[MIT_NR] = Date.now();
+      updateDoc(doc(db, "olsenpost", m.id), { set_af: arrayUnion(MIT_NR), set_tid: setTid }).catch(()=>{});
     }
   });
   el.innerHTML = indbakkeData.map(m => {
@@ -444,10 +457,11 @@ function tegnSendt(){
     const linjer = til.map((nr,i) => {
       const navn = (m.til_navne && m.til_navne[i]) ? m.til_navne[i] : ("nr. " + nr);
       const set = setAf.includes(nr);
-      return `<div class="besked-set ${set?'set':''}">${set?'✓ Set':'• Ikke set endnu'} — ${navn} (nr. ${nr})</div>`;
+      const setKl = (m.set_tid && m.set_tid[nr]) ? " " + tidTal(m.set_tid[nr]) : "";
+      return `<div class="besked-set ${set?'set':''}">${set?'✓ Set'+setKl:'• Ikke set endnu'} — ${navn} (nr. ${nr})</div>`;
     }).join("");
     const svar = (m.svar||[]).map(s =>
-      `<div class="besked-set set">↩ ${s.fra_navn}: ${escHtml(s.tekst)}</div>`).join("");
+      `<div class="besked-set set">↩ ${s.fra_navn}: ${escHtml(s.tekst)}${s.tid?'  <span style="color:#999;font-style:italic">'+tidTal(s.tid)+'</span>':''}</div>`).join("");
     return `
       <div class="besked">
         <div class="besked-top">
