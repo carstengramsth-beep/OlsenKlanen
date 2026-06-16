@@ -23,17 +23,23 @@ const firebaseConfig = {
 const PAA_OLSENPOST = location.pathname.toLowerCase().indexOf("meddelelser") !== -1;
 
 const MIT_NR = sessionStorage.getItem("ok_nr") || localStorage.getItem("ok_nr") || "";
-if (MIT_NR && !PAA_OLSENPOST) start();
+if (MIT_NR && !PAA_OLSENPOST) {
+  if (document.readyState === "loading")
+    document.addEventListener("DOMContentLoaded", () => setTimeout(start, 800));
+  else
+    setTimeout(start, 800);
+}
 
 function start(){
   /* ── Stil til linjen ── */
   const css = document.createElement("style");
   css.textContent = `
     #ok-postvarsel {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 2147483647;
+      position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important;
+      z-index: 2147483647 !important;
       transform: translateY(-140px); transition: transform 0.5s ease;
-      display: flex; justify-content: center; pointer-events: none;
-      font-family: Georgia, 'Times New Roman', serif;
+      display: flex !important; justify-content: center !important; pointer-events: none;
+      font-family: Georgia, 'Times New Roman', serif !important; margin: 0 !important;
     }
     #ok-postvarsel.frem { transform: translateY(0); }
     #ok-postvarsel .indhold {
@@ -89,6 +95,7 @@ function start(){
   }
 
   function visEngang(){
+    if (!document.body.contains(wrap)) document.body.appendChild(wrap);
     document.getElementById("ok-pv-tekst").textContent = byggTekst();
     wrap.classList.add("frem", "blink");
     // Stå fremme i 6 sekunder, glид så væk igen
