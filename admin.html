@@ -635,7 +635,26 @@ const firebaseConfig = {
 };
 
 const app=initializeApp(firebaseConfig);const auth=getAuth(app);const db=getFirestore(app);const stor=getStorage(app);const rtdb=getDatabase(app);
-onAuthStateChanged(auth,user=>{if(typeof window.haandterAuth==='function')window.haandterAuth(user);});
+// --- ENKELT LOGIN: er man allerede logget ind som admin via hoveddoeren? ---
+function hoveddoerAdmin(){
+  try{
+    const niveau=(sessionStorage.getItem('ok_niveau')||localStorage.getItem('ok_niveau')||'').trim().toLowerCase();
+    if(niveau!=='admin') return null;
+    const navn=(sessionStorage.getItem('ok_navn')||localStorage.getItem('ok_navn')||'Admin').trim();
+    const nr=(sessionStorage.getItem('ok_nr')||localStorage.getItem('ok_nr')||'').trim();
+    // Byg en e-mail-noegle saa resten af panelet (presence, kort) virker som foer.
+    const email=(navn.split(/\s+/)[0]||'admin').toLowerCase().replace(/[^a-z0-9]/g,'')+'@olsenklanen.lokal';
+    return { email, displayName: navn + (nr?(' ('+nr+')'):'') , _hoveddoer:true };
+  }catch(e){ return null; }
+}
+const _hd=hoveddoerAdmin();
+if(_hd){
+  // Logget ind som admin ved hoveddoeren -> spring email-login over.
+  window.addEventListener('DOMContentLoaded',()=>{ aktivRolle='admin'; aktivBruger=_hd; opsætAdminPanel(_hd); });
+} else {
+  // Ellers: almindeligt email-login som foer.
+  onAuthStateChanged(auth,user=>{if(typeof window.haandterAuth==='function')window.haandterAuth(user);});
+}
 window.fb={
   logInd:(e,k)=>signInWithEmailAndPassword(auth,e,k),
   logUd:()=>signOut(auth),
@@ -690,7 +709,7 @@ function opsætAdminPanel(user){const email=user.email.toLowerCase();const initi
 async function indlaesAltData(){await Promise.allSettled([indlaesNyheder(),indlaesBegivenheder(),indlaesGodkendelser(),indlaesBilleder(),indlaesUdviklingslog(),aktivRolle==='admin'?hentLog():Promise.resolve()]);}
 function visLoginSide(){document.getElementById('admin-side').style.display='none';document.getElementById('login-side').style.display='flex';aktivBruger=null;aktivRolle=null;}
 async function logInd(){const email=document.getElementById('login-email').value.trim();const kode=document.getElementById('login-kode').value;if(!email||!kode){visLoginBesked('fejl','Udfyld email og adgangskode');return;}const knap=document.getElementById('login-knap');knap.disabled=true;knap.classList.add('loading');knap.textContent='';try{await window.fb.logInd(email,kode);}catch(e){visLoginBesked('fejl',fejlTekst(e.code));knap.disabled=false;knap.classList.remove('loading');knap.textContent='Log ind';}}
-function logUd(){if(aktivBruger){window.fb.fjernPresence(aktivBruger.email);window.fb.saetDnd(emailNoegle(aktivBruger.email),false);}dndAktiv=false;window.fb.logUd();}
+function logUd(){if(aktivBruger){window.fb.fjernPresence(aktivBruger.email);window.fb.saetDnd(emailNoegle(aktivBruger.email),false);}dndAktiv=false;if(aktivBruger&&aktivBruger._hoveddoer){window.location.href='forside.html';return;}window.fb.logUd();}
 function startPresence(email,navn){window.fb.opsaetPresence(email,navn);window.fb.lytPresence(opdaterOnlinePrikker);}
 const ALLE_BRUGERE=[{email:'cg@gallerieg.dk',navn:'Carsten Gram',rolle:'Administrator'},{email:'kurt@vormslev.dk',navn:'Kurt Vormslev Olsen',rolle:'Redaktør'},{email:'safi@dr.dk',navn:'Sanne Gram Fadel',rolle:'Redaktør'},{email:'tvo@ishoejby.dk',navn:'Tommy Vormslev Olsen',rolle:'Redaktør'},{email:'kld@inmobia.com',navn:'Karin Lund',rolle:'Redaktør'},];
 let alleOnline=new Set();let alleDnd={};let dndAktiv=false;let dndUnsub=null;
