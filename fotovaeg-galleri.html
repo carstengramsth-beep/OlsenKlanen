@@ -143,6 +143,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var
     <div class="titel">Fotovæggen · <em id="rum-aar"></em></div>
     <div style="display:flex;gap:.5rem;align-items:center">
       <button class="ud-knap" id="musik-knap" onclick="skiftMusik()" style="background:#3a6320;color:#fff">🔊 Musik til</button>
+      <select id="musik-vaelger" onchange="vaelgSang(this.value)" title="Vælg melodi" style="background:#fff;color:#2d5016;border:none;padding:.5rem .6rem;border-radius:8px;font-family:inherit;font-weight:600;font-size:13px;max-width:200px;cursor:pointer"></select>
       <a href="aarenes-billeder.html" class="ud-knap" style="background:#4a7c2a;color:#fff;text-decoration:none">📷 Læg billeder op</a>
       <button class="ud-knap" onclick="gaaUd()">🚪 Gå ud</button>
     </div>
@@ -354,28 +355,55 @@ let musikTaendt = false;
 baggrundsMusik.addEventListener('ended', ()=>{
   if(musikListe.length===0) return;
   musikIndex = (musikIndex+1) % musikListe.length;
-  baggrundsMusik.src = musikListe[musikIndex];
+  baggrundsMusik.src = musikListe[musikIndex].url;
   baggrundsMusik.play().catch(()=>{});
+  opdaterVaelger();
 });
 
 async function hentMusik(){
   try{
     const mappe = ref(storage, 'musik/');
     const res = await listAll(mappe);
-    const urls = await Promise.all(res.items.map(it=>getDownloadURL(it)));
+    const sange = await Promise.all(res.items.map(async it=>{
+      const url = await getDownloadURL(it);
+      // Pænt navn: filnavn uden mappe og uden endelse, _ bliver mellemrum
+      const navn = it.name.replace(/\.[^.]+$/,'').replace(/_/g,' ');
+      return { url, navn };
+    }));
     // bland så det ikke altid er samme sang først
-    urls.sort(()=>Math.random()-0.5);
-    musikListe = urls;
+    sange.sort(()=>Math.random()-0.5);
+    musikListe = sange;
+    bygMusikVaelger();
   }catch(e){ musikListe = []; }
 }
+
+function bygMusikVaelger(){
+  const sel = document.getElementById('musik-vaelger');
+  if(!sel) return;
+  sel.innerHTML = musikListe.map((s,i)=>`<option value="${i}">${s.navn}</option>`).join('');
+}
+
+function opdaterVaelger(){
+  const sel = document.getElementById('musik-vaelger');
+  if(sel) sel.value = musikIndex;
+}
+
+window.vaelgSang = function(i){
+  musikIndex = parseInt(i,10) || 0;
+  baggrundsMusik.src = musikListe[musikIndex].url;
+  baggrundsMusik.play().then(()=>{ musikTaendt=true; opdaterMusikKnap(); }).catch(()=>{});
+  musikTaendt = true;
+  opdaterMusikKnap();
+};
 
 function startMusik(){
   if(musikListe.length===0) return;
   musikIndex = 0;
-  baggrundsMusik.src = musikListe[0];
+  baggrundsMusik.src = musikListe[0].url;
   baggrundsMusik.play().then(()=>{
     musikTaendt = true;
     opdaterMusikKnap();
+    opdaterVaelger();
   }).catch(()=>{ /* browseren blokerede auto-afspilning — knappen tænder den */ });
 }
 
@@ -385,7 +413,7 @@ window.skiftMusik = function(){
     musikTaendt = false;
   }else{
     if(!baggrundsMusik.src && musikListe.length>0){
-      baggrundsMusik.src = musikListe[0];
+      baggrundsMusik.src = musikListe[musikIndex].url;
     }
     baggrundsMusik.play().then(()=>{ musikTaendt=true; opdaterMusikKnap(); }).catch(()=>{});
     musikTaendt = true;
