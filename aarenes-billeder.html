@@ -545,26 +545,30 @@ window.udfoerFlyt = async function(e){
   // Hvis intet ændres (samme år OG samme ramme) — gør ingenting
   if(nyAar === valgtAar && nyGid === b.gruppe){ document.getElementById('lb-status').textContent='Billedet er der allerede.'; return; }
   const status = document.getElementById('lb-status');
-  status.textContent = 'Flytter…';
+  status.style.fontSize = '15px'; status.style.color = '#ffd27f';
+  status.textContent = 'Trin 1: henter fil…';
   try{
     // Hent filen via Firebase SDK (undgår CORS-problem på Mac/Safari)
     let blob;
     try{
       blob = await getBlob(ref(storage, b.sti));
+      status.textContent = 'Trin 2: fil hentet (getBlob). Uploader…';
     }catch(e1){
-      // Reserveløsning hvis getBlob ikke kan
+      status.textContent = 'getBlob fejlede ('+(e1.code||e1.message)+'), prøver fetch…';
       const svar = await fetch(b.url);
       blob = await svar.blob();
+      status.textContent = 'Trin 2: fil hentet (fetch). Uploader…';
     }
     const gammeltNavn = b.sti.split('/').pop();
     const nySti = ref(storage, `fotovaeg/${nyAar}/${nyGid}/${gammeltNavn}`);
     await uploadBytes(nySti, blob, { customMetadata:{ tekst:b.tekst||'', navn:b.navn||'', uploaderNr:b.uploaderNr||'' } });
+    status.textContent = 'Trin 3: uploadet. Sletter gammel…';
     await deleteObject(ref(storage, b.sti));
     document.getElementById('lightbox').classList.remove('vis');
     aabentBillede = null;
     await visValg();
   }catch(err){
-    status.textContent = 'Kunne ikke flytte: ' + (err.message||err);
+    status.textContent = 'FEJL: ' + (err.code||'') + ' ' + (err.message||err);
   }
 };
 
