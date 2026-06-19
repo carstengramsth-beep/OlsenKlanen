@@ -207,6 +207,18 @@
     Log ind med dit medlemsnummer og din PIN-kode.
   </div>
 
+  <!-- Musikafspiller (offentlig - kræver ikke login) -->
+  <div id="musik-boks" style="margin-top:1.2rem;padding:.9rem;background:rgba(45,80,22,.06);border-radius:12px;display:none">
+    <div style="font-size:13px;color:#2d5016;font-weight:600;margin-bottom:.5rem">🎵 Lyt til OlsenKlanens sange</div>
+    <div style="display:flex;gap:.5rem;align-items:center;justify-content:center;flex-wrap:wrap">
+      <button type="button" id="login-musik-knap" onclick="loginSkiftMusik()" style="background:#3a6320;color:#fff;border:none;padding:.5rem .8rem;border-radius:8px;font-family:inherit;font-weight:600;cursor:pointer">🔊 Afspil</button>
+      <select id="login-musik-vaelger" onchange="loginVaelgSang(this.value)" style="background:#fff;color:#2d5016;border:1px solid #cfdcc2;padding:.5rem .6rem;border-radius:8px;font-family:inherit;font-weight:600;font-size:13px;max-width:180px;cursor:pointer"></select>
+    </div>
+    <div style="font-size:11px;color:#6b7d5a;margin-top:.6rem;line-height:1.5;font-style:italic">
+      Tekster af Birthe · Musik kreeret af René Gram<br>Venligst udlånt af familien
+    </div>
+  </div>
+
   <!-- NY: velkomst- og kontaktbesked til familiemedlemmer der mangler adgang -->
   <div class="ny-adresse">
     <strong>OlsenKlanen har fået ny hjemmeside!</strong><br>
@@ -228,6 +240,7 @@
 
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getStorage, ref, listAll, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -239,6 +252,80 @@
   };
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const storage = getStorage(app);
+
+  // ---- MUSIKAFSPILLER (offentlig, kraever ikke login) ----
+  const loginMusik = new Audio();
+  loginMusik.preload = "none";
+  let loginMusikListe = [];
+  let loginMusikIndex = 0;
+  let loginMusikTaendt = false;
+  let loginAutoProevet = false;
+
+  async function loginHentMusik(){
+    try{
+      const res = await listAll(ref(storage, 'musik/'));
+      const sange = await Promise.all(res.items.map(async it=>{
+        const url = await getDownloadURL(it);
+        const navn = it.name.replace(/\.[^.]+$/,'').replace(/_/g,' ');
+        return { url, navn };
+      }));
+      sange.sort(()=>Math.random()-0.5);
+      loginMusikListe = sange;
+      if(sange.length>0){
+        const sel = document.getElementById('login-musik-vaelger');
+        sel.innerHTML = sange.map((s,i)=>`<option value="${i}">${s.navn}</option>`).join('');
+        document.getElementById('musik-boks').style.display = 'block';
+        loginMusik.src = sange[0].url;
+        // Proev auto-afspilning (browseren blokerer ofte foer foerste klik)
+        loginMusik.play().then(()=>{ loginMusikTaendt=true; loginOpdaterKnap(); }).catch(()=>{});
+      }
+    }catch(e){ /* musik ikke offentlig endnu - boksen forbliver skjult */ }
+  }
+
+  function loginOpdaterKnap(){
+    const k = document.getElementById('login-musik-knap');
+    if(k) k.textContent = loginMusikTaendt ? '🔇 Stop' : '🔊 Afspil';
+  }
+
+  window.loginSkiftMusik = function(){
+    if(loginMusikListe.length===0) return;
+    if(loginMusikTaendt){
+      loginMusik.pause(); loginMusikTaendt=false; loginOpdaterKnap();
+    }else{
+      if(!loginMusik.src) loginMusik.src = loginMusikListe[loginMusikIndex].url;
+      loginMusik.play().then(()=>{ loginMusikTaendt=true; loginOpdaterKnap(); }).catch(()=>{});
+    }
+  };
+
+  window.loginVaelgSang = function(i){
+    loginMusikIndex = parseInt(i,10) || 0;
+    if(!loginMusikListe[loginMusikIndex]) return;
+    loginMusik.pause();
+    loginMusik.src = loginMusikListe[loginMusikIndex].url;
+    loginMusik.load();
+    loginMusik.play().then(()=>{ loginMusikTaendt=true; loginOpdaterKnap(); }).catch(()=>{});
+  };
+
+  // Naar en sang slutter -> gaa til naeste
+  loginMusik.addEventListener('ended', ()=>{
+    if(loginMusikListe.length===0) return;
+    loginMusikIndex = (loginMusikIndex+1) % loginMusikListe.length;
+    loginMusik.src = loginMusikListe[loginMusikIndex].url;
+    loginMusik.play().catch(()=>{});
+    const sel = document.getElementById('login-musik-vaelger');
+    if(sel) sel.value = loginMusikIndex;
+  });
+
+  // Auto-start ved foerste klik paa siden (hvis browseren blokerede auto)
+  document.addEventListener('click', ()=>{
+    if(!loginAutoProevet && !loginMusikTaendt && loginMusikListe.length>0){
+      loginAutoProevet = true;
+      loginMusik.play().then(()=>{ loginMusikTaendt=true; loginOpdaterKnap(); }).catch(()=>{});
+    }
+  }, { once:false });
+
+  loginHentMusik();
 
   // ---- Admin styres i KARTOTEKET (feltet 'rettighed' = "admin") ----
   // Ekstra sikkerheds-bagstopper: nr. 8 (Carsten) er ALTID admin,
