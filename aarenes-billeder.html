@@ -135,6 +135,7 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
   <div class="lb-cap">
     <div class="lb-tekst" id="lb-tekst"></div>
     <div class="lb-navn" id="lb-navn"></div>
+    <div id="lb-diag" style="font-size:11px;color:#ffd27f;margin-top:.4rem"></div>
     <div id="lb-handlinger" style="margin-top:1rem;display:none">
       <button id="lb-rettekst-knap" onclick="visRetTekst(event)" style="background:#4a7c2a;color:#fff;border:none;padding:.55rem 1.1rem;border-radius:6px;font-family:'Source Sans 3',sans-serif;font-weight:600;cursor:pointer;font-size:13px;margin:.25rem">✏️ Ret tekst</button>
       <button id="lb-flyt-knap" onclick="visFlytValg(event)" style="background:var(--guld);color:var(--tekst);border:none;padding:.55rem 1.1rem;border-radius:6px;font-family:'Source Sans 3',sans-serif;font-weight:600;cursor:pointer;font-size:13px;margin:.25rem">➡️ Flyt til andet år / ramme</button>
@@ -455,6 +456,8 @@ window.visStort = function(i){
   document.getElementById('lb-navn').textContent='📷 Lagt op af '+(b.navn||'ukendt');
   const handlinger = document.getElementById('lb-handlinger');
   handlinger.style.display = maaRedigere(b) ? 'block' : 'none';
+  document.getElementById('lb-diag').textContent =
+    'DIAG — mit nr: "'+mitNr()+'" · niveau: "'+(sessionStorage.getItem('ok_niveau')||localStorage.getItem('ok_niveau')||'(tom)')+'" · billedets ejer: "'+(b.uploaderNr||'(tom)')+'" · admin: '+erAdmin()+' · må redigere: '+maaRedigere(b);
   document.getElementById('lb-flyt-boks').style.display = 'none';
   document.getElementById('lb-rettekst-boks').style.display = 'none';
   document.getElementById('lb-status').textContent = '';
