@@ -212,11 +212,14 @@ function erAdmin(){
     return r === 'admin';
   }catch(e){ return false; }
 }
-// Må JEG flytte/slette dette billede? Ejer (mit nr.) ELLER admin.
+// Kun taldelen af et medlemsnummer (8A -> 8, 12B -> 12)
+function talDel(nr){ return (String(nr||'').match(/\d+/)||[''])[0]; }
+// Må JEG flytte/slette dette billede? Ejer (samme taldel) ELLER admin.
 function maaRedigere(b){
   if(erAdmin()) return true;
-  const mit = mitNr();
-  return mit && b.uploaderNr && (mit === String(b.uploaderNr).trim());
+  const mit = talDel(mitNr());
+  const ejer = talDel(b.uploaderNr);
+  return mit && ejer && (mit === ejer);
 }
 
 let valgtAar = AAR_LISTE[0];
