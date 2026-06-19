@@ -135,7 +135,6 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
   <div class="lb-cap">
     <div class="lb-tekst" id="lb-tekst"></div>
     <div class="lb-navn" id="lb-navn"></div>
-    <div id="lb-diag" style="font-size:11px;color:#ffd27f;margin-top:.4rem"></div>
     <div id="lb-handlinger" style="margin-top:1rem;display:none">
       <button id="lb-rettekst-knap" onclick="visRetTekst(event)" style="background:#4a7c2a;color:#fff;border:none;padding:.55rem 1.1rem;border-radius:6px;font-family:'Source Sans 3',sans-serif;font-weight:600;cursor:pointer;font-size:13px;margin:.25rem">✏️ Ret tekst</button>
       <button id="lb-flyt-knap" onclick="visFlytValg(event)" style="background:var(--guld);color:var(--tekst);border:none;padding:.55rem 1.1rem;border-radius:6px;font-family:'Source Sans 3',sans-serif;font-weight:600;cursor:pointer;font-size:13px;margin:.25rem">➡️ Flyt til andet år / ramme</button>
@@ -456,8 +455,6 @@ window.visStort = function(i){
   document.getElementById('lb-navn').textContent='📷 Lagt op af '+(b.navn||'ukendt');
   const handlinger = document.getElementById('lb-handlinger');
   handlinger.style.display = maaRedigere(b) ? 'block' : 'none';
-  document.getElementById('lb-diag').textContent =
-    'DIAG — mit nr: "'+mitNr()+'" · niveau: "'+(sessionStorage.getItem('ok_niveau')||localStorage.getItem('ok_niveau')||'(tom)')+'" · billedets ejer: "'+(b.uploaderNr||'(tom)')+'" · admin: '+erAdmin()+' · må redigere: '+maaRedigere(b);
   document.getElementById('lb-flyt-boks').style.display = 'none';
   document.getElementById('lb-rettekst-boks').style.display = 'none';
   document.getElementById('lb-status').textContent = '';
@@ -545,30 +542,24 @@ window.udfoerFlyt = async function(e){
   // Hvis intet ændres (samme år OG samme ramme) — gør ingenting
   if(nyAar === valgtAar && nyGid === b.gruppe){ document.getElementById('lb-status').textContent='Billedet er der allerede.'; return; }
   const status = document.getElementById('lb-status');
-  status.style.fontSize = '15px'; status.style.color = '#ffd27f';
-  status.textContent = 'Trin 1: henter fil…';
+  status.textContent = 'Flytter…';
   try{
-    // Hent filen via Firebase SDK (undgår CORS-problem på Mac/Safari)
     let blob;
     try{
       blob = await getBlob(ref(storage, b.sti));
-      status.textContent = 'Trin 2: fil hentet (getBlob). Uploader…';
     }catch(e1){
-      status.textContent = 'getBlob fejlede ('+(e1.code||e1.message)+'), prøver fetch…';
       const svar = await fetch(b.url);
       blob = await svar.blob();
-      status.textContent = 'Trin 2: fil hentet (fetch). Uploader…';
     }
     const gammeltNavn = b.sti.split('/').pop();
     const nySti = ref(storage, `fotovaeg/${nyAar}/${nyGid}/${gammeltNavn}`);
     await uploadBytes(nySti, blob, { customMetadata:{ tekst:b.tekst||'', navn:b.navn||'', uploaderNr:b.uploaderNr||'' } });
-    status.textContent = 'Trin 3: uploadet. Sletter gammel…';
     await deleteObject(ref(storage, b.sti));
     document.getElementById('lightbox').classList.remove('vis');
     aabentBillede = null;
     await visValg();
   }catch(err){
-    status.textContent = 'FEJL: ' + (err.code||'') + ' ' + (err.message||err);
+    status.textContent = 'Kunne ikke flytte: ' + (err.message||err);
   }
 };
 
