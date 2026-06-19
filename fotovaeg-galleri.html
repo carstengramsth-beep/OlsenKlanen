@@ -390,10 +390,18 @@ function opdaterVaelger(){
 
 window.vaelgSang = function(i){
   musikIndex = parseInt(i,10) || 0;
+  if(!musikListe[musikIndex]){ return; }
+  baggrundsMusik.pause();
   baggrundsMusik.src = musikListe[musikIndex].url;
-  baggrundsMusik.play().then(()=>{ musikTaendt=true; opdaterMusikKnap(); }).catch(()=>{});
-  musikTaendt = true;
-  opdaterMusikKnap();
+  baggrundsMusik.load();
+  baggrundsMusik.play().then(()=>{
+    musikTaendt = true;
+    opdaterMusikKnap();
+  }).catch(err=>{
+    const k = document.getElementById('musik-knap');
+    if(k) k.textContent = '⚠️ Tryk her';
+    musikTaendt = false;
+  });
 };
 
 function startMusik(){
