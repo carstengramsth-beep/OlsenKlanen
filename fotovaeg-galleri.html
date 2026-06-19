@@ -247,7 +247,7 @@ window.gaaInd = async function(){
   document.getElementById('doer-karm').classList.add('aabner');
   // Hent billeder imens døren åbner
   const hentning = hentVaeg();
-  hentMusik();
+  const musikHentning = hentMusik();
   // Vent til døren er åbnet (samme tid som animationen)
   await new Promise(r=>setTimeout(r,1700));
   document.getElementById('forhal').style.display='none';
@@ -256,6 +256,7 @@ window.gaaInd = async function(){
   document.getElementById('rum-aar').textContent = valgtAar;
   document.getElementById('velkomst-titel').textContent = 'Velkommen til ' + valgtAar;
   window.scrollTo(0,0);
+  await musikHentning;
   startMusik();
   await hentning;
   // Nulstil døren så den er lukket næste gang
@@ -416,17 +417,21 @@ function startMusik(){
 }
 
 window.skiftMusik = function(){
+  if(musikListe.length===0) return;
   if(musikTaendt){
     baggrundsMusik.pause();
     musikTaendt = false;
+    opdaterMusikKnap();
   }else{
-    if(!baggrundsMusik.src && musikListe.length>0){
+    if(!baggrundsMusik.src){
       baggrundsMusik.src = musikListe[musikIndex].url;
     }
-    baggrundsMusik.play().then(()=>{ musikTaendt=true; opdaterMusikKnap(); }).catch(()=>{});
-    musikTaendt = true;
+    baggrundsMusik.play().then(()=>{
+      musikTaendt = true;
+      opdaterMusikKnap();
+      opdaterVaelger();
+    }).catch(()=>{});
   }
-  opdaterMusikKnap();
 };
 
 function opdaterMusikKnap(){
