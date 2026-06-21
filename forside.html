@@ -418,26 +418,30 @@ function renderFremhaevede(kommende) {
         <div class="fremh-tag tag-maerk">Mærkedag</div>
       </div>`;
   });
-  // De faste arrangementer beholdes nederst
-  html += `
-    <div class="fremh-row">
-      <div class="fremh-dato">29. maj</div>
-      <div class="fremh-tekst">Skovtur 2026 starter</div>
-      <div class="fremh-tag tag-arr">Arrangement</div>
-    </div>
-    <div class="fremh-row">
-      <div class="fremh-dato">31. maj</div>
-      <div class="fremh-tekst">Skovtur 2026 slutter</div>
-      <div class="fremh-tag tag-arr">Arrangement</div>
-    </div>`;
+  // Arrangementer fra databasen (hentes i koerMaerkedage)
+  (window.OLSEN_ARRANGEMENTER || []).forEach(a => {
+    const d = new Date(a.start + 'T00:00:00');
+    const datoTekst = d.getDate() + '. ' + MAANEDER[d.getMonth()];
+    const tagKlasse = a.type === 'inv' ? 'tag-jub' : 'tag-arr';
+    const tagTekst  = a.type === 'inv' ? 'Invitation' : 'Arrangement';
+    html += `
+      <div class="fremh-row">
+        <div class="fremh-dato">${datoTekst}</div>
+        <div class="fremh-tekst">${a.titel}</div>
+        <div class="fremh-tag ${tagKlasse}">${tagTekst}</div>
+      </div>`;
+  });
   el.innerHTML = html;
  
   // Opdater også den lille info-tekst i venstre opslag
   const info = document.getElementById('opslag-fremh-info');
+  const foersteArr = (window.OLSEN_ARRANGEMENTER || [])[0];
   if (info && kommende.length) {
-    info.textContent = kommende[0].navn + ' ' + kommende[0].alder + ' · Skovtur 2026';
+    info.textContent = kommende[0].navn + ' ' + kommende[0].alder + (foersteArr ? ' · ' + foersteArr.titel : '');
+  } else if (info && foersteArr) {
+    info.textContent = foersteArr.titel;
   } else if (info) {
-    info.textContent = 'Skovtur 2026';
+    info.textContent = 'Velkommen';
   }
 }
  
@@ -459,26 +463,31 @@ let foedselsdagsTekst = "";
  
     // 2) Kommende mærkedage → Fremhævede begivenheder
     const kommende = kommendeFoedselsdage(personer, idag, 3);
+
+    // 2b) Hent kommende arrangementer fra databasen
+    try {
+      const arrSnap = await getDocs(collection(db, "arrangementer"));
+      let arr = [];
+      arrSnap.forEach(d => arr.push(d.data()));
+      const idag0 = new Date(); idag0.setHours(0,0,0,0);
+      arr = arr.filter(a => {
+        const slut = new Date((a.slut || a.start) + "T00:00:00");
+        return slut >= idag0;
+      }).sort((a,b) => (a.start||"").localeCompare(b.start||""));
+      window.OLSEN_ARRANGEMENTER = arr;
+    } catch(e) { window.OLSEN_ARRANGEMENTER = []; }
+
     renderFremhaevede(kommende);
+    if (typeof window.byggKalender === 'function') window.byggKalender();
  
     // Byg båndet igen nu hvor vi har fødselsdags-info
     if (typeof byggBaand === 'function') byggBaand();
   } catch(e) {
     console.log("Kunne ikke hente mærkedage fra kartoteket:", e);
     const info = document.getElementById('opslag-fremh-info');
-    if (info) info.textContent = 'Skovtur 2026';
+    if (info) info.textContent = 'Velkommen';
     const el = document.getElementById('fremh-liste');
-    if (el) el.innerHTML = `
-      <div class="fremh-row">
-        <div class="fremh-dato">29. maj</div>
-        <div class="fremh-tekst">Skovtur 2026 starter</div>
-        <div class="fremh-tag tag-arr">Arrangement</div>
-      </div>
-      <div class="fremh-row">
-        <div class="fremh-dato">31. maj</div>
-        <div class="fremh-tekst">Skovtur 2026 slutter</div>
-        <div class="fremh-tag tag-arr">Arrangement</div>
-      </div>`;
+    if (el) el.innerHTML = '<div class="fremh-row"><div class="fremh-tekst">Ingen begivenheder lige nu.</div></div>';
   }
   // Gør teksten tilgængelig globalt for nyhedsbåndet
   window.OLSEN_FOEDSELSDAG = foedselsdagsTekst;
@@ -626,7 +635,7 @@ hentNyheder(DR_FEED)
 <script>
 // ── SELV-OPDATERENDE KALENDER ──
 // Bygger altid kalenderen ud fra dagens rigtige dato og fremhæver i dag.
-(function bygKalender(){
+window.byggKalender = function bygKalender(){
   const MAANEDER = ["januar","februar","marts","april","maj","juni","juli",
                     "august","september","oktober","november","december"];
   const idag = new Date();
@@ -641,6 +650,18 @@ hentNyheder(DR_FEED)
   // Stort forbogstav i månedsnavn
   const mNavn = MAANEDER[maaned].charAt(0).toUpperCase() + MAANEDER[maaned].slice(1);
   if (titel) titel.textContent = "Kalender — " + mNavn + " " + aar;
+
+  // Find dage i DENNE måned der har en begivenhed (fra databasen)
+  const eventDage = new Set();
+  (window.OLSEN_ARRANGEMENTER || []).forEach(a => {
+    const start = new Date(a.start + "T00:00:00");
+    const slut  = new Date((a.slut || a.start) + "T00:00:00");
+    let d = new Date(start);
+    while (d <= slut) {
+      if (d.getFullYear() === aar && d.getMonth() === maaned) eventDage.add(d.getDate());
+      d.setDate(d.getDate() + 1);
+    }
+  });
 
   // Fjern gamle dage (behold de 7 ugedags-overskrifter)
   grid.querySelectorAll('.kal-dag').forEach(el => el.remove());
@@ -658,7 +679,11 @@ hentNyheder(DR_FEED)
   // Selve dagene
   for (let d = 1; d <= antalDage; d++) {
     const erIdag = (d === dagIdag);
-    html += '<div class="kal-dag' + (erIdag ? ' idag' : '') + '">' + d + '</div>';
+    const harEvent = eventDage.has(d);
+    let klasse = 'kal-dag';
+    if (erIdag) klasse += ' idag';
+    else if (harEvent) klasse += ' event';
+    html += '<div class="' + klasse + '">' + d + '</div>';
   }
   // Fyld resten af sidste uge med tomme felter
   const ialt = foersteDag + antalDage;
@@ -666,7 +691,8 @@ hentNyheder(DR_FEED)
   for (let i = 0; i < rest; i++) html += '<div class="kal-dag tom"></div>';
 
   grid.insertAdjacentHTML('beforeend', html);
-})();
+};
+window.byggKalender();
 </script>
 <script type="module" src="besoegstaeller.js"></script>
 </body>
