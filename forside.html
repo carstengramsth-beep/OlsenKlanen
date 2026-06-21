@@ -561,11 +561,9 @@ function logUd() {
 }
  
 // NYHEDSBAAND — Fødselsdag + DR + Vejr
-const CORS = "https://api.allorigins.win/get?url=";
-const DR_RSS = encodeURIComponent("https://www.dr.dk/nyheder/service/feeds/allenyheder");
 let nyheder = [];
 let vejr = "";
- 
+
 window.byggBaand = function byggBaand() {
   let tekst = "";
   // Fødselsdag FØRST — det er det festlige
@@ -574,7 +572,7 @@ window.byggBaand = function byggBaand() {
   nyheder.forEach(n => { tekst += "★  " + n + "     "; });
   if (tekst) document.getElementById("baand-tekst").textContent = tekst;
 };
- 
+
 fetch("https://api.open-meteo.com/v1/forecast?latitude=55.68&longitude=12.57&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FCopenhagen&forecast_days=1")
   .then(r => r.json())
   .then(data => {
@@ -584,27 +582,46 @@ fetch("https://api.open-meteo.com/v1/forecast?latitude=55.68&longitude=12.57&dai
     window.byggBaand();
   })
   .catch(() => { vejr = ""; window.byggBaand(); });
- 
-fetch(CORS + DR_RSS)
-  .then(r => r.json())
-  .then(data => {
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(data.contents, "text/xml");
-    const items = xml.querySelectorAll("item");
-    let count = 0;
-    items.forEach(item => {
-      if(count >= 6) return;
-      const titel = item.querySelector("title")?.textContent || "";
-      if(titel) nyheder.push(titel);
-      count++;
+
+// DR-nyheder via rss2json (stabil tjeneste der henter DR's RSS-feed)
+const DR_FEED = "https://www.dr.dk/nyheder/service/feeds/senestenyt";
+function hentNyheder(feedUrl) {
+  return fetch("https://api.rss2json.com/v1/api.json?count=8&rss_url=" + encodeURIComponent(feedUrl))
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.status === "ok" && data.items && data.items.length) {
+        nyheder = data.items.slice(0, 6).map(it => it.title).filter(Boolean);
+        window.byggBaand();
+        return true;
+      }
+      return false;
     });
-    window.byggBaand();
+}
+hentNyheder(DR_FEED)
+  .then(ok => {
+    if (!ok) {
+      // Reserve: prøv allorigins hvis rss2json svigter
+      return fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(DR_FEED))
+        .then(r => r.json())
+        .then(data => {
+          const xml = new DOMParser().parseFromString(data.contents, "text/xml");
+          const items = xml.querySelectorAll("item");
+          let c = 0;
+          items.forEach(item => {
+            if (c >= 6) return;
+            const t = item.querySelector("title")?.textContent || "";
+            if (t) { nyheder.push(t); c++; }
+          });
+          window.byggBaand();
+        });
+    }
   })
   .catch(() => {
-    nyheder = ["Nyheder fra DR hentes automatisk"];
+    nyheder = ["Velkommen til OlsenKlanen"];
     window.byggBaand();
   });
 </script>
+ 
  
 <script>
 // ── SELV-OPDATERENDE KALENDER ──
