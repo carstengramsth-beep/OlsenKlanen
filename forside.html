@@ -421,7 +421,11 @@ function renderFremhaevede(kommende) {
   // Arrangementer fra databasen (hentes i koerMaerkedage)
   (window.OLSEN_ARRANGEMENTER || []).forEach(a => {
     const d = new Date(a.start + 'T00:00:00');
-    const datoTekst = d.getDate() + '. ' + MAANEDER[d.getMonth()];
+    let datoTekst = d.getDate() + '. ' + MAANEDER[d.getMonth()];
+    if (a.slut && a.slut !== a.start) {
+      const ds = new Date(a.slut + 'T00:00:00');
+      datoTekst += '–' + ds.getDate() + '. ' + MAANEDER[ds.getMonth()];
+    }
     const tagKlasse = a.type === 'inv' ? 'tag-jub' : 'tag-arr';
     const tagTekst  = a.type === 'inv' ? 'Invitation' : 'Arrangement';
     html += `
