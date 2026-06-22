@@ -1116,6 +1116,8 @@ function opdaterKomiteChips(i){
   const wrap = document.querySelector(`[data-komite-chips="${i}"]`);
   if (wrap) wrap.innerHTML = komiteChips(p.komite_aar, i);
 }
+
+function renderBegiEdit() {
   const el = document.getElementById('begi-liste-edit');
   if (!begiListe.length) {
     el.innerHTML = '<div style="font-size:12px;color:var(--tekst-lys);font-style:italic;margin-bottom:.5rem">Ingen begivenheder endnu.</div>';
