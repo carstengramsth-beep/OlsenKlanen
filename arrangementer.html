@@ -494,6 +494,11 @@ function detFold(titel, vaerdi){
   </details>`;
 }
 
+// Fast link til foreningens vedtægter (vises altid)
+function vedtaegtLink(){
+  return `<div class="hist-row"><div style="min-width:160px;font-weight:bold;color:#2d5016;">📜 Vedtægter</div><div style="flex:1;"><a href="vedtaegter.html" style="color:#2d5016;font-weight:600;">Læs foreningens vedtægter →</a></div></div>`;
+}
+
 function nulstilDetForm(){
   ["d-sted","d-datoer","d-ankomst","d-afgang","d-pris","d-frist","d-betaling","d-kontakt-navn","d-kontakt-tlf","d-medbring","d-program","d-referat"].forEach(id => {
     document.getElementById(id).value = "";
@@ -550,11 +555,12 @@ async function hentDet(){
     const snap = await getDoc(doc(db,"skovtur_detaljer","skovtur"+DET_AKTUELT_AAR));
     if(!snap.exists()){
       nulstilDetForm();
-      let tom = komiteRaekke(komite);
-      if(!tom){
-        tom = maa
+      let tom = komiteRaekke(komite) + vedtaegtLink();
+      const harData = komiteRaekke(komite);
+      if(!harData){
+        tom = (maa
           ? '<div class="tom-besked">Ingen oplysninger for ' + DET_AKTUELT_AAR + ' endnu. Tryk “✎ Ret oplysninger” for at udfylde.</div>'
-          : '<div class="tom-besked">Ingen oplysninger for ' + DET_AKTUELT_AAR + ' endnu.</div>';
+          : '<div class="tom-besked">Ingen oplysninger for ' + DET_AKTUELT_AAR + ' endnu.</div>') + vedtaegtLink();
       }
       el.innerHTML = tom;
       return;
@@ -587,7 +593,7 @@ async function hentDet(){
       detRaekke("Medbring", d.medbring) +
       detRaekke("Program / info", d.program) +
       detFold("📄 Referat", d.referat) +
-      `<div class="hist-row"><div style="min-width:160px;font-weight:bold;color:#2d5016;">📜 Vedtægter</div><div style="flex:1;"><a href="vedtaegter.html" style="color:#2d5016;font-weight:600;">Læs foreningens vedtægter →</a></div></div>`;
+      vedtaegtLink();
     if(!html) html = '<div class="tom-besked">Ingen oplysninger for ' + DET_AKTUELT_AAR + ' endnu.</div>';
     if(d.opdateret_af){
       const od = d.opdateret_dato ? new Date(d.opdateret_dato).toLocaleDateString("da-DK") : "";
