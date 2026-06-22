@@ -1078,10 +1078,11 @@ function renderPersonEdit() {
       <div class="person-komite" style="margin-top:.5rem">
         <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--tekst-lys);margin-bottom:3px">🏕️ Arrangementskomité — valgte år</label>
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
-          <select data-komite-vaelg="${i}" style="flex:0 0 auto;border:1px solid var(--border);padding:.35rem .5rem;font-size:12.5px;font-family:'Source Sans 3',sans-serif;background:var(--hvid);border-radius:3px">
+          <span style="font-size:11px;color:var(--tekst-lys)">Vælg år:</span>
+          <select data-komite-vaelg="${i}" style="flex:0 0 auto;border:1px solid var(--guld);background:#fffaf0;padding:.35rem .5rem;font-size:12.5px;font-family:'Source Sans 3',sans-serif;border-radius:3px;color:var(--gron);font-weight:600">
             ${komiteAarsValg()}
           </select>
-          <button type="button" data-komite-tilfoej="${i}" style="background:var(--guld);color:var(--tekst);border:none;padding:.35rem .7rem;border-radius:3px;font-weight:600;cursor:pointer;font-size:12px">+ Tilføj år</button>
+          <button type="button" data-komite-tilfoej="${i}" style="background:var(--guld);color:var(--tekst);border:none;padding:.35rem .7rem;border-radius:3px;font-weight:600;cursor:pointer;font-size:12px">+ Godkend år</button>
         </div>
         <div data-komite-chips="${i}" style="display:flex;flex-wrap:wrap;gap:5px">
           ${komiteChips(p.komite_aar, i)}
@@ -1096,11 +1097,14 @@ function komiteAarListe(raw){
   return String(raw||'').split(',').map(s => s.trim()).filter(Boolean);
 }
 function komiteAarsValg(){
-  const iAar = new Date().getFullYear();
+  const nu = new Date();
+  // Kommende skovtur-år (efter 1. juni peges på næste år)
+  const kommende = (nu.getMonth() >= 5) ? nu.getFullYear() + 1 : nu.getFullYear();
+  const iAar = nu.getFullYear();
   let ops = '';
-  // Fra 5 år frem til 15 år tilbage
+  // Fra 5 år frem til 15 år tilbage; kommende skovtur-år er forvalgt
   for (let a = iAar + 5; a >= iAar - 15; a--){
-    ops += `<option value="${a}">${a}</option>`;
+    ops += `<option value="${a}"${a === kommende ? ' selected' : ''}>${a}</option>`;
   }
   return ops;
 }
