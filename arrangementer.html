@@ -97,19 +97,29 @@ try {
     </div>
   </div>
 
-  <!-- HULLEBILAG: SKOVTUR 2027 — PRAKTISKE OPLYSNINGER -->
+  <!-- HULLEBILAG: SKOVTUR — PRAKTISKE OPLYSNINGER (år-baseret) -->
   <div class="boks">
     <div class="boks-header">
-      <span>🏕️ SKOVTUR 2027 · PRAKTISKE OPLYSNINGER</span>
+      <span>🏕️ SKOVTUR · PRAKTISKE OPLYSNINGER</span>
       <button class="knap knap-guld knap-lille skjul" id="det-ret-knap" onclick="visDetForm()">✎ Ret oplysninger</button>
     </div>
     <div class="boks-body">
+      <!-- ÅRSVÆLGER -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #f0ead8;">
+        <button class="knap knap-graa knap-lille" onclick="aarTilbage()" title="Tidligere år">◀</button>
+        <div style="text-align:center;min-width:120px;">
+          <div style="font-size:22px;font-weight:bold;color:#2d5016;" id="det-aar-vis">2027</div>
+          <div style="font-size:11px;color:#aaa;" id="det-aar-noter"></div>
+        </div>
+        <button class="knap knap-graa knap-lille" onclick="aarFrem()" title="Senere år">▶</button>
+      </div>
+
       <!-- VISNING -->
       <div id="det-visning"><div class="tom-besked">Henter oplysninger…</div></div>
 
       <!-- REDIGERINGSFORMULAR (hullebilag) -->
       <div class="skjul" id="det-form" style="background:#faf6ea;padding:16px;border-radius:6px;">
-        <p style="font-size:13px;color:#666;margin-bottom:6px;">Udfyld de felter, der er kendt. Tomme felter vises ikke for medlemmerne.</p>
+        <p style="font-size:13px;color:#666;margin-bottom:6px;">Du retter oplysninger for <strong id="det-form-aar">2027</strong>. Udfyld de felter, der er kendt — også for tidligere år, så historien bevares.</p>
         <div class="to-kol">
           <div><label>Sted / lejr</label><input type="text" id="d-sted" placeholder="Holmsborg, Sønderjylland"></div>
           <div><label>Datoer</label><input type="text" id="d-datoer" placeholder="7.–9. maj 2027"></div>
@@ -231,11 +241,10 @@ const MIT_NR    = hent("ok_nr");
 const MIT_NAVN  = hent("ok_navn") || "Et medlem";
 const MIT_NIVEAU= hent("ok_niveau");
 const ER_ADMIN  = (MIT_NIVEAU === "admin" || MIT_NIVEAU === "olsenbanden");
-const SKOVTUR_AAR = "2027";
 const MINE_KOMITE_AAR = (hent("ok_komite_aar") || "").split(",").map(s => s.trim());
-const ER_KOMITE = MINE_KOMITE_AAR.includes(SKOVTUR_AAR);
-const MAA_REDIGERE_DETALJER = ER_ADMIN || ER_KOMITE;
-document.getElementById("bruger-navn").textContent = MIT_NAVN + (ER_ADMIN ? " (admin)" : (ER_KOMITE ? " (komité)" : ""));
+// Komité-adgang afgøres pr. valgt år (se maaRedigereAaret)
+function maaRedigereAaret(aar){ return ER_ADMIN || MINE_KOMITE_AAR.includes(String(aar)); }
+document.getElementById("bruger-navn").textContent = MIT_NAVN + (ER_ADMIN ? " (admin)" : "");
 
 const MAANEDER = ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"];
 function datoTekst(iso){
@@ -415,14 +424,28 @@ async function hentHist(){
   } catch(e){ el.innerHTML = '<div class="tom-besked">Kunne ikke hente historik.</div>'; console.log(e); }
 }
 
-// ============ HULLEBILAG: SKOVTUR 2027 DETALJER ============
+// ============ HULLEBILAG: SKOVTUR DETALJER (år-baseret) ============
 import { getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-const DET_ID = "skovtur2027";
 
-// Vis Ret-knap kun for admin/komité
-if (MAA_REDIGERE_DETALJER) {
-  document.getElementById("det-ret-knap").classList.remove("skjul");
+// Standard-år = næste kommende skovtur (typisk maj). Efter maj peges på næste år.
+function standardAar(){
+  const nu = new Date();
+  // Hvis vi er forbi 1. juni, peg på næste år; ellers indeværende år.
+  return (nu.getMonth() >= 5) ? nu.getFullYear() + 1 : nu.getFullYear();
 }
+let DET_AKTUELT_AAR = standardAar();
+
+function opdaterAarVisning(){
+  document.getElementById("det-aar-vis").textContent = DET_AKTUELT_AAR;
+  document.getElementById("det-form-aar").textContent = DET_AKTUELT_AAR;
+  // Ret-knap kun synlig hvis man må redigere netop dette år
+  const knap = document.getElementById("det-ret-knap");
+  if (maaRedigereAaret(DET_AKTUELT_AAR)) knap.classList.remove("skjul");
+  else knap.classList.add("skjul");
+}
+
+window.aarTilbage = function(){ DET_AKTUELT_AAR--; skjulDetForm(); opdaterAarVisning(); hentDet(); };
+window.aarFrem    = function(){ DET_AKTUELT_AAR++; skjulDetForm(); opdaterAarVisning(); hentDet(); };
 
 window.visDetForm = function(){
   document.getElementById("det-form").classList.remove("skjul");
@@ -432,6 +455,7 @@ window.skjulDetForm = function(){ document.getElementById("det-form").classList.
 
 window.gemDet = async function(){
   const data = {
+    aar:         DET_AKTUELT_AAR,
     sted:        document.getElementById("d-sted").value.trim(),
     datoer:      document.getElementById("d-datoer").value.trim(),
     ankomst:     document.getElementById("d-ankomst").value.trim(),
@@ -448,7 +472,7 @@ window.gemDet = async function(){
   };
   const btn = document.getElementById("d-gem"); btn.disabled = true; btn.textContent = "Gemmer…";
   try {
-    await setDoc(doc(db,"skovtur_detaljer",DET_ID), data);
+    await setDoc(doc(db,"skovtur_detaljer","skovtur"+DET_AKTUELT_AAR), data);
     skjulDetForm(); await hentDet();
   } catch(e){ alert("Kunne ikke gemme: " + e.message); }
   btn.disabled = false; btn.textContent = "Gem oplysninger";
@@ -459,18 +483,25 @@ function detRaekke(label, vaerdi){
   return `<div class="hist-row"><div style="min-width:160px;font-weight:bold;color:#2d5016;">${label}</div><div style="flex:1;white-space:pre-wrap;">${escHtml(vaerdi)}</div></div>`;
 }
 
+function nulstilDetForm(){
+  ["d-sted","d-datoer","d-ankomst","d-afgang","d-pris","d-frist","d-betaling","d-komite","d-kontakt-navn","d-kontakt-tlf","d-medbring","d-program"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+}
+
 async function hentDet(){
   const el = document.getElementById("det-visning");
+  const maa = maaRedigereAaret(DET_AKTUELT_AAR);
   try {
-    const snap = await getDoc(doc(db,"skovtur_detaljer",DET_ID));
+    const snap = await getDoc(doc(db,"skovtur_detaljer","skovtur"+DET_AKTUELT_AAR));
     if(!snap.exists()){
-      el.innerHTML = MAA_REDIGERE_DETALJER
-        ? '<div class="tom-besked">Ingen oplysninger endnu. Tryk “✎ Ret oplysninger” for at udfylde.</div>'
-        : '<div class="tom-besked">Praktiske oplysninger følger snart.</div>';
+      nulstilDetForm();
+      el.innerHTML = maa
+        ? '<div class="tom-besked">Ingen oplysninger for ' + DET_AKTUELT_AAR + ' endnu. Tryk “✎ Ret oplysninger” for at udfylde.</div>'
+        : '<div class="tom-besked">Ingen oplysninger for ' + DET_AKTUELT_AAR + ' endnu.</div>';
       return;
     }
     const d = snap.data();
-    // Fyld formularen til redigering
     document.getElementById("d-sted").value = d.sted||"";
     document.getElementById("d-datoer").value = d.datoer||"";
     document.getElementById("d-ankomst").value = d.ankomst||"";
@@ -483,8 +514,7 @@ async function hentDet(){
     document.getElementById("d-kontakt-tlf").value = d.kontaktTlf||"";
     document.getElementById("d-medbring").value = d.medbring||"";
     document.getElementById("d-program").value = d.program||"";
-    // Byg visning
-    let kontakt = d.kontaktNavn || d.kontaktTlf
+    let kontakt = (d.kontaktNavn || d.kontaktTlf)
       ? [d.kontaktNavn, d.kontaktTlf].filter(Boolean).join(" · ") : "";
     let html =
       detRaekke("Sted / lejr", d.sted) +
@@ -498,7 +528,7 @@ async function hentDet(){
       detRaekke("Kontakt", kontakt) +
       detRaekke("Medbring", d.medbring) +
       detRaekke("Program / info", d.program);
-    if(!html) html = '<div class="tom-besked">Praktiske oplysninger følger snart.</div>';
+    if(!html) html = '<div class="tom-besked">Ingen oplysninger for ' + DET_AKTUELT_AAR + ' endnu.</div>';
     if(d.opdateret_af){
       const od = d.opdateret_dato ? new Date(d.opdateret_dato).toLocaleDateString("da-DK") : "";
       html += `<div style="margin-top:12px;font-size:12px;color:#aaa;font-style:italic;">Senest opdateret af ${escHtml(d.opdateret_af)}${od ? " · " + od : ""}</div>`;
@@ -507,6 +537,7 @@ async function hentDet(){
   } catch(e){ el.innerHTML = '<div class="tom-besked">Kunne ikke hente oplysninger.</div>'; console.log(e); }
 }
 
+opdaterAarVisning();
 hentEvents();
 hentHist();
 hentDet();
