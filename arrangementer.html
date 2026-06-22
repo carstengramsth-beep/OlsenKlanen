@@ -97,6 +97,51 @@ try {
     </div>
   </div>
 
+  <!-- HULLEBILAG: SKOVTUR 2027 — PRAKTISKE OPLYSNINGER -->
+  <div class="boks">
+    <div class="boks-header">
+      <span>🏕️ SKOVTUR 2027 · PRAKTISKE OPLYSNINGER</span>
+      <button class="knap knap-guld knap-lille skjul" id="det-ret-knap" onclick="visDetForm()">✎ Ret oplysninger</button>
+    </div>
+    <div class="boks-body">
+      <!-- VISNING -->
+      <div id="det-visning"><div class="tom-besked">Henter oplysninger…</div></div>
+
+      <!-- REDIGERINGSFORMULAR (hullebilag) -->
+      <div class="skjul" id="det-form" style="background:#faf6ea;padding:16px;border-radius:6px;">
+        <p style="font-size:13px;color:#666;margin-bottom:6px;">Udfyld de felter, der er kendt. Tomme felter vises ikke for medlemmerne.</p>
+        <div class="to-kol">
+          <div><label>Sted / lejr</label><input type="text" id="d-sted" placeholder="Holmsborg, Sønderjylland"></div>
+          <div><label>Datoer</label><input type="text" id="d-datoer" placeholder="7.–9. maj 2027"></div>
+        </div>
+        <div class="to-kol">
+          <div><label>Ankomst</label><input type="text" id="d-ankomst" placeholder="fredag fra kl. 16:00"></div>
+          <div><label>Afgang</label><input type="text" id="d-afgang" placeholder="søndag senest kl. 12:00"></div>
+        </div>
+        <div class="to-kol">
+          <div><label>Pris pr. husstand</label><input type="text" id="d-pris" placeholder="f.eks. 350 kr."></div>
+          <div><label>Tilmeldingsfrist</label><input type="text" id="d-frist" placeholder="f.eks. 1. april 2027"></div>
+        </div>
+        <label>Betaling til (konto / MobilePay)</label>
+        <input type="text" id="d-betaling" placeholder="f.eks. MobilePay 12345 eller reg. 1234 konto 5678901">
+        <label>Arrangementskomité</label>
+        <input type="text" id="d-komite" placeholder="f.eks. Kurt, Karin & Tommy">
+        <div class="to-kol">
+          <div><label>Kontaktperson</label><input type="text" id="d-kontakt-navn" placeholder="navn"></div>
+          <div><label>Telefon</label><input type="text" id="d-kontakt-tlf" placeholder="telefonnummer"></div>
+        </div>
+        <label>Medbring</label>
+        <textarea id="d-medbring" placeholder="sovepose, gummistøvler, godt humør…"></textarea>
+        <label>Program / praktisk info</label>
+        <textarea id="d-program" placeholder="program, måltider, aktiviteter, andet vigtigt…"></textarea>
+        <div class="form-knapper">
+          <button class="knap" id="d-gem" onclick="gemDet()">Gem oplysninger</button>
+          <button class="knap knap-graa" onclick="skjulDetForm()">Annullér</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- OPRET / RET FORMULAR -->
   <div class="boks skjul" id="form-boks">
     <div class="boks-header"><span id="form-titel">NY BEGIVENHED</span></div>
@@ -186,7 +231,9 @@ const MIT_NR    = hent("ok_nr");
 const MIT_NAVN  = hent("ok_navn") || "Et medlem";
 const MIT_NIVEAU= hent("ok_niveau");
 const ER_ADMIN  = (MIT_NIVEAU === "admin" || MIT_NIVEAU === "olsenbanden");
-document.getElementById("bruger-navn").textContent = MIT_NAVN + (ER_ADMIN ? " (admin)" : "");
+const ER_KOMITE = (hent("ok_komite") === "ja");
+const MAA_REDIGERE_DETALJER = ER_ADMIN || ER_KOMITE;
+document.getElementById("bruger-navn").textContent = MIT_NAVN + (ER_ADMIN ? " (admin)" : (ER_KOMITE ? " (komité)" : ""));
 
 const MAANEDER = ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"];
 function datoTekst(iso){
@@ -366,8 +413,101 @@ async function hentHist(){
   } catch(e){ el.innerHTML = '<div class="tom-besked">Kunne ikke hente historik.</div>'; console.log(e); }
 }
 
+// ============ HULLEBILAG: SKOVTUR 2027 DETALJER ============
+import { getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const DET_ID = "skovtur2027";
+
+// Vis Ret-knap kun for admin/komité
+if (MAA_REDIGERE_DETALJER) {
+  document.getElementById("det-ret-knap").classList.remove("skjul");
+}
+
+window.visDetForm = function(){
+  document.getElementById("det-form").classList.remove("skjul");
+  document.getElementById("det-form").scrollIntoView({behavior:"smooth"});
+};
+window.skjulDetForm = function(){ document.getElementById("det-form").classList.add("skjul"); };
+
+window.gemDet = async function(){
+  const data = {
+    sted:        document.getElementById("d-sted").value.trim(),
+    datoer:      document.getElementById("d-datoer").value.trim(),
+    ankomst:     document.getElementById("d-ankomst").value.trim(),
+    afgang:      document.getElementById("d-afgang").value.trim(),
+    pris:        document.getElementById("d-pris").value.trim(),
+    frist:       document.getElementById("d-frist").value.trim(),
+    betaling:    document.getElementById("d-betaling").value.trim(),
+    komite:      document.getElementById("d-komite").value.trim(),
+    kontaktNavn: document.getElementById("d-kontakt-navn").value.trim(),
+    kontaktTlf:  document.getElementById("d-kontakt-tlf").value.trim(),
+    medbring:    document.getElementById("d-medbring").value.trim(),
+    program:     document.getElementById("d-program").value.trim(),
+    opdateret_af: MIT_NAVN, opdateret_dato: new Date().toISOString()
+  };
+  const btn = document.getElementById("d-gem"); btn.disabled = true; btn.textContent = "Gemmer…";
+  try {
+    await setDoc(doc(db,"skovtur_detaljer",DET_ID), data);
+    skjulDetForm(); await hentDet();
+  } catch(e){ alert("Kunne ikke gemme: " + e.message); }
+  btn.disabled = false; btn.textContent = "Gem oplysninger";
+};
+
+function detRaekke(label, vaerdi){
+  if(!vaerdi) return "";
+  return `<div class="hist-row"><div style="min-width:160px;font-weight:bold;color:#2d5016;">${label}</div><div style="flex:1;white-space:pre-wrap;">${escHtml(vaerdi)}</div></div>`;
+}
+
+async function hentDet(){
+  const el = document.getElementById("det-visning");
+  try {
+    const snap = await getDoc(doc(db,"skovtur_detaljer",DET_ID));
+    if(!snap.exists()){
+      el.innerHTML = MAA_REDIGERE_DETALJER
+        ? '<div class="tom-besked">Ingen oplysninger endnu. Tryk “✎ Ret oplysninger” for at udfylde.</div>'
+        : '<div class="tom-besked">Praktiske oplysninger følger snart.</div>';
+      return;
+    }
+    const d = snap.data();
+    // Fyld formularen til redigering
+    document.getElementById("d-sted").value = d.sted||"";
+    document.getElementById("d-datoer").value = d.datoer||"";
+    document.getElementById("d-ankomst").value = d.ankomst||"";
+    document.getElementById("d-afgang").value = d.afgang||"";
+    document.getElementById("d-pris").value = d.pris||"";
+    document.getElementById("d-frist").value = d.frist||"";
+    document.getElementById("d-betaling").value = d.betaling||"";
+    document.getElementById("d-komite").value = d.komite||"";
+    document.getElementById("d-kontakt-navn").value = d.kontaktNavn||"";
+    document.getElementById("d-kontakt-tlf").value = d.kontaktTlf||"";
+    document.getElementById("d-medbring").value = d.medbring||"";
+    document.getElementById("d-program").value = d.program||"";
+    // Byg visning
+    let kontakt = d.kontaktNavn || d.kontaktTlf
+      ? [d.kontaktNavn, d.kontaktTlf].filter(Boolean).join(" · ") : "";
+    let html =
+      detRaekke("Sted / lejr", d.sted) +
+      detRaekke("Datoer", d.datoer) +
+      detRaekke("Ankomst", d.ankomst) +
+      detRaekke("Afgang", d.afgang) +
+      detRaekke("Pris pr. husstand", d.pris) +
+      detRaekke("Tilmeldingsfrist", d.frist) +
+      detRaekke("Betaling til", d.betaling) +
+      detRaekke("Arrangementskomité", d.komite) +
+      detRaekke("Kontakt", kontakt) +
+      detRaekke("Medbring", d.medbring) +
+      detRaekke("Program / info", d.program);
+    if(!html) html = '<div class="tom-besked">Praktiske oplysninger følger snart.</div>';
+    if(d.opdateret_af){
+      const od = d.opdateret_dato ? new Date(d.opdateret_dato).toLocaleDateString("da-DK") : "";
+      html += `<div style="margin-top:12px;font-size:12px;color:#aaa;font-style:italic;">Senest opdateret af ${escHtml(d.opdateret_af)}${od ? " · " + od : ""}</div>`;
+    }
+    el.innerHTML = html;
+  } catch(e){ el.innerHTML = '<div class="tom-besked">Kunne ikke hente oplysninger.</div>'; console.log(e); }
+}
+
 hentEvents();
 hentHist();
+hentDet();
 </script>
 </body>
 </html>
