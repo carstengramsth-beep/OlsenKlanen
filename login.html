@@ -618,6 +618,12 @@
     // Tjekker fornavnet paa den valgte person, saa fx Elisabeth IKKE bliver admin.
     if (ALTID_ADMIN.includes(nr) && fornavnAf(navn).toLowerCase() === "carsten") rettighed = "admin";
 
+    // KOMITÉ-ÅR: personens egne komité-år (fritekst, fx "2027" eller "2027, 2028")
+    let komiteAar = "";
+    if (valgtPerson && valgtPerson.komite_aar) komiteAar = String(valgtPerson.komite_aar);
+    else if (d.komite_aar) komiteAar = String(d.komite_aar);
+    komiteAar = komiteAar.trim();
+
     try {
       if (husk) localStorage.setItem("ok_husk_nr", fuldtNr);
       else      localStorage.removeItem("ok_husk_nr");
@@ -632,7 +638,7 @@
     const boks = document.getElementById("hvem-er-du");
     if (boks) boks.remove();
 
-    gemAdgang(rettighed, navn, fuldtNr);
+    gemAdgang(rettighed, navn, fuldtNr, komiteAar);
     videreTil("forside.html");
   }
 
@@ -663,8 +669,8 @@
     }
   }
 
-  // ---- Gem hvem der er logget ind (nr + navn + rettighed) ----
-  function gemAdgang(niveau, navn, nr) {
+  // ---- Gem hvem der er logget ind (nr + navn + rettighed + komité-år) ----
+  function gemAdgang(niveau, navn, nr, komiteAar) {
     try {
       sessionStorage.setItem("ok_niveau", niveau);
       sessionStorage.setItem("ok_navn", navn);
@@ -672,6 +678,8 @@
       localStorage.setItem("ok_niveau", niveau);
       localStorage.setItem("ok_navn", navn);
       localStorage.setItem("ok_nr", nr);
+      sessionStorage.setItem("ok_komite_aar", komiteAar || "");
+      localStorage.setItem("ok_komite_aar", komiteAar || "");
     } catch(e) {}
   }
 
