@@ -546,6 +546,22 @@ function komiteRaekke(medlemmer){
   return `<div class="hist-row"><div style="min-width:160px;font-weight:bold;color:#2d5016;">Arrangementskomité</div><div style="flex:1;">${linjer}</div></div>`;
 }
 
+// Indbygget historisk data (bruges hvis intet er gemt i databasen for året)
+const INDBYGGET = {
+  2026: {
+    sted: "Eriksminde, Eriksmindevej 15, 4581 Rørvig",
+    datoer: "29. — 31. maj 2026",
+    ankomst: "fredag fra kl. 16:30",
+    afgang: "søndag (efter rengøring)",
+    pris: "Deltagergebyr hele weekenden: voksne 225 kr. · børn (3-15 år) 75 kr. — Kun lørdag: 100/50 kr. — Aftensmad fredag: 60/30 kr. — Morgenmad søndag: 35/20 kr. Kontingent 2026: 200 kr. pr. husstand.",
+    frist: "3. maj 2026",
+    betaling: "Reg. 1551 — Konto 1231790 (husk tekst ved betaling, fx \"Vi kommer: 2x vok. fre-søn / 2x aft.mad fre. / 2x mo mad sø.\")",
+    medbring: "Bemærk: husdyr, lejrbål og telte/campingvogne er ikke tilladt.",
+    program: "Vi mødes på Eriksminde — et gensyn med det velkendte hus i skovbrynet, som vi besøgte i 2014, 2020 og 2022. Ca. 3 km fra Rørvig by og havn, 5 minutter fra vandet.\n\nForan huset er et åbent område med fodboldmål og rige muligheder for leg og spil. Kolonien har 54 sengepladser fordelt i 1-, 2- og 4-personers rum, en stor spisesal, opholdsstue og aktivitetsrum.\n\nI prisen er indregnet: leje fra fredag kl. 16:30 til søndag, morgenbord lørdag, fælles aktiviteter samt rengøring søndag. Drikkevarer kan købes til familievenlige priser.",
+    referat: "Generalforsamling — lørdag den 30. maj 2026 kl. 9.45\n\nDagsorden:\n1. Valg af dirigent\n2. Formanden fremlægger beretning 2025/2026\n3. Kassereren fremlægger regnskab 2025\n4. Fastlæggelse af kontingent 2027\n5. Indkomne forslag\n6. Valg af bestyrelse for 2027\n7. Valg af arrangementskomité 2028\n8. Foreløbig information om skovtur 2027\n9. Eventuelt\n\nFrist for forslag til generalforsamlingen: 10. maj 2026."
+  }
+};
+
 async function hentDet(){
   const el = document.getElementById("det-visning");
   const maa = maaRedigereAaret(DET_AKTUELT_AAR);
@@ -553,7 +569,8 @@ async function hentDet(){
   const komite = await hentKomite(DET_AKTUELT_AAR);
   try {
     const snap = await getDoc(doc(db,"skovtur_detaljer","skovtur"+DET_AKTUELT_AAR));
-    if(!snap.exists()){
+    let d = snap.exists() ? snap.data() : (INDBYGGET[DET_AKTUELT_AAR] || null);
+    if(!d){
       nulstilDetForm();
       let tom = komiteRaekke(komite) + vedtaegtLink();
       const harData = komiteRaekke(komite);
@@ -565,7 +582,6 @@ async function hentDet(){
       el.innerHTML = tom;
       return;
     }
-    const d = snap.data();
     document.getElementById("d-sted").value = d.sted||"";
     document.getElementById("d-datoer").value = d.datoer||"";
     document.getElementById("d-ankomst").value = d.ankomst||"";
