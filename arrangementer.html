@@ -144,6 +144,8 @@ try {
         <textarea id="d-medbring" placeholder="sovepose, gummistøvler, godt humør…"></textarea>
         <label>Program / praktisk info</label>
         <textarea id="d-program" placeholder="program, måltider, aktiviteter, andet vigtigt…"></textarea>
+        <label>Referat</label>
+        <textarea id="d-referat" placeholder="indsæt eller skriv referatet fra skovturen / generalforsamlingen…" style="min-height:120px"></textarea>
         <div class="form-knapper">
           <button class="knap" id="d-gem" onclick="gemDet()">Gem oplysninger</button>
           <button class="knap knap-graa" onclick="skjulDetForm()">Annullér</button>
@@ -467,6 +469,7 @@ window.gemDet = async function(){
     kontaktTlf:  document.getElementById("d-kontakt-tlf").value.trim(),
     medbring:    document.getElementById("d-medbring").value.trim(),
     program:     document.getElementById("d-program").value.trim(),
+    referat:     document.getElementById("d-referat").value.trim(),
     opdateret_af: MIT_NAVN, opdateret_dato: new Date().toISOString()
   };
   const btn = document.getElementById("d-gem"); btn.disabled = true; btn.textContent = "Gemmer…";
@@ -482,8 +485,17 @@ function detRaekke(label, vaerdi){
   return `<div class="hist-row"><div style="min-width:160px;font-weight:bold;color:#2d5016;">${label}</div><div style="flex:1;white-space:pre-wrap;">${escHtml(vaerdi)}</div></div>`;
 }
 
+// Lang tekst som foldbar blok (klik på titlen for at åbne/lukke)
+function detFold(titel, vaerdi){
+  if(!vaerdi) return "";
+  return `<details style="margin-top:8px;border:1px solid #e5ddc7;border-radius:6px;overflow:hidden;">
+    <summary style="cursor:pointer;padding:10px 14px;background:#f7f2e3;font-weight:bold;color:#2d5016;list-style:none;">${titel}</summary>
+    <div style="padding:14px;white-space:pre-wrap;line-height:1.55;">${escHtml(vaerdi)}</div>
+  </details>`;
+}
+
 function nulstilDetForm(){
-  ["d-sted","d-datoer","d-ankomst","d-afgang","d-pris","d-frist","d-betaling","d-kontakt-navn","d-kontakt-tlf","d-medbring","d-program"].forEach(id => {
+  ["d-sted","d-datoer","d-ankomst","d-afgang","d-pris","d-frist","d-betaling","d-kontakt-navn","d-kontakt-tlf","d-medbring","d-program","d-referat"].forEach(id => {
     document.getElementById(id).value = "";
   });
 }
@@ -559,6 +571,7 @@ async function hentDet(){
     document.getElementById("d-kontakt-tlf").value = d.kontaktTlf||"";
     document.getElementById("d-medbring").value = d.medbring||"";
     document.getElementById("d-program").value = d.program||"";
+    document.getElementById("d-referat").value = d.referat||"";
     let kontakt = (d.kontaktNavn || d.kontaktTlf)
       ? [d.kontaktNavn, d.kontaktTlf].filter(Boolean).join(" · ") : "";
     let html =
@@ -572,7 +585,9 @@ async function hentDet(){
       komiteRaekke(komite) +
       detRaekke("Kontakt", kontakt) +
       detRaekke("Medbring", d.medbring) +
-      detRaekke("Program / info", d.program);
+      detRaekke("Program / info", d.program) +
+      detFold("📄 Referat", d.referat) +
+      `<div class="hist-row"><div style="min-width:160px;font-weight:bold;color:#2d5016;">📜 Vedtægter</div><div style="flex:1;"><a href="vedtaegter.html" style="color:#2d5016;font-weight:600;">Læs foreningens vedtægter →</a></div></div>`;
     if(!html) html = '<div class="tom-besked">Ingen oplysninger for ' + DET_AKTUELT_AAR + ' endnu.</div>';
     if(d.opdateret_af){
       const od = d.opdateret_dato ? new Date(d.opdateret_dato).toLocaleDateString("da-DK") : "";
