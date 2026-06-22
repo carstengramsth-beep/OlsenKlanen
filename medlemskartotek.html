@@ -1073,6 +1073,10 @@ function renderPersonEdit() {
           <option value="admin"    ${(p.rettighed||'')==='admin'          ?'selected':''}>Administrator (OlsenBanden)</option>
           <option value="gaest"    ${(p.rettighed||'')==='gaest'          ?'selected':''}>Gæst (midlertidig)</option>
         </select>
+      </div>
+      <div class="person-komite" style="margin-top:.5rem">
+        <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--tekst-lys);margin-bottom:3px">🏕️ Arrangementskomité — år</label>
+        <input data-pi="${i}" data-felt="komite_aar" value="${p.komite_aar||''}" placeholder="f.eks. 2027 (flere år adskilles med komma)" style="width:100%;border:1px solid var(--border);padding:.4rem .6rem;font-size:12.5px;font-family:'Source Sans 3',sans-serif;background:var(--hvid);border-radius:3px">
       </div>` : ''}`}
     </div>`;
   }).join('');
