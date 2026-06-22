@@ -231,7 +231,9 @@ const MIT_NR    = hent("ok_nr");
 const MIT_NAVN  = hent("ok_navn") || "Et medlem";
 const MIT_NIVEAU= hent("ok_niveau");
 const ER_ADMIN  = (MIT_NIVEAU === "admin" || MIT_NIVEAU === "olsenbanden");
-const ER_KOMITE = (hent("ok_komite") === "ja");
+const SKOVTUR_AAR = "2027";
+const MINE_KOMITE_AAR = (hent("ok_komite_aar") || "").split(",").map(s => s.trim());
+const ER_KOMITE = MINE_KOMITE_AAR.includes(SKOVTUR_AAR);
 const MAA_REDIGERE_DETALJER = ER_ADMIN || ER_KOMITE;
 document.getElementById("bruger-navn").textContent = MIT_NAVN + (ER_ADMIN ? " (admin)" : (ER_KOMITE ? " (komité)" : ""));
 
