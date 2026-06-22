@@ -135,7 +135,7 @@ try {
         <label>Betaling til (konto / MobilePay)</label>
         <input type="text" id="d-betaling" placeholder="f.eks. MobilePay 12345 eller reg. 1234 konto 5678901">
         <label>Arrangementskomité</label>
-        <input type="text" id="d-komite" placeholder="f.eks. Kurt, Karin & Tommy">
+        <div style="font-size:13px;color:#666;background:#fff;border:1px solid #cfc8b5;border-radius:5px;padding:9px 10px;">Komitéen vises automatisk ud fra kartoteket. Sæt årstallet i feltet "🏕️ Arrangementskomité — år" på de pågældende medlemmer i medlemskartoteket.</div>
         <div class="to-kol">
           <div><label>Kontaktperson</label><input type="text" id="d-kontakt-navn" placeholder="navn"></div>
           <div><label>Telefon</label><input type="text" id="d-kontakt-tlf" placeholder="telefonnummer"></div>
@@ -463,7 +463,6 @@ window.gemDet = async function(){
     pris:        document.getElementById("d-pris").value.trim(),
     frist:       document.getElementById("d-frist").value.trim(),
     betaling:    document.getElementById("d-betaling").value.trim(),
-    komite:      document.getElementById("d-komite").value.trim(),
     kontaktNavn: document.getElementById("d-kontakt-navn").value.trim(),
     kontaktTlf:  document.getElementById("d-kontakt-tlf").value.trim(),
     medbring:    document.getElementById("d-medbring").value.trim(),
@@ -484,21 +483,68 @@ function detRaekke(label, vaerdi){
 }
 
 function nulstilDetForm(){
-  ["d-sted","d-datoer","d-ankomst","d-afgang","d-pris","d-frist","d-betaling","d-komite","d-kontakt-navn","d-kontakt-tlf","d-medbring","d-program"].forEach(id => {
+  ["d-sted","d-datoer","d-ankomst","d-afgang","d-pris","d-frist","d-betaling","d-kontakt-navn","d-kontakt-tlf","d-medbring","d-program"].forEach(id => {
     document.getElementById(id).value = "";
   });
+}
+
+// Navn fra person-objekt (samme logik som kartoteket)
+function personNavn(p){
+  const dele = [p.fornavn, p.mellemnavn, p.efternavn].filter(Boolean);
+  return dele.length ? dele.join(" ") : (p.navn || "");
+}
+
+// Henter komité-medlemmer for et givet år fra membres-kartoteket.
+// Email/telefon hører til husstanden (m.email / m.tlf).
+async function hentKomite(aar){
+  const aarStr = String(aar);
+  let medlemmer = [];
+  try {
+    const snap = await getDocs(collection(db,"membres"));
+    snap.forEach(docSnap => {
+      const m = docSnap.data();
+      const husTlf   = m.tlf || "";
+      const husEmail = (m.email || "").split("/")[0].trim();
+      (m.familiemedlemmer || []).forEach(p => {
+        const aarListe = String(p.komite_aar || "").split(",").map(s => s.trim());
+        if (aarListe.includes(aarStr)) {
+          medlemmer.push({
+            navn: personNavn(p),
+            tlf: p.mobil || husTlf,
+            email: p.email || husEmail
+          });
+        }
+      });
+    });
+  } catch(e){ console.log("Kunne ikke hente komité:", e); }
+  return medlemmer;
+}
+
+function komiteRaekke(medlemmer){
+  if(!medlemmer.length) return "";
+  const linjer = medlemmer.map(m => {
+    const kontakt = [m.tlf, m.email].filter(Boolean).join(" · ");
+    return `<div style="margin-bottom:4px;"><strong>${escHtml(m.navn)}</strong>${kontakt ? ` <span style="color:#888;font-size:13px;">— ${escHtml(kontakt)}</span>` : ""}</div>`;
+  }).join("");
+  return `<div class="hist-row"><div style="min-width:160px;font-weight:bold;color:#2d5016;">Arrangementskomité</div><div style="flex:1;">${linjer}</div></div>`;
 }
 
 async function hentDet(){
   const el = document.getElementById("det-visning");
   const maa = maaRedigereAaret(DET_AKTUELT_AAR);
+  // Hent komité fra kartoteket (uafhængigt af om der er gemt detaljer)
+  const komite = await hentKomite(DET_AKTUELT_AAR);
   try {
     const snap = await getDoc(doc(db,"skovtur_detaljer","skovtur"+DET_AKTUELT_AAR));
     if(!snap.exists()){
       nulstilDetForm();
-      el.innerHTML = maa
-        ? '<div class="tom-besked">Ingen oplysninger for ' + DET_AKTUELT_AAR + ' endnu. Tryk “✎ Ret oplysninger” for at udfylde.</div>'
-        : '<div class="tom-besked">Ingen oplysninger for ' + DET_AKTUELT_AAR + ' endnu.</div>';
+      let tom = komiteRaekke(komite);
+      if(!tom){
+        tom = maa
+          ? '<div class="tom-besked">Ingen oplysninger for ' + DET_AKTUELT_AAR + ' endnu. Tryk “✎ Ret oplysninger” for at udfylde.</div>'
+          : '<div class="tom-besked">Ingen oplysninger for ' + DET_AKTUELT_AAR + ' endnu.</div>';
+      }
+      el.innerHTML = tom;
       return;
     }
     const d = snap.data();
@@ -509,7 +555,6 @@ async function hentDet(){
     document.getElementById("d-pris").value = d.pris||"";
     document.getElementById("d-frist").value = d.frist||"";
     document.getElementById("d-betaling").value = d.betaling||"";
-    document.getElementById("d-komite").value = d.komite||"";
     document.getElementById("d-kontakt-navn").value = d.kontaktNavn||"";
     document.getElementById("d-kontakt-tlf").value = d.kontaktTlf||"";
     document.getElementById("d-medbring").value = d.medbring||"";
@@ -524,7 +569,7 @@ async function hentDet(){
       detRaekke("Pris pr. husstand", d.pris) +
       detRaekke("Tilmeldingsfrist", d.frist) +
       detRaekke("Betaling til", d.betaling) +
-      detRaekke("Arrangementskomité", d.komite) +
+      komiteRaekke(komite) +
       detRaekke("Kontakt", kontakt) +
       detRaekke("Medbring", d.medbring) +
       detRaekke("Program / info", d.program);
@@ -544,3 +589,4 @@ hentDet();
 </script>
 </body>
 </html>
+
