@@ -606,30 +606,32 @@ const NYHEDS_KILDER = [
 ];
 
 // Hent ét feed → returnér liste af {kilde, titel}
+// allorigins bruges primært (ingen stram grænse); rss2json som reserve.
 function hentEtFeed(kilde) {
-  const via1 = "https://api.rss2json.com/v1/api.json?count=5&rss_url=" + encodeURIComponent(kilde.url);
-  return fetch(via1)
+  return fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(kilde.url))
     .then(r => r.json())
     .then(data => {
-      if (data && data.status === "ok" && data.items && data.items.length) {
-        return data.items.slice(0, 4).map(it => ({ kilde: kilde.navn, titel: it.title })).filter(x => x.titel);
-      }
+      const xml = new DOMParser().parseFromString(data.contents, "text/xml");
+      const items = xml.querySelectorAll("item");
+      let ud = [], c = 0;
+      items.forEach(item => {
+        if (c >= 4) return;
+        const t = item.querySelector("title")?.textContent || "";
+        if (t) { ud.push({ kilde: kilde.navn, titel: t }); c++; }
+      });
+      if (ud.length) return ud;
       throw new Error("tom");
     })
     .catch(() => {
-      // Reserve: allorigins
-      return fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(kilde.url))
+      // Reserve: rss2json
+      const via2 = "https://api.rss2json.com/v1/api.json?count=5&rss_url=" + encodeURIComponent(kilde.url);
+      return fetch(via2)
         .then(r => r.json())
         .then(data => {
-          const xml = new DOMParser().parseFromString(data.contents, "text/xml");
-          const items = xml.querySelectorAll("item");
-          let ud = [], c = 0;
-          items.forEach(item => {
-            if (c >= 4) return;
-            const t = item.querySelector("title")?.textContent || "";
-            if (t) { ud.push({ kilde: kilde.navn, titel: t }); c++; }
-          });
-          return ud;
+          if (data && data.status === "ok" && data.items && data.items.length) {
+            return data.items.slice(0, 4).map(it => ({ kilde: kilde.navn, titel: it.title })).filter(x => x.titel);
+          }
+          return [];
         })
         .catch(() => []);
     });
