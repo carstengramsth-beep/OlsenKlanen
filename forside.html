@@ -596,38 +596,62 @@ fetch("https://api.open-meteo.com/v1/forecast?latitude=55.68&longitude=12.57&dai
   })
   .catch(() => { vejr = ""; window.byggBaand(); });
 
-// DR-nyheder via rss2json (stabil tjeneste der henter DR's RSS-feed)
-const DR_FEED = "https://www.dr.dk/nyheder/service/feeds/senestenyt";
-function hentNyheder(feedUrl) {
-  return fetch("https://api.rss2json.com/v1/api.json?count=8&rss_url=" + encodeURIComponent(feedUrl))
+// NYHEDER FRA FLERE KILDER — DR, TV2, Berlingske, Ekstra Bladet
+// Henter via rss2json med allorigins som reserve. Blander kilderne.
+const NYHEDS_KILDER = [
+  { navn: "DR",       url: "https://www.dr.dk/nyheder/service/feeds/senestenyt" },
+  { navn: "TV2",      url: "https://feeds.services.tv2.dk/api/feeds/nyheder/rss" },
+  { navn: "Berlingske", url: "https://www.berlingske.dk/content/rss" },
+  { navn: "Ekstra Bladet", url: "https://ekstrabladet.dk/rssfeed/all/" }
+];
+
+// Hent ét feed → returnér liste af {kilde, titel}
+function hentEtFeed(kilde) {
+  const via1 = "https://api.rss2json.com/v1/api.json?count=5&rss_url=" + encodeURIComponent(kilde.url);
+  return fetch(via1)
     .then(r => r.json())
     .then(data => {
       if (data && data.status === "ok" && data.items && data.items.length) {
-        nyheder = data.items.slice(0, 6).map(it => it.title).filter(Boolean);
-        window.byggBaand();
-        return true;
+        return data.items.slice(0, 4).map(it => ({ kilde: kilde.navn, titel: it.title })).filter(x => x.titel);
       }
-      return false;
-    });
-}
-hentNyheder(DR_FEED)
-  .then(ok => {
-    if (!ok) {
-      // Reserve: prøv allorigins hvis rss2json svigter
-      return fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(DR_FEED))
+      throw new Error("tom");
+    })
+    .catch(() => {
+      // Reserve: allorigins
+      return fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(kilde.url))
         .then(r => r.json())
         .then(data => {
           const xml = new DOMParser().parseFromString(data.contents, "text/xml");
           const items = xml.querySelectorAll("item");
-          let c = 0;
+          let ud = [], c = 0;
           items.forEach(item => {
-            if (c >= 6) return;
+            if (c >= 4) return;
             const t = item.querySelector("title")?.textContent || "";
-            if (t) { nyheder.push(t); c++; }
+            if (t) { ud.push({ kilde: kilde.navn, titel: t }); c++; }
           });
-          window.byggBaand();
-        });
+          return ud;
+        })
+        .catch(() => []);
+    });
+}
+
+// Hent alle kilder parallelt, bland resultaterne
+Promise.all(NYHEDS_KILDER.map(hentEtFeed))
+  .then(resultater => {
+    // Flet sammen: tag skiftevis fra hver kilde, så de blandes pænt
+    let blandet = [];
+    const maxLaengde = Math.max(...resultater.map(r => r.length), 0);
+    for (let i = 0; i < maxLaengde; i++) {
+      resultater.forEach(kildeListe => {
+        if (kildeListe[i]) blandet.push(kildeListe[i]);
+      });
     }
+    if (blandet.length) {
+      nyheder = blandet.slice(0, 12).map(n => n.kilde + ": " + n.titel);
+    } else {
+      nyheder = ["Velkommen til OlsenKlanen"];
+    }
+    window.byggBaand();
   })
   .catch(() => {
     nyheder = ["Velkommen til OlsenKlanen"];
