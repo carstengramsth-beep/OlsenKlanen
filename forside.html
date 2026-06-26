@@ -164,45 +164,6 @@ try {
       <div class="opslag-info">Her lægger du billeder op, flytter og retter · 2015 til i dag</div>
     </a>
  
-    <div class="tavle-boks">
-      <div class="tavle-titel">📌 Opslagstavlen — her og nu</div>
-      <div class="tavle-tal-raekke">
-        <a href="opslagstavlen.html?filter=nye" class="tavle-tal">
-          <span class="tavle-tal-tekst">🆕 Nye opslag</span>
-          <span class="tavle-tal-tal" id="tal-nye">0</span>
-        </a>
-        <a href="opslagstavlen.html?filter=ukommenterede" class="tavle-tal">
-          <span class="tavle-tal-tekst">💬 Uden kommentar</span>
-          <span class="tavle-tal-tal" id="tal-ukommenterede">0</span>
-        </a>
-        <a href="opslagstavlen.html" class="tavle-tal">
-          <span class="tavle-tal-tekst">📋 Opslag i alt</span>
-          <span class="tavle-tal-tal ialt" id="tal-ialt">0</span>
-        </a>
-      </div>
-    </div>
-
-    <div class="tavle-boks">
-      <div class="tavle-titel">👥 Besøg på OlsenKlanen</div>
-      <div class="tavle-tal-raekke">
-        <div class="tavle-tal">
-          <span class="tavle-tal-tekst">🟢 Aktive lige nu</span>
-          <span class="tavle-tal-tal" id="besoeg-nu">0</span>
-        </div>
-        <div class="tavle-tal">
-          <span class="tavle-tal-tekst">📅 Besøg i dag</span>
-          <span class="tavle-tal-tal" id="besoeg-idag">0</span>
-        </div>
-        <div class="tavle-tal">
-          <span class="tavle-tal-tekst">🧮 Besøg i alt</span>
-          <span class="tavle-tal-tal ialt" id="besoeg-ialt">0</span>
-        </div>
-      </div>
-      <div style="font-size:11px; color:#888; margin-top:8px; padding-left:4px; font-style:italic;">
-        Dit besøg tæller 1 pr. dag — så kan du selv holde øje.
-      </div>
-    </div>
- 
   </aside>
  
   <main class="mid">
@@ -277,6 +238,11 @@ try {
         <div class="nav-txt"><div class="nav-titel">Årenes billeder — læg op og ret</div><div class="nav-info">Læg billeder op · flyt og ret</div></div>
       </a>
  
+      <a class="nav-item" href="aarbogen.html">
+        <div class="nav-emoji">📖</div>
+        <div class="nav-txt"><div class="nav-titel">Årbogen</div><div class="nav-info">Gamle blade · familiens historie</div></div>
+      </a>
+ 
       <a class="nav-item" href="videofon-moederum.html">
         <div class="nav-emoji">📞</div>
         <div class="nav-txt"><div class="nav-titel">Videofon Møde Rum</div><div class="nav-info">Meld dig til · ring til familien</div></div>
@@ -288,6 +254,62 @@ try {
       </a>
  
     </div>
+
+    <!-- NYT OM HJEMMESIDEN -->
+    <div class="tavle-boks" style="border-left:4px solid #2d5016; margin-top:16px;">
+      <div class="tavle-titel">📰 Nyt om hjemmesiden</div>
+      <div style="font-size:13px; color:#444; line-height:1.6; padding:4px 2px 0;">
+        <p style="margin-bottom:10px;"><strong>📖 Årbogen er åbnet!</strong> Vi er begyndt at samle klanens gamle
+        medlemsblade til én sammenhængende historiebog. Du finder den under <em>Årbogen</em> i menuen — det
+        første blad (2022) kan allerede bladres igennem.</p>
+        <p style="margin-bottom:10px;"><strong>Vi mangler de gamle årgange.</strong> Især bladene fra
+        1980'erne og 1990'erne har vi ikke længere digitalt. Har du et gammelt blad eller andet materiale
+        gemt — også fra de år hvor samlingen står tom — så hører vi meget gerne fra dig.</p>
+        <p style="margin-bottom:0;">📨 Send dit bidrag til en i OlsenBanden, så vi sammen kan gøre Årbogen komplet.</p>
+      </div>
+    </div>
+
+    <!-- OPSLAGSTAVLEN — flyttet hertil -->
+    <div class="tavle-boks" style="margin-top:12px;">
+      <div class="tavle-titel">📌 Opslagstavlen — her og nu</div>
+      <div class="tavle-tal-raekke">
+        <a href="opslagstavlen.html?filter=nye" class="tavle-tal">
+          <span class="tavle-tal-tekst">🆕 Nye opslag</span>
+          <span class="tavle-tal-tal" id="tal-nye">0</span>
+        </a>
+        <a href="opslagstavlen.html?filter=ukommenterede" class="tavle-tal">
+          <span class="tavle-tal-tekst">💬 Uden kommentar</span>
+          <span class="tavle-tal-tal" id="tal-ukommenterede">0</span>
+        </a>
+        <a href="opslagstavlen.html" class="tavle-tal">
+          <span class="tavle-tal-tekst">📋 Opslag i alt</span>
+          <span class="tavle-tal-tal ialt" id="tal-ialt">0</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- BESØG — flyttet hertil -->
+    <div class="tavle-boks" style="margin-top:12px;">
+      <div class="tavle-titel">👥 Besøg på OlsenKlanen</div>
+      <div class="tavle-tal-raekke">
+        <div class="tavle-tal">
+          <span class="tavle-tal-tekst">🟢 Aktive lige nu</span>
+          <span class="tavle-tal-tal" id="besoeg-nu">0</span>
+        </div>
+        <div class="tavle-tal">
+          <span class="tavle-tal-tekst">📅 Besøg i dag</span>
+          <span class="tavle-tal-tal" id="besoeg-idag">0</span>
+        </div>
+        <div class="tavle-tal">
+          <span class="tavle-tal-tekst">🧮 Besøg i alt</span>
+          <span class="tavle-tal-tal ialt" id="besoeg-ialt">0</span>
+        </div>
+      </div>
+      <div style="font-size:11px; color:#888; margin-top:8px; padding-left:4px; font-style:italic;">
+        Dit besøg tæller 1 pr. dag — så kan du selv holde øje.
+      </div>
+    </div>
+
   </aside>
  
 </div>
@@ -727,5 +749,3 @@ window.byggKalender();
 <script type="module" src="besoegstaeller.js"></script>
 </body>
 </html>
- 
- 
