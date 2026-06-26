@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen · Årbogen</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Georgia, 'Times New Roman', serif;
+  background: #f5f1e8;
+  color: #2c3e1f;
+  line-height: 1.5;
+  padding-bottom: 50px;
+}
+
+/* Topbar — som resten af sitet */
+.topbar {
+  background: #2d5016; color: #f5e6a8;
+  padding: 16px 30px;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 12px;
+}
+.topbar h1 { font-size: 22px; font-weight: normal; }
+.hjem {
+  color: #f5e6a8; text-decoration: none;
+  padding: 6px 16px; border: 1px solid #f5e6a8; border-radius: 4px;
+  font-size: 14px; transition: .15s;
+}
+.hjem:hover { background: #f5e6a8; color: #2d5016; }
+
+/* Intro */
+.intro {
+  max-width: 920px; margin: 28px auto 10px; padding: 0 22px;
+  text-align: center;
+}
+.intro .stortitel {
+  font-size: 34px; color: #2d5016; letter-spacing: .5px; margin-bottom: 6px;
+}
+.intro .underrubrik {
+  font-style: italic; color: #6b6b50; font-size: 17px; margin-bottom: 18px;
+}
+.intro p {
+  font-size: 15px; color: #4a4a3a; max-width: 720px; margin: 0 auto 6px;
+}
+.efterlys-note {
+  background: #fff8e6; border: 1px solid #e6d3a0;
+  border-radius: 8px; padding: 12px 18px;
+  max-width: 720px; margin: 18px auto 0;
+  font-size: 14px; color: #7a5e1a;
+}
+
+/* Reol med årgange */
+.reol {
+  max-width: 920px; margin: 26px auto 0; padding: 0 22px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+
+.aargang {
+  display: flex; align-items: stretch;
+  background: #fff; border-radius: 8px; overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  text-decoration: none; color: inherit;
+  border-left: 6px solid #2d5016;
+  transition: transform .12s, box-shadow .12s;
+}
+.aargang.klar:hover {
+  transform: translateX(4px);
+  box-shadow: 0 3px 12px rgba(45,80,22,0.18);
+}
+
+/* Årstal-blok */
+.aar-tal {
+  background: #2d5016; color: #f5e6a8;
+  min-width: 120px; padding: 18px 14px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.aar-tal .tal { font-size: 30px; font-weight: bold; line-height: 1; }
+.aar-tal .blad { font-size: 11px; letter-spacing: 1px; opacity: .8; margin-top: 5px; text-transform: uppercase; }
+
+/* Indhold */
+.aar-indhold {
+  flex: 1; padding: 16px 20px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.aar-titel { font-size: 18px; font-weight: bold; color: #2c3e1f; }
+.aar-sted { font-size: 14px; color: #5a6b3f; margin-top: 3px; }
+.aar-dato { font-size: 13px; color: #999; font-style: italic; margin-top: 2px; }
+
+/* Handling-pil */
+.aar-pil {
+  display: flex; align-items: center; padding: 0 22px;
+  font-size: 14px; color: #2d5016; white-space: nowrap;
+}
+.aar-pil .knap {
+  background: #c89e3c; color: #fff;
+  padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: bold;
+}
+
+/* Manglende årgang — grå */
+.aargang.mangler {
+  border-left-color: #cfcabb;
+  background: #f7f5ee;
+  cursor: default;
+}
+.aargang.mangler .aar-tal {
+  background: #d8d3c4; color: #8a8470;
+}
+.aargang.mangler .aar-titel { color: #9a9482; font-weight: normal; font-style: italic; }
+.aargang.mangler .aar-pil .knap {
+  background: transparent; color: #a59a6f;
+  border: 1px dashed #c3b78a; font-weight: normal;
+}
+
+/* Aflyst årgang */
+.aargang.aflyst { border-left-color: #b08968; }
+.aargang.aflyst .aar-tal { background: #8a6a4f; color: #f0e4d8; }
+.aargang.aflyst .aar-titel { color: #8a6a4f; font-style: italic; }
+
+@media (max-width: 620px) {
+  .aargang { flex-wrap: wrap; }
+  .aar-tal { min-width: 100%; flex-direction: row; gap: 10px; padding: 12px; }
+  .aar-tal .blad { margin-top: 0; }
+  .aar-pil { padding: 0 20px 14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>📖 OlsenKlanen · Årbogen</h1>
+  <a class="hjem" href="forside.html">⌂ Forside</a>
+</div>
+
+<div class="intro">
+  <div class="stortitel">Årbogen</div>
+  <div class="underrubrik">Familiens historie — år for år</div>
+  <p>Her samler vi klanens gamle medlemsblade og årskataloger til én sammenhængende
+     historiebog om familiens udvikling. Klik på en årgang for at bladre i bladet.</p>
+  <div class="efterlys-note">
+    🔎 <strong>Hjælp samlingen på vej:</strong> De grå årgange mangler vi stadig materiale til.
+    Har du et gammelt blad gemt — også fra 1980'erne og 1990'erne — så send det ind,
+    så vi kan gøre Årbogen komplet.
+  </div>
+</div>
+
+<div class="reol" id="reol">
+  <!-- Årgangene genereres herunder -->
+</div>
+
+<script>
+/* ──────────────────────────────────────────────────────────────
+   ÅRBOGEN — ÅRGANGSLISTE
+   Sådan tilføjer du en ny årgang:
+   1. Find linjen med det rigtige årstal nedenfor.
+   2. Skift "status" fra "mangler" til "klar".
+   3. Skriv blad-aar (udgivelsesår), titel, sted og dato.
+   4. Sæt "fil" til navnet på bladre-bogen, fx "blad-2022.html".
+   ────────────────────────────────────────────────────────────── */
+
+const AARGANGE = [
+  {
+    bladAar: "2022",
+    status: "klar",
+    titel: "Skovtur 2021",
+    sted: "Holmsborg · Lejren i Søndervig",
+    dato: "4.–6. juni 2021",
+    fil: "blad-2022.html"
+  },
+  { bladAar: "2021", status: "mangler" },
+  { bladAar: "2020", status: "aflyst",
+    titel: "Ikke afholdt — grundet Corona" },
+  { bladAar: "2019", status: "mangler" },
+  { bladAar: "2018", status: "mangler" },
+  { bladAar: "2017", status: "mangler" },
+  { bladAar: "2016", status: "mangler" },
+  { bladAar: "2015", status: "mangler" },
+  { bladAar: "2014", status: "mangler" },
+  { bladAar: "2013", status: "mangler" }
+];
+
+const reol = document.getElementById("reol");
+
+AARGANGE.forEach(a => {
+  if (a.status === "klar") {
+    const el = document.createElement("a");
+    el.className = "aargang klar";
+    el.href = a.fil;
+    el.innerHTML = `
+      <div class="aar-tal"><span class="tal">${a.bladAar}</span><span class="blad">Blad</span></div>
+      <div class="aar-indhold">
+        <div class="aar-titel">${a.titel}</div>
+        <div class="aar-sted">${a.sted}</div>
+        <div class="aar-dato">${a.dato}</div>
+      </div>
+      <div class="aar-pil"><span class="knap">Bladr i bladet ›</span></div>`;
+    reol.appendChild(el);
+  } else if (a.status === "aflyst") {
+    const el = document.createElement("div");
+    el.className = "aargang aflyst";
+    el.innerHTML = `
+      <div class="aar-tal"><span class="tal">${a.bladAar}</span><span class="blad">Året</span></div>
+      <div class="aar-indhold">
+        <div class="aar-titel">${a.titel}</div>
+      </div>
+      <div class="aar-pil"></div>`;
+    reol.appendChild(el);
+  } else {
+    const el = document.createElement("div");
+    el.className = "aargang mangler";
+    el.innerHTML = `
+      <div class="aar-tal"><span class="tal">${a.bladAar}</span><span class="blad">Året</span></div>
+      <div class="aar-indhold">
+        <div class="aar-titel">Materiale mangler</div>
+        <div class="aar-sted">Kender du dette blad? Send det ind.</div>
+      </div>
+      <div class="aar-pil"><span class="knap">Efterlyses</span></div>`;
+    reol.appendChild(el);
+  }
+});
+</script>
+
+</body>
+</html>
