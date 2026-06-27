@@ -83,6 +83,7 @@ body {
   flex: 1; padding: 16px 20px;
   display: flex; flex-direction: column; justify-content: center;
 }
+.aar-infonr { font-size: 12px; font-weight: bold; color: #c89e3c; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
 .aar-titel { font-size: 18px; font-weight: bold; color: #2c3e1f; }
 .aar-sted { font-size: 14px; color: #5a6b3f; margin-top: 3px; }
 .aar-dato { font-size: 13px; color: #999; font-style: italic; margin-top: 2px; }
@@ -141,6 +142,10 @@ body {
     🔎 <strong>Hjælp samlingen på vej:</strong> De grå årgange mangler vi stadig materiale til.
     Har du et gammelt blad gemt — også fra 1980'erne og 1990'erne — så send det ind,
     så vi kan gøre Årbogen komplet.
+    <br><br>
+    📑 Hvert blad har sit eget <strong>informationsnummer</strong> (fx Information nr. 46).
+    Nummerrækken er ikke komplet endnu — når der opstår huller, kan vi efterlyse de manglende
+    numre præcist.
   </div>
 </div>
 
@@ -160,8 +165,18 @@ body {
 
 const AARGANGE = [
   {
+    bladAar: "2023",
+    status: "klar",
+    infonr: "Information nr. 46",
+    titel: "Skovtur 2022",
+    sted: "Eriks Minde · Rørvig",
+    dato: "27.–29. maj 2022",
+    fil: "blad-2023.html"
+  },
+  {
     bladAar: "2022",
     status: "klar",
+    infonr: "Information nr. 45",
     titel: "Skovtur 2021",
     sted: "Holmsborg · Lejren i Søndervig",
     dato: "4.–6. juni 2021",
@@ -189,6 +204,7 @@ AARGANGE.forEach(a => {
     el.innerHTML = `
       <div class="aar-tal"><span class="tal">${a.bladAar}</span><span class="blad">Blad</span></div>
       <div class="aar-indhold">
+        <div class="aar-infonr">${a.infonr || ""}</div>
         <div class="aar-titel">${a.titel}</div>
         <div class="aar-sted">${a.sted}</div>
         <div class="aar-dato">${a.dato}</div>
