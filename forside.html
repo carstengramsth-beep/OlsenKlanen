@@ -163,6 +163,15 @@ try {
       <div class="opslag-titel">Årenes billeder — læg op og ret</div>
       <div class="opslag-info">Her lægger du billeder op, flytter og retter · 2015 til i dag</div>
     </a>
+
+    <!-- NYT OM HJEMMESIDEN — lille klikbar boks -->
+    <a href="nyheder.html" class="tavle-boks" style="display:block; border-left:4px solid #2d5016; margin-top:16px; text-decoration:none; color:inherit;">
+      <div class="tavle-titel">📰 Nyt om hjemmesiden</div>
+      <div id="nyt-overskrifter" style="font-size:13px; color:#444; line-height:1.5; padding:4px 2px 2px;">
+        <div style="color:#888; font-style:italic;">Henter nyheder...</div>
+      </div>
+      <div style="font-size:13px; color:#2d5016; font-weight:bold; padding-top:8px; margin-top:6px; border-top:1px solid #f0ead8;">Se alle nyheder →</div>
+    </a>
  
   </aside>
  
@@ -255,20 +264,6 @@ try {
  
     </div>
 
-    <!-- NYT OM HJEMMESIDEN -->
-    <div class="tavle-boks" style="border-left:4px solid #2d5016; margin-top:16px;">
-      <div class="tavle-titel">📰 Nyt om hjemmesiden</div>
-      <div style="font-size:13px; color:#444; line-height:1.6; padding:4px 2px 0;">
-        <p style="margin-bottom:10px;"><strong>📖 Årbogen er åbnet!</strong> Vi er begyndt at samle klanens gamle
-        medlemsblade til én sammenhængende historiebog. Du finder den under <em>Årbogen</em> i menuen — det
-        første blad (2022) kan allerede bladres igennem.</p>
-        <p style="margin-bottom:10px;"><strong>Vi mangler de gamle årgange.</strong> Især bladene fra
-        1980'erne og 1990'erne har vi ikke længere digitalt. Har du et gammelt blad eller andet materiale
-        gemt — også fra de år hvor samlingen står tom — så hører vi meget gerne fra dig.</p>
-        <p style="margin-bottom:0;">📨 Send dit bidrag til en i OlsenBanden, så vi sammen kan gøre Årbogen komplet.</p>
-      </div>
-    </div>
-
     <!-- OPSLAGSTAVLEN — flyttet hertil -->
     <div class="tavle-boks" style="margin-top:12px;">
       <div class="tavle-titel">📌 Opslagstavlen — her og nu</div>
@@ -321,7 +316,7 @@ try {
  
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, query, onSnapshot, getDocs, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, query, onSnapshot, getDocs, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
  
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -336,6 +331,39 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
  
 const minEmail = sessionStorage.getItem("ok_email") || "";
+ 
+// ── NYT OM HJEMMESIDEN — hent 3 nyeste overskrifter ──
+(function(){
+  const maaneder = ["jan","feb","mar","apr","maj","jun","jul","aug","sep","okt","nov","dec"];
+  function kortDato(iso){
+    if(!iso) return "";
+    const d = new Date(iso);
+    if(isNaN(d)) return iso;
+    return d.getDate() + ". " + maaneder[d.getMonth()] + " " + d.getFullYear();
+  }
+  const nq = query(collection(db, "hjemmeside_nyheder"), orderBy("dato","desc"), limit(3));
+  onSnapshot(nq, (snap) => {
+    const boks = document.getElementById("nyt-overskrifter");
+    if(!boks) return;
+    if(snap.empty){
+      boks.innerHTML = '<div style="color:#888; font-style:italic;">Ingen nyheder endnu.</div>';
+      return;
+    }
+    let html = "";
+    snap.docs.forEach(d => {
+      const n = d.data();
+      const titel = String(n.titel||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      html += '<div style="margin-bottom:8px;">'
+            + '<div style="color:#c89e3c; font-size:11px; font-weight:bold;">' + kortDato(n.dato) + '</div>'
+            + '<div style="color:#2c3e1f; font-weight:bold;">' + titel + '</div>'
+            + '</div>';
+    });
+    boks.innerHTML = html;
+  }, e => {
+    const boks = document.getElementById("nyt-overskrifter");
+    if(boks) boks.innerHTML = '<div style="color:#888; font-style:italic;">Kunne ikke hente nyheder.</div>';
+  });
+})();
  
 const q = query(collection(db, "opslagstavle"));
 onSnapshot(q, (snap) => {
