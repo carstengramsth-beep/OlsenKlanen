@@ -50,6 +50,29 @@ body {
   font-size: 14px; color: #7a5e1a;
 }
 
+.princip-boks {
+  background: #eef3e4; border-left: 4px solid #2d5016;
+  border-radius: 8px; padding: 16px 22px;
+  max-width: 720px; margin: 20px auto 0;
+  font-size: 14.5px; color: #2c3e1f; line-height: 1.65; text-align: left;
+}
+.princip-titel { font-size: 16px; font-weight: bold; color: #2d5016; margin-bottom: 8px; }
+.princip-boks p { margin-bottom: 8px; }
+.princip-boks p:last-child { margin-bottom: 0; }
+
+.opfordring-boks {
+  background: #fff; border: 1px solid #d8c98a; border-top: 4px solid #c89e3c;
+  border-radius: 8px; padding: 18px 22px;
+  max-width: 720px; margin: 16px auto 0;
+  font-size: 14.5px; color: #3a3a2a; line-height: 1.65; text-align: left;
+}
+.opfordring-titel { font-size: 17px; font-weight: bold; color: #b8862a; margin-bottom: 10px; }
+.opfordring-boks p { margin-bottom: 10px; }
+.opfordring-boks ul { margin: 0 0 10px 22px; }
+.opfordring-boks li { margin-bottom: 4px; }
+.opfordring-boks em { color: #2d5016; font-style: italic; }
+.opfordring-kontakt { font-weight: bold; color: #2d5016; margin-bottom: 0 !important; }
+
 /* Reol med årgange */
 .reol {
   max-width: 920px; margin: 26px auto 0; padding: 0 22px;
@@ -136,13 +159,38 @@ body {
 <div class="intro">
   <div class="stortitel">Årbogen</div>
   <div class="underrubrik">Familiens historie — år for år</div>
-  <p>Her samler vi klanens gamle medlemsblade og årskataloger til én sammenhængende
-     historiebog om familiens udvikling. Klik på en årgang for at bladre i bladet.</p>
+  <p>Her samler vi klanens historie i én sammenhængende bog — år for år. Hvert år har sin
+     egen plads, også de år hvor vi endnu ikke har noget. Klik på en årgang for at se hvad
+     der findes om netop det år.</p>
+
+  <div class="princip-boks">
+    <div class="princip-titel">📖 Sådan er Årbogen tænkt</div>
+    <p>Tanken er enkel: <strong>året er adressen</strong>. Hvert år fra klanens skovture har sin
+       egen kasse. Nogle kasser er fyldte — med et blad, et referat eller billeder. Andre står
+       tomme og venter på at blive fyldt.</p>
+    <p>Et tomt år er ikke en mangel — det er en invitation. Når nogen sender materiale ind fra
+       det år, lægger vi det på plads, og kassen skifter fra grå til grøn.</p>
+  </div>
+
+  <div class="opfordring-boks">
+    <div class="opfordring-titel">✋ Vær med til at fylde Årbogen</div>
+    <p>Vi vil rigtig gerne have din hjælp. Sidder du med noget fra en af klanens skovture, så send
+       det ind — så lægger vi det ind under det rigtige år.</p>
+    <p><strong>Det behøver slet ikke være et blad.</strong> Det kan være:</p>
+    <ul>
+      <li>Et gammelt foto eller to</li>
+      <li>Et referat eller et A4-ark med tekst</li>
+      <li>Eller bare en erindring — en historie du husker</li>
+    </ul>
+    <p>For det er historierne der gør Årbogen levende. Hvem husker ikke skovturen i bussen, hvor
+       Else sprang ud i en mark, satte sig ned og udbrød: <em>"Når jeg skal tisse — så skal jeg
+       altså tisse!"</em> Den slags er guld værd. Skriv det ned, send det ind — så bliver det en
+       del af klanens historie.</p>
+    <p class="opfordring-kontakt">📨 Send dit bidrag til en i OlsenBanden, så finder vi det rigtige
+       år sammen.</p>
+  </div>
+
   <div class="efterlys-note">
-    🔎 <strong>Hjælp samlingen på vej:</strong> De grå årgange mangler vi stadig materiale til.
-    Har du et gammelt blad gemt — også fra 1980'erne og 1990'erne — så send det ind,
-    så vi kan gøre Årbogen komplet.
-    <br><br>
     📑 Hvert blad har sit eget <strong>informationsnummer</strong> (fx Information nr. 46).
     Nummerrækken er ikke komplet endnu — når der opstår huller, kan vi efterlyse de manglende
     numre præcist.
