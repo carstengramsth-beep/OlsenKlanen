@@ -115,15 +115,22 @@ function dkDato(iso) {
 }
 
 // Vis nyheder — nyeste øverst
-const q = query(collection(db, "hjemmeside_nyheder"), orderBy("dato", "desc"));
+const q = query(collection(db, "hjemmeside_nyheder"));
 onSnapshot(q, (snap) => {
   const liste = document.getElementById("nyheder-liste");
   if (snap.empty) {
     liste.innerHTML = '<div class="tom-besked">Der er ingen nyheder endnu.</div>';
     return;
   }
+  // Sortér: nyeste dato øverst; ved samme dato, nyest skrevet øverst
+  const docs = snap.docs.slice().sort((a, b) => {
+    const da = a.data(), db_ = b.data();
+    const datoA = da.dato || "", datoB = db_.dato || "";
+    if (datoA !== datoB) return datoB.localeCompare(datoA);
+    return (db_.oprettet || 0) - (da.oprettet || 0);
+  });
   liste.innerHTML = "";
-  snap.docs.forEach(d => {
+  docs.forEach(d => {
     const n = d.data();
     const div = document.createElement("div");
     div.className = "nyhed";
