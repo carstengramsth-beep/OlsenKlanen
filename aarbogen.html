@@ -165,6 +165,7 @@ body {
 .minde-billede { max-width: 100%; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
 .minde-tekst { font-size: 14px; color: #444; margin-top: 14px; line-height: 1.6; }
 .aargang.minde .blad { background: #c89e3c !important; }
+.aargang.regnskab .blad { background: #2f7d6e !important; }
 </style>
 </head>
 <body>
@@ -230,6 +231,16 @@ body {
    ────────────────────────────────────────────────────────────── */
 
 const AARGANGE = [
+  { bladAar: "2026", status: "mangler" },
+  {
+    bladAar: "2025",
+    status: "regnskab",
+    titel: "Årsregnskab 2025",
+    sted: "Fremlagt af Tommy Vormslev Olsen",
+    tekst: "Klanens årsregnskab for 2025 — fremlagt til orientering og drøftelse.",
+    fil: "regnskab-2025.html"
+  },
+  { bladAar: "2024", status: "mangler" },
   {
     bladAar: "2023",
     status: "klar",
@@ -295,6 +306,19 @@ AARGANGE.forEach(a => {
         <div class="aar-dato">${a.dato}</div>
       </div>
       <div class="aar-pil"><span class="knap">Bladr i bladet ›</span></div>`;
+    reol.appendChild(el);
+  } else if (a.status === "regnskab") {
+    const el = document.createElement("a");
+    el.className = "aargang klar regnskab";
+    el.href = a.fil;
+    el.innerHTML = `
+      <div class="aar-tal"><span class="tal">${a.bladAar}</span><span class="blad">Regnskab</span></div>
+      <div class="aar-indhold">
+        <div class="aar-titel">${a.titel}</div>
+        <div class="aar-sted">${a.sted}</div>
+        <div class="aar-dato">${a.tekst || ""}</div>
+      </div>
+      <div class="aar-pil"><span class="knap">Se regnskab ›</span></div>`;
     reol.appendChild(el);
   } else if (a.status === "minde") {
     const el = document.createElement("div");
