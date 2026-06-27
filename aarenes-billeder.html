@@ -66,6 +66,11 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
 .lightbox .lb-cap .lb-tekst{font-size:1.05rem}
 .lightbox .lb-cap .lb-navn{font-size:.85rem;color:#cfc;margin-top:.4rem;font-style:italic}
 .lightbox .lb-luk{position:fixed;top:1rem;right:1rem;background:#fff;color:#222;font-size:1.6rem;cursor:pointer;line-height:1;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.4);z-index:130;font-weight:700}
+.lightbox .lb-pil{position:fixed;top:50%;transform:translateY(-50%);background:#fff;color:#222;font-size:2.4rem;cursor:pointer;line-height:1;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.4);z-index:130;font-weight:700;user-select:none}
+.lightbox .lb-pil:hover{background:var(--guld,#d4a843)}
+.lightbox .lb-pil-forrige{left:1.5rem}
+.lightbox .lb-pil-naeste{right:1.5rem}
+@media(max-width:600px){.lightbox .lb-pil{width:46px;height:46px;font-size:2rem}.lightbox .lb-pil-forrige{left:.5rem}.lightbox .lb-pil-naeste{right:.5rem}}
 </style>
 </head>
 <body>
@@ -131,6 +136,8 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
 <!-- LIGHTBOX -->
 <div class="lightbox" id="lightbox">
   <span class="lb-luk" onclick="lukLightbox()">✕</span>
+  <span class="lb-pil lb-pil-forrige" onclick="bladreBillede(event,-1)">‹</span>
+  <span class="lb-pil lb-pil-naeste" onclick="bladreBillede(event,1)">›</span>
   <img id="lb-img" src="">
   <div class="lb-cap">
     <div class="lb-tekst" id="lb-tekst"></div>
@@ -461,6 +468,25 @@ window.visStort = function(i){
   document.getElementById('lightbox').classList.add('vis');
 };
 window.lukLightbox = function(){ document.getElementById('lightbox').classList.remove('vis'); aabentBillede=null; };
+
+// BLADRE mellem billeder i lightboxen
+window.bladreBillede = function(e, retning){
+  if(e) e.stopPropagation();
+  if(!aabentBillede) return;
+  let ny = aabentBillede.i + retning;
+  if(ny < 0) ny = visListe.length - 1;        // fra første → sidste
+  if(ny >= visListe.length) ny = 0;           // fra sidste → første
+  visStort(ny);
+};
+
+// Tastatur: piletaster og Esc
+document.addEventListener('keydown', function(e){
+  const lb = document.getElementById('lightbox');
+  if(!lb || !lb.classList.contains('vis')) return;
+  if(e.key === 'ArrowRight') bladreBillede(null, 1);
+  else if(e.key === 'ArrowLeft') bladreBillede(null, -1);
+  else if(e.key === 'Escape') lukLightbox();
+});
 
 // SLET (kun ejer/admin — knappen vises ellers ikke)
 window.sletBillede = async function(e){
