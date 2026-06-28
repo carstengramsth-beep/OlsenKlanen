@@ -619,7 +619,7 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth,signInAnonymously, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, getDoc, setDoc, addDoc, updateDoc, deleteDoc, doc, query, orderBy, limit, serverTimestamp, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, listAll, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import { getDatabase, ref as dbRef, set, remove, onValue, onDisconnect, serverTimestamp as dbTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -638,6 +638,7 @@ const app=initializeApp(firebaseConfig);const auth=getAuth(app);const db=getFire
 // --- ENKELT LOGIN: er man allerede logget ind som admin via hoveddoeren? ---
 function hoveddoerAdmin(){
   try{
+    signInAnonymously(auth).catch(()=>{});
     const niveau=(sessionStorage.getItem('ok_niveau')||localStorage.getItem('ok_niveau')||'').trim().toLowerCase();
     if(niveau!=='admin') return null;
     const navn=(sessionStorage.getItem('ok_navn')||localStorage.getItem('ok_navn')||'Admin').trim();
