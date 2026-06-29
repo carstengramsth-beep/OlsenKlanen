@@ -704,23 +704,9 @@ function begiLabel(type) { return BEGI_TYPE[type] || type; }
 function kanRedigere(nr) {
   // OlsenBanden (admin) må alt
   if (document.body.classList.contains('kan-redigere')) return true;
-  // Skal være logget ind på netop denne husstand
-  if (!familieSession || familieSession.nr !== nr) return false;
-
-  // Find husstandens data for at vurdere dataansvarlige
-  const m = data.find(x => x.nr === nr);
-  const voksne = (m && m.familiemedlemmer || []).filter(p => p.rolle !== 'barn');
-  const dataansvarlige = voksne.filter(p => p.dataansvarlig);
-
-  // Hvis nogen er markeret dataansvarlig: kun de(n) valgte dataansvarlige må rette
-  if (dataansvarlige.length > 0) {
-    return familieSession.dataansvarlig === true;
-  }
-
-  // Blødt fald-tilbage: ingen kryds sat endnu →
-  // alle voksne (ikke børn) må rette indtil OlsenBanden sætter krydser
-  if (familieSession.rolle && familieSession.rolle === 'barn') return false;
-  return true;
+  // Logget ind på sin EGEN husstand → må altid rette egne data
+  if (familieSession && familieSession.nr === nr) return true;
+  return false;
 }
  
 // ── KORTRENDERER ─────────────────────────────────────────────
