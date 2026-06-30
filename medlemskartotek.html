@@ -701,11 +701,16 @@ const BEGI_TYPE = {
  
 function begiLabel(type) { return BEGI_TYPE[type] || type; }
  
+// Sammenlign medlemsnumre uafhængigt af om de er tal eller tekst (46 vs "46")
+function sammeNr(a, b) {
+  return String(a) === String(b);
+}
+
 function kanRedigere(nr) {
   // OlsenBanden (admin) må alt
   if (document.body.classList.contains('kan-redigere')) return true;
   // Logget ind på sin EGEN husstand → må altid rette egne data
-  if (familieSession && familieSession.nr === nr) return true;
+  if (familieSession && sammeNr(familieSession.nr, nr)) return true;
   return false;
 }
  
@@ -719,7 +724,7 @@ const ROLLE_GRUPPER = [
 ];
  
 function byggKort(m) {
-  const erEgen    = familieSession && familieSession.nr === m.nr;
+  const erEgen    = familieSession && sammeNr(familieSession.nr, m.nr);
   const visRed    = kanRedigere(m.nr);
   const navnVis   = visKortNavn(m);
   const adrVis    = visAdresse(m);
@@ -831,7 +836,7 @@ function byggBekraeftBoks(m, erEgen, visRed) {
 
 // ── Gem bekræftelsen ──
 async function bekraeftMedlemskab(nr) {
-  const m = data.find(x => x.nr === nr);
+  const m = data.find(x => sammeNr(x.nr, nr));
   if (!m) return;
   const input = document.getElementById('bekraeft-email-' + nr);
   const email = (input ? input.value : '').trim();
@@ -1301,7 +1306,7 @@ function opdaterManglerListe() {
 }
  
 function aabneEditModal(nr) {
-  const m = data.find(x => x.nr === nr);
+  const m = data.find(x => sammeNr(x.nr, nr));
   if (!m) return;
   editDirty   = false;
   aktivtNr    = nr;
