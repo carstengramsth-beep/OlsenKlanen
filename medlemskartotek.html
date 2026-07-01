@@ -321,10 +321,10 @@ body.kan-redigere .historisk-btn-wrapper{display:block}
 <div class="flag-banner">🇩🇰 🇩🇰 🇩🇰 🇩🇰 🇩🇰</div>
  
 <nav class="topbar">
-  <a href="index.html" class="topbar-logo">OlsenKlanen</a>
+  <a href="forside.html" class="topbar-logo">OlsenKlanen</a>
   <div class="topbar-hojre">
     <div class="topbar-links">
-      <a href="index.html">Forside</a>
+      <a href="forside.html">Forside</a>
       <a href="skovtur2025.html">Skovtur 2025</a>
       <a href="foedselsdage.html">Begivenheder</a>
       <a href="medlemskartotek.html" class="aktiv">Medlemmer</a>
@@ -956,24 +956,24 @@ function lavVelkomstbrev(nr) {
   const html = `<!DOCTYPE html><html lang="da"><head><meta charset="utf-8">
 <title>Velkomstbrev ${m.nr}</title>
 <style>
-  @page { size: A4 portrait; margin: 2cm; }
-  body{font-family:Georgia,serif;color:#1B4332;line-height:1.55;max-width:640px;margin:0 auto;padding:24px}
-  h1{font-size:34px;margin:0 0 2px;text-align:center}
-  .under{text-align:center;font-style:italic;color:#9a7d0a;margin:0 0 26px;font-size:17px}
-  h2{font-size:18px;color:#1B4332;border-bottom:1px solid #9a7d0a;padding-bottom:3px;margin:24px 0 10px}
-  p{margin:0 0 12px}
-  table{border-collapse:collapse;margin:6px 0 14px;width:100%}
-  td{border:1px solid #cdb96a;padding:8px 12px;font-size:16px}
+  @page { size: A4 portrait; margin: 1.3cm; }
+  body{font-family:Georgia,serif;color:#1B4332;line-height:1.35;max-width:640px;margin:0 auto;padding:10px}
+  h1{font-size:28px;margin:0 0 2px;text-align:center}
+  .under{text-align:center;font-style:italic;color:#9a7d0a;margin:0 0 12px;font-size:15px}
+  h2{font-size:16px;color:#1B4332;border-bottom:1px solid #9a7d0a;padding-bottom:2px;margin:11px 0 5px}
+  p{margin:0 0 7px}
+  table{border-collapse:collapse;margin:4px 0 8px;width:100%}
+  td{border:1px solid #cdb96a;padding:6px 12px;font-size:15px}
   tr td:first-child{background:#f7f3e3}
-  .kode-boks{background:#f7f3e3;border:1px solid #9a7d0a;border-radius:6px;padding:14px 18px;margin:14px 0;text-align:center;font-size:18px}
-  .kode-boks b{font-size:22px;color:#9a7d0a}
-  .knap-linje{text-align:center;margin:20px 0}
-  .knap-linje a{background:#1B4332;color:#fff;text-decoration:none;padding:12px 28px;border-radius:6px;font-weight:bold}
-  .print-vejledning{background:#eef4ea;border-radius:6px;padding:12px 16px;font-size:13px;color:#40613a;margin:24px 0}
-  .fod{margin-top:26px;padding-top:14px;border-top:1px solid #9a7d0a;font-size:13px;color:#555}
-.print-knap{display:block;margin:18px auto 0;background:#1B4332;color:#fff;border:none;padding:12px 32px;font-size:15px;font-weight:bold;border-radius:6px;cursor:pointer;font-family:Georgia,serif;letter-spacing:.5px}
+  .kode-boks{background:#f7f3e3;border:1px solid #9a7d0a;border-radius:6px;padding:9px 18px;margin:8px 0;text-align:center;font-size:16px}
+  .kode-boks b{font-size:20px;color:#9a7d0a}
+  .knap-linje{text-align:center;margin:10px 0}
+  .knap-linje a{background:#1B4332;color:#fff;text-decoration:none;padding:9px 24px;border-radius:6px;font-weight:bold}
+  .print-vejledning{background:#eef4ea;border-radius:6px;padding:10px 16px;font-size:13px;color:#40613a;margin:12px 0}
+  .fod{margin-top:12px;padding-top:8px;border-top:1px solid #9a7d0a;font-size:12px;color:#555}
+.print-knap{display:block;margin:12px auto 0;background:#1B4332;color:#fff;border:none;padding:11px 30px;font-size:15px;font-weight:bold;border-radius:6px;cursor:pointer;font-family:Georgia,serif;letter-spacing:.5px}
 .print-knap:hover{background:#2d6e50}
-.afsender{margin-top:16px;padding-top:12px;border-top:1px solid #9a7d0a;font-size:12px;color:#888;text-align:center;line-height:1.6}
+.afsender{margin-top:10px;padding-top:8px;border-top:1px solid #9a7d0a;font-size:12px;color:#888;text-align:center;line-height:1.5}
 @media print{.print-knap{display:none}}
   @media print{ .print-vejledning{display:none} }
 </style></head><body>
