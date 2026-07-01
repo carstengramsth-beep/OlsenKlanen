@@ -140,6 +140,9 @@ body.kan-redigere #admin-bjaelke{display:flex}
 .bekraeft-knap:hover{background:var(--gron-lys)}
 body.kan-redigere .rediger-knap{display:inline-block}
 body.familie-session .rediger-knap.egen-rediger{display:inline-block}
+.brev-knap{background:var(--guld,#9a7d0a);color:#fff;border:none;font-size:13px;font-weight:700;letter-spacing:.5px;padding:9px 20px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:background .2s,box-shadow .2s;display:none;flex-shrink:0;box-shadow:0 2px 8px rgba(154,125,10,.35)}
+.brev-knap:hover{filter:brightness(1.1);box-shadow:0 4px 12px rgba(154,125,10,.45)}
+body.kan-redigere .brev-knap{display:inline-block}
  
 /* ── MODALER ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto}
@@ -795,6 +798,7 @@ function byggKort(m) {
       ${visRed
         ? `<button class="rediger-knap ${erEgen ? 'egen-rediger' : ''}" data-nr="${m.nr}" style="display:inline-block">✏️ Rediger</button>`
         : `<button class="rediger-knap ${erEgen ? 'egen-rediger' : ''}" data-nr="${m.nr}">✏️ Rediger</button>`}
+      <button class="brev-knap" data-brev-nr="${m.nr}">📋 Velkomstbrev</button>
     </div>`;
   return el;
 }
@@ -925,11 +929,93 @@ function renderGrid() {
   synlige.forEach(m => grid.appendChild(byggKort(m)));
 }
  
+// ── VELKOMSTBREV (kun admin) ──────────────────────────────────
+function lavVelkomstbrev(nr) {
+  const m = data.find(x => sammeNr(x.nr, nr));
+  if (!m) { alert('Kunne ikke finde medlem nr. ' + nr); return; }
+
+  const husstandsNavn = visNavn(m);
+  const kode = m.kode || 'Olsen-' + String(m.nr).split('-')[0];
+
+  // Personer i husstanden med hvert deres nummer (46-A, 46-B ...)
+  const personer = (m.familiemedlemmer || []).filter(p => (visPersonNavn(p) || p.navn));
+  let loginRaekker;
+  if (personer.length) {
+    loginRaekker = personer.map((p, i) => {
+      const bogstav = String.fromCharCode(65 + i); // A, B, C...
+      const persNr = String(m.nr).includes('-') ? m.nr : (m.nr + '-' + bogstav);
+      return `<tr><td>${visPersonNavn(p) || p.navn}</td><td><b>${persNr}</b></td></tr>`;
+    }).join('');
+  } else {
+    loginRaekker = `<tr><td>${husstandsNavn}</td><td><b>${m.nr}</b></td></tr>`;
+  }
+
+  const loginUrl = 'https://www.olsenklanen.dk';
+  const idag = new Date().toLocaleDateString('da-DK', { day:'numeric', month:'long', year:'numeric' });
+
+  const html = `<!DOCTYPE html><html lang="da"><head><meta charset="utf-8">
+<title>Velkomstbrev ${m.nr}</title>
+<style>
+  @page { margin: 2cm; }
+  body{font-family:Georgia,serif;color:#1B4332;line-height:1.55;max-width:640px;margin:0 auto;padding:24px}
+  h1{font-size:34px;margin:0 0 2px;text-align:center}
+  .under{text-align:center;font-style:italic;color:#9a7d0a;margin:0 0 26px;font-size:17px}
+  h2{font-size:18px;color:#1B4332;border-bottom:1px solid #9a7d0a;padding-bottom:3px;margin:24px 0 10px}
+  p{margin:0 0 12px}
+  table{border-collapse:collapse;margin:6px 0 14px;width:100%}
+  td{border:1px solid #cdb96a;padding:8px 12px;font-size:16px}
+  tr td:first-child{background:#f7f3e3}
+  .kode-boks{background:#f7f3e3;border:1px solid #9a7d0a;border-radius:6px;padding:14px 18px;margin:14px 0;text-align:center;font-size:18px}
+  .kode-boks b{font-size:22px;color:#9a7d0a}
+  .knap-linje{text-align:center;margin:20px 0}
+  .knap-linje a{background:#1B4332;color:#fff;text-decoration:none;padding:12px 28px;border-radius:6px;font-weight:bold}
+  .print-vejledning{background:#eef4ea;border-radius:6px;padding:12px 16px;font-size:13px;color:#40613a;margin:24px 0}
+  .fod{margin-top:26px;padding-top:14px;border-top:1px solid #9a7d0a;font-size:13px;color:#555}
+  @media print{ .print-vejledning{display:none} }
+</style></head><body>
+<h1>OlsenKlanen</h1>
+<p class="under">Familiens egen hjemmeside</p>
+
+<p class="print-vejledning">📄 <b>Sådan gemmer du brevet som PDF:</b> Tryk <b>Ctrl+P</b> (eller ⌘+P på Mac), vælg <b>"Gem som PDF"</b>, og giv den navnet <b>Velkomstbrev-${m.nr}</b>. Denne grå boks kommer ikke med i PDF'en.</p>
+
+<p>Kære ${husstandsNavn},</p>
+<p>Velkommen til OlsenKlanen — vores helt egen familieside. Her holder vi sammen på det hele: navne og fødselsdage, billeder gennem årene, familiens historie, og en videofon, hvor vi kan se og snakke sammen.</p>
+
+<h2>Sådan logger du ind</h2>
+<p>Gå ind på <b>${loginUrl}</b> og log ind med dit personlige medlemsnummer og PIN-koden nedenfor:</p>
+<table>${loginRaekker}</table>
+<div class="kode-boks">Fælles start-PIN: <b>${kode}</b></div>
+<div class="knap-linje"><a href="${loginUrl}">Gå til OlsenKlanen</a></div>
+
+<h2>Skift din PIN-kode</h2>
+<p>PIN-koden ovenfor er blot en startkode. Vil du have den ændret til noget, du selv vælger, så sig til Carsten eller Karin — så retter vi den for dig.</p>
+
+<h2>Første gang: kig dine oplysninger efter</h2>
+<p>Når du er logget ind, så gå ind i <b>Medlemskartoteket</b>, find dit eget navn og klik på det. Klik på <b>✏️ Rediger</b> og tjek, at telefon, mail og adresse passer. Husk at trykke <b>Gem</b> nederst.</p>
+<p><i>Lille tip: Hvis "Rediger" ikke dukker op, så log helt ud (øverst til højre) og ind igen med dit eget medlemsnummer. Så kommer knappen frem.</i></p>
+
+<p>Vi glæder os til at se dig aktiv derinde. Har du spørgsmål, så ring eller skriv til en af os i OlsenBanden.</p>
+<p>Mange varme hilsner<br><b>OlsenBanden</b></p>
+
+<div class="fod">Velkomstbrev til husstand nr. ${m.nr} · dannet ${idag}</div>
+</body></html>`;
+
+  const w = window.open('', '_blank');
+  if (!w) { alert('Din browser blokerede vinduet. Tillad pop op-vinduer og prøv igen.'); return; }
+  w.document.write(html);
+  w.document.close();
+}
+
 // ── EXPAND/COLLAPSE ───────────────────────────────────────────
 document.getElementById('grid').addEventListener('click', e => {
   if (e.target.closest('.rediger-knap')) {
     e.stopPropagation();
     aabneEditModal(e.target.closest('.rediger-knap').dataset.nr);
+    return;
+  }
+  if (e.target.closest('.brev-knap')) {
+    e.stopPropagation();
+    lavVelkomstbrev(e.target.closest('.brev-knap').dataset.brevNr);
     return;
   }
   if (e.target.closest('.bekraeft-knap')) {
