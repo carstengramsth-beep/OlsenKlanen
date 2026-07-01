@@ -20,7 +20,7 @@
   --lilla:#6b3580;--lilla-pale:#f3eaff;
 }
 body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var(--tekst);min-height:100vh}
- 
+ h
 /* ── FLAG-BANNER ── */
 .flag-banner{background:var(--gron);text-align:center;padding:.55rem 0;font-size:26px;letter-spacing:6px;border-bottom:3px solid var(--guld)}
  
@@ -956,7 +956,7 @@ function lavVelkomstbrev(nr) {
   const html = `<!DOCTYPE html><html lang="da"><head><meta charset="utf-8">
 <title>Velkomstbrev ${m.nr}</title>
 <style>
-  @page { margin: 2cm; }
+  @page { size: A4 portrait; margin: 2cm; }
   body{font-family:Georgia,serif;color:#1B4332;line-height:1.55;max-width:640px;margin:0 auto;padding:24px}
   h1{font-size:34px;margin:0 0 2px;text-align:center}
   .under{text-align:center;font-style:italic;color:#9a7d0a;margin:0 0 26px;font-size:17px}
@@ -971,12 +971,17 @@ function lavVelkomstbrev(nr) {
   .knap-linje a{background:#1B4332;color:#fff;text-decoration:none;padding:12px 28px;border-radius:6px;font-weight:bold}
   .print-vejledning{background:#eef4ea;border-radius:6px;padding:12px 16px;font-size:13px;color:#40613a;margin:24px 0}
   .fod{margin-top:26px;padding-top:14px;border-top:1px solid #9a7d0a;font-size:13px;color:#555}
+.print-knap{display:block;margin:18px auto 0;background:#1B4332;color:#fff;border:none;padding:12px 32px;font-size:15px;font-weight:bold;border-radius:6px;cursor:pointer;font-family:Georgia,serif;letter-spacing:.5px}
+.print-knap:hover{background:#2d6e50}
+.afsender{margin-top:16px;padding-top:12px;border-top:1px solid #9a7d0a;font-size:12px;color:#888;text-align:center;line-height:1.6}
+@media print{.print-knap{display:none}}
   @media print{ .print-vejledning{display:none} }
 </style></head><body>
 <h1>OlsenKlanen</h1>
 <p class="under">Familiens egen hjemmeside</p>
 
-<p class="print-vejledning">📄 <b>Sådan gemmer du brevet som PDF:</b> Tryk <b>Ctrl+P</b> (eller ⌘+P på Mac), vælg <b>"Gem som PDF"</b>, og giv den navnet <b>Velkomstbrev-${m.nr}</b>. Denne grå boks kommer ikke med i PDF'en.</p>
+<p class="print-vejledning">📄 <b>Sådan gemmer du brevet som PDF:</b> Tryk på knappen nedenfor (eller Ctrl+P). Vælg <b>"Gem som PDF"</b>, og giv den navnet <b>Velkomstbrev-${m.nr}</b>. Denne grå boks og knappen kommer ikke med i PDF'en.</p>
+<button class="print-knap" onclick="window.print()">🖨️ Gem som PDF / Print</button>
 
 <p>Kære ${husstandsNavn},</p>
 <p>Velkommen til OlsenKlanen — vores helt egen familieside. Her holder vi sammen på det hele: navne og fødselsdage, billeder gennem årene, familiens historie, og en videofon, hvor vi kan se og snakke sammen.</p>
@@ -997,6 +1002,7 @@ function lavVelkomstbrev(nr) {
 <p>Vi glæder os til at se dig aktiv derinde. Har du spørgsmål, så ring eller skriv til en af os i OlsenBanden.</p>
 <p>Mange varme hilsner<br><b>OlsenBanden</b></p>
 
+<div class="afsender">Afsender: <b>OlsenBanden</b> · Carsten Gram · cg@gallerieg.dk · tlf. 20 73 25 25</div>
 <div class="fod">Velkomstbrev til husstand nr. ${m.nr} · dannet ${idag}</div>
 </body></html>`;
 
