@@ -245,19 +245,41 @@ function knirk(){
   const c = lydCtx(); if(!c) return;
   try{
     const t = c.currentTime;
+    const D = 1.5; // varighed: en langsom, gammel dør
+    // Hoved-knirk: savtak gennem båndpas, stigende tonehøjde (som når hængslet drejer)
     const o = c.createOscillator(); o.type='sawtooth';
-    const f = c.createBiquadFilter(); f.type='lowpass'; f.frequency.value=900;
+    o.frequency.setValueAtTime(280, t);
+    o.frequency.linearRampToValueAtTime(560, t+D*0.75);
+    o.frequency.linearRampToValueAtTime(500, t+D);
+    const bp = c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=560; bp.Q.value=6;
+    // Uregelmæssig vibrato (giver den "levende" knirken)
+    const vib = c.createOscillator(); vib.type='sine';
+    vib.frequency.setValueAtTime(7, t); vib.frequency.linearRampToValueAtTime(16, t+D);
+    const vibG = c.createGain(); vibG.gain.value=26; vib.connect(vibG); vibG.connect(o.frequency);
+    // Stick-slip "raslen" (tremolo) — selve knirke-karakteren
+    const trem = c.createOscillator(); trem.type='square';
+    trem.frequency.setValueAtTime(9, t); trem.frequency.linearRampToValueAtTime(19, t+D);
+    const tremG = c.createGain(); tremG.gain.value=0.5;
+    const stutter = c.createGain(); stutter.gain.value=0.5;
+    trem.connect(tremG); tremG.connect(stutter.gain);
+    // Envelope
     const g = c.createGain();
-    o.frequency.setValueAtTime(240, t);
-    o.frequency.exponentialRampToValueAtTime(90, t+0.55);
-    const lfo = c.createOscillator(); lfo.type='sine'; lfo.frequency.value=24;
-    const lfoG = c.createGain(); lfoG.gain.value=28;
-    lfo.connect(lfoG); lfoG.connect(o.frequency);
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.16, t+0.06);
-    g.gain.exponentialRampToValueAtTime(0.0001, t+0.62);
-    o.connect(f); f.connect(g); g.connect(c.destination);
-    o.start(t); lfo.start(t); o.stop(t+0.64); lfo.stop(t+0.64);
+    g.gain.exponentialRampToValueAtTime(0.15, t+0.16);
+    g.gain.setValueAtTime(0.15, t+D*0.72);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+D);
+    o.connect(bp); bp.connect(stutter); stutter.connect(g); g.connect(c.destination);
+    // Lav træ-groan under knirket
+    const lo = c.createOscillator(); lo.type='sine';
+    lo.frequency.setValueAtTime(72, t); lo.frequency.exponentialRampToValueAtTime(52, t+D);
+    const loG = c.createGain();
+    loG.gain.setValueAtTime(0.0001, t);
+    loG.gain.exponentialRampToValueAtTime(0.06, t+0.22);
+    loG.gain.exponentialRampToValueAtTime(0.0001, t+D);
+    lo.connect(loG); loG.connect(c.destination);
+    const slut = t+D+0.05;
+    o.start(t); vib.start(t); trem.start(t); lo.start(t);
+    o.stop(slut); vib.stop(slut); trem.stop(slut); lo.stop(slut);
   }catch(e){}
 }
 function slam(){
@@ -519,25 +541,35 @@ document.addEventListener('keydown', e=>{
 (function(){
   const img = document.getElementById('lup-img');
   if(!img) return;
-  let zoom=1, tx=0, ty=0, traekker=false, sx=0, sy=0;
+  const TRIN = [1, 1.7, 2.6, 3.8, 5];   // zoom-niveauer — ét klik = ét trin
+  let zi = 0, tx=0, ty=0, traekker=false, sx=0, sy=0;
   function anvend(){
-    img.style.transform = 'translate('+tx+'px,'+ty+'px) scale('+zoom+')';
-    img.style.cursor = zoom>1 ? 'grab' : 'zoom-in';
+    img.style.transform = 'translate('+tx+'px,'+ty+'px) scale('+TRIN[zi]+')';
+    img.style.cursor = zi >= TRIN.length-1 ? 'zoom-out' : 'zoom-in';
   }
-  window.nulstilZoom = function(){ zoom=1; tx=0; ty=0; anvend(); };
+  window.nulstilZoom = function(){ zi=0; tx=0; ty=0; anvend(); };
+  // Venstreklik = zoom ét trin ind (og forfra når man er helt inde)
   img.addEventListener('click', function(e){
     e.stopPropagation();
-    if(zoom>1){ zoom=1; tx=0; ty=0; } else { zoom=2.5; }
+    if(zi < TRIN.length-1){ zi++; } else { zi=0; tx=0; ty=0; }
     anvend();
   });
+  // Højreklik = zoom ét trin ud (uden højreklik-menu)
+  img.addEventListener('contextmenu', function(e){
+    e.preventDefault(); e.stopPropagation();
+    if(zi>0){ zi--; if(zi===0){ tx=0; ty=0; } }
+    anvend();
+  });
+  // Scrollehjul = zoom ind/ud
   img.addEventListener('wheel', function(e){
     e.preventDefault(); e.stopPropagation();
-    zoom = Math.min(5, Math.max(1, zoom + (e.deltaY<0 ? 0.3 : -0.3)));
-    if(zoom<=1){ zoom=1; tx=0; ty=0; }
+    if(e.deltaY<0 && zi<TRIN.length-1) zi++;
+    else if(e.deltaY>0 && zi>0){ zi--; if(zi===0){ tx=0; ty=0; } }
     anvend();
   }, {passive:false});
+  // Træk for at flytte rundt når der er zoomet
   img.addEventListener('mousedown', function(e){
-    if(zoom<=1) return;
+    if(zi===0) return;
     e.preventDefault(); traekker=true; sx=e.clientX-tx; sy=e.clientY-ty; img.style.cursor='grabbing';
   });
   window.addEventListener('mousemove', function(e){
@@ -545,7 +577,7 @@ document.addEventListener('keydown', e=>{
   });
   window.addEventListener('mouseup', function(){ if(traekker){ traekker=false; anvend(); } });
   img.addEventListener('touchstart', function(e){
-    if(zoom<=1 || e.touches.length!==1) return;
+    if(zi===0 || e.touches.length!==1) return;
     sx=e.touches[0].clientX-tx; sy=e.touches[0].clientY-ty; traekker=true;
   }, {passive:true});
   img.addEventListener('touchmove', function(e){

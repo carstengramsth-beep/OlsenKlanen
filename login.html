@@ -317,13 +317,19 @@
     if(sel) sel.value = loginMusikIndex;
   });
 
-  // Auto-start ved foerste klik paa siden (hvis browseren blokerede auto)
-  document.addEventListener('click', ()=>{
-    if(!loginAutoProevet && !loginMusikTaendt && loginMusikListe.length>0){
-      loginAutoProevet = true;
-      loginMusik.play().then(()=>{ loginMusikTaendt=true; loginOpdaterKnap(); }).catch(()=>{});
-    }
-  }, { once:false });
+  // Auto-start ved foerste handling paa siden (klik, tastetryk, beroering) —
+  // browsere blokerer ren auto-afspilning, men tillader lyd efter foerste bruger-handling.
+  function loginProevAutostart(){
+    if(loginAutoProevet || loginMusikTaendt || loginMusikListe.length===0) return;
+    loginAutoProevet = true;
+    if(!loginMusik.src) loginMusik.src = loginMusikListe[loginMusikIndex].url;
+    loginMusik.play()
+      .then(()=>{ loginMusikTaendt=true; loginOpdaterKnap(); })
+      .catch(()=>{ loginAutoProevet = false; }); // mislykkedes -> proev igen ved naeste handling
+  }
+  ['pointerdown','click','keydown','touchstart'].forEach(function(ev){
+    document.addEventListener(ev, loginProevAutostart, { passive:true });
+  });
 
   loginHentMusik();
 
