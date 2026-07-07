@@ -645,6 +645,18 @@
     if (boks) boks.remove();
 
     gemAdgang(rettighed, navn, fuldtNr, komiteAar);
+
+    // ---- DATA-GODKENDELSE: mangler husstanden bekræftelse? ----
+    // Bekræftelse gemmes pr. husstand i feltet 'medlemskab_bekraeftet'.
+    // Er den ikke sat, sendes medlemmet direkte til sit medlemskort med
+    // en opfordring om at tjekke navn, adresse, telefon og email.
+    // Gæster (996-999) skal ikke bekræfte.
+    const erGaest = GAESTENUMRE.includes(nr);
+    if (!erGaest && !d.medlemskab_bekraeftet) {
+      videreTil("medlemskartotek.html?godkend=" + encodeURIComponent(nr));
+      return;
+    }
+
     videreTil("forside.html");
   }
 
