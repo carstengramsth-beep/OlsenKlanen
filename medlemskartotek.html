@@ -864,7 +864,7 @@ async function bekraeftMedlemskab(nr) {
   const idag = new Date().toISOString().slice(0,10);
   const medlemmer = (m.familiemedlemmer || []).map(p => visPersonNavn(p)).filter(Boolean);
  
-  m.medlemskab_bekraeftet = { dato: idag, email: email, medlemmer: medlemmer, nr: nr };
+  m.medlemskab_bekraeftet = { dato: idag, tid: new Date().toTimeString().slice(0,5), email: email, medlemmer: medlemmer, nr: nr, kilde: 'bekraeft-knap' };
   // Opdater også husstandens email hvis den blev rettet
   if (email && (m.email || '').split('/')[0].trim() !== email) {
     m.email = email;
@@ -1516,6 +1516,15 @@ async function gemData() {
     .map(p => ({ ...p, navn: visPersonNavn(p) }))
     .filter(p => p.navn.trim());
  
+  // FORENING: gemmer man SIT EGET kort, taeller det som bekraeftelse (dato + klokkeslaet).
+  // Redigerer en admin en ANDEN husstand, bevares husstandens eksisterende bekraeftelse (slettes ikke).
+  const _naa = new Date();
+  const _erEget = egetNr && sammeHusstand(egetNr, gammelNr);
+  const _bekrEmail = document.getElementById('ef-email').value.trim().split('/')[0].trim();
+  const _bekraeftelse = _erEget
+    ? { dato: _naa.toISOString().slice(0,10), tid: _naa.toTimeString().slice(0,5), email: _bekrEmail, medlemmer: reneMedlemmer.map(p => (p.navn || '').trim()).filter(Boolean), nr: gammelNr, kilde: 'gem-rettelse' }
+    : (tidl.medlemskab_bekraeftet || null);
+ 
   const opdateret = {
     nr: nytNr,
     navne, fornavn, mellemnavn, efternavn,
@@ -1527,6 +1536,7 @@ async function gemData() {
     familiemedlemmer: reneMedlemmer,
     begivenheder:     begiListe.filter(b => b.dato || b.beskrivelse || b.besked),
     sidstRedigeret:   new Date().toISOString(),
+    medlemskab_bekraeftet: _bekraeftelse,
     sidstRedigeretAf: auth.currentUser?.email || (familieSession ? `Medlem nr. ${familieSession.nr}` : 'ukendt')
   };
  
