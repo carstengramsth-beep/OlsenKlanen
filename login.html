@@ -239,6 +239,7 @@
   //  v20.4: MIDLERTIDIGT slået data-godkendelse fra (8. juli 2026) —
   //         alle sendes til forsiden, til godkend-funktionen er klar.
   //  v20.5: Tilføjet vedligeholdelses-skilt (styres af vedligehold.json).
+  //  v20.6: Data-godkendelse tændt igen — ubekræftede sendes til eget kort.
   // ============================================================
  
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -678,10 +679,16 @@
  
     gemAdgang(rettighed, navn, fuldtNr, komiteAar);
  
-    // ---- DATA-GODKENDELSE: MIDLERTIDIGT SLÅET FRA (8. juli 2026) ----
-    // Godkend-funktionen på medlemskortet er endnu ikke helt færdigbygget,
-    // så vi sender IKKE medlemmer til kartoteket lige nu. Alle går direkte
-    // til forsiden som før, indtil funktionen er klar og testet.
+    // ---- DATA-GODKENDELSE: mangler husstanden bekræftelse? ----
+    // Er 'medlemskab_bekraeftet' ikke sat, sendes medlemmet til sit EGET kort
+    // (?godkend=nr), hvor det kan tjekke, rette og bekræfte sine oplysninger.
+    // Gæster (996-999) skal ikke bekræfte.
+    const erGaest = GAESTENUMRE.includes(nr);
+    if (!erGaest && !d.medlemskab_bekraeftet) {
+      videreTil("medlemskartotek.html?godkend=" + encodeURIComponent(nr));
+      return;
+    }
+ 
     videreTil("forside.html");
   }
  
