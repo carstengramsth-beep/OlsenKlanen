@@ -1440,6 +1440,19 @@ function aabneEditModal(nr) {
   editStatusEl.textContent = '';
   editStatusEl.className = 'edit-status-stor';
   editGemKnap.disabled = false;
+  // Eget kort? Så er "gem" også en bekræftelse — samme gule farve og tekst som bekræft-knappen.
+  try {
+    const _egetKort = egetNr && sammeHusstand(egetNr, nr);
+    if (_egetKort) {
+      editGemKnap.textContent = '✓ Bekræft data og medlemskab';
+      editGemKnap.style.background = '#f5d76e';
+      editGemKnap.style.color = '#1B4332';
+    } else {
+      editGemKnap.textContent = '💾 Gem rettelse';
+      editGemKnap.style.background = '';
+      editGemKnap.style.color = '';
+    }
+  } catch(e) {}
   nulstilFeltFarver();
   PAAKREEVET_IDS.forEach(opdaterEtFelt);
  
