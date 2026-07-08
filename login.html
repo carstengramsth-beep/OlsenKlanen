@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OlsenKlanen — Log ind</title>
-
+ 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1B4332">
 <link rel="apple-touch-icon" href="icon-192.png">
-
+ 
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body { height:100%; }
@@ -62,7 +62,7 @@
   }
   .felt:focus { outline:none; border-color:#fff; background:rgba(255,255,255,0.1); }
   .felt::placeholder { color:#a89860; }
-
+ 
   /* PIN-feltet med forstørrelsesglas */
   .kode-wrapper {
     position:relative;
@@ -86,7 +86,7 @@
     border-radius:4px;
   }
   .vis-kode:hover { background:rgba(245,215,110,0.1); }
-
+ 
   /* Knap-række (Log ind + Fortryd) */
   .knap-raekke {
     display:flex;
@@ -115,7 +115,7 @@
     flex:0 0 110px;
   }
   .knap-fortryd:hover { background:rgba(245,215,110,0.1); color:#f5d76e; }
-
+ 
   .besked {
     margin-top:16px;
     min-height:24px;
@@ -174,39 +174,39 @@
 </style>
 </head>
 <body>
-
+ 
 <div class="login-boks">
   <img src="icon-512.png" alt="OlsenKlanen logo" class="logo">
   <h1>OlsenKlanen</h1>
   <div class="undertekst">Familieside</div>
-
+ 
   <input type="text" id="nr" class="felt" placeholder="Dit medlemsnummer (fx 8-B)" autofocus autocomplete="off">
-
+ 
   <div class="kode-wrapper">
     <input type="password" id="kode" class="felt" placeholder="Din PIN-kode" autocomplete="off">
     <button type="button" class="vis-kode" id="visKodeKnap" onclick="visKode()" title="Vis koden">🔍</button>
   </div>
-
+ 
   <label class="husk-mig">
     <input type="checkbox" id="huskMig" checked>
     Husk mig på denne computer
   </label>
-
+ 
   <div class="knap-raekke">
     <button class="knap" id="logIndKnap" onclick="logInd()">Log ind</button>
     <button class="knap knap-fortryd" onclick="fortryd()">Fortryd</button>
   </div>
-
+ 
   <div id="besked" class="besked"></div>
-
+ 
   <button id="installerKnap" class="installer-knap" onclick="installerApp()">
     📲 Installer OlsenKlanen som app
   </button>
-
+ 
   <div class="hjaelp">
     Log ind med dit medlemsnummer og din PIN-kode.
   </div>
-
+ 
   <!-- Musikafspiller (offentlig - kræver ikke login) -->
   <div id="musik-boks" style="margin-top:1.2rem;padding:.9rem;background:rgba(45,80,22,.06);border-radius:12px;display:none">
     <div style="font-size:13px;color:#2d5016;font-weight:600;margin-bottom:.5rem">🎵 Lyt til OlsenKlanens sange</div>
@@ -218,7 +218,7 @@
       Tekster af Birthe · Musik kreeret af René Gram<br>Venligst udlånt af familien
     </div>
   </div>
-
+ 
   <!-- NY: velkomst- og kontaktbesked til familiemedlemmer der mangler adgang -->
   <div class="ny-adresse">
     <strong>OlsenKlanen har fået ny hjemmeside!</strong><br>
@@ -227,7 +227,7 @@
     Carsten Gram — <a href="mailto:cg@gallerieg.dk">cg@gallerieg.dk</a> · tlf. 20 73 25 25
   </div>
 </div>
-
+ 
 <script type="module">
   // ============================================================
   //  OlsenKlanen — SAMLET LOGIN  (medlemsnr. + PIN for ALLE)
@@ -236,12 +236,15 @@
   //  v20.2: Tilføjet velkomst-/kontaktbesked til nye medlemmer.
   //  v20.3: RETTELSE — barn gemmes nu med fuldt nummer (fx "55-1"),
   //         ikke bare husstanden ("55"). Så post lander rigtigt.
+  //  v20.4: MIDLERTIDIGT slået data-godkendelse fra (8. juli 2026) —
+  //         alle sendes til forsiden, til godkend-funktionen er klar.
+  //  v20.5: Tilføjet vedligeholdelses-skilt (styres af vedligehold.json).
   // ============================================================
-
+ 
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getStorage, ref, listAll, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-
+ 
   const firebaseConfig = {
     apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
     authDomain: "olsenklanen-familieside.firebaseapp.com",
@@ -253,7 +256,36 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const storage = getStorage(app);
-
+ 
+  // ---- VEDLIGEHOLDELSES-SKILT (styres af filen vedligehold.json) ----
+  // Er "aktiv": true i vedligehold.json, vises en kort besked og login lukkes.
+  // Kan filen ikke hentes, fortsaetter login helt normalt (fejler til "aaben").
+  (async function tjekVedligehold(){
+    try {
+      const svar = await fetch("vedligehold.json?cb=" + Date.now(), { cache: "no-store" });
+      if (!svar.ok) return;
+      const v = await svar.json();
+      if (!v || v.aktiv !== true) return;
+      const besked = (v.besked && String(v.besked)) || "Login er kortvarigt lukket. Proev igen om lidt.";
+      const skjul = [
+        document.getElementById("nr"),
+        document.querySelector(".kode-wrapper"),
+        document.querySelector(".husk-mig"),
+        document.querySelector(".knap-raekke"),
+        document.getElementById("installerKnap"),
+        document.getElementById("musik-boks")
+      ];
+      skjul.forEach(function(el){ if (el) el.style.display = "none"; });
+      const under = document.querySelector(".undertekst");
+      if (under) {
+        const d = document.createElement("div");
+        d.style.cssText = "margin:20px 0;padding:18px 20px;border:2px solid #f5d76e;border-radius:8px;background:rgba(245,215,110,0.12);color:#f5d76e;font-size:1.05rem;line-height:1.5;text-align:center";
+        d.textContent = besked;
+        under.insertAdjacentElement("afterend", d);
+      }
+    } catch (e) { /* fejler til aaben - login fortsaetter normalt */ }
+  })();
+ 
   // ---- MUSIKAFSPILLER (offentlig, kraever ikke login) ----
   const loginMusik = new Audio();
   loginMusik.preload = "none";
@@ -261,7 +293,7 @@
   let loginMusikIndex = 0;
   let loginMusikTaendt = false;
   let loginAutoProevet = false;
-
+ 
   async function loginHentMusik(){
     try{
       const res = await listAll(ref(storage, 'musik/'));
@@ -282,12 +314,12 @@
       }
     }catch(e){ /* musik ikke offentlig endnu - boksen forbliver skjult */ }
   }
-
+ 
   function loginOpdaterKnap(){
     const k = document.getElementById('login-musik-knap');
     if(k) k.textContent = loginMusikTaendt ? '🔇 Stop' : '🔊 Afspil';
   }
-
+ 
   window.loginSkiftMusik = function(){
     if(loginMusikListe.length===0) return;
     if(loginMusikTaendt){
@@ -297,7 +329,7 @@
       loginMusik.play().then(()=>{ loginMusikTaendt=true; loginOpdaterKnap(); }).catch(()=>{});
     }
   };
-
+ 
   window.loginVaelgSang = function(i){
     loginMusikIndex = parseInt(i,10) || 0;
     if(!loginMusikListe[loginMusikIndex]) return;
@@ -306,7 +338,7 @@
     loginMusik.load();
     loginMusik.play().then(()=>{ loginMusikTaendt=true; loginOpdaterKnap(); }).catch(()=>{});
   };
-
+ 
   // Naar en sang slutter -> gaa til naeste
   loginMusik.addEventListener('ended', ()=>{
     if(loginMusikListe.length===0) return;
@@ -316,7 +348,7 @@
     const sel = document.getElementById('login-musik-vaelger');
     if(sel) sel.value = loginMusikIndex;
   });
-
+ 
   // Auto-start ved foerste handling paa siden (klik, tastetryk, beroering) —
   // browsere blokerer ren auto-afspilning, men tillader lyd efter foerste bruger-handling.
   function loginProevAutostart(){
@@ -330,31 +362,31 @@
   ['pointerdown','click','keydown','touchstart'].forEach(function(ev){
     document.addEventListener(ev, loginProevAutostart, { passive:true });
   });
-
+ 
   loginHentMusik();
-
+ 
   // ---- Admin styres i KARTOTEKET (feltet 'rettighed' = "admin") ----
   // Ekstra sikkerheds-bagstopper: nr. 8 (Carsten) er ALTID admin,
   // saa administrator aldrig kan laase sig selv ude.
   const ALTID_ADMIN = ["8"];
-
+ 
   // ---- Gaestenumre (styres af OlsenBanden i gaeste-administrationen) ----
   const GAESTENUMRE = ["996", "997", "998", "999"];
-
+ 
   // ---- ALTID HOVEDDOEREN: ryd evt. gemt sidste-side ----
   try { sessionStorage.removeItem("ok_sidste_side"); } catch(e) {}
-
+ 
   // ---- HUSK MIG: udfyld medlemsnummer hvis vi har gemt foer ----
   try {
     const gemtNr = localStorage.getItem("ok_husk_nr");
     if (gemtNr) document.getElementById("nr").value = gemtNr;
   } catch(e) {}
-
+ 
   // Traek fornavnet ud af et fuldt navn ("Carsten Gram" -> "Carsten")
   function fornavnAf(fuldtNavn) {
     return (fuldtNavn || "").trim().split(/\s+/)[0] || "";
   }
-
+ 
   // ---- DEL MEDLEMSNUMMER OP: "8-B" -> { hus:"8", del:"B" } ----
   // Accepterer baade "8-B", "8B", "48-2", og bart "8" (del = "").
   // Bindestreg, mellemrum eller direkte sammensat virker alt sammen.
@@ -365,7 +397,7 @@
     if (!m) return { hus: t, del: "" };
     return { hus: m[1], del: (m[2] || "").trim() };
   }
-
+ 
   // ---- LAES FOEDSELSDATO ROBUST -> tal man kan sortere paa ----
   // Haandterer baade dansk "dd-mm-aaaa" og ISO "aaaa-mm-dd".
   // Returnerer aaaammdd som tal (mindre tal = aeldre). Ukendt = stort tal (yngst).
@@ -383,7 +415,7 @@
     if (m) return Number(m[3] + m[2].padStart(2,"0") + m[1].padStart(2,"0"));
     return 99999999;
   }
-
+ 
   // ---- SORTER VOKSNE EFTER ALDER: aeldst foerst (= A, B, C, D ...) ----
   function voksneEfterAlder(d) {
     return (d.familiemedlemmer || [])
@@ -391,7 +423,7 @@
       .slice()
       .sort((a, b) => foedselsTal(a) - foedselsTal(b));
   }
-
+ 
   // ---- FIND PERSON UD FRA BOGSTAV/TAL-DEL ----
   // "A"/"B"/"C"... -> voksen nr. 1/2/3 efter alder (aeldst = A).
   // "1"/"2"...      -> barn med medlemsnummer hus-1, hus-2 (som hidtil).
@@ -413,66 +445,66 @@
     const bIndex = Number(del) - 1;
     return boern[bIndex] || null;
   }
-
+ 
   async function logInd() {
     const nrRaa  = document.getElementById("nr").value.trim();
     const kode   = document.getElementById("kode").value.trim();
     const husk   = document.getElementById("huskMig").checked;
     const besked = document.getElementById("besked");
     const knap   = document.getElementById("logIndKnap");
-
+ 
     if (!nrRaa || !kode) {
       besked.textContent = "Skriv både medlemsnummer og PIN-kode.";
       besked.className = "besked";
       return;
     }
-
+ 
     // Del "8-B" op i husstand ("8") og person-del ("B").
     const { hus, del } = delNummer(nrRaa);
     const nr = hus; // husstandsnummeret bruges til opslag i kartoteket
-
+ 
     knap.disabled = true;
     besked.textContent = "Tjekker...";
     besked.className = "besked";
-
+ 
     try {
       const snap = await getDoc(doc(db, "membres", nr));
-
+ 
       if (!snap.exists()) {
         besked.textContent = "Medlemsnummer ikke fundet. Tjek nummeret.";
         besked.className = "besked";
         knap.disabled = false;
         return;
       }
-
+ 
       const d = snap.data();
       const rigtigKode = String(d.kode || "").trim();
-
+ 
       if (!rigtigKode) {
         besked.textContent = "Der er endnu ikke sat en PIN-kode på dette nummer. Spørg OlsenBanden.";
         besked.className = "besked";
         knap.disabled = false;
         return;
       }
-
+ 
       if (kode !== rigtigKode) {
         besked.textContent = "Forkert PIN-kode.";
         besked.className = "besked";
         knap.disabled = false;
         return;
       }
-
+ 
       // ---- GAESTE-TJEK (numrene 996-999) ----
       if (GAESTENUMRE.includes(nr)) {
         const g = d.gaest || null;
-
+ 
         if (!g || !g.aktiv) {
           besked.textContent = "Denne gæsteadgang er ikke aktiv. Kontakt OlsenBanden.";
           besked.className = "besked";
           knap.disabled = false;
           return;
         }
-
+ 
         const udloeber = Number(g.udloeber || 0);
         if (!udloeber || Date.now() > udloeber) {
           besked.textContent = "Gæsteadgangen er udløbet. Kontakt OlsenBanden for ny adgang.";
@@ -480,17 +512,17 @@
           knap.disabled = false;
           return;
         }
-
+ 
         try { sessionStorage.setItem("ok_gaest_udloeber", String(udloeber)); } catch(e) {}
       }
-
+ 
       // ---- Login lykkedes ----
       // Husk medlemsnummer (hele det indtastede, fx "8-B" — aldrig PIN-koden)
       try {
         if (husk) localStorage.setItem("ok_husk_nr", nrRaa);
         else      localStorage.removeItem("ok_husk_nr");
       } catch(e) {}
-
+ 
       // Er der tastet en person-del (bogstav/tal)? Saa er personen entydig.
       if (del && !GAESTENUMRE.includes(nr)) {
         const valgtPerson = findPerson(d, nr, del);
@@ -504,22 +536,22 @@
         fuldfoerLogin(nr, d, valgtPerson, husk, del);
         return;
       }
-
+ 
       // Intet bogstav tastet (bart "8"): som hidtil.
       // Kort med flere voksne: vis "Hvem logger ind?".
       const voksne = voksneEfterAlder(d);
-
+ 
       if (voksne.length >= 2 && !GAESTENUMRE.includes(nr)) {
         // Flere voksne -> lad personen vælge sig selv
         knap.disabled = false;
         visPersonValg(nr, d, voksne, husk);
         return;
       }
-
+ 
       // Kun én voksen (eller gæst): find navn + rettighed direkte
       let valgtPerson = voksne.length === 1 ? voksne[0] : null;
       fuldfoerLogin(nr, d, valgtPerson, husk, "");
-
+ 
     } catch(err) {
       console.log("Login-fejl:", err);
       besked.textContent = "Der opstod en fejl. Tjek din internetforbindelse og prøv igen.";
@@ -527,7 +559,7 @@
       knap.disabled = false;
     }
   }
-
+ 
   // ---- HVEM ER DU? (kort med flere voksne) ----
   // Viser en knap pr. voksen. Den valgte persons rettighed foelger med.
   function personNavnAf(p) {
@@ -535,24 +567,24 @@
     if (dele.length) return dele.join(" ");
     return (p.navn || "").trim();
   }
-
+ 
   function visPersonValg(nr, d, voksne, husk) {
     const besked = document.getElementById("besked");
     besked.textContent = "";
     besked.className = "besked";
-
+ 
     // Byg knapper under login-felterne
     let boks = document.getElementById("hvem-er-du");
     if (boks) boks.remove();
     boks = document.createElement("div");
     boks.id = "hvem-er-du";
     boks.style.marginTop = "18px";
-
+ 
     const titel = document.createElement("div");
     titel.textContent = "Hvem logger ind?";
     titel.style.cssText = "color:#f5d76e;font-size:1rem;margin-bottom:10px;letter-spacing:1px";
     boks.appendChild(titel);
-
+ 
     // voksne er allerede sorteret aeldst-foerst, saa index 0 = A, 1 = B ...
     voksne.forEach((p, i) => {
       const bogstav = String.fromCharCode("A".charCodeAt(0) + i);
@@ -567,10 +599,10 @@
       };
       boks.appendChild(b);
     });
-
+ 
     document.querySelector(".login-boks").appendChild(boks);
   }
-
+ 
   // ---- Find bogstavet (A/B/C...) for en valgt voksen ud fra alder ----
   function bogstavForPerson(d, valgtPerson) {
     if (!valgtPerson) return "";
@@ -580,17 +612,17 @@
       || (personNavnAf(p) === personNavnAf(valgtPerson) && foedselsTal(p) === foedselsTal(valgtPerson)));
     return i >= 0 ? String.fromCharCode("A".charCodeAt(0) + i) : "";
   }
-
+ 
   // tastetDel = det bogstav/tal personen tastede (fx "1" for barn, "B" for voksen).
   // Den bruges saa barnets tal bevares hele vejen og gemmes som "55-1".
   function fuldfoerLogin(nr, d, valgtPerson, husk, tastetDel) {
     const besked = document.getElementById("besked");
-
+ 
     // Navn: fra valgt person, ellers kortets 'navne'
     let navn = valgtPerson ? personNavnAf(valgtPerson) : (d.navne || "").trim();
     if (!navn) navn = "Medlem " + nr;
     const fornavn = fornavnAf(navn);
-
+ 
     // Fuldt medlemsnummer med bogstav/tal, fx "8-B" eller "55-1".
     let fuldtNr = nr;
     if (valgtPerson) {
@@ -614,7 +646,7 @@
         fuldtNr = bogstav ? (nr + "-" + bogstav) : nr;
       }
     }
-
+ 
     // RETTIGHED: foerst personens egen, ellers kortets, ellers 'medlem'.
     let rettighed = "medlem";
     if (valgtPerson && valgtPerson.rettighed) rettighed = String(valgtPerson.rettighed);
@@ -623,43 +655,36 @@
     // Bagstopper: KUN Carsten (nr. 8) er altid admin — uanset om han er 8-A eller 8-B.
     // Tjekker fornavnet paa den valgte person, saa fx Elisabeth IKKE bliver admin.
     if (ALTID_ADMIN.includes(nr) && fornavnAf(navn).toLowerCase() === "carsten") rettighed = "admin";
-
+ 
     // KOMITÉ-ÅR: personens egne komité-år (fritekst, fx "2027" eller "2027, 2028")
     let komiteAar = "";
     if (valgtPerson && valgtPerson.komite_aar) komiteAar = String(valgtPerson.komite_aar);
     else if (d.komite_aar) komiteAar = String(d.komite_aar);
     komiteAar = komiteAar.trim();
-
+ 
     try {
       if (husk) localStorage.setItem("ok_husk_nr", fuldtNr);
       else      localStorage.removeItem("ok_husk_nr");
     } catch(e) {}
-
+ 
     // ---- HAANDTRYK: "Velkommen medlem 8-B Carsten" ----
     besked.textContent = fornavn
       ? ("Velkommen medlem " + fuldtNr + " " + fornavn)
       : ("Velkommen medlem " + fuldtNr);
     besked.className = "besked ok";
-
+ 
     const boks = document.getElementById("hvem-er-du");
     if (boks) boks.remove();
-
+ 
     gemAdgang(rettighed, navn, fuldtNr, komiteAar);
-
-    // ---- DATA-GODKENDELSE: mangler husstanden bekræftelse? ----
-    // Bekræftelse gemmes pr. husstand i feltet 'medlemskab_bekraeftet'.
-    // Er den ikke sat, sendes medlemmet direkte til sit medlemskort med
-    // en opfordring om at tjekke navn, adresse, telefon og email.
-    // Gæster (996-999) skal ikke bekræfte.
-    const erGaest = GAESTENUMRE.includes(nr);
-    if (!erGaest && !d.medlemskab_bekraeftet) {
-      videreTil("medlemskartotek.html?godkend=" + encodeURIComponent(nr));
-      return;
-    }
-
+ 
+    // ---- DATA-GODKENDELSE: MIDLERTIDIGT SLÅET FRA (8. juli 2026) ----
+    // Godkend-funktionen på medlemskortet er endnu ikke helt færdigbygget,
+    // så vi sender IKKE medlemmer til kartoteket lige nu. Alle går direkte
+    // til forsiden som før, indtil funktionen er klar og testet.
     videreTil("forside.html");
   }
-
+ 
   function fortryd() {
     document.getElementById("nr").value = "";
     document.getElementById("kode").value = "";
@@ -671,7 +696,7 @@
     if (boks) boks.remove();
     document.getElementById("nr").focus();
   }
-
+ 
   // ---- VIS KODE: forstoerrelsesglas-knap ----
   function visKode() {
     const kodeFelt = document.getElementById("kode");
@@ -686,7 +711,7 @@
       knap.title = "Vis koden";
     }
   }
-
+ 
   // ---- Gem hvem der er logget ind (nr + navn + rettighed + komité-år) ----
   function gemAdgang(niveau, navn, nr, komiteAar) {
     try {
@@ -700,12 +725,12 @@
       localStorage.setItem("ok_komite_aar", komiteAar || "");
     } catch(e) {}
   }
-
+ 
   function videreTil(side) {
     // Vent 2,5 sek. saa haandtryk-beskeden kan naa at blive laest
     setTimeout(function() { window.location.href = side; }, 2500);
   }
-
+ 
   // ---- Enter-tast ----
   document.getElementById("kode").addEventListener("keydown", function(e) {
     if (e.key === "Enter") logInd();
@@ -713,12 +738,12 @@
   document.getElementById("nr").addEventListener("keydown", function(e) {
     if (e.key === "Enter") document.getElementById("kode").focus();
   });
-
+ 
   // ---- Goer funktioner tilgaengelige for knapperne i HTML ----
   window.logInd = logInd;
   window.fortryd = fortryd;
   window.visKode = visKode;
-
+ 
   // ---- PWA: Service Worker ----
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function() {
@@ -727,7 +752,7 @@
       });
     });
   }
-
+ 
   // ---- PWA: Installer-knap ----
   let installPrompt = null;
   window.addEventListener("beforeinstallprompt", function(e) {
@@ -735,7 +760,7 @@
     installPrompt = e;
     document.getElementById("installerKnap").style.display = "inline-block";
   });
-
+ 
   window.installerApp = function() {
     if (!installPrompt) {
       alert("Installation er ikke tilgængelig i denne browser. Prøv Chrome eller Edge på computer, eller 'Føj til hjemmeskærm' i Safari på iPhone.");
@@ -748,6 +773,6 @@
     });
   };
 </script>
-
+ 
 </body>
 </html>
