@@ -2179,14 +2179,22 @@ function haandterGodkendFraLogin() {
   let nr;
   try { nr = new URLSearchParams(window.location.search).get('godkend'); } catch(e) { return; }
   if (!nr) return;
-  // Velkomst-besked, saa medlemmet forstaar hvorfor det er sendt hertil
+  // Fuldskaerms overgangs-skilt med store typer — kan ikke overses
   try {
-    if (!document.getElementById('godkend-velkomst')) {
-      const vb = document.createElement('div');
-      vb.id = 'godkend-velkomst';
-      vb.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#3a6320;color:#fff;padding:14px 18px;text-align:center;font-size:15px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.3);line-height:1.4';
-      vb.innerHTML = '👋 Velkommen! Tjek venligst dine oplysninger på dit fremhævede kort nedenfor — og tryk "✓ Bekræft medlemskab". <button type="button" onclick="this.parentNode.remove()" style="margin-left:12px;background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:5px;padding:5px 12px;cursor:pointer;font-weight:700">OK</button>';
-      document.body.insertBefore(vb, document.body.firstChild);
+    if (!document.getElementById('godkend-overlay')) {
+      const rentNr = String(nr).replace(/[^0-9A-Za-zÆØÅæøå-]/g,'');
+      const ov = document.createElement('div');
+      ov.id = 'godkend-overlay';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#2d5016;color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px';
+      ov.innerHTML = '<div style="max-width:660px">'
+        + '<div style="font-size:clamp(30px,6vw,54px);font-weight:800;line-height:1.15;margin-bottom:18px">👋 Hej medlem nr. ' + rentNr + '</div>'
+        + '<div style="font-size:clamp(18px,3.2vw,26px);line-height:1.5;margin-bottom:14px">Vi stiller nu om til jeres medlemsside.</div>'
+        + '<div style="font-size:clamp(16px,2.6vw,21px);line-height:1.55;opacity:.95;margin-bottom:32px">Gennemgå venligst jeres registrerede data — <b>navne, fødselsdage, adresse, e-mail og telefon</b> — og bekræft, at det passer.</div>'
+        + '<button type="button" id="godkend-overlay-luk" style="background:#f5d76e;color:#1B4332;border:none;border-radius:10px;padding:16px 34px;font-size:clamp(17px,3vw,23px);font-weight:800;cursor:pointer">Gennemgå mine data →</button>'
+        + '</div>';
+      document.body.appendChild(ov);
+      const lukBtn = document.getElementById('godkend-overlay-luk');
+      if (lukBtn) lukBtn.addEventListener('click', function(){ ov.remove(); });
     }
   } catch(e) {}
   // Ryd parameteren fra adresselinjen, så det ikke gentages ved genindlæsning
