@@ -710,12 +710,21 @@ function begiLabel(type) { return BEGI_TYPE[type] || type; }
 function sammeNr(a, b) {
   return String(a) === String(b);
 }
-
+ 
+// Husstandsdelen af et medlemsnummer: "8-B" -> "8", "55-1" -> "55", "8" -> "8"
+function husstandsAf(nr) {
+  return String(nr == null ? '' : nr).trim().split('-')[0].trim();
+}
+// Er man logget ind i SAMME husstand som kortet? ("8-B" hoerer til "8")
+function sammeHusstand(a, b) {
+  return husstandsAf(a) === husstandsAf(b);
+}
+ 
 function kanRedigere(nr) {
   // OlsenBanden (admin) må alt
   if (document.body.classList.contains('kan-redigere')) return true;
   // Logget ind på sin EGEN husstand → må altid rette egne data
-  if (familieSession && sammeNr(familieSession.nr, nr)) return true;
+  if (familieSession && sammeHusstand(familieSession.nr, nr)) return true;
   return false;
 }
  
@@ -729,7 +738,7 @@ const ROLLE_GRUPPER = [
 ];
  
 function byggKort(m) {
-  const erEgen    = familieSession && sammeNr(familieSession.nr, m.nr);
+  const erEgen    = familieSession && sammeHusstand(familieSession.nr, m.nr);
   const visRed    = kanRedigere(m.nr);
   const navnVis   = visKortNavn(m);
   const adrVis    = visAdresse(m);
@@ -743,7 +752,7 @@ function byggKort(m) {
     const idx = alleVoksne.indexOf(p);
     return idx === -1 ? '' : String.fromCharCode('A'.charCodeAt(0) + idx);
   }
-
+ 
   const familieHtml = ROLLE_GRUPPER
     .map(g => byggPersonGruppe((m.familiemedlemmer||[]).filter(p => p.rolle === g.rolle), g.label, m.nr, 1, voksenBogstavKort))
     .join('');
@@ -765,7 +774,7 @@ function byggKort(m) {
  
   // ── MEDLEMSKABS-BEKRÆFTELSE (kun husstandens eget kort + dataansvarlig/admin) ──
   const bekraeftHtml = byggBekraeftBoks(m, erEgen, visRed);
-
+ 
   const el = document.createElement('div');
   el.className = 'kort' + (erEgen ? ' egen' : '');
   el.dataset.nr = m.nr;
@@ -807,9 +816,9 @@ function byggKort(m) {
  
 // ── Byg medlemskabs-bekræftelsesboks ──
 function byggBekraeftBoks(m, erEgen, visRed) {
-  // Vises kun på husstandens EGET kort, og kun for dataansvarlig/admin
-  if (!erEgen || !visRed) return '';
-
+  // Bekræftet-status vises for eget kort OG for admin (så admin har overblik).
+  if (!visRed) return '';
+ 
   // Allerede bekræftet?
   if (m.medlemskab_bekraeftet) {
     const d = m.medlemskab_bekraeftet;
@@ -823,12 +832,13 @@ function byggBekraeftBoks(m, erEgen, visRed) {
         </div>
       </div>`;
   }
-
-  // Ikke bekræftet endnu → vis boks med medlemmer + email-felt + knap
+ 
+  // Ikke bekræftet endnu. Kun på husstandens EGET kort vises den interaktive boks.
+  if (!erEgen) return '';
   const navne = (m.familiemedlemmer || [])
     .map(p => visPersonNavn(p)).filter(Boolean).join(', ');
   const gemtEmail = (m.email || '').split('/')[0].trim();
-
+ 
   return `
     <div class="bekraeft-boks bekraeft-spoerg" data-nr="${m.nr}">
       <div class="bekraeft-titel">🤝 Er I med i klanen?</div>
@@ -839,7 +849,7 @@ function byggBekraeftBoks(m, erEgen, visRed) {
       <button class="bekraeft-knap" data-nr="${m.nr}">✓ Bekræft medlemskab</button>
     </div>`;
 }
-
+ 
 // ── Gem bekræftelsen ──
 async function bekraeftMedlemskab(nr) {
   const m = data.find(x => sammeNr(x.nr, nr));
@@ -852,7 +862,7 @@ async function bekraeftMedlemskab(nr) {
   }
   const idag = new Date().toISOString().slice(0,10);
   const medlemmer = (m.familiemedlemmer || []).map(p => visPersonNavn(p)).filter(Boolean);
-
+ 
   m.medlemskab_bekraeftet = { dato: idag, email: email, medlemmer: medlemmer, nr: nr };
   // Opdater også husstandens email hvis den blev rettet
   if (email && (m.email || '').split('/')[0].trim() !== email) {
@@ -867,7 +877,7 @@ async function bekraeftMedlemskab(nr) {
     m.medlemskab_bekraeftet = null;
   }
 }
-
+ 
 function byggPersonGruppe(personer, label, husstandsNr, boernStart, voksenBogstavKort) {
   if (!personer.length) return '';
   const sorteret = sorterAEldstOEverst(personer);
@@ -935,10 +945,10 @@ function renderGrid() {
 function lavVelkomstbrev(nr) {
   const m = data.find(x => sammeNr(x.nr, nr));
   if (!m) { alert('Kunne ikke finde medlem nr. ' + nr); return; }
-
+ 
   const husstandsNavn = visNavn(m);
   const kode = m.kode || 'Olsen-' + String(m.nr).split('-')[0];
-
+ 
   // Personer i husstanden med hvert deres nummer (46-A, 46-B ...)
   const personer = (m.familiemedlemmer || []).filter(p => (visPersonNavn(p) || p.navn));
   let loginRaekker;
@@ -951,10 +961,10 @@ function lavVelkomstbrev(nr) {
   } else {
     loginRaekker = `<tr><td>${husstandsNavn}</td><td><b>${m.nr}</b></td></tr>`;
   }
-
+ 
   const loginUrl = 'https://www.olsenklanen.dk';
   const idag = new Date().toLocaleDateString('da-DK', { day:'numeric', month:'long', year:'numeric' });
-
+ 
   const html = `<!DOCTYPE html><html lang="da"><head><meta charset="utf-8">
 <title>Velkomstbrev ${m.nr}</title>
 <style>
@@ -981,39 +991,39 @@ function lavVelkomstbrev(nr) {
 </style></head><body>
 <h1>OlsenKlanen</h1>
 <p class="under">Familiens egen hjemmeside</p>
-
+ 
 <p class="print-vejledning">📄 <b>Sådan gemmer du brevet som PDF:</b> Tryk på knappen nedenfor (eller Ctrl+P). Vælg <b>"Gem som PDF"</b>, og giv den navnet <b>Velkomstbrev-${m.nr}</b>. Denne grå boks og knappen kommer ikke med i PDF'en.</p>
 <button class="print-knap" onclick="window.print()">🖨️ Gem som PDF / Print</button>
-
+ 
 <p>Kære ${husstandsNavn},</p>
 <p>Velkommen til OlsenKlanen — vores helt egen familieside. Her holder vi sammen på det hele: navne og fødselsdage, billeder gennem årene, familiens historie, og en videofon, hvor vi kan se og snakke sammen.</p>
-
+ 
 <h2>Sådan logger du ind</h2>
 <p>Gå ind på <b>${loginUrl}</b> og log ind med dit personlige medlemsnummer og PIN-koden nedenfor:</p>
 <table>${loginRaekker}</table>
 <div class="kode-boks">Fælles start-PIN: <b>${kode}</b></div>
 <div class="knap-linje"><a href="${loginUrl}">Gå til OlsenKlanen</a></div>
-
+ 
 <h2>Skift din PIN-kode</h2>
 <p>PIN-koden ovenfor er blot en startkode. Vil du have den ændret til noget, du selv vælger, så sig til Carsten eller Karin — så retter vi den for dig.</p>
-
+ 
 <h2>Første gang: kig dine oplysninger efter</h2>
 <p>Når du er logget ind, så gå ind i <b>Medlemskartoteket</b>, find dit eget navn og klik på det. Klik på <b>✏️ Rediger</b> og tjek, at telefon, mail og adresse passer. Husk at trykke <b>Gem</b> nederst.</p>
 <p><i>Lille tip: Hvis "Rediger" ikke dukker op, så log helt ud (øverst til højre) og ind igen med dit eget medlemsnummer. Så kommer knappen frem.</i></p>
-
+ 
 <p>Vi glæder os til at se dig aktiv derinde. Har du spørgsmål, så ring eller skriv til en af os i OlsenBanden.</p>
 <p>Mange varme hilsner<br><b>OlsenBanden</b></p>
-
+ 
 <div class="afsender">Afsender: <b>OlsenBanden</b> · Carsten Gram · cg@gallerieg.dk · tlf. 20 73 25 25</div>
 <div class="fod">Velkomstbrev til husstand nr. ${m.nr} · dannet ${idag}</div>
 </body></html>`;
-
+ 
   const w = window.open('', '_blank');
   if (!w) { alert('Din browser blokerede vinduet. Tillad pop op-vinduer og prøv igen.'); return; }
   w.document.write(html);
   w.document.close();
 }
-
+ 
 // ── EXPAND/COLLAPSE ───────────────────────────────────────────
 document.getElementById('grid').addEventListener('click', e => {
   if (e.target.closest('.rediger-knap')) {
@@ -1076,7 +1086,7 @@ function renderPersonEdit() {
     const idx = boernSorteret.indexOf(person);
     return idx === -1 ? '?' : (idx + 1);
   }
-
+ 
   // Voksne (ikke børn) får bogstav efter ALDER: ældste = A, næste = B, C, D ...
   // Samme regel som login: nummeret 8-A / 8-B identificerer personen entydigt.
   const voksneSorteret = personListe
@@ -1094,7 +1104,7 @@ function renderPersonEdit() {
     const idx = voksneSorteret.indexOf(person);
     return idx === -1 ? '' : String.fromCharCode('A'.charCodeAt(0) + idx);
   }
-
+ 
   // VISNINGSRÆKKEFØLGE: voksne øverst (ældst først), derefter børn (ældst først).
   // Vi beholder personens OPRINDELIGE index i personListe (origIndex), så
   // data-pi/data-slet stadig peger på den rigtige person ved redigering/sletning.
@@ -1111,7 +1121,7 @@ function renderPersonEdit() {
       if (!da && db) return 1;
       return 0;
     });
-
+ 
   el.innerHTML = visningsRaekke.map(({ p, origIndex }) => {
     const i = origIndex; // bevarer korrekt reference til data-felter og sletning
     const erBarn = p.rolle === 'barn';
@@ -1176,7 +1186,7 @@ function renderPersonEdit() {
     </div>`;
   }).join('');
 }
-
+ 
 // ===== KOMITÉ-ÅR (chips) =====
 function komiteAarListe(raw){
   return String(raw||'').split(',').map(s => s.trim()).filter(Boolean);
@@ -1205,7 +1215,7 @@ function opdaterKomiteChips(i){
   const wrap = document.querySelector(`[data-komite-chips="${i}"]`);
   if (wrap) wrap.innerHTML = komiteChips(p.komite_aar, i);
 }
-
+ 
 function renderBegiEdit() {
   const el = document.getElementById('begi-liste-edit');
   if (!begiListe.length) {
@@ -1232,7 +1242,7 @@ function renderBegiEdit() {
 document.getElementById('person-liste-edit').addEventListener('click', e => {
   const s = e.target.closest('[data-slet]');
   if (s) { personListe.splice(+s.dataset.slet, 1); renderPersonEdit(); markDirty(); return; }
-
+ 
   // Komité: tilføj år
   const tilf = e.target.closest('[data-komite-tilfoej]');
   if (tilf) {
@@ -1250,7 +1260,7 @@ document.getElementById('person-liste-edit').addEventListener('click', e => {
     }
     return;
   }
-
+ 
   // Komité: fjern år
   const fjern = e.target.closest('[data-komite-fjern]');
   if (fjern) {
@@ -1518,7 +1528,7 @@ async function gemData() {
     sidstRedigeret:   new Date().toISOString(),
     sidstRedigeretAf: auth.currentUser?.email || (familieSession ? `Medlem nr. ${familieSession.nr}` : 'ukendt')
   };
-
+ 
   // Bevar medlemskabs-bekræftelsen hvis den allerede findes (må ikke slettes ved redigering)
   if (tidl.medlemskab_bekraeftet) {
     opdateret.medlemskab_bekraeftet = tidl.medlemskab_bekraeftet;
@@ -1745,7 +1755,7 @@ window.addEventListener('beforeunload', e => {
  
 // ── LOGIN MODAL ───────────────────────────────────────────────
 const loginModal = document.getElementById('login-modal');
-
+ 
 // Gem den oprindelige familie-panel-HTML så vi kan gendanne den
 // efter person-valg (som ellers ville fjerne login-felterne).
 const familiePanelOriginalHTML = document.getElementById('panel-familie').innerHTML;
@@ -1753,54 +1763,54 @@ function gendanFamiliePanel() {
   document.getElementById('panel-familie').innerHTML = familiePanelOriginalHTML;
   kobFamilieLoginKnap();
 }
-
+ 
 document.getElementById('login-knap').addEventListener('click', () => {
   if (document.body.classList.contains('kan-redigere') || familieSession) return;
   gendanFamiliePanel();
   loginModal.classList.add('vis');
 });
 document.getElementById('admin-log-ud').addEventListener('click', () => signOut(auth));
-
+ 
 // ── SÆT DATAANSVARLIGE AUTOMATISK (engangs-knap for OlsenBanden) ──
 document.getElementById('ret-alle-ind-knap').addEventListener('click', async () => {
   if (!document.body.classList.contains('kan-redigere')) {
     alert('Kun OlsenBanden kan gøre dette.');
     return;
   }
-
+ 
   // Find familier der mangler dataansvarlig
   const manglende = data.filter(m => {
     const voksne = (m.familiemedlemmer || []).filter(p => p.rolle !== 'barn');
     const harAnsvarlig = voksne.some(p => p.dataansvarlig);
     return voksne.length > 0 && !harAnsvarlig;
   });
-
+ 
   if (!manglende.length) {
     alert('Alle familier har allerede mindst én dataansvarlig. Intet at gøre.');
     return;
   }
-
+ 
   const ok = confirm(
     `${manglende.length} familier mangler en dataansvarlig.\n\n` +
     `Systemet sætter de ÆLDSTE voksne (op til 2 pr. husstand) som dataansvarlige. ` +
     `Du kan altid ændre det manuelt bagefter.\n\nVil du fortsætte?`
   );
   if (!ok) return;
-
+ 
   const knap = document.getElementById('ret-alle-ind-knap');
   knap.disabled = true;
   knap.textContent = '⏳ Arbejder…';
-
+ 
   let opdateret = 0;
   let fejl = 0;
-
+ 
   for (const m of manglende) {
     try {
       // Find voksne, sortér ældste først (efter fødselsdato)
       const voksne = (m.familiemedlemmer || [])
         .map((p, idx) => ({ p, idx }))
         .filter(x => x.p.rolle !== 'barn');
-
+ 
       const medDato = voksne.filter(x => x.p.foedselsdato);
       let valgte;
       if (medDato.length > 0) {
@@ -1811,16 +1821,16 @@ document.getElementById('ret-alle-ind-knap').addEventListener('click', async () 
         // Ingen fødselsdatoer: tag de første op til 2 voksne
         valgte = voksne.slice(0, 2);
       }
-
+ 
       // Sæt dataansvarlig på de valgte
       const nyMedlemmer = m.familiemedlemmer.map((p, idx) => {
         const skalVaere = valgte.some(v => v.idx === idx);
         return { ...p, dataansvarlig: skalVaere ? true : !!p.dataansvarlig };
       });
-
+ 
       const opdateretFamilie = { ...m, familiemedlemmer: nyMedlemmer };
       await setDoc(doc(db, 'membres', m.nr), opdateretFamilie);
-
+ 
       // Opdatér lokalt data
       const i = data.findIndex(x => x.nr === m.nr);
       if (i >= 0) data[i] = opdateretFamilie;
@@ -1829,11 +1839,11 @@ document.getElementById('ret-alle-ind-knap').addEventListener('click', async () 
       fejl++;
     }
   }
-
+ 
   knap.disabled = false;
   knap.textContent = '🛡️ Sæt dataansvarlige automatisk';
   renderGrid();
-
+ 
   alert(
     `Færdig!\n\n` +
     `${opdateret} familier fik sat dataansvarlige.` +
@@ -1864,26 +1874,26 @@ function kobFamilieLoginKnap() {
     });
   }
 }
-
+ 
 async function haandterFamilieLogin() {
   const nr   = document.getElementById('fam-nr').value.trim();
   const kode = document.getElementById('fam-kode').value.trim();
   const fejl = document.getElementById('fam-fejl');
   fejl.className = 'modal-fejl';
   fejl.textContent = '';
-
+ 
   if (!nr || !kode) {
     fejl.className = 'modal-fejl roed';
     fejl.textContent = 'Udfyld både medlemsnummer og PIN-kode.';
     return;
   }
-
+ 
   try {
     const snap = await getDoc(doc(db, 'membres', nr));
     if (!snap.exists()) throw new Error('Ukendt medlemsnummer.');
     const md = snap.data();
     if (!md.kode || md.kode !== kode) throw new Error('Forkert PIN-kode.');
-
+ 
     // Korrekt login — vis valg af hvem man er
     visPersonValg(nr, md);
   } catch (err) {
@@ -1891,36 +1901,36 @@ async function haandterFamilieLogin() {
     fejl.textContent = err.message || 'Kunne ikke logge ind.';
   }
 }
-
+ 
 // Knyt login-knappen ved opstart
 kobFamilieLoginKnap();
-
+ 
 // ── PERSON-VALG VED FAMILIE-LOGIN ─────────────────────────────
 // Efter korrekt nummer+PIN vælger man hvem man er i husstanden.
 function visPersonValg(nr, md) {
   const fejl = document.getElementById('fam-fejl');
   fejl.className = 'modal-fejl';
   fejl.textContent = '';
-
+ 
   // Voksne (ikke børn) kan vælges som "den der er logget ind"
   const voksne = (md.familiemedlemmer || [])
     .map((p, idx) => ({ p, idx }))
     .filter(x => x.p.rolle !== 'barn' && (x.p.navn || visPersonNavn(x.p)).trim());
-
+ 
   const panel = document.getElementById('panel-familie');
-
+ 
   // Hvis ingen voksne kan identificeres, log ind på husstands-niveau (som før)
   if (!voksne.length) {
     saetFamilieSession(nr, md, null);
     return;
   }
-
+ 
   const knapper = voksne.map(x => {
     const navn = (x.p.navn || visPersonNavn(x.p)).trim();
     return `<button class="login-knap-stor" style="margin-bottom:8px"
               data-personidx="${x.idx}">${navn}</button>`;
   }).join('');
-
+ 
   panel.innerHTML = `
     <div class="modal-panel-titel">Hvem er du?</div>
     <p style="font-size:12px;color:var(--tekst-lys);margin-bottom:.75rem">
@@ -1928,7 +1938,7 @@ function visPersonValg(nr, md) {
     </p>
     ${knapper}
     <div class="modal-fejl" id="fam-fejl"></div>`;
-
+ 
   panel.querySelectorAll('[data-personidx]').forEach(btn => {
     btn.addEventListener('click', () => {
       const valgt = md.familiemedlemmer[+btn.dataset.personidx];
@@ -1936,7 +1946,7 @@ function visPersonValg(nr, md) {
     });
   });
 }
-
+ 
 function saetFamilieSession(nr, md, valgtPerson) {
   familieSession = {
     nr,
@@ -2135,7 +2145,7 @@ async function initialiserSide() {
       }
     }
   } catch(e) {}
-
+ 
   try {
     const gem = sessionStorage.getItem('familieSession');
     if (gem && !familieSession) { familieSession = JSON.parse(gem); visFamilieSession(); }
@@ -2178,7 +2188,7 @@ function haandterGodkendFraLogin() {
     setTimeout(() => kort.classList.remove('fremhaev'), 4500);
   }, 300);
 }
-
+ 
 initialiserSide();
 </script>
 <script type="module" src="post-varsel.js"></script>
