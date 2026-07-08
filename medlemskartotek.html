@@ -138,8 +138,8 @@ body.kan-redigere #admin-bjaelke{display:flex}
 .bekraeft-medlemmer{font-size:13px;color:var(--tekst);margin-bottom:10px;line-height:1.5}
 .bekraeft-email-label{display:block;font-size:12px;color:var(--tekst-lys);margin-bottom:4px;font-weight:600}
 .bekraeft-email-input{width:100%;padding:9px;border:1px solid var(--border);border-radius:4px;font-family:inherit;font-size:14px;margin-bottom:10px;background:#fff}
-.bekraeft-knap{background:var(--gron);color:#fff;border:none;padding:10px 18px;border-radius:4px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit}
-.bekraeft-knap:hover{background:var(--gron-lys)}
+.bekraeft-knap{background:#f5d76e;color:#1B4332;border:none;padding:12px 22px;border-radius:6px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit}
+.bekraeft-knap:hover{background:#f0cb4d}
 body.kan-redigere .rediger-knap{display:inline-block}
 body.familie-session .rediger-knap.egen-rediger{display:inline-block}
 .brev-knap{background:var(--guld,#9a7d0a);color:#fff;border:none;font-size:13px;font-weight:700;letter-spacing:.5px;padding:9px 20px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:background .2s,box-shadow .2s;display:none;flex-shrink:0;box-shadow:0 2px 8px rgba(154,125,10,.35)}
@@ -847,7 +847,7 @@ function byggBekraeftBoks(m, erEgen, visRed) {
       <div class="bekraeft-medlemmer"><strong>Husstand nr. ${m.nr}:</strong> ${navne || 'ingen registreret'}</div>
       <label class="bekraeft-email-label">Jeres e-mail (bekræft eller ret):</label>
       <input type="email" class="bekraeft-email-input" id="bekraeft-email-${m.nr}" value="${gemtEmail}" placeholder="navn@mail.dk">
-      <button class="bekraeft-knap" data-nr="${m.nr}">✓ Bekræft medlemskab</button>
+      <button class="bekraeft-knap" data-nr="${m.nr}">✓ Bekræft data og medlemskab</button>
     </div>`;
 }
  
