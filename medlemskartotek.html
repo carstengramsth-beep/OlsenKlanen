@@ -127,6 +127,8 @@ body.kan-redigere #admin-bjaelke{display:flex}
 .rediger-knap{background:var(--gron);color:var(--hvid);border:none;font-size:13px;font-weight:700;letter-spacing:.5px;padding:9px 20px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:background .2s,box-shadow .2s;display:none;flex-shrink:0;box-shadow:0 2px 8px rgba(45,80,22,.4)}
 .rediger-knap:hover{background:var(--gron-lys);box-shadow:0 4px 12px rgba(45,80,22,.5)}
 .bekraeft-boks{margin-top:.8rem;padding:14px;border-radius:6px}
+.kort.fremhaev{animation:fremhaevPuls 1.4s ease-in-out 3;box-shadow:0 0 0 3px var(--guld,#c9a227)}
+@keyframes fremhaevPuls{0%,100%{box-shadow:0 0 0 3px rgba(201,162,39,.25)}50%{box-shadow:0 0 0 6px rgba(201,162,39,.75)}}
 .bekraeft-spoerg{background:var(--guld-pale);border:1px solid var(--guld)}
 .bekraeft-bekraeftet{background:var(--gron-pale);border:1px solid var(--gron-lys);display:flex;align-items:center;gap:12px}
 .bekraeft-titel{font-weight:700;font-size:15px;color:var(--gron);margin-bottom:3px}
@@ -2152,12 +2154,31 @@ async function initialiserSide() {
       data.push(fd);
     });
     renderGrid();
+    haandterGodkendFraLogin();
   } catch (err) {
     document.getElementById('grid').innerHTML =
       '<div class="ingen-resultater">⚠️ Kunne ikke hente medlemmer fra databasen. Tjek din internetforbindelse og genindlæs siden.</div>';
   }
 }
  
+// ── Kom fra login med ?godkend=NR: åbn, scroll til og fremhæv eget kort ──
+function haandterGodkendFraLogin() {
+  let nr;
+  try { nr = new URLSearchParams(window.location.search).get('godkend'); } catch(e) { return; }
+  if (!nr) return;
+  // Ryd parameteren fra adresselinjen, så det ikke gentages ved genindlæsning
+  try { history.replaceState(null, '', window.location.pathname); } catch(e) {}
+  setTimeout(() => {
+    const kort = document.querySelector('.kort[data-nr="' + (window.CSS && CSS.escape ? CSS.escape(nr) : nr) + '"]')
+              || [...document.querySelectorAll('.kort')].find(k => sammeNr(k.dataset.nr, nr));
+    if (!kort) return;
+    kort.classList.add('udvidet');
+    kort.classList.add('fremhaev');
+    kort.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => kort.classList.remove('fremhaev'), 4500);
+  }, 300);
+}
+
 initialiserSide();
 </script>
 <script type="module" src="post-varsel.js"></script>
