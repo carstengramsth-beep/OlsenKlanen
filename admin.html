@@ -248,7 +248,7 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
 </style>
 </head>
 <body>
-
+ 
 <div id="login-side">
   <div class="login-kort">
     <div class="login-header">
@@ -276,7 +276,7 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
     <div class="login-kortfod">OlsenKlanen.dk · Kun for administratorer og redaktører</div>
   </div>
 </div>
-
+ 
 <div id="admin-side">
   <div class="topbar">
     <div class="topbar-venstre">
@@ -300,7 +300,7 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
       <button class="logout-knap" onclick="logUd()">Log ud</button>
     </div>
   </div>
-
+ 
   <div class="sidebar" id="sidebar">
     <div class="nav-gruppe">
       <span class="nav-gruppe-label">Overblik</span>
@@ -345,12 +345,12 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
     </div>
     <div class="nav-gruppe">
       <span class="nav-gruppe-label">Familiemedlemmer</span>
-      <div class="nav-item" data-panel="godkend" onclick="visPanel('godkend',this)">
+      <div class="nav-item" data-panel="godkend" onclick="visPanel('godkend',this)" style="display:none">
         <span class="nav-ikon">✅</span>Godkend ansøgninger
         <span class="nav-admin-tag" id="godkend-tæller" style="display:none">0</span>
       </div>
       <div class="nav-item" data-panel="datastatus" onclick="visPanel('datastatus',this)">
-        <span class="nav-ikon">📇</span>Datastatus
+        <span class="nav-ikon">📇</span>Medlemsstatus
         <span class="nav-admin-tag" id="datastatus-tæller" style="display:none">0</span>
       </div>
     </div>
@@ -371,10 +371,10 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
       </div>
     </div>
   </div>
-
+ 
   <div class="main">
     <div class="main-indhold">
-
+ 
       <div class="panel aktiv" id="panel-overblik">
         <div class="side-overskrift">
           <div class="side-titel">Overblik</div>
@@ -416,7 +416,7 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
           </div>
         </div>
       </div>
-
+ 
       <div class="panel" id="panel-beskeder">
         <div class="side-overskrift"><div class="side-titel">Fælles Postkasse</div><div class="side-sub">Beskeder fra familiemedlemmer til OlsenBanden</div></div>
         <div class="kort">
@@ -434,7 +434,7 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
           <div class="kort-body" style="padding:0"><div class="postkasse-liste" id="postkasse-liste"><div class="tom-tilstand"><div class="tom-ikon">📬</div><div class="tom-titel">Postkassen er tom</div><div class="tom-tekst">Ingen beskeder endnu</div></div></div></div>
         </div>
       </div>
-
+ 
       <div class="panel" id="panel-chat">
         <div class="side-overskrift"><div class="side-titel">OlsenBanden — Intern Chat</div><div class="side-sub">Privat gruppebesked mellem Carsten, Kurt, Sanne, Tommy og Karin</div></div>
         <div class="kort" style="overflow:hidden">
@@ -451,7 +451,7 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
           <div class="kort-body" style="padding:0"><div id="gemte-beskeder-liste"><div style="text-align:center;padding:1.5rem;color:var(--tekst-lys);font-size:13px">Ingen gemte beskeder endnu — klik ⭐ på en besked for at gemme den</div></div></div>
         </div>
       </div>
-
+ 
       <div class="panel" id="panel-video">
         <div class="side-overskrift"><div class="side-titel">Videomøde</div><div class="side-sub">Åbn OlsenBandens faste møderum på Whereby</div></div>
         <div class="whereby-boks">
@@ -470,7 +470,7 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
           </div>
         </div>
       </div>
-
+ 
       <div class="panel" id="panel-nyheder">
         <div class="side-overskrift"><div class="side-titel">Nyheder</div><div class="side-sub">Opret og rediger nyheder der vises på forsiden</div></div>
         <div class="kort">
@@ -490,7 +490,7 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
           <div class="kort-body" style="padding:0"><table class="tabel"><thead><tr><th>Dato</th><th>Overskrift</th><th>Synlig for</th><th>Oprettet af</th><th></th></tr></thead><tbody id="nyheder-tbody"><tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--tekst-lys)">Henter nyheder…</td></tr></tbody></table></div>
         </div>
       </div>
-
+ 
       <div class="panel" id="panel-kalender">
         <div class="side-overskrift"><div class="side-titel">Kalender</div><div class="side-sub">Tilføj og rediger familiens begivenheder</div></div>
         <div class="kort">
@@ -512,7 +512,7 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
           <div class="kort-body" style="padding:0"><table class="tabel"><thead><tr><th>Dato</th><th>Titel</th><th>Sted</th><th>Type</th><th></th></tr></thead><tbody id="kalender-tbody"><tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--tekst-lys)">Henter begivenheder…</td></tr></tbody></table></div>
         </div>
       </div>
-
+ 
       <div class="panel" id="panel-billeder">
         <div class="side-overskrift"><div class="side-titel">Billeder</div><div class="side-sub">Upload og administrer familiebilleder</div></div>
         <div class="kort">
@@ -534,7 +534,7 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
           <div class="kort-body"><div class="foto-grid" id="foto-grid"><div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--tekst-lys)">Henter billeder…</div></div></div>
         </div>
       </div>
-
+ 
       <div class="panel" id="panel-godkend">
         <div class="side-overskrift"><div class="side-titel">Godkend familiemedlemmer</div><div class="side-sub">Nye anmodninger om adgang til OlsenKlanen</div></div>
         <div class="kort">
@@ -546,9 +546,9 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
           <div class="kort-body" style="padding:0"><table class="tabel"><thead><tr><th>Navn</th><th>Email</th><th>Dato</th><th>Status</th></tr></thead><tbody id="behandlet-tbody"><tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--tekst-lys)">Henter…</td></tr></tbody></table></div>
         </div>
       </div>
-
+ 
       <div class="panel" id="panel-datastatus">
-        <div class="side-overskrift"><div class="side-titel">Datastatus for husstande</div><div class="side-sub">Hvem har bekræftet at navn, adresse, telefon og email er korrekt</div></div>
+        <div class="side-overskrift"><div class="side-titel">Medlemsstatus for husstande</div><div class="side-sub">Hvem har bekræftet at navn, adresse, telefon og email er korrekt</div></div>
         <div class="stat-raekke" style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.25rem">
           <div class="stat"><div class="stat-tal" id="ds-antal-total">—</div><div class="stat-label">Husstande i alt</div></div>
           <div class="stat"><div class="stat-tal" id="ds-antal-bekraeftet" style="color:var(--ok,#2f7d32)">—</div><div class="stat-label">Har bekræftet</div></div>
@@ -563,12 +563,12 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
           <div class="kort-body" style="padding:0"><table class="tabel"><thead><tr><th>Nr.</th><th>Husstand</th><th>Bekræftet</th><th>Email</th></tr></thead><tbody id="ds-bekraeftet-tbody"><tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--tekst-lys)">Henter…</td></tr></tbody></table></div>
         </div>
       </div>
-
+ 
       <div class="panel" id="panel-online">
         <div class="side-overskrift"><div class="side-titel">Online nu</div><div class="side-sub">Hvem er logget ind på admin-panelet lige nu</div></div>
         <div class="kort"><div class="kort-body" style="padding:0"><div class="online-liste" id="online-liste"></div></div></div>
       </div>
-
+ 
       <div class="panel" id="panel-brugere">
         <div class="side-overskrift"><div class="side-titel">Brugerstyring</div><div class="side-sub">Administrer adgang til OlsenKlanen — kun for Carsten</div></div>
         <div class="kort">
@@ -595,7 +595,7 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
           <div class="kort-body" style="padding:0"><table class="tabel"><thead><tr><th>Rolle</th><th>Hvem</th><th>Kan gøre</th></tr></thead><tbody><tr><td><span class="badge badge-admin">Admin</span></td><td>Carsten</td><td>Fuld adgang · brugerstyring · indstillinger · alle paneler</td></tr><tr><td><span class="badge badge-redaktor">Redaktør</span></td><td>Kurt, Sanne, Tommy, Karin Lund</td><td>Nyheder · kalender · billeder · godkend familiemedlemmer</td></tr></tbody></table></div>
         </div>
       </div>
-
+ 
       <div class="panel" id="panel-log">
         <div class="side-overskrift"><div class="side-titel">Aktivitetslog</div><div class="side-sub">Alle handlinger i systemet logges automatisk</div></div>
         <div class="kort">
@@ -603,7 +603,7 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
           <div class="kort-body"><div class="akt-liste" id="log-liste"><div class="tom-tilstand"><div class="tom-ikon">📋</div><div class="tom-tekst">Henter aktivitetslog…</div></div></div></div>
         </div>
       </div>
-
+ 
       <div class="panel" id="panel-indstillinger">
         <div class="side-overskrift"><div class="side-titel">Systemindstillinger</div><div class="side-sub">Grundlæggende indstillinger for OlsenKlanen</div></div>
         <div class="kort">
@@ -623,11 +623,11 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
           <div class="kort-body"><table class="tabel"><thead><tr><th>Tjeneste</th><th>Status</th><th>Info</th></tr></thead><tbody><tr><td>Firebase Authentication</td><td><span class="badge badge-godkendt">Aktiv</span></td><td style="color:var(--tekst-lys)">olsenklanen-familieside</td></tr><tr><td>Cloud Firestore</td><td><span class="badge badge-godkendt" id="fs-status">Tjekker…</span></td><td style="color:var(--tekst-lys)">Nyheder, kalender, log, godkendelser</td></tr><tr><td>Firebase Storage</td><td><span class="badge badge-godkendt" id="storage-status">Tjekker…</span></td><td style="color:var(--tekst-lys)">Familiebilleder</td></tr></tbody></table></div>
         </div>
       </div>
-
+ 
     </div>
   </div>
 </div>
-
+ 
 <!-- MODALER -->
 <div class="modal-overlay" id="glemt-modal"><div class="modal"><div class="modal-header"><div class="modal-titel">Glemt adgangskode</div><button class="modal-luk" onclick="lukModal('glemt-modal')">×</button></div><div class="modal-body"><p style="font-size:13px;color:var(--tekst-mid);margin-bottom:1.25rem">Skriv din email-adresse, så sender vi et link til at vælge en ny adgangskode.</p><div class="login-besked" id="glemt-besked"></div><div class="form-felt" style="margin-bottom:1rem"><label>Email</label><input type="email" id="glemt-email" placeholder="din@email.dk"></div><div class="form-handlinger"><button class="btn btn-mos" onclick="sendGlemtKode()">Send nulstillingslink</button><button class="btn btn-lys" onclick="lukModal('glemt-modal')">Annuller</button></div></div></div></div>
 <div class="modal-overlay" id="rediger-nyhed-modal"><div class="modal"><div class="modal-header"><div class="modal-titel">Rediger nyhed</div><button class="modal-luk" onclick="lukModal('rediger-nyhed-modal')">×</button></div><div class="modal-body"><input type="hidden" id="rediger-nyhed-id"><div class="form-grid"><div class="form-felt form-fuld"><label>Overskrift</label><input type="text" id="rediger-nyhed-overskrift"></div><div class="form-felt form-fuld"><label>Tekst</label><textarea id="rediger-nyhed-tekst"></textarea></div><div class="form-felt"><label>Dato</label><input type="date" id="rediger-nyhed-dato"></div><div class="form-felt"><label>Synlighed</label><select id="rediger-nyhed-synlighed"><option value="alle">Alle familiemedlemmer</option><option value="admins">Kun admins og redaktører</option></select></div></div><div class="form-handlinger"><button class="btn btn-mos" onclick="gemRedigertNyhed()">Gem ændringer</button><button class="btn btn-lys" onclick="lukModal('rediger-nyhed-modal')">Annuller</button></div></div></div></div>
@@ -635,16 +635,16 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
 <div class="modal-overlay" id="opret-bruger-modal"><div class="modal"><div class="modal-header"><div class="modal-titel">Tilføj ny bruger</div><button class="modal-luk" onclick="lukModal('opret-bruger-modal')">×</button></div><div class="modal-body"><p style="font-size:13px;color:var(--tekst-mid);margin-bottom:1.25rem">Ny bruger oprettes i Firebase Authentication.</p><div class="form-grid"><div class="form-felt"><label>Navn</label><input type="text" id="ny-bruger-navn" placeholder="Fornavn Efternavn"></div><div class="form-felt"><label>Rolle</label><select id="ny-bruger-rolle"><option value="redaktor">Redaktør</option></select></div><div class="form-felt form-fuld"><label>Email</label><input type="email" id="ny-bruger-email" placeholder="ny@email.dk"></div><div class="form-felt form-fuld"><label>Midlertidig adgangskode</label><input type="text" id="ny-bruger-kode" placeholder="Mindst 8 tegn"></div></div><div class="form-handlinger"><button class="btn btn-mos" onclick="opretNyBruger()">Opret bruger</button><button class="btn btn-lys" onclick="lukModal('opret-bruger-modal')">Annuller</button></div></div></div></div>
 <div class="modal-overlay" id="bekraeft-modal"><div class="modal" style="max-width:400px"><div class="modal-header"><div class="modal-titel">Bekræft sletning</div><button class="modal-luk" onclick="lukModal('bekraeft-modal')">×</button></div><div class="modal-body"><p style="font-size:14px;color:var(--tekst-mid);margin-bottom:1.5rem" id="bekraeft-tekst"></p><div class="form-handlinger"><button class="btn btn-fare" id="bekraeft-ja-knap">Slet</button><button class="btn btn-lys" onclick="lukModal('bekraeft-modal')">Annuller</button></div></div></div></div>
 <div class="modal-overlay" id="besked-modal"><div class="modal" style="max-width:600px"><div class="modal-header"><div class="modal-titel" id="besked-modal-emne">Besked</div><button class="modal-luk" onclick="lukModal('besked-modal')">×</button></div><div class="modal-body"><div style="font-size:12px;color:var(--tekst-lys);margin-bottom:1rem" id="besked-modal-meta"></div><div style="font-size:14px;color:var(--tekst);line-height:1.7;white-space:pre-wrap" id="besked-modal-tekst"></div><div class="form-handlinger" style="margin-top:1.5rem"><button class="btn btn-mos" onclick="videresendBesked()">📧 Videresend til email</button><button class="btn btn-lys" onclick="lukModal('besked-modal')">Luk</button></div></div></div></div>
-
+ 
 <div id="toast"></div>
-
+ 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth,signInAnonymously, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, getDoc, setDoc, addDoc, updateDoc, deleteDoc, doc, query, orderBy, limit, serverTimestamp, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, listAll, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import { getDatabase, ref as dbRef, set, remove, onValue, onDisconnect, serverTimestamp as dbTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
+ 
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
   authDomain: "olsenklanen-familieside.firebaseapp.com",
@@ -654,7 +654,7 @@ const firebaseConfig = {
   appId: "1:640843662410:web:e749b77ec9271e75c4d2b3",
   databaseURL: "https://olsenklanen-familieside-default-rtdb.europe-west1.firebasedatabase.app"
 };
-
+ 
 const app=initializeApp(firebaseConfig);const auth=getAuth(app);const db=getFirestore(app);const stor=getStorage(app);const rtdb=getDatabase(app);
 // --- ENKELT LOGIN: er man allerede logget ind som admin via hoveddoeren? ---
 function hoveddoerAdmin(){
@@ -724,7 +724,7 @@ window.fb={
   sletBrugerFirestore:email=>deleteDoc(doc(db,'brugere',email)),
 };
 </script>
-
+ 
 <script>
 let aktivBruger=null;let aktivRolle=null;
 window.haandterAuth=async function(user){if(!user){visLoginSide();return;}const email=user.email.toLowerCase();try{const snap=await window.fb.hentBruger(email);if(!snap.exists()){await window.fb.logUd();visLoginBesked('fejl','Du har ikke adgang til admin-panelet. Kontakt Carsten.');return;}const rolle=snap.data().rolle;if(rolle==='administrator')aktivRolle='admin';else if(rolle==='redaktør')aktivRolle='redaktor';else{await window.fb.logUd();visLoginBesked('fejl','Du har ikke adgang.');return;}}catch(e){await window.fb.logUd();visLoginBesked('fejl','Fejl ved adgangskontrol. Prøv igen.');return;}aktivBruger=user;opsætAdminPanel(user);};
@@ -822,5 +822,3 @@ function visLoginBesked(type,tekst){const el=document.getElementById('login-besk
 <script type="module" src="post-varsel.js"></script>
 </body>
 </html>
-
-
