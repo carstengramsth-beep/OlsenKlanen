@@ -1,3 +1,5 @@
+VEJLEDNING (tag IKKE denne linje med): Klik i koden herunder, tryk Ctrl+A og Ctrl+C. Gaa til medlemskartotek.html paa GitHub, tryk Ctrl+A i kodefeltet og Ctrl+V. Tryk Commit changes.
+
 <!DOCTYPE html>
 <html lang="da">
 <head>
@@ -1008,8 +1010,10 @@ function lavVelkomstbrev(nr) {
 <h2>Skift din PIN-kode</h2>
 <p>PIN-koden ovenfor er blot en startkode. Vil du have den ændret til noget, du selv vælger, så sig til Carsten eller Karin — så retter vi den for dig.</p>
  
-<h2>Første gang: kig dine oplysninger efter</h2>
-<p>Når du er logget ind, så gå ind i <b>Medlemskartoteket</b>, find dit eget navn og klik på det. Klik på <b>✏️ Rediger</b> og tjek, at telefon, mail og adresse passer. Husk at trykke <b>Gem</b> nederst.</p>
+<h2>Første gang: bekræft dine oplysninger</h2>
+<p>Når du er logget ind, så gå ind i <b>Medlemskartoteket</b>, find dit eget navn og klik på det. Klik på <b>✏️ Rediger</b>, og tjek at navn, fødselsdag, adresse, telefon og mail passer — ret det, der er forkert.</p>
+<p>Har du en <b>mærkedag</b> på vej — fødselsdag, jubilæum eller diamantbryllup? Så tryk på <b>➕ Begivenhed</b>, vælg type og dato, og skriv gerne en lille <b>besked til forsiden</b>, som vises på selve dagen (f.eks. "Der er morgenkaffe kl. 8.00 — alle er velkomne").</p>
+<p>Til sidst trykker du på den gule knap <b>✓ Bekræft data og medlemskab</b> nederst. Så er dine rettelser gemt, og du er registreret som aktivt medlem.</p>
 <p><i>Lille tip: Hvis "Rediger" ikke dukker op, så log helt ud (øverst til højre) og ind igen med dit eget medlemsnummer. Så kommer knappen frem.</i></p>
  
 <p>Vi glæder os til at se dig aktiv derinde. Har du spørgsmål, så ring eller skriv til en af os i OlsenBanden.</p>
@@ -2223,19 +2227,4 @@ function haandterGodkendFraLogin() {
   // Ryd parameteren fra adresselinjen, så det ikke gentages ved genindlæsning
   try { history.replaceState(null, '', window.location.pathname); } catch(e) {}
   setTimeout(() => {
-    const kort = document.querySelector('.kort[data-nr="' + (window.CSS && CSS.escape ? CSS.escape(nr) : nr) + '"]')
-              || [...document.querySelectorAll('.kort')].find(k => sammeNr(k.dataset.nr, nr));
-    if (!kort) return;
-    kort.classList.add('udvidet');
-    kort.classList.add('fremhaev');
-    kort.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    setTimeout(() => kort.classList.remove('fremhaev'), 4500);
-  }, 300);
-}
- 
-initialiserSide();
-</script>
-<script type="module" src="post-varsel.js"></script>
-</body>
-</html>
- 
+    const kort = document.querySelector('.kort[data-nr="' + (window.CSS && CSS.escape ? CS
