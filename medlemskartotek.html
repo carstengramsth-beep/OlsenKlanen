@@ -1,5 +1,3 @@
-VEJLEDNING (tag IKKE denne linje med): Klik i koden herunder, tryk Ctrl+A og Ctrl+C. Gaa til medlemskartotek.html paa GitHub, tryk Ctrl+A i kodefeltet og Ctrl+V. Tryk Commit changes.
-
 <!DOCTYPE html>
 <html lang="da">
 <head>
@@ -2227,4 +2225,19 @@ function haandterGodkendFraLogin() {
   // Ryd parameteren fra adresselinjen, så det ikke gentages ved genindlæsning
   try { history.replaceState(null, '', window.location.pathname); } catch(e) {}
   setTimeout(() => {
-    const kort = document.querySelector('.kort[data-nr="' + (window.CSS && CSS.escape ? CS
+    const kort = document.querySelector('.kort[data-nr="' + (window.CSS && CSS.escape ? CSS.escape(nr) : nr) + '"]')
+              || [...document.querySelectorAll('.kort')].find(k => sammeNr(k.dataset.nr, nr));
+    if (!kort) return;
+    kort.classList.add('udvidet');
+    kort.classList.add('fremhaev');
+    kort.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => kort.classList.remove('fremhaev'), 4500);
+  }, 300);
+}
+ 
+initialiserSide();
+</script>
+<script type="module" src="post-varsel.js"></script>
+</body>
+</html>
+ 
