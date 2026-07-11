@@ -11,14 +11,14 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .topbar h1 { font-size: 22px; font-weight: normal; }
 .topbar .hjem { color: #f5e6a8; text-decoration: none; padding: 5px 14px; border: 1px solid #f5e6a8; border-radius: 4px; font-size: 13px; }
 .topbar .hjem:hover { background: rgba(245,230,168,0.15); }
-
+ 
 .wrap { max-width: 760px; margin: 0 auto; padding: 30px 20px 60px; }
 .side-titel { font-size: 26px; color: #2d5016; margin-bottom: 6px; }
 .side-under { font-size: 14px; color: #888; margin-bottom: 26px; font-style: italic; }
-
+ 
 .velkomst { background: #e8f0d8; border-radius: 8px; padding: 18px 22px; margin-bottom: 26px; font-size: 14px; color: #3a4a2a; line-height: 1.7; }
 .velkomst p { margin-bottom: 10px; }
-
+ 
 .nyhed { background: #fff; border-radius: 8px; border-left: 4px solid #2d5016; box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 18px 22px; margin-bottom: 16px; }
 .nyhed-dato { font-size: 12px; color: #c89e3c; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
 .nyhed-titel { font-size: 19px; color: #2c3e1f; font-weight: bold; margin-bottom: 8px; }
@@ -26,9 +26,15 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .nyhed-admin { margin-top: 12px; display: none; gap: 10px; }
 .nyhed-admin a { font-size: 12px; color: #888; cursor: pointer; text-decoration: none; }
 .nyhed-admin a:hover { color: #2d5016; }
-
+ 
+/* Opslag der afventer godkendelse (kun admin ser dem) */
+.nyhed-venter { border-left-color: #c89e3c; background: #fffdf5; }
+.venter-badge { display: inline-block; background: #fff3cd; color: #856404; font-size: 11px; font-weight: bold; padding: 2px 9px; border-radius: 10px; margin-bottom: 8px; letter-spacing: 0.3px; }
+.nyhed-admin a.godkend-link { color: #2d5016; font-weight: bold; }
+.nyhed-admin a.godkend-link:hover { color: #3a6420; }
+ 
 .tom-besked { background: #fff; border-radius: 8px; padding: 30px; text-align: center; color: #888; font-style: italic; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-
+ 
 /* ADMIN-felt — kun synligt for admin */
 #admin-omraade { display: none; background: #fff; border-radius: 8px; border-left: 4px solid #c89e3c; box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 20px 22px; margin-bottom: 26px; }
 #admin-omraade h3 { font-size: 16px; color: #2d5016; margin-bottom: 14px; }
@@ -41,16 +47,16 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 </style>
 </head>
 <body>
-
+ 
 <div class="topbar">
   <h1>📰 Nyt om hjemmesiden</h1>
   <a class="hjem" href="forside.html">← Forside</a>
 </div>
-
+ 
 <div class="wrap">
   <div class="side-titel">Nyt om hjemmesiden</div>
   <div class="side-under">Her samler vi alt det nye på OlsenKlanen — nyeste øverst.</div>
-
+ 
   <!-- VELKOMST / FORKLARING -->
   <div class="velkomst">
     <p>Her kan du følge med i de større ting der sker på OlsenKlanen — en ny historie,
@@ -59,7 +65,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
     arbejdet med over tid. (De helt almindelige nye billeder kommer løbende til af sig selv —
     dem skriver vi ikke om her.)</p>
   </div>
-
+ 
   <!-- ADMIN: tilføj nyhed (kun synligt for admin) -->
   <div id="admin-omraade">
     <h3>✏️ Tilføj en nyhed</h3>
@@ -72,17 +78,17 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
     <button class="gem-knap" id="gem-knap">Læg nyheden op</button>
     <div id="admin-status"></div>
   </div>
-
+ 
   <!-- NYHEDER vises her -->
   <div id="nyheder-liste">
     <div class="tom-besked">Henter nyheder...</div>
   </div>
 </div>
-
+ 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, arrayUnion, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+ 
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
   authDomain: "olsenklanen-familieside.firebaseapp.com",
@@ -91,20 +97,24 @@ const firebaseConfig = {
   messagingSenderId: "640843662410",
   appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
 };
-
+ 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
+ 
 // Er brugeren admin?
 const niveau = sessionStorage.getItem("ok_niveau") || localStorage.getItem("ok_niveau");
 const erAdmin = (niveau === "admin" || niveau === "olsenbanden");
-
+ 
+// Aktuelt medlemsnummer (bruges til læst-markering, så login-genvejen forsvinder)
+const MIT_NR = (sessionStorage.getItem("ok_nr") || localStorage.getItem("ok_nr") || "").trim();
+let harMarkeretLaest = false;
+ 
 if (erAdmin) {
   document.getElementById("admin-omraade").style.display = "block";
   // Sæt dagens dato som standard
   document.getElementById("ny-dato").value = new Date().toISOString().slice(0,10);
 }
-
+ 
 // Dansk datoformat
 const maaneder = ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"];
 function dkDato(iso) {
@@ -113,7 +123,7 @@ function dkDato(iso) {
   if (isNaN(d)) return iso;
   return d.getDate() + ". " + maaneder[d.getMonth()] + " " + d.getFullYear();
 }
-
+ 
 // Vis nyheder — nyeste øverst
 const q = query(collection(db, "hjemmeside_nyheder"));
 onSnapshot(q, (snap) => {
@@ -129,55 +139,93 @@ onSnapshot(q, (snap) => {
     if (datoA !== datoB) return datoB.localeCompare(datoA);
     return (db_.oprettet || 0) - (da.oprettet || 0);
   });
-  liste.innerHTML = "";
-  docs.forEach(d => {
-    const n = d.data();
-    const div = document.createElement("div");
-    div.className = "nyhed";
-    div.innerHTML =
-      '<div class="nyhed-dato">' + dkDato(n.dato) + '</div>' +
-      '<div class="nyhed-titel">' + escape(n.titel || "") + '</div>' +
-      '<div class="nyhed-tekst">' + escape(n.tekst || "").replace(/\n/g,"<br>") + '</div>' +
-      (erAdmin ? '<div class="nyhed-admin" style="display:flex;"><a data-id="'+d.id+'" class="slet-link">🗑️ Slet</a></div>' : '');
-    liste.appendChild(div);
-  });
-
-  // Slet-knapper
-  if (erAdmin) {
-    document.querySelectorAll(".slet-link").forEach(a => {
-      a.addEventListener("click", async () => {
-        if (confirm("Slet denne nyhed?")) {
-          await deleteDoc(doc(db, "hjemmeside_nyheder", a.dataset.id));
-        }
-      });
+ 
+  // Medlemmer ser KUN godkendte opslag. Gamle opslag uden felt regnes som godkendte,
+  // så intet forsvinder for medlemmerne. Admin ser alle — også dem der afventer godkendelse.
+  const synlige = erAdmin ? docs : docs.filter(d => d.data().godkendt !== false);
+ 
+  if (!synlige.length) {
+    liste.innerHTML = '<div class="tom-besked">Der er ingen nyheder endnu.</div>';
+  } else {
+    liste.innerHTML = "";
+    synlige.forEach(d => {
+      const n = d.data();
+      const venter = (n.godkendt === false);
+      const div = document.createElement("div");
+      div.className = "nyhed" + (venter ? " nyhed-venter" : "");
+      let adminHtml = "";
+      if (erAdmin) {
+        adminHtml = '<div class="nyhed-admin" style="display:flex;">'
+          + (venter ? '<a data-id="' + d.id + '" class="godkend-link">✓ Godkend og vis for alle</a>' : '')
+          + '<a data-id="' + d.id + '" class="slet-link">🗑️ Slet</a>'
+          + '</div>';
+      }
+      div.innerHTML =
+        (venter ? '<div class="venter-badge">⏳ Afventer din godkendelse</div>' : '') +
+        '<div class="nyhed-dato">' + dkDato(n.dato) + '</div>' +
+        '<div class="nyhed-titel">' + escape(n.titel || "") + '</div>' +
+        '<div class="nyhed-tekst">' + escape(n.tekst || "").replace(/\n/g,"<br>") + '</div>' +
+        adminHtml;
+      liste.appendChild(div);
     });
+ 
+    // Admin-knapper: Slet + Godkend
+    if (erAdmin) {
+      document.querySelectorAll(".slet-link").forEach(a => {
+        a.addEventListener("click", async () => {
+          if (confirm("Slet denne nyhed?")) {
+            await deleteDoc(doc(db, "hjemmeside_nyheder", a.dataset.id));
+          }
+        });
+      });
+      document.querySelectorAll(".godkend-link").forEach(a => {
+        a.addEventListener("click", async () => {
+          if (confirm("Godkend dette opslag, så alle medlemmer kan se det?")) {
+            await updateDoc(doc(db, "hjemmeside_nyheder", a.dataset.id), { godkendt: true });
+          }
+        });
+      });
+    }
+  }
+ 
+  // Læst-markering: når en bruger åbner nyhedssiden, markeres det NYESTE godkendte
+  // opslag som læst for ham/hende — så login-genvejen på forsiden forsvinder.
+  if (MIT_NR && !harMarkeretLaest) {
+    harMarkeretLaest = true;
+    const nyesteGodkendte = docs.find(d => {
+      const n = d.data();
+      return n.godkendt === true && Array.isArray(n.set_af);
+    });
+    if (nyesteGodkendte && !(nyesteGodkendte.data().set_af || []).includes(MIT_NR)) {
+      updateDoc(doc(db, "hjemmeside_nyheder", nyesteGodkendte.id), { set_af: arrayUnion(MIT_NR) }).catch(() => {});
+    }
   }
 });
-
+ 
 function escape(s) {
   return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
-
-// Gem ny nyhed
+ 
+// Gem ny nyhed — oprettes som "afventer godkendelse" (godkendt: false)
 if (erAdmin) {
   document.getElementById("gem-knap").addEventListener("click", async () => {
     const dato = document.getElementById("ny-dato").value;
     const titel = document.getElementById("ny-titel").value.trim();
     const tekst = document.getElementById("ny-tekst").value.trim();
     const status = document.getElementById("admin-status");
-
+ 
     if (!dato || !titel) {
       status.style.color = "#a33";
       status.textContent = "Udfyld mindst dato og overskrift.";
       return;
     }
     try {
-      await addDoc(collection(db, "hjemmeside_nyheder"), { dato, titel, tekst, oprettet: Date.now() });
+      await addDoc(collection(db, "hjemmeside_nyheder"), { dato, titel, tekst, oprettet: Date.now(), godkendt: false, set_af: [] });
       status.style.color = "#2d5016";
-      status.textContent = "✓ Nyheden er lagt op.";
+      status.textContent = "✓ Oprettet — afventer godkendelse. Find opslaget nedenfor og tryk “Godkend og vis for alle”.";
       document.getElementById("ny-titel").value = "";
       document.getElementById("ny-tekst").value = "";
-      setTimeout(() => status.textContent = "", 3000);
+      setTimeout(() => status.textContent = "", 6000);
     } catch(e) {
       status.style.color = "#a33";
       status.textContent = "Fejl: " + e.message;
@@ -185,6 +233,7 @@ if (erAdmin) {
   });
 }
 </script>
-
+ 
 </body>
 </html>
+ 
