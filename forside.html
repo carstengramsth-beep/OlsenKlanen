@@ -22,8 +22,9 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .tavle-boks { background: #fff; padding: 14px 16px; margin-bottom: 10px; border-radius: 6px; border-left: 4px solid #c89e3c; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
 .tavle-titel { font-weight: bold; color: #2c3e1f; font-size: 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
 /* Rødt opmærksomheds-blink for nye/ulæste opslag */
-.nyt-prik { display:inline-block; width:9px; height:9px; border-radius:50%; background:#e02424; margin-right:6px; vertical-align:middle; box-shadow:0 0 0 0 rgba(224,36,36,0.6); animation: nytPuls 1.3s infinite; }
-.nyt-blink-header { display:inline-block; width:10px; height:10px; border-radius:50%; background:#e02424; box-shadow:0 0 0 0 rgba(224,36,36,0.6); animation: nytPuls 1.3s infinite; }
+.nyt-prik { display:inline-block; width:7px; height:7px; border-radius:50%; background:#e02424; margin-right:6px; vertical-align:middle; box-shadow:0 0 0 0 rgba(224,36,36,0.6); animation: nytPuls 1.3s infinite; }
+.nyt-laest { display:inline-block; width:7px; height:7px; border-radius:50%; background:#3aa655; margin-right:6px; vertical-align:middle; }
+.nyt-blink-header { display:inline-block; width:8px; height:8px; border-radius:50%; background:#e02424; box-shadow:0 0 0 0 rgba(224,36,36,0.6); animation: nytPuls 1.3s infinite; }
 @keyframes nytPuls { 0%{ box-shadow:0 0 0 0 rgba(224,36,36,0.6);} 70%{ box-shadow:0 0 0 7px rgba(224,36,36,0);} 100%{ box-shadow:0 0 0 0 rgba(224,36,36,0);} }
 .tavle-tal-raekke { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
 .tavle-tal { display: flex; justify-content: space-between; align-items: center; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 13px; color: #444; text-decoration: none; transition: background 0.15s; }
@@ -369,7 +370,9 @@ const minEmail = sessionStorage.getItem("ok_email") || "";
       const titel = String(n.titel||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
       const ulaest = erUlaest(n);
       if(ulaest) ulaesteIds.push(d.id);
-      const prik = ulaest ? '<span class="nyt-prik"></span>' : '';
+      const harTracking = (n.godkendt === true && Array.isArray(n.set_af) && MIT_NR);
+      let prik = '';
+      if(harTracking) prik = ulaest ? '<span class="nyt-prik"></span>' : '<span class="nyt-laest"></span>';
       html += '<div style="margin-bottom:8px;">'
             + '<div style="color:#c89e3c; font-size:11px; font-weight:bold;">' + kortDato(n.dato) + '</div>'
             + '<div style="color:#2c3e1f; font-weight:bold;">' + prik + titel + '</div>'
