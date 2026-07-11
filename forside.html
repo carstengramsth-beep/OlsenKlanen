@@ -21,6 +21,10 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .opslag a:hover .opslag-titel { color: #2d5016; }
 .tavle-boks { background: #fff; padding: 14px 16px; margin-bottom: 10px; border-radius: 6px; border-left: 4px solid #c89e3c; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
 .tavle-titel { font-weight: bold; color: #2c3e1f; font-size: 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+/* Rødt opmærksomheds-blink for nye/ulæste opslag */
+.nyt-prik { display:inline-block; width:9px; height:9px; border-radius:50%; background:#e02424; margin-right:6px; vertical-align:middle; box-shadow:0 0 0 0 rgba(224,36,36,0.6); animation: nytPuls 1.3s infinite; }
+.nyt-blink-header { display:inline-block; width:10px; height:10px; border-radius:50%; background:#e02424; box-shadow:0 0 0 0 rgba(224,36,36,0.6); animation: nytPuls 1.3s infinite; }
+@keyframes nytPuls { 0%{ box-shadow:0 0 0 0 rgba(224,36,36,0.6);} 70%{ box-shadow:0 0 0 7px rgba(224,36,36,0);} 100%{ box-shadow:0 0 0 0 rgba(224,36,36,0);} }
 .tavle-tal-raekke { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
 .tavle-tal { display: flex; justify-content: space-between; align-items: center; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 13px; color: #444; text-decoration: none; transition: background 0.15s; }
 .tavle-tal:hover { background: #faf3dc; }
@@ -163,10 +167,10 @@ try {
       <div class="opslag-titel">Årenes billeder — læg op og ret</div>
       <div class="opslag-info">Her lægger du billeder op, flytter og retter · 2015 til i dag</div>
     </a>
-
+ 
     <!-- NYT OM HJEMMESIDEN — lille klikbar boks -->
     <a href="nyheder.html" class="tavle-boks" style="display:block; border-left:4px solid #2d5016; margin-top:16px; text-decoration:none; color:inherit;">
-      <div class="tavle-titel">📰 Nyt om hjemmesiden</div>
+      <div class="tavle-titel">📰 Nyt om hjemmesiden<span id="nyt-blink" class="nyt-blink-header" style="display:none; margin-left:6px;"></span></div>
       <div id="nyt-overskrifter" style="font-size:13px; color:#444; line-height:1.5; padding:4px 2px 2px;">
         <div style="color:#888; font-style:italic;">Henter nyheder...</div>
       </div>
@@ -263,7 +267,7 @@ try {
       </a>
  
     </div>
-
+ 
     <!-- OPSLAGSTAVLEN — flyttet hertil -->
     <div class="tavle-boks" style="margin-top:12px;">
       <div class="tavle-titel">📌 Opslagstavlen — her og nu</div>
@@ -282,7 +286,7 @@ try {
         </a>
       </div>
     </div>
-
+ 
     <!-- BESØG — flyttet hertil -->
     <div class="tavle-boks" style="margin-top:12px;">
       <div class="tavle-titel">👥 Besøg på OlsenKlanen</div>
@@ -304,7 +308,7 @@ try {
         Dit besøg tæller 1 pr. dag — så kan du selv holde øje.
       </div>
     </div>
-
+ 
   </aside>
  
 </div>
@@ -316,7 +320,7 @@ try {
  
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, query, onSnapshot, getDocs, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, updateDoc, arrayUnion, query, onSnapshot, getDocs, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
  
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -332,7 +336,7 @@ const db = getFirestore(app);
  
 const minEmail = sessionStorage.getItem("ok_email") || "";
  
-// ── NYT OM HJEMMESIDEN — hent 3 nyeste overskrifter ──
+// ── NYT OM HJEMMESIDEN — nyeste overskrifter + rødt blink for ulæste ──
 (function(){
   const maaneder = ["jan","feb","mar","apr","maj","jun","jul","aug","sep","okt","nov","dec"];
   function kortDato(iso){
@@ -341,24 +345,60 @@ const minEmail = sessionStorage.getItem("ok_email") || "";
     if(isNaN(d)) return iso;
     return d.getDate() + ". " + maaneder[d.getMonth()] + " " + d.getFullYear();
   }
-  const nq = query(collection(db, "hjemmeside_nyheder"), orderBy("dato","desc"), limit(3));
+  const MIT_NR = (sessionStorage.getItem("ok_nr") || localStorage.getItem("ok_nr") || "").trim();
+  // Ulæst for MIG? Godkendt opslag, har en læst-liste, og jeg står ikke på den.
+  function erUlaest(n){
+    return n && n.godkendt === true && Array.isArray(n.set_af) && MIT_NR && !n.set_af.includes(MIT_NR);
+  }
+  const nq = query(collection(db, "hjemmeside_nyheder"), orderBy("dato","desc"), limit(10));
   onSnapshot(nq, (snap) => {
     const boks = document.getElementById("nyt-overskrifter");
     if(!boks) return;
-    if(snap.empty){
+    // Medlemmer ser kun godkendte opslag. Gamle opslag uden felt regnes som godkendte.
+    const godkendte = snap.docs.filter(d => d.data().godkendt !== false).slice(0,3);
+    const blink = document.getElementById("nyt-blink");
+    if(!godkendte.length){
       boks.innerHTML = '<div style="color:#888; font-style:italic;">Ingen nyheder endnu.</div>';
+      if(blink) blink.style.display = "none";
       return;
     }
+    const ulaesteIds = [];
     let html = "";
-    snap.docs.forEach(d => {
+    godkendte.forEach(d => {
       const n = d.data();
       const titel = String(n.titel||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      const ulaest = erUlaest(n);
+      if(ulaest) ulaesteIds.push(d.id);
+      const prik = ulaest ? '<span class="nyt-prik"></span>' : '';
       html += '<div style="margin-bottom:8px;">'
             + '<div style="color:#c89e3c; font-size:11px; font-weight:bold;">' + kortDato(n.dato) + '</div>'
-            + '<div style="color:#2c3e1f; font-weight:bold;">' + titel + '</div>'
+            + '<div style="color:#2c3e1f; font-weight:bold;">' + prik + titel + '</div>'
             + '</div>';
     });
     boks.innerHTML = html;
+    // Rødt blink ved overskriften, hvis der er noget ulæst
+    if(blink) blink.style.display = ulaesteIds.length ? "inline-block" : "none";
+    // Klik på boksen: markér de viste ulæste som læst, FØR vi går til nyhedssiden
+    const boksLink = boks.closest("a");
+    if(boksLink){
+      boksLink._ulaesteIds = ulaesteIds;
+      if(!boksLink.dataset.laestBundet){
+        boksLink.dataset.laestBundet = "1";
+        boksLink.addEventListener("click", async (ev) => {
+          const ids = boksLink._ulaesteIds || [];
+          if(!MIT_NR || !ids.length) return;
+          ev.preventDefault();
+          const dest = boksLink.getAttribute("href") || "nyheder.html";
+          try{
+            await Promise.race([
+              Promise.all(ids.map(id => updateDoc(doc(db, "hjemmeside_nyheder", id), { set_af: arrayUnion(MIT_NR) }))),
+              new Promise(r => setTimeout(r, 800))
+            ]);
+          }catch(e){}
+          window.location.href = dest;
+        });
+      }
+    }
   }, e => {
     const boks = document.getElementById("nyt-overskrifter");
     if(boks) boks.innerHTML = '<div style="color:#888; font-style:italic;">Kunne ikke hente nyheder.</div>';
@@ -517,7 +557,7 @@ let foedselsdagsTekst = "";
  
     // 2) Kommende mærkedage → Fremhævede begivenheder
     const kommende = kommendeFoedselsdage(personer, idag, 3);
-
+ 
     // 2b) Hent kommende arrangementer fra databasen
     try {
       const arrSnap = await getDocs(collection(db, "arrangementer"));
@@ -530,7 +570,7 @@ let foedselsdagsTekst = "";
       }).sort((a,b) => (a.start||"").localeCompare(b.start||""));
       window.OLSEN_ARRANGEMENTER = arr;
     } catch(e) { window.OLSEN_ARRANGEMENTER = []; }
-
+ 
     renderFremhaevede(kommende);
     if (typeof window.byggKalender === 'function') window.byggKalender();
  
@@ -547,12 +587,12 @@ let foedselsdagsTekst = "";
   window.OLSEN_FOEDSELSDAG = foedselsdagsTekst;
   if (typeof window.byggBaand === 'function') window.byggBaand();
 })();
-
+ 
 /* ════════ OLSENPOST — varsel om ulæst post ════════ */
 (function(){
   const MIT_NR = sessionStorage.getItem("ok_nr") || localStorage.getItem("ok_nr") || "";
   if (!MIT_NR) return;
-
+ 
   // Kort brevkasse-lyd (lille bip), spilles når der ER ny post ved indlæsning
   function spilLyd(){
     try {
@@ -566,7 +606,7 @@ let foedselsdagsTekst = "";
       o.start(); o.stop(ac.currentTime + 0.5);
     } catch(e){}
   }
-
+ 
   let harSpillet = false;
   const qy = query(collection(db, "olsenpost"), where("til", "array-contains", MIT_NR));
   onSnapshot(qy, snap => {
@@ -624,7 +664,7 @@ function logUd() {
 // NYHEDSBAAND — Fødselsdag + DR + Vejr
 let nyheder = [];
 let vejr = "";
-
+ 
 window.byggBaand = function byggBaand() {
   let tekst = "";
   // Fødselsdag FØRST — det er det festlige
@@ -633,7 +673,7 @@ window.byggBaand = function byggBaand() {
   nyheder.forEach(n => { tekst += "★  " + n + "     "; });
   if (tekst) document.getElementById("baand-tekst").textContent = tekst;
 };
-
+ 
 fetch("https://api.open-meteo.com/v1/forecast?latitude=55.68&longitude=12.57&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FCopenhagen&forecast_days=1")
   .then(r => r.json())
   .then(data => {
@@ -643,7 +683,7 @@ fetch("https://api.open-meteo.com/v1/forecast?latitude=55.68&longitude=12.57&dai
     window.byggBaand();
   })
   .catch(() => { vejr = ""; window.byggBaand(); });
-
+ 
 // NYHEDER FRA FLERE KILDER — DR, TV2, Berlingske, Ekstra Bladet
 // Henter via rss2json med allorigins som reserve. Blander kilderne.
 const NYHEDS_KILDER = [
@@ -652,7 +692,7 @@ const NYHEDS_KILDER = [
   { navn: "Berlingske", url: "https://www.berlingske.dk/content/rss" },
   { navn: "Ekstra Bladet", url: "https://ekstrabladet.dk/rssfeed/all/" }
 ];
-
+ 
 // Hent ét feed → returnér liste af {kilde, titel}
 // allorigins bruges primært (ingen stram grænse); rss2json som reserve.
 function hentEtFeed(kilde) {
@@ -684,7 +724,7 @@ function hentEtFeed(kilde) {
         .catch(() => []);
     });
 }
-
+ 
 // Hent alle kilder parallelt, bland resultaterne
 Promise.all(NYHEDS_KILDER.map(hentEtFeed))
   .then(resultater => {
@@ -720,15 +760,15 @@ window.byggKalender = function bygKalender(){
   const aar = idag.getFullYear();
   const maaned = idag.getMonth(); // 0-11
   const dagIdag = idag.getDate();
-
+ 
   const titel = document.getElementById('kal-titel');
   const grid  = document.getElementById('kal-grid');
   if (!grid) return;
-
+ 
   // Stort forbogstav i månedsnavn
   const mNavn = MAANEDER[maaned].charAt(0).toUpperCase() + MAANEDER[maaned].slice(1);
   if (titel) titel.textContent = "Kalender — " + mNavn + " " + aar;
-
+ 
   // Find dage i DENNE måned der har en begivenhed (fra databasen)
   const eventDage = new Set();
   (window.OLSEN_ARRANGEMENTER || []).forEach(a => {
@@ -740,17 +780,17 @@ window.byggKalender = function bygKalender(){
       d.setDate(d.getDate() + 1);
     }
   });
-
+ 
   // Fjern gamle dage (behold de 7 ugedags-overskrifter)
   grid.querySelectorAll('.kal-dag').forEach(el => el.remove());
-
+ 
   // Hvilken ugedag er den 1.? (gør mandag = 0)
   let foersteDag = new Date(aar, maaned, 1).getDay(); // 0=søndag
   foersteDag = (foersteDag === 0) ? 6 : foersteDag - 1; // mandag-først
-
+ 
   // Antal dage i måneden
   const antalDage = new Date(aar, maaned + 1, 0).getDate();
-
+ 
   let html = '';
   // Tomme felter før den 1.
   for (let i = 0; i < foersteDag; i++) html += '<div class="kal-dag tom"></div>';
@@ -767,7 +807,7 @@ window.byggKalender = function bygKalender(){
   const ialt = foersteDag + antalDage;
   const rest = (7 - (ialt % 7)) % 7;
   for (let i = 0; i < rest; i++) html += '<div class="kal-dag tom"></div>';
-
+ 
   grid.insertAdjacentHTML('beforeend', html);
 };
 window.byggKalender();
@@ -775,3 +815,4 @@ window.byggKalender();
 <script type="module" src="besoegstaeller.js"></script>
 </body>
 </html>
+ 
