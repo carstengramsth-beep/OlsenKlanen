@@ -1,3 +1,8 @@
+Thought process
+Thought process
+Word-mysteriet er hurtigt forklaret: fejlboksen nævnte filen som AARENE~1.DOC — altså en gammel .DOC, ikke .docx. Filen blev åbnet med en forkert filtype-tilknytning, og så nægter Word. Det er ikke noget i koden — vi behøver slet ikke Word. Og siden du allerede har GitHub klar, dropper vi filer helt: her er hele koden direkte i chatten. Markér alt i feltet nedenfor, kopiér, og sæt ind i GitHub (Ctrl+A → Delete → Ctrl+V), commit 2 gange.
+
+html
 <!DOCTYPE html>
 <html lang="da">
 <head>
@@ -20,18 +25,18 @@ header{background:var(--gron);color:#fff;text-align:center;padding:2.2rem 1rem 2
 header h1{font-family:'Playfair Display',serif;font-size:2.3rem;font-weight:500}
 header h1 em{color:var(--guld-lys);font-style:italic}
 header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
- 
+
 .vaelgere{max-width:760px;margin:1.8rem auto 0;padding:0 1.2rem;display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
 .vaelg-blok{flex:1;min-width:220px}
 .vaelg-blok label{display:block;font-size:12px;font-weight:600;color:var(--tekst-lys);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.35rem}
 .vaelg-blok select{width:100%;padding:.7rem;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:15px;background:#fff;cursor:pointer}
- 
+
 .wrap{max-width:980px;margin:0 auto;padding:2rem 1.2rem 0}
- 
+
 .gruppe-overskrift{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--gron);border-bottom:2px solid var(--guld);padding-bottom:.4rem;margin-bottom:1.2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem}
 .gruppe-overskrift .upload-knap{font-family:'Source Sans 3',sans-serif;font-size:13px;background:var(--guld);color:var(--tekst);border:none;padding:.5rem 1rem;border-radius:6px;font-weight:600;cursor:pointer}
 .gruppe-overskrift .upload-knap:hover{background:#b8842a}
- 
+
 .galleri-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
 @media(max-width:680px){.galleri-grid{grid-template-columns:repeat(2,1fr)}}
 .celle{background:var(--hvid);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);transition:transform .2s,box-shadow .2s;position:relative}
@@ -40,9 +45,9 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
 .celle .cap{padding:.6rem .75rem}
 .celle .cap .tekst{font-size:13px;color:var(--tekst);line-height:1.4}
 .celle .cap .navn{font-size:11px;color:var(--tekst-lys);margin-top:.35rem;font-style:italic}
- 
+
 .besked{font-size:14px;color:var(--tekst-lys);font-style:italic;padding:2.5rem 1.5rem;text-align:center;background:var(--hvid);border:1px dashed var(--border);border-radius:8px}
- 
+
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:center;justify-content:center;padding:1rem}
 .modal-overlay.vis{display:flex}
 .modal{background:var(--hvid);border-radius:12px;max-width:440px;width:100%;padding:1.6rem;box-shadow:0 12px 40px rgba(0,0,0,.3)}
@@ -58,7 +63,7 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
 .knap-gem:disabled{background:#999;cursor:wait}
 .knap-annuller{background:#eee;color:var(--tekst)}
 .upload-status{font-size:12px;color:var(--gron-lys);margin-top:.6rem;text-align:center;min-height:18px}
- 
+
 .lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:120;align-items:center;justify-content:center;flex-direction:column;padding:2rem}
 .lightbox.vis{display:flex}
 .lightbox img{max-width:90%;max-height:72vh;border-radius:6px;box-shadow:0 8px 40px rgba(0,0,0,.5)}
@@ -74,16 +79,16 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
 </style>
 </head>
 <body>
- 
+
 <div class="flag-banner">🇩🇰 🇩🇰 🇩🇰 🇩🇰 🇩🇰</div>
- 
+
 <a href="forside.html" style="position:fixed;top:.6rem;left:.8rem;z-index:90;background:#fff;color:var(--gron);border:2px solid var(--guld);padding:.5rem .9rem;border-radius:8px;font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.25)">🏠 Til forsiden</a>
- 
+
 <header>
   <h1>Årenes <em>Billeder</em></h1>
   <p>OlsenKlanens billedarkiv — vælg år og begivenhed</p>
 </header>
- 
+
 <div class="vaelgere">
   <div class="vaelg-blok">
     <label>Vælg år</label>
@@ -94,11 +99,11 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
     <select id="gruppe-vaelger-nav"></select>
   </div>
 </div>
- 
+
 <div id="tael-linje" style="text-align:center;margin-top:1rem;font-size:14px;color:var(--gron-lys);font-weight:600"></div>
- 
+
 <div class="wrap" id="indhold"></div>
- 
+
 <!-- UPLOAD-MODAL -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
@@ -112,7 +117,7 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
     <input type="text" id="navn" placeholder="F.eks. Carsten (nr. 8)">
     <label>Vælg ét eller flere billeder</label>
     <input type="file" id="fil" accept="image/*" multiple>
- 
+
     <!-- Navngivning ét billede ad gangen -->
     <div id="navngiv-boks" style="display:none;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
       <div style="font-size:13px;font-weight:600;color:var(--gron)" id="navngiv-tael"></div>
@@ -124,7 +129,7 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
         <button type="button" id="naeste-knap" onclick="navngivSkift(1)" style="flex:1;padding:.6rem;border-radius:6px;border:none;background:var(--guld);color:var(--tekst);font-weight:600;cursor:pointer">Næste →</button>
       </div>
     </div>
- 
+
     <div class="upload-status" id="upload-status"></div>
     <div class="modal-knapper">
       <button class="knap-annuller" onclick="lukModal()">Annullér</button>
@@ -132,7 +137,7 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
     </div>
   </div>
 </div>
- 
+
 <!-- LIGHTBOX -->
 <div class="lightbox" id="lightbox">
   <span class="lb-luk" onclick="lukLightbox()">✕</span>
@@ -168,12 +173,12 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
     </div>
   </div>
 </div>
- 
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, listAll, getMetadata, deleteObject, getBlob, updateMetadata }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
- 
+
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
   authDomain: "olsenklanen-familieside.firebaseapp.com",
@@ -184,10 +189,10 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
- 
+
 // Tilgængelige år i dropdown (nyeste først). Tilføj nye år her.
-const AAR_LISTE = ['2026','2025','2024','2023','2022','2021','2020','2019','2018','2017','2016','2015','2014','2013','2012','2011','2010','2009','2008','2007','2006','2005','2004','2003','2002','2001','2000','1999','1998','1997','1996','1995','1994','1993','1992','1991','1990'];
- 
+const AAR_LISTE = ['2026','2025','2024','2023','2022','2021','2020','2019','2018','2017','2016','2015'];
+
 // De 14 grupperinger (samme rækkefølge hvert år)
 const GRUPPER = [
   { id:'fre-aftensmad',   titel:'Fredag · Aftensmad og aftenhygge' },
@@ -206,7 +211,7 @@ const GRUPPER = [
   { id:'fri-leg',         titel:'Fri leg · Andre familiebegivenheder' },
 ];
 const titelFor = id => (GRUPPER.find(g=>g.id===id)||{}).titel || id;
- 
+
 // Mit medlemsnummer fra login (sat af login.html) — til ejerskab af billeder
 function mitNr(){
   try{ return (sessionStorage.getItem('ok_nr') || localStorage.getItem('ok_nr') || '').trim(); }
@@ -228,17 +233,17 @@ function maaRedigere(b){
   const ejer = talDel(b.uploaderNr);
   return mit && ejer && (mit === ejer);
 }
- 
+
 let valgtAar = AAR_LISTE[0];
 let valgtGruppe = 'ALLE'; // 'ALLE' = hele weekenden
 let aktuelleBilleder = []; // billeder i den viste gruppe (når enkelt gruppe)
 let alleData = {};         // { gruppeId: [billeder] } når hele weekenden
 let visListe = [];         // peger på det aktuelt viste (til lightbox)
- 
+
 // Udfyld år-dropdown
 const aarSel = document.getElementById('aar-vaelger');
 aarSel.innerHTML = AAR_LISTE.map(a=>`<option value="${a}">${a}</option>`).join('');
- 
+
 // Udfyld gruppe-dropdowns ('Hele weekenden' øverst i nav)
 function fyldNavDropdown(valgt){
   const sel = document.getElementById('gruppe-vaelger-nav');
@@ -249,7 +254,7 @@ function fyldGruppeDropdown(sel, valgt){
   sel.innerHTML = GRUPPER.map(g=>`<option value="${g.id}" ${g.id===valgt?'selected':''}>${g.titel}</option>`).join('');
 }
 fyldNavDropdown(valgtGruppe);
- 
+
 // Hent billeder for én gruppe
 async function hentGruppe(gid){
   try{
@@ -264,11 +269,11 @@ async function hentGruppe(gid){
     return items;
   }catch(e){ return []; }
 }
- 
+
 async function visValg(){
   const indhold = document.getElementById('indhold');
   indhold.innerHTML = `<div class="besked">Henter billeder…</div>`;
- 
+
   if(valgtGruppe === 'ALLE'){
     // Hele weekenden: hent alle grupper, vis venstre→højre i rækkefølge
     alleData = {};
@@ -279,12 +284,12 @@ async function visValg(){
     tegnEnkeltGruppe();
   }
 }
- 
+
 function opdaterTael(antal){
   document.getElementById('tael-linje').textContent =
     antal > 0 ? `📷 ${antal} ${antal===1?'billede':'billeder'} i ${valgtAar}` : '';
 }
- 
+
 function celleHTML(b, globalIndex){
   return `<div class="celle">
     <img class="bil" src="${b.url}" loading="lazy" data-i="${globalIndex}" onclick="visStort(${globalIndex})">
@@ -294,7 +299,7 @@ function celleHTML(b, globalIndex){
     </div>
   </div>`;
 }
- 
+
 function tegnEnkeltGruppe(){
   const indhold = document.getElementById('indhold');
   // global liste = denne gruppe (til lightbox)
@@ -314,18 +319,18 @@ function tegnEnkeltGruppe(){
   document.getElementById('aabn-upload').addEventListener('click', aabnModal);
   kobLightbox();
 }
- 
+
 function tegnHeleWeekenden(){
   const indhold = document.getElementById('indhold');
   // Byg én samlet liste i rækkefølge (til lightbox + tæller)
   visListe = [];
   GRUPPER.forEach(g=>{ (alleData[g.id]||[]).forEach(b=> visListe.push(b)); });
   opdaterTael(visListe.length);
- 
+
   const topknap = `<div style="text-align:center;margin-bottom:1.5rem">
       <button class="upload-knap" id="aabn-upload" style="font-size:14px;padding:.7rem 1.4rem">📷 Læg et billede op</button>
     </div>`;
- 
+
   let gIndex = 0;
   const sektioner = GRUPPER.map(g=>{
     const liste = alleData[g.id] || [];
@@ -342,19 +347,19 @@ function tegnHeleWeekenden(){
         ${krop}
       </div>`;
   }).join('');
- 
+
   indhold.innerHTML = topknap + sektioner;
   document.getElementById('aabn-upload').addEventListener('click', aabnModal);
   kobLightbox();
 }
- 
+
 // global liste til lightbox (peger på det aktuelt viste)
 function kobLightbox(){
   document.getElementById('indhold').querySelectorAll('.bil').forEach(img=>{
     img.addEventListener('click', ()=> visStort(+img.dataset.i));
   });
 }
- 
+
 // Dropdown-skift
 document.getElementById('aar-vaelger').addEventListener('change', e=>{
   valgtAar = e.target.value; visValg();
@@ -362,12 +367,12 @@ document.getElementById('aar-vaelger').addEventListener('change', e=>{
 document.getElementById('gruppe-vaelger-nav').addEventListener('change', e=>{
   valgtGruppe = e.target.value; visValg();
 });
- 
+
 // Upload-modal — flere billeder ad gangen
 let valgteFiler = [];   // de valgte billedfiler
 let billedTekster = []; // tekst pr. billede (samme rækkefølge)
 let aktuelIndex = 0;    // hvilket billede vi navngiver lige nu
- 
+
 window.aabnModal = function(){
   const startGruppe = (valgtGruppe === 'ALLE') ? GRUPPER[0].id : valgtGruppe;
   document.getElementById('modal-sub').textContent = 'Vælg år, ramme og dine billeder';
@@ -384,7 +389,7 @@ window.aabnModal = function(){
   document.getElementById('modal').classList.add('vis');
 };
 window.lukModal = function(){ document.getElementById('modal').classList.remove('vis'); };
- 
+
 // Når man vælger filer: gem dem og vis det første til navngivning
 document.getElementById('fil').addEventListener('change', e=>{
   valgteFiler = Array.from(e.target.files||[]);
@@ -394,7 +399,7 @@ document.getElementById('fil').addEventListener('change', e=>{
   document.getElementById('navngiv-boks').style.display='block';
   visAktueltTilNavngivning();
 });
- 
+
 // Vis det aktuelle billede + dets tekstfelt
 function visAktueltTilNavngivning(){
   const f = valgteFiler[aktuelIndex];
@@ -408,7 +413,7 @@ function visAktueltTilNavngivning(){
   document.getElementById('forrige-knap').style.visibility = aktuelIndex===0 ? 'hidden':'visible';
   document.getElementById('naeste-knap').style.visibility = aktuelIndex===valgteFiler.length-1 ? 'hidden':'visible';
 }
- 
+
 // Skift mellem billeder (gemmer teksten på vej)
 window.navngivSkift = function(retning){
   billedTekster[aktuelIndex] = document.getElementById('tekst').value.trim();
@@ -417,7 +422,7 @@ window.navngivSkift = function(retning){
   aktuelIndex = ny;
   visAktueltTilNavngivning();
 };
- 
+
 window.gemBillede = async function(){
   // Gem teksten på det billede der vises lige nu
   if(valgteFiler.length>0) billedTekster[aktuelIndex] = document.getElementById('tekst').value.trim();
@@ -445,15 +450,16 @@ window.gemBillede = async function(){
     valgtGruppe = gid;
     fyldNavDropdown(valgtGruppe);
     await visValg();
+    opdaterAarsAntal();
   }catch(err){
     status.textContent='Kunne ikke uploade: '+(err.message||err);
   }finally{
     knap.disabled=false; knap.textContent='Læg alle op';
   }
 };
- 
+
 let aabentBillede = null; // { i, b } billedet i lightbox lige nu
- 
+
 window.visStort = function(i){
   const b=visListe[i];
   aabentBillede = { i, b };
@@ -468,7 +474,7 @@ window.visStort = function(i){
   document.getElementById('lightbox').classList.add('vis');
 };
 window.lukLightbox = function(){ document.getElementById('lightbox').classList.remove('vis'); aabentBillede=null; };
- 
+
 // BLADRE mellem billeder i lightboxen
 window.bladreBillede = function(e, retning){
   if(e) e.stopPropagation();
@@ -478,7 +484,7 @@ window.bladreBillede = function(e, retning){
   if(ny >= visListe.length) ny = 0;           // fra sidste → første
   visStort(ny);
 };
- 
+
 // Tastatur: piletaster og Esc
 document.addEventListener('keydown', function(e){
   const lb = document.getElementById('lightbox');
@@ -487,7 +493,7 @@ document.addEventListener('keydown', function(e){
   else if(e.key === 'ArrowLeft') bladreBillede(null, -1);
   else if(e.key === 'Escape') lukLightbox();
 });
- 
+
 // SLET (kun ejer/admin — knappen vises ellers ikke)
 window.sletBillede = async function(e){
   if(e) e.stopPropagation();
@@ -502,11 +508,12 @@ window.sletBillede = async function(e){
     document.getElementById('lightbox').classList.remove('vis');
     aabentBillede = null;
     await visValg();
+    opdaterAarsAntal();
   }catch(err){
     status.textContent = 'Kunne ikke slette: ' + (err.message||err);
   }
 };
- 
+
 // Vis/skjul flyt-dropdown (alle rammer undtagen den nuværende)
 window.visFlytValg = function(e){
   if(e) e.stopPropagation();
@@ -523,7 +530,7 @@ window.visFlytValg = function(e){
     boks.style.display = 'none';
   }
 };
- 
+
 // UDFØR flyt: kopiér til ny ramme, slet fra gammel
 // Vis/skjul ret-tekst-boks
 window.visRetTekst = function(e){
@@ -537,7 +544,7 @@ window.visRetTekst = function(e){
     boks.style.display = 'none';
   }
 };
- 
+
 // Gem ny billedtekst (opdaterer metadata uden at flytte filen)
 window.gemRetTekst = async function(e){
   if(e) e.stopPropagation();
@@ -556,7 +563,7 @@ window.gemRetTekst = async function(e){
     status.textContent = 'Kunne ikke gemme tekst: ' + (err.message||err);
   }
 };
- 
+
 window.udfoerFlyt = async function(e){
   if(e) e.stopPropagation();
   if(!aabentBillede) return;
@@ -584,15 +591,46 @@ window.udfoerFlyt = async function(e){
     document.getElementById('lightbox').classList.remove('vis');
     aabentBillede = null;
     await visValg();
+    opdaterAarsAntal();
   }catch(err){
     status.textContent = 'Kunne ikke flytte: ' + (err.message||err);
   }
 };
- 
+
+// === Tæl billeder pr. år og vis antallet i "Vælg år"-dropdownen ===
+// Tæller alle billeder i ét år (på tværs af de 14 rammer)
+async function taelAaretsBilleder(aar){
+  const antalPrGruppe = await Promise.all(
+    GRUPPER.map(g =>
+      listAll(ref(storage, `fotovaeg/${aar}/${g.id}`))
+        .then(r => r.items.length)
+        .catch(()=> 0)
+    )
+  );
+  return antalPrGruppe.reduce((sum, n)=> sum + n, 0);
+}
+
+// Skriver antallet ud for hvert år i dropdownen — så man ser hvor der mangler
+async function opdaterAarsAntal(){
+  const sel = document.getElementById('aar-vaelger');
+  if(!sel) return;
+  for(const aar of AAR_LISTE){
+    let antal = 0;
+    try{ antal = await taelAaretsBilleder(aar); }catch(e){ antal = 0; }
+    const opt = sel.querySelector(`option[value="${aar}"]`);
+    if(opt){
+      // Et tal ud for hvert år: 0 hvis ingen billeder, ellers det faktiske antal
+      opt.textContent = `${aar} — ${antal}`;
+    }
+  }
+}
+
 // Start
 visValg();
+opdaterAarsAntal();
 </script>
 <script type="module" src="post-varsel.js"></script>
 </body>
 </html>
- 
+
+
