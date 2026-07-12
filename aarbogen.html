@@ -110,6 +110,8 @@ body {
 .aar-titel { font-size: 18px; font-weight: bold; color: #2c3e1f; }
 .aar-sted { font-size: 14px; color: #5a6b3f; margin-top: 3px; }
 .aar-dato { font-size: 13px; color: #999; font-style: italic; margin-top: 2px; }
+.aar-omhandler { font-size: 13.5px; color: #4a4a3a; margin-top: 8px; line-height: 1.55; border-top: 1px solid #ece7d6; padding-top: 7px; }
+.omhandler-mrk { display: block; font-size: 11px; font-weight: bold; color: #c89e3c; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 3px; }
 
 /* Handling-pil */
 .aar-pil {
@@ -240,7 +242,16 @@ const AARGANGE = [
     tekst: "Klanens årsregnskab for 2025 — fremlagt til orientering og drøftelse.",
     fil: "regnskab-2025.html"
   },
-  { bladAar: "2024", status: "mangler" },
+  {
+    bladAar: "2024",
+    status: "klar",
+    infonr: "Information nr. 47",
+    titel: "Skovtur 2023",
+    sted: "Hovborglejren · Langeland",
+    dato: "19.–21. maj 2023",
+    indhold: "Referat og billeder fra skovturen til Hovborglejren på Langeland i 2023 — plus indkaldelsen til skovturen 24.–26. maj 2024 ved Bisseruplejren, Bisserup Strand.",
+    fil: "blad-2024.html"
+  },
   {
     bladAar: "2023",
     status: "klar",
@@ -248,6 +259,7 @@ const AARGANGE = [
     titel: "Skovtur 2022",
     sted: "Eriks Minde · Rørvig",
     dato: "27.–29. maj 2022",
+    indhold: "Referat og billeder fra skovturen ved Eriks Minde i Rørvig i 2022 — stemninger, historier og indkaldelse til næste års tur.",
     fil: "blad-2023.html"
   },
   {
@@ -257,6 +269,7 @@ const AARGANGE = [
     titel: "Skovtur 2021",
     sted: "Holmsborg · Lejren i Søndervig",
     dato: "4.–6. juni 2021",
+    indhold: "Referat og billeder fra skovturen på Holmsborg ved Søndervig i 2021 — gensyn, gåture og indkaldelse til næste års tur.",
     fil: "blad-2022.html"
   },
   { bladAar: "2021", status: "mangler" },
@@ -272,6 +285,7 @@ const AARGANGE = [
     titel: "Skovtur 2015",
     sted: "Kolonien Lønsømaj · ved Nordborg",
     dato: "29.–31. maj 2015",
+    indhold: "Referat og billeder fra skovturen på Kolonien Lønsømaj ved Nordborg i 2015 — minder fra en weekend med hele klanen.",
     fil: "blad-2016.html"
   },
   { bladAar: "2015", status: "mangler" },
@@ -376,6 +390,7 @@ AARGANGE.forEach(a => {
         <div class="aar-titel">${a.titel}</div>
         <div class="aar-sted">${a.sted}</div>
         <div class="aar-dato">${a.dato}</div>
+        ${a.indhold ? `<div class="aar-omhandler"><span class="omhandler-mrk">Indhold omhandler</span>${a.indhold}</div>` : ""}
       </div>
       <div class="aar-pil"><span class="knap">Bladr i bladet ›</span></div>`;
     reol.appendChild(el);
