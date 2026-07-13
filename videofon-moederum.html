@@ -457,9 +457,9 @@ window.komIndIRum = function() {
   window.gaaIndIRum(rum);
 };
 
-/* ==== FØLG LEDEREN v3 (auto-åben + robust leder + debug) 2026-07-13 ==== */
+/* ==== FØLG LEDEREN v4 (tilladt kanal vmr_rum/__delt) 2026-07-13 ==== */
 window.__foelg = { unsub: null, erFoerer: false, autoOpen: false, sisteUrl: null, sisteD: null, subRum: null };
-function delRef(rum){ return ref(db, 'vmr_delt/' + rum); }
+function delRef(rum){ return ref(db, 'vmr_rum/__delt/' + rum); }
 function minRolle(){
   const rum = window.aktivtRum;
   const p = (window.alleRum && window.alleRum[rum]) ? window.alleRum[rum][window.minNr] : null;
@@ -472,7 +472,7 @@ function opdaterDebug(){
   const d = window.__foelg.sisteD;
   const foerer = (d && d.foererNr) ? d.foererNr : '-';
   const split = (ov && ov.classList.contains('split')) ? 'JA' : 'NEJ';
-  el.textContent = 'v3 rum:' + rum + ' mig:' + (window.minNr || '-') + ' rolle:' + minRolle() + ' foerer:' + foerer + ' sub:' + (window.__foelg.subRum || '-') + ' delt:' + split;
+  el.textContent = 'v4 rum:' + rum + ' mig:' + (window.minNr || '-') + ' rolle:' + minRolle() + ' foerer:' + foerer + ' sub:' + (window.__foelg.subRum || '-') + ' delt:' + split;
 }
 function visFoerer(d){
   const ind = document.getElementById('foerer-indikator');
@@ -582,7 +582,7 @@ window.givPenTil = function(nr){
     if(!window.__foelg.erFoerer || !window.aktivtRum) return;
     try {
       const u = frame.contentWindow.location.href;
-      if(u !== window.__foelg.sisteUrl){ window.__foelg.sisteUrl = u; set(ref(db, 'vmr_delt/' + window.aktivtRum + '/url'), u); }
+      if(u !== window.__foelg.sisteUrl){ window.__foelg.sisteUrl = u; set(ref(db, 'vmr_rum/__delt/' + window.aktivtRum + '/url'), u); }
     } catch(e){}
   });
   const ov = document.getElementById('video-overlay');
