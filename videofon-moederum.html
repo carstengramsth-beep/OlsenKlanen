@@ -457,6 +457,131 @@ window.komIndIRum = function() {
   window.gaaIndIRum(rum);
 };
 
+/* ==== FØLG LEDEREN (delt navigation via Firebase) 2026-07-13 ==== */
+window.__foelg = { unsub: null, erFoerer: false, sisteUrl: null };
+function delRef(){ return ref(db, 'vmr_delt/' + window.aktivtRum); }
+function minRolle(){
+  const rum = window.aktivtRum;
+  const p = (window.alleRum && window.alleRum[rum]) ? window.alleRum[rum][window.minNr] : null;
+  return p ? p.rolle : 'deltager';
+}
+function visFoerer(d){
+  const ind = document.getElementById('foerer-indikator');
+  const gknap = document.getElementById('giv-pen-knap');
+  const tknap = document.getElementById('tag-pen-knap');
+  if(!ind || !gknap || !tknap) return;
+  const harFoerer = d && d.foererNr;
+  const jegFoerer = harFoerer && String(d.foererNr) === String(window.minNr);
+  if(harFoerer){
+    ind.textContent = jegFoerer ? '🖊️ Du styrer' : ('🖊️ ' + (d.foererNavn || '?') + ' styrer');
+    ind.style.display = 'inline-flex';
+  } else {
+    ind.style.display = 'none';
+  }
+  gknap.style.display = jegFoerer ? 'inline-block' : 'none';
+  tknap.style.display = (!jegFoerer && minRolle() === 'arrangoer') ? 'inline-block' : 'none';
+}
+window.startDelt = function(){
+  const rum = window.aktivtRum;
+  if(!rum) return;
+  const frame = document.getElementById('site-frame');
+  if(!frame) return;
+  if(window.__foelg.unsub){ try { window.__foelg.unsub(); } catch(e){} }
+  window.__foelg.unsub = onValue(delRef(), function(snap){
+    const d = snap.val();
+    if((!d || !d.foererNr) && minRolle() === 'arrangoer'){
+      let u = 'forside.html'; try { u = frame.contentWindow.location.href; } catch(e){}
+      set(delRef(), { foererNr: window.minNr, foererNavn: window.minNavn, url: u });
+      return;
+    }
+    window.__foelg.erFoerer = d && String(d.foererNr) === String(window.minNr);
+    visFoerer(d);
+    if(window.__foelg.erFoerer){
+      frame.style.pointerEvents = 'auto';
+    } else {
+      frame.style.pointerEvents = 'none';
+      if(d && d.url){
+        let cur = ''; try { cur = frame.contentWindow.location.href; } catch(e){}
+        if(cur !== d.url && frame.getAttribute('src') !== d.url){ frame.setAttribute('src', d.url); }
+      }
+    }
+  });
+  frame.onload = function(){
+    if(!window.__foelg.erFoerer || !window.aktivtRum) return;
+    try {
+      const u = frame.contentWindow.location.href;
+      if(u !== window.__foelg.sisteUrl){ window.__foelg.sisteUrl = u; set(ref(db, 'vmr_delt/' + window.aktivtRum + '/url'), u); }
+    } catch(e){}
+  };
+};
+window.stopDelt = function(){
+  if(window.__foelg.unsub){ try { window.__foelg.unsub(); } catch(e){} window.__foelg.unsub = null; }
+  const frame = document.getElementById('site-frame');
+  if(frame){ frame.style.pointerEvents = 'auto'; frame.onload = null; }
+  if(window.__foelg.erFoerer && window.aktivtRum){ try { remove(delRef()); } catch(e){} }
+  window.__foelg.erFoerer = false; window.__foelg.sisteUrl = null;
+  visFoerer(null);
+};
+window.tagPen = function(){
+  const rum = window.aktivtRum; if(!rum) return;
+  const frame = document.getElementById('site-frame');
+  let u = 'forside.html'; try { u = frame.contentWindow.location.href; } catch(e){}
+  set(delRef(), { foererNr: window.minNr, foererNavn: window.minNavn, url: u });
+};
+window.aabnGivPen = function(){
+  const rum = window.aktivtRum; const personer = (window.alleRum && window.alleRum[rum]) || {};
+  const liste = document.getElementById('gp-liste'); if(!liste) return;
+  liste.innerHTML = '';
+  const nrs = Object.keys(personer).filter(function(nr){ return String(nr) !== String(window.minNr); });
+  if(nrs.length === 0){ liste.innerHTML = '<p style="color:#888;padding:10px;">Ingen andre deltagere i rummet endnu.</p>'; }
+  nrs.forEach(function(nr){
+    const d = document.createElement('div'); d.className = 'gp-person';
+    d.textContent = personer[nr].navn || ('Nr ' + nr);
+    d.addEventListener('click', function(){ window.givPenTil(nr); });
+    liste.appendChild(d);
+  });
+  document.getElementById('gp-bg').style.display = 'flex';
+};
+window.lukGivPen = function(){ const b = document.getElementById('gp-bg'); if(b) b.style.display = 'none'; };
+window.givPenTil = function(nr){
+  const rum = window.aktivtRum; const personer = (window.alleRum && window.alleRum[rum]) || {};
+  const p = personer[nr]; window.lukGivPen(); if(!p) return;
+  const frame = document.getElementById('site-frame');
+  let u = 'forside.html'; try { u = frame.contentWindow.location.href; } catch(e){}
+  set(delRef(), { foererNr: nr, foererNavn: p.navn || ('Nr ' + nr), url: u });
+};
+(function initFoelg(){
+  const topbar = document.getElementById('vo-topbar');
+  if(!topbar){ return setTimeout(initFoelg, 400); }
+  if(document.getElementById('foerer-indikator')) return;
+  const knapCss = 'display:none;background:#8a6a2f;color:#fff;border:none;border-radius:8px;padding:10px 14px;font-size:14px;font-weight:bold;cursor:pointer;font-family:inherit;';
+  const ind = document.createElement('span'); ind.id = 'foerer-indikator';
+  ind.style.cssText = 'display:none;align-items:center;gap:4px;color:#f5e08a;font-weight:bold;margin-left:6px;font-size:14px;';
+  const gknap = document.createElement('button'); gknap.id = 'giv-pen-knap'; gknap.textContent = '🖊️ Giv styringen';
+  gknap.onclick = window.aabnGivPen; gknap.style.cssText = knapCss;
+  const tknap = document.createElement('button'); tknap.id = 'tag-pen-knap'; tknap.textContent = '🖊️ Tag styringen';
+  tknap.onclick = window.tagPen; tknap.style.cssText = knapCss;
+  topbar.appendChild(ind); topbar.appendChild(gknap); topbar.appendChild(tknap);
+  const bg = document.createElement('div'); bg.id = 'gp-bg';
+  bg.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:5000;align-items:center;justify-content:center;';
+  bg.innerHTML = '<div style="background:#fff;border-radius:14px;padding:22px;max-width:360px;width:90%;font-family:inherit;box-sizing:border-box;"><h2 style="margin:0 0 6px;font-size:20px;color:#1a3a1a;">🖊️ Giv styringen videre</h2><p style="margin:0 0 12px;color:#444;">Vælg hvem der skal styre den delte visning.</p><div id="gp-liste"></div><button onclick="lukGivPen()" style="margin-top:14px;background:#eee;border:none;border-radius:8px;padding:10px 16px;cursor:pointer;font-family:inherit;">Luk</button></div>';
+  document.body.appendChild(bg);
+  const st = document.createElement('style');
+  st.textContent = '.gp-person{padding:12px;border-bottom:1px solid #eee;cursor:pointer;font-size:16px;}.gp-person:hover{background:#f3f7f3;}';
+  document.head.appendChild(st);
+  const ov = document.getElementById('video-overlay');
+  if(ov){
+    let sidst = ov.classList.contains('split');
+    new MutationObserver(function(){
+      const nu = ov.classList.contains('split');
+      if(nu && !sidst){ window.startDelt(); }
+      else if(!nu && sidst){ window.stopDelt(); }
+      sidst = nu;
+    }).observe(ov, { attributes: true, attributeFilter: ['class'] });
+  }
+})();
+/* ==== slut FØLG LEDEREN ==== */
+
 window.afvisInvitation = function() {
   remove(ref(db, 'vmr_invitation/' + window.minNr));
   document.getElementById('bank-pop').classList.remove('vis');
