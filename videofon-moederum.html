@@ -35,11 +35,15 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .knap-gaaind.fuld { background: #999; cursor: not-allowed; }
 
 /* Videooverlay */
-#video-overlay { display:none; position:fixed; inset:0; background:#0b0b0b; z-index:4000; }
-#jitsi-boks { position:absolute; inset:0; }
-.knap-aaben { position:absolute; top:14px; left:375px; z-index:4100; background:#185fa5; color:#fff; border:none; border-radius:8px; padding:12px 20px; font-size:16px; font-weight:bold; cursor:pointer; font-family:inherit; }
-.knap-laegpaa { position:absolute; top:14px; left:14px; z-index:4100; background:#b03030; color:#fff; border:none; border-radius:8px; padding:12px 20px; font-size:16px; font-weight:bold; cursor:pointer; font-family:inherit; }
-.knap-inviter { position:absolute; top:14px; left:170px; z-index:4100; background:#2d7a2d; color:#fff; border:none; border-radius:8px; padding:12px 20px; font-size:16px; font-weight:bold; cursor:pointer; font-family:inherit; }
+#video-overlay { display:none; position:fixed; inset:0; background:#0b0b0b; z-index:4000; flex-direction:column; }
+#vo-topbar { flex:0 0 auto; display:flex; align-items:center; gap:12px; padding:10px 14px; background:#111; }
+#vo-body { flex:1 1 auto; display:flex; min-height:0; }
+#site-frame { flex:0 0 64%; border:none; background:#fff; display:none; }
+#video-overlay.split #site-frame { display:block; }
+#jitsi-boks { flex:1 1 auto; min-width:0; height:100%; }
+.knap-aaben { z-index:4100; background:#185fa5; color:#fff; border:none; border-radius:8px; padding:12px 20px; font-size:16px; font-weight:bold; cursor:pointer; font-family:inherit; }
+.knap-laegpaa { z-index:4100; background:#b03030; color:#fff; border:none; border-radius:8px; padding:12px 20px; font-size:16px; font-weight:bold; cursor:pointer; font-family:inherit; }
+.knap-inviter { z-index:4100; background:#2d7a2d; color:#fff; border:none; border-radius:8px; padding:12px 20px; font-size:16px; font-weight:bold; cursor:pointer; font-family:inherit; }
 
 /* Invitér-medlem boks (popup) */
 .inv-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); align-items:center; justify-content:center; z-index:5000; padding:16px; }
@@ -91,10 +95,15 @@ Her er tre møderum. Du kan se om et rum er ledigt eller optaget, og hvem der er
 
 <!-- INDBYGGET VIDEOMØDE -->
 <div id="video-overlay">
-  <div id="jitsi-boks"></div>
+  <div id="vo-topbar">
   <button onclick="forladRum()" class="knap-laegpaa">📴 Forlad rum</button>
   <button onclick="aabnInviter()" class="knap-inviter" id="inviter-knap">➕ Invitér medlem</button>
-  <button onclick="window.open('forside.html','_blank')" class="knap-aaben" id="aaben-knap" title="Åbn olsenklanen.dk i nyt vindue">🌐 Åben olsenklanen.dk</button>
+  <button onclick="toggleSite()" class="knap-aaben" id="aaben-knap" title="Vis/skjul olsenklanen.dk i mødet">🌐 Åben olsenklanen.dk</button>
+  </div>
+  <div id="vo-body">
+    <iframe id="site-frame" title="olsenklanen.dk"></iframe>
+    <div id="jitsi-boks"></div>
+  </div>
 </div>
 
 <!-- INVITÉR MEDLEM (popup) -->
@@ -278,7 +287,10 @@ window.gaaIndIRum = function(rumNr) {
 function startVideo(rumNr) {
   if (window.jitsiApi) { try { window.jitsiApi.dispose(); } catch(e){} window.jitsiApi = null; }
   document.getElementById('jitsi-boks').innerHTML = '';
-  document.getElementById('video-overlay').style.display = 'block';
+  document.getElementById('video-overlay').style.display = 'flex';
+  document.getElementById('video-overlay').classList.remove('split');
+  window.__siteOpen = false;
+  { const _b = document.getElementById('aaben-knap'); if (_b) _b.textContent = '🌐 Åben olsenklanen.dk'; }
 
   const rumNavn = APPID + '/OlsenKlanen-Moederum-' + rumNr;
   window.jitsiApi = new JitsiMeetExternalAPI('8x8.vc', {
@@ -292,6 +304,23 @@ function startVideo(rumNr) {
 }
 
 // ===== FORLAD RUM =====
+window.__siteOpen = false;
+window.toggleSite = function() {
+  const ov = document.getElementById('video-overlay');
+  const fr = document.getElementById('site-frame');
+  const b = document.getElementById('aaben-knap');
+  if (!window.__siteOpen) {
+    if (!fr.getAttribute('src')) fr.setAttribute('src', 'forside.html');
+    ov.classList.add('split');
+    window.__siteOpen = true;
+    b.textContent = '✖ Skjul olsenklanen.dk';
+  } else {
+    ov.classList.remove('split');
+    window.__siteOpen = false;
+    b.textContent = '🌐 Åben olsenklanen.dk';
+  }
+};
+
 window.forladRum = function() {
   if (window.jitsiApi) { try { window.jitsiApi.dispose(); } catch(e){} window.jitsiApi = null; }
   document.getElementById('jitsi-boks').innerHTML = '';
