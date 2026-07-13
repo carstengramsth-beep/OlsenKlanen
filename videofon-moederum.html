@@ -457,13 +457,22 @@ window.komIndIRum = function() {
   window.gaaIndIRum(rum);
 };
 
-/* ==== FØLG LEDEREN v2 (delt visning styret af lederen) 2026-07-13 ==== */
+/* ==== FØLG LEDEREN v3 (auto-åben + robust leder + debug) 2026-07-13 ==== */
 window.__foelg = { unsub: null, erFoerer: false, autoOpen: false, sisteUrl: null, sisteD: null, subRum: null };
 function delRef(rum){ return ref(db, 'vmr_delt/' + rum); }
 function minRolle(){
   const rum = window.aktivtRum;
   const p = (window.alleRum && window.alleRum[rum]) ? window.alleRum[rum][window.minNr] : null;
-  return p ? p.rolle : 'deltager';
+  return p ? (p.rolle || 'deltager') : 'ukendt';
+}
+function opdaterDebug(){
+  const el = document.getElementById('foelg-debug'); if(!el) return;
+  const ov = document.getElementById('video-overlay');
+  const rum = window.aktivtRum || '-';
+  const d = window.__foelg.sisteD;
+  const foerer = (d && d.foererNr) ? d.foererNr : '-';
+  const split = (ov && ov.classList.contains('split')) ? 'JA' : 'NEJ';
+  el.textContent = 'v3 rum:' + rum + ' mig:' + (window.minNr || '-') + ' rolle:' + minRolle() + ' foerer:' + foerer + ' sub:' + (window.__foelg.subRum || '-') + ' delt:' + split;
 }
 function visFoerer(d){
   const ind = document.getElementById('foerer-indikator');
@@ -479,13 +488,13 @@ function visFoerer(d){
     ind.style.display = 'none';
   }
   gknap.style.display = jegFoerer ? 'inline-block' : 'none';
-  tknap.style.display = (!jegFoerer && minRolle() === 'arrangoer') ? 'inline-block' : 'none';
+  tknap.style.display = (harFoerer && !jegFoerer) ? 'inline-block' : 'none';
 }
 function paaDelt(d){
   window.__foelg.sisteD = d;
   const ov = document.getElementById('video-overlay');
   const frame = document.getElementById('site-frame');
-  if(!ov || !frame) return;
+  if(!ov || !frame){ return; }
   const harFoerer = d && d.foererNr;
   const jegFoerer = harFoerer && String(d.foererNr) === String(window.minNr);
   window.__foelg.erFoerer = !!jegFoerer;
@@ -517,6 +526,7 @@ function paaDelt(d){
     frame.style.pointerEvents = 'auto';
     visFoerer(null);
   }
+  opdaterDebug();
 }
 window.tagPen = function(){
   const rum = window.aktivtRum; if(!rum) return;
@@ -558,7 +568,9 @@ window.givPenTil = function(nr){
   gknap.onclick = window.aabnGivPen; gknap.style.cssText = knapCss;
   const tknap = document.createElement('button'); tknap.id = 'tag-pen-knap'; tknap.textContent = '🖊️ Tag styringen';
   tknap.onclick = window.tagPen; tknap.style.cssText = knapCss;
-  topbar.appendChild(ind); topbar.appendChild(gknap); topbar.appendChild(tknap);
+  const dbg = document.createElement('span'); dbg.id = 'foelg-debug';
+  dbg.style.cssText = 'margin-left:auto;color:#9fb0c0;font-size:11px;font-family:monospace;white-space:nowrap;';
+  topbar.appendChild(ind); topbar.appendChild(gknap); topbar.appendChild(tknap); topbar.appendChild(dbg);
   const bg = document.createElement('div'); bg.id = 'gp-bg';
   bg.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:5000;align-items:center;justify-content:center;';
   bg.innerHTML = '<div style="background:#fff;border-radius:14px;padding:22px;max-width:360px;width:90%;font-family:inherit;box-sizing:border-box;"><h2 style="margin:0 0 6px;font-size:20px;color:#1a3a1a;">🖊️ Giv styringen videre</h2><p style="margin:0 0 12px;color:#444;">Vælg hvem der skal styre den delte visning.</p><div id="gp-liste"></div><button onclick="lukGivPen()" style="margin-top:14px;background:#eee;border:none;border-radius:8px;padding:10px 16px;cursor:pointer;font-family:inherit;">Luk</button></div>';
@@ -580,7 +592,7 @@ window.givPenTil = function(nr){
       const nu = ov.classList.contains('split');
       if(nu && !sidst){
         const rum = window.aktivtRum; const d = window.__foelg.sisteD;
-        if(rum && !window.__foelg.autoOpen && minRolle() === 'arrangoer' && (!d || !d.foererNr)){
+        if(rum && !window.__foelg.autoOpen && (!d || !d.foererNr)){
           let u = 'forside.html'; try { u = frame.contentWindow.location.href; } catch(e){}
           set(delRef(rum), { foererNr: window.minNr, foererNavn: window.minNavn, url: u });
         }
@@ -589,6 +601,7 @@ window.givPenTil = function(nr){
         if(rum && window.__foelg.erFoerer && !window.__foelg.autoOpen){ try { remove(delRef(rum)); } catch(e){} }
       }
       sidst = nu;
+      opdaterDebug();
     }).observe(ov, { attributes: true, attributeFilter: ['class'] });
   }
   setInterval(function(){
@@ -601,6 +614,7 @@ window.givPenTil = function(nr){
       if(rum){ window.__foelg.unsub = onValue(delRef(rum), function(snap){ paaDelt(snap.val()); }); }
       else { paaDelt(null); window.__foelg.autoOpen = false; }
     }
+    opdaterDebug();
   }, 600);
 })();
 /* ==== slut FØLG LEDEREN ==== */
