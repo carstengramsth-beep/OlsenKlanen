@@ -7,7 +7,9 @@
    Læser window.__foelg.erFoerer og window.aktivtRum fra hoved-modulet.
    2026-07-15  (robust følger: buffer events, vent på lib + fuld snapshot;
                 start live fra seneste event, så lederens bevægelser er live;
-                skalér hele siden ned så den passer i ruden — ingen klip)
+                skalér hele siden ned så den passer i ruden — ingen klip;
+                STRENG-kod hvert event (Firebase afviser rrweb-snapshot med
+                undefined-værdier, så det fulde billede blev tabt lydløst))
    ================================================================ */
 import { getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, push, set, remove, onChildAdded }
@@ -133,7 +135,7 @@ function beginLeaderRecord(iwin, idoc, r){
       leaderStop = iwin.rrweb.record({
         emit: function(ev){
           leaderCount++;
-          try { push(rrRef, ev); } catch(e){}
+          try { push(rrRef, { d: JSON.stringify(ev) }); } catch(e){}
           if(leaderCount % 15 === 0) dbg('rr:SENDER ' + leaderCount);
         },
         sampling: { mousemove: 40, scroll: 100, media: 500, input: 'last' }
@@ -176,7 +178,11 @@ function attachStream(r){
   detachStream();
   const rrRef = ref(db, 'vmr_rum/__rr/' + r);
   streamUnsub = onChildAdded(rrRef, function(snap){
-    const e = snap.val(); if(e) feed(e);
+    const raw = snap.val(); if(!raw) return;
+    let e = null;
+    if(typeof raw.d === 'string'){ try { e = JSON.parse(raw.d); } catch(_){ e = null; } }
+    else { e = raw; }                 // bagudkompatibel med gammelt (ukodet) format
+    if(e) feed(e);
   });
 }
 
