@@ -45,6 +45,12 @@ service cloud.firestore {
 
     match /udviklingslog/{id} {
       allow read, write: if erAutoriseret();
+
+      match /kommentarer/{kid} {
+        allow read: if erAutoriseret();
+        allow create: if erAutoriseret();
+        allow update, delete: if erAdministrator();
+      }
     }
 
     match /system/{id} {
