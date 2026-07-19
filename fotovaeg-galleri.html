@@ -224,6 +224,10 @@ let valgtAar = '2026';
 // Fyld år-dropdown
 const aarFoer = document.getElementById('aar-foer');
 aarFoer.innerHTML = AAR_LISTE.map(a=>`<option value="${a}">${a}</option>`).join('');
+// === Tæl billeder pr. år og vis antallet i årsvælgeren (år — antal) ===
+async function taelAaretsBilleder(aar){const antalPrGruppe=await Promise.all(GRUPPER.map(g=>listAll(ref(storage,`fotovaeg/${aar}/${g.id}`)).then(r=>r.items.length).catch(()=>0)));return antalPrGruppe.reduce((sum,n)=>sum+n,0);}
+async function opdaterAarsAntal(){for(const aar of AAR_LISTE){let antal=0;try{antal=await taelAaretsBilleder(aar);}catch(e){antal=0;}const opt=aarFoer.querySelector(`option[value="${aar}"]`);if(opt)opt.textContent=`${aar} — ${antal}`;}}
+opdaterAarsAntal();
 aarFoer.addEventListener('change', e=>{
   document.getElementById('doer-tekst').textContent = 'Gå ind →';
 });
@@ -590,5 +594,6 @@ document.addEventListener('keydown', e=>{
 <script type="module" src="post-varsel.js"></script>
 </body>
 </html>
+
 
 
