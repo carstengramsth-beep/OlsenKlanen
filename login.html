@@ -134,20 +134,25 @@
   }
   .hjaelp {
     margin-top:24px;
-    font-size:0.78rem;
-    color:#8a7d4a;
+    font-size:0.82rem;
+    color:#efe8d3;
     line-height:1.5;
   }
   /* NY: velkomst-/kontaktboks til familiemedlemmer uden adgang */
   .ny-adresse {
     margin-top:22px;
-    padding:16px;
+    padding:20px 24px;
     border:1px solid #4a7a5a;
     border-radius:6px;
     background:rgba(255,255,255,0.04);
-    font-size:0.85rem;
+    font-size:0.9rem;
     color:#c9b96e;
     line-height:1.6;
+    width:92vw;
+    max-width:640px;
+    margin-left:50%;
+    transform:translateX(-50%);
+    box-sizing:border-box;
   }
   .ny-adresse strong { color:#f5d76e; }
   .ny-adresse a { color:#f5d76e; text-decoration:underline; }
@@ -209,12 +214,12 @@
  
   <!-- Musikafspiller (offentlig - kræver ikke login) -->
   <div id="musik-boks" style="margin-top:1.2rem;padding:.9rem;background:rgba(45,80,22,.06);border-radius:12px;display:none">
-    <div style="font-size:13px;color:#2d5016;font-weight:600;margin-bottom:.5rem">🎵 Lyt til OlsenKlanens sange</div>
+    <div style="font-size:13px;color:#efe8d3;font-weight:600;margin-bottom:.5rem">🎵 Lyt til OlsenKlanens sange</div>
     <div style="display:flex;gap:.5rem;align-items:center;justify-content:center;flex-wrap:wrap">
       <button type="button" id="login-musik-knap" onclick="loginSkiftMusik()" style="background:#3a6320;color:#fff;border:none;padding:.5rem .8rem;border-radius:8px;font-family:inherit;font-weight:600;cursor:pointer">🔊 Afspil</button>
       <select id="login-musik-vaelger" onchange="loginVaelgSang(this.value)" style="background:#fff;color:#2d5016;border:1px solid #cfdcc2;padding:.5rem .6rem;border-radius:8px;font-family:inherit;font-weight:600;font-size:13px;max-width:180px;cursor:pointer"></select>
     </div>
-    <div style="font-size:11px;color:#6b7d5a;margin-top:.6rem;line-height:1.5;font-style:italic">
+    <div style="font-size:11px;color:#efe8d3;margin-top:.6rem;line-height:1.5;font-style:italic">
       Tekster af Birthe · Musik kreeret af René Gram<br>Venligst udlånt af familien
     </div>
   </div>
@@ -783,4 +788,5 @@
  
 </body>
 </html>
+
 
