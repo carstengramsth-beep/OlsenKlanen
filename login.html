@@ -134,8 +134,8 @@
   }
   .hjaelp {
     margin-top:24px;
-    font-size:0.82rem;
-    color:#efe8d3;
+    font-size:0.95rem;
+    color:#faf6ec;
     line-height:1.5;
   }
   /* NY: velkomst-/kontaktboks til familiemedlemmer uden adgang */
@@ -214,12 +214,12 @@
  
   <!-- Musikafspiller (offentlig - kræver ikke login) -->
   <div id="musik-boks" style="margin-top:1.2rem;padding:.9rem;background:rgba(45,80,22,.06);border-radius:12px;display:none">
-    <div style="font-size:13px;color:#efe8d3;font-weight:600;margin-bottom:.5rem">🎵 Lyt til OlsenKlanens sange</div>
+    <div style="font-size:16px;color:#faf6ec;font-weight:600;margin-bottom:.5rem">🎵 Lyt til OlsenKlanens sange</div>
     <div style="display:flex;gap:.5rem;align-items:center;justify-content:center;flex-wrap:wrap">
       <button type="button" id="login-musik-knap" onclick="loginSkiftMusik()" style="background:#3a6320;color:#fff;border:none;padding:.5rem .8rem;border-radius:8px;font-family:inherit;font-weight:600;cursor:pointer">🔊 Afspil</button>
       <select id="login-musik-vaelger" onchange="loginVaelgSang(this.value)" style="background:#fff;color:#2d5016;border:1px solid #cfdcc2;padding:.5rem .6rem;border-radius:8px;font-family:inherit;font-weight:600;font-size:13px;max-width:180px;cursor:pointer"></select>
     </div>
-    <div style="font-size:11px;color:#efe8d3;margin-top:.6rem;line-height:1.5;font-style:italic">
+    <div style="font-size:13px;color:#faf6ec;margin-top:.6rem;line-height:1.5;font-style:italic">
       Tekster af Birthe · Musik kreeret af René Gram<br>Venligst udlånt af familien
     </div>
   </div>
@@ -227,7 +227,7 @@
   <!-- NY: velkomst- og kontaktbesked til familiemedlemmer der mangler adgang -->
   <div class="ny-adresse">
     <strong>Familieforeningen Olsenklanen</strong> &middot; CVR 37815144<br><br>
-    Skriv til os på <a href="mailto:post@olsenklanen.dk">post@olsenklanen.dk</a> — fx hvis du mangler din kode eller adgang. Du får svar fra en af ugens postansvarlige.<br><br>
+    Skriv til os på <a href="mailto:post@olsenklanen.dk" style="color:#6db3ff">post@olsenklanen.dk</a> — fx hvis du mangler din kode eller adgang. Du får svar fra en af ugens postansvarlige.<br><br>
     <strong>Administrationsgruppen</strong><br>
     <span style="color:#f0ead8;letter-spacing:.3px">Kurt Olsen &middot; Karin Lund &middot; Carsten Gram &middot; Tommy Olsen &middot; Sanne Gram Fadel</span>
   </div>
@@ -788,5 +788,6 @@
  
 </body>
 </html>
+
 
 
