@@ -59,9 +59,6 @@ textarea:focus { outline: none; border-color: #2d5016; }
 .mail-status.ikke-besvaret { color: #c89e3c; }
 .svar-omr { margin-top: 14px; padding-top: 14px; border-top: 1px dashed #ddd6bd; }
 .svar-omr h4 { font-size: 14px; color: #2d5016; margin-bottom: 10px; }
-.svar-knapper { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
-.svar-knap { background: #eef3e3; border: 1px solid #c3d3a6; border-radius: 16px; font-family: inherit; font-size: 13px; padding: 6px 13px; cursor: pointer; color: #2d5016; }
-.svar-knap:hover { background: #e0ebcd; }
 .tom { text-align: center; color: #999; font-style: italic; padding: 40px 20px; }
 .indlaeser { text-align: center; color: #888; padding: 30px; font-style: italic; }
 .hint { font-size: 13px; color: #888; margin-bottom: 4px; font-style: italic; }
@@ -78,9 +75,7 @@ try {
     if (niveau) sessionStorage.setItem("ok_niveau", niveau);
     if (navn)   sessionStorage.setItem("ok_navn", navn);
     if (nr)     sessionStorage.setItem("ok_nr", nr);
-  } else {
-    window.location.href = "login.html";
-  }
+  } else { window.location.href = "login.html"; }
 } catch(e) {}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -102,19 +97,13 @@ try {
     <button class="fane" id="fane-intern" onclick="visFane('intern')">💬 Intern besked</button>
   </div>
   <div id="omr-send">
-    <div class="info-boks">
-      <strong>📮 Mails sendes fra post@olsenklanen.dk</strong>
-      Modtageren ser at mailen kommer fra Familieforeningen Olsenklanen.
-    </div>
+    <div class="info-boks"><strong>📮 Mails sendes fra post@olsenklanen.dk</strong>Modtageren ser at mailen kommer fra Familieforeningen Olsenklanen.</div>
     <div class="kort">
       <h2>Send mail til et eller flere medlemmer</h2>
       <label for="sog-mail">Til hvem?</label>
       <input type="text" id="sog-mail" class="felt" placeholder="Søg på navn …" oninput="filtrerMail()" autocomplete="off">
       <div class="modtager-liste" id="modtager-liste-mail"><div class="indlaeser">Henter medlemmer …</div></div>
-      <div class="valgte-boks" id="valgte-boks-mail">
-        <div class="overskrift">📬 Du sender til:</div>
-        <div class="valgte" id="valgte-mail"></div>
-      </div>
+      <div class="valgte-boks" id="valgte-boks-mail"><div class="overskrift">📬 Du sender til:</div><div class="valgte" id="valgte-mail"></div></div>
       <label for="emne">Emne</label>
       <input type="text" id="emne" class="felt" placeholder="Skriv emne her …" maxlength="100">
       <label for="tekst-mail">Din besked</label>
@@ -137,10 +126,7 @@ try {
       <label for="sog-intern">Til hvem?</label>
       <input type="text" id="sog-intern" class="felt" placeholder="Søg på navn …" oninput="filtrerIntern()" autocomplete="off">
       <div class="modtager-liste" id="modtager-liste-intern"><div class="indlaeser">Henter medlemmer …</div></div>
-      <div class="valgte-boks" id="valgte-boks-intern">
-        <div class="overskrift">📬 Du sender til:</div>
-        <div class="valgte" id="valgte-intern"></div>
-      </div>
+      <div class="valgte-boks" id="valgte-boks-intern"><div class="overskrift">📬 Du sender til:</div><div class="valgte" id="valgte-intern"></div></div>
       <label for="tekst-intern">Din besked</label>
       <textarea id="tekst-intern" placeholder="Skriv din besked her …" maxlength="500"></textarea>
       <button class="knap" id="send-intern-knap" onclick="sendIntern()">💬 Send intern besked</button>
@@ -164,7 +150,7 @@ const ER_POSTANSVARLIG = POSTANSVARLIGE.includes(MIT_NR);
 document.getElementById("mit-navn").textContent = MIT_NAVN + " (nr. " + MIT_NR + ")";
 if (ER_POSTANSVARLIG) document.getElementById("admin-chip").style.display = "inline";
 const EMAILJS_PUBLIC_KEY = "76jQOeDv73Qw2zgmU";
-const EMAILJS_SERVICE_ID = "service_oo888vl";
+const EMAILJS_SERVICE_ID = "service_8vxtpef";
 const EMAILJS_TEMPLATE_ID = "8t883lg";
 let emailJSKlar = false;
 try { emailjs.init(EMAILJS_PUBLIC_KEY); emailJSKlar = true; } catch(e) {}
@@ -187,19 +173,12 @@ async function hentModtagere(){
     liste.sort((a,b)=>a.navn.localeCompare(b.navn,"da")); alleModtagere=liste; tegnMod(liste,"mail"); tegnMod(liste,"intern");
   } catch(e){ console.log("Modtager-fejl:",e); }
 }
-function tegnMod(liste,type){
-  const el=document.getElementById("modtager-liste-"+type); if(!liste.length){el.innerHTML='<div class="tom">Ingen match.</div>';return;}
-  const valgte=type==="mail"?valgteMail:valgteIntern;
-  const vis=type==="mail"?liste.filter(m=>m.email):liste;
-  if(!vis.length){el.innerHTML='<div class="tom">Ingen med mailadresse.</div>';return;}
-  el.innerHTML=vis.map(m=>`<label class="modtager-rk"><input type="checkbox" data-nr="${m.nr}" data-navn="${enc(m.navn)}" data-email="${enc(m.email)}" ${valgte.has(m.nr)?"checked":""}><span class="modtager-navn">${m.navn}</span><span class="modtager-nr">nr. ${m.nr}</span>${type==="mail"&&m.email?`<span class="modtager-email">${m.email}</span>`:""}</label>`).join("");
-  el.querySelectorAll("input").forEach(cb=>{ cb.addEventListener("change",e=>{ const nr=e.target.dataset.nr,navn=e.target.dataset.navn,email=e.target.dataset.email; if(e.target.checked)valgte.set(nr,{navn,email});else valgte.delete(nr); tegnValgte(type); }); });
-}
+function tegnMod(liste,type){ const el=document.getElementById("modtager-liste-"+type); if(!liste.length){el.innerHTML='<div class="tom">Ingen match.</div>';return;} const valgte=type==="mail"?valgteMail:valgteIntern; const vis=type==="mail"?liste.filter(m=>m.email):liste; if(!vis.length){el.innerHTML='<div class="tom">Ingen med mailadresse.</div>';return;} el.innerHTML=vis.map(m=>`<label class="modtager-rk"><input type="checkbox" data-nr="${m.nr}" data-navn="${enc(m.navn)}" data-email="${enc(m.email)}" ${valgte.has(m.nr)?"checked":""}><span class="modtager-navn">${m.navn}</span><span class="modtager-nr">nr. ${m.nr}</span>${type==="mail"&&m.email?`<span class="modtager-email">${m.email}</span>`:""}</label>`).join(""); el.querySelectorAll("input").forEach(cb=>{ cb.addEventListener("change",e=>{ const nr=e.target.dataset.nr,navn=e.target.dataset.navn,email=e.target.dataset.email; if(e.target.checked)valgte.set(nr,{navn,email});else valgte.delete(nr); tegnValgte(type); }); }); }
 function tegnValgte(type){ const el=document.getElementById("valgte-"+type); const boks=document.getElementById("valgte-boks-"+type); const valgte=type==="mail"?valgteMail:valgteIntern; if(!valgte.size){el.innerHTML="";boks.classList.remove("vis");return;} boks.classList.add("vis"); let html=""; valgte.forEach((data,nr)=>{ const navn=typeof data==="string"?data:data.navn; html+=`<span class="chip">${navn} <button onclick="fjernValgt('${type}','${nr}')" title="Fjern">✕</button></span>`; }); el.innerHTML=html; }
 window.fjernValgt=function(type,nr){ if(type==="mail")valgteMail.delete(nr);else valgteIntern.delete(nr); tegnValgte(type); const cb=document.querySelector(`#modtager-liste-${type} input[data-nr="${nr}"]`); if(cb)cb.checked=false; };
 window.filtrerMail=function(){ const s=document.getElementById("sog-mail").value.trim().toLowerCase(); tegnMod(s?alleModtagere.filter(m=>m.soegetekst.includes(s)):alleModtagere,"mail"); };
 window.filtrerIntern=function(){ const s=document.getElementById("sog-intern").value.trim().toLowerCase(); tegnMod(s?alleModtagere.filter(m=>m.soegetekst.includes(s)):alleModtagere,"intern"); };
-window.sendMail=async function(){ const emne=document.getElementById("emne").value.trim(); const tekst=document.getElementById("tekst-mail").value.trim(); const statusEl=document.getElementById("send-mail-status"); const knap=document.getElementById("send-mail-knap"); if(!valgteMail.size){visS(statusEl,"fejl","Vælg mindst én modtager.");return;} if(!emne){visS(statusEl,"fejl","Skriv et emne.");return;} if(!tekst){visS(statusEl,"fejl","Skriv en besked.");return;} knap.disabled=true; visS(statusEl,"ok","⏳ Sender mail …"); const signatur=`\n\n---\nMed venlig hilsen\n${MIT_NAVN}\npå vegne af Familieforeningen Olsenklanen\npost@olsenklanen.dk`; let sendt=0,fejl=0; for(const[nr,data]of valgteMail){ const email=data.email,navn=data.navn; if(!email)continue; try{ await addDoc(collection(db,"olsenpost_mail"),{fra_nr:MIT_NR,fra_navn:MIT_NAVN,til_nr:nr,til_navn:navn,til_email:email,emne,tekst,sendt:serverTimestamp(),sendt_lokal:Date.now(),besvaret:false,besvaret_af:null,besvaret_tid:null}); if(emailJSKlar)await emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{to_email:email,to_name:navn,from_name:"Familieforeningen Olsenklanen",reply_to:"post@olsenklanen.dk",subject:emne,message:tekst+signatur,afsender_navn:MIT_NAVN}); sendt++; }catch(e){console.log("Mail-fejl:",e);fejl++;} } if(fejl===0)visS(statusEl,"ok",`✅ Mail sendt til ${sendt} modtager${sendt===1?"":"e"} fra post@olsenklanen.dk`);else visS(statusEl,"fejl",`Sendt til ${sendt}, fejl ved ${fejl}.`); document.getElementById("emne").value=""; document.getElementById("tekst-mail").value=""; valgteMail.clear();tegnValgte("mail"); document.querySelectorAll("#modtager-liste-mail input").forEach(cb=>cb.checked=false); knap.disabled=false; };
+window.sendMail=async function(){ const emne=document.getElementById("emne").value.trim(); const tekst=document.getElementById("tekst-mail").value.trim(); const statusEl=document.getElementById("send-mail-status"); const knap=document.getElementById("send-mail-knap"); if(!valgteMail.size){visS(statusEl,"fejl","Vælg mindst én modtager.");return;} if(!emne){visS(statusEl,"fejl","Skriv et emne.");return;} if(!tekst){visS(statusEl,"fejl","Skriv en besked.");return;} knap.disabled=true; visS(statusEl,"ok","⏳ Sender mail …"); const signatur=`\n\n---\nMed venlig hilsen\n${MIT_NAVN}\npå vegne af Familieforeningen Olsenklanen\npost@olsenklanen.dk`; let sendt=0,fejl=0; for(const[nr,data]of valgteMail){ const email=data.email,navn=data.navn; if(!email)continue; try{ await addDoc(collection(db,"olsenpost_mail"),{fra_nr:MIT_NR,fra_navn:MIT_NAVN,til_nr:nr,til_navn:navn,til_email:email,emne,tekst,sendt:serverTimestamp(),sendt_lokal:Date.now(),besvaret:false}); if(emailJSKlar)await emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{to_email:email,to_name:navn,from_name:"Familieforeningen Olsenklanen",reply_to:"post@olsenklanen.dk",subject:emne,message:tekst+signatur,afsender_navn:MIT_NAVN}); sendt++; }catch(e){console.log("Mail-fejl:",e);fejl++;} } if(fejl===0)visS(statusEl,"ok",`✅ Mail sendt til ${sendt} modtager${sendt===1?"":"e"} fra post@olsenklanen.dk`);else visS(statusEl,"fejl",`Sendt til ${sendt}, fejl ved ${fejl}.`); document.getElementById("emne").value=""; document.getElementById("tekst-mail").value=""; valgteMail.clear();tegnValgte("mail"); document.querySelectorAll("#modtager-liste-mail input").forEach(cb=>cb.checked=false); knap.disabled=false; };
 window.visReplySvar=function(id){ const omr=document.getElementById("svar-omr-"+id); if(omr)omr.style.display=omr.style.display==="none"?"block":"none"; };
 window.sendSvarMail=async function(id,tilEmail,tilNavn,origEmne){ const tekstEl=document.getElementById("svar-tekst-"+id); const tekst=tekstEl?tekstEl.value.trim():""; const statusEl=document.getElementById("svar-status-"+id); if(!tekst){if(statusEl){statusEl.className="status fejl";statusEl.textContent="Skriv et svar først.";statusEl.style.display="block";}return;} const emne=origEmne.startsWith("Re:")?origEmne:"Re: "+origEmne; const signatur=`\n\n---\nMed venlig hilsen\n${MIT_NAVN}\npå vegne af Familieforeningen Olsenklanen\npost@olsenklanen.dk`; try{ await updateDoc(doc(db,"olsenpost_indkomne",id),{besvaret:true,besvaret_af:MIT_NAVN,besvaret_af_nr:MIT_NR,besvaret_tid:serverTimestamp(),svar_tekst:tekst}); if(emailJSKlar)await emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{to_email:tilEmail,to_name:tilNavn,from_name:"Familieforeningen Olsenklanen",reply_to:"post@olsenklanen.dk",subject:emne,message:tekst+signatur,afsender_navn:MIT_NAVN}); if(statusEl){statusEl.className="status ok";statusEl.textContent="✅ Svar sendt fra post@olsenklanen.dk";statusEl.style.display="block";} if(tekstEl)tekstEl.value=""; }catch(e){ if(statusEl){statusEl.className="status fejl";statusEl.textContent="Kunne ikke sende svar.";statusEl.style.display="block";} } };
 let indbakkeData=[];
@@ -211,9 +190,8 @@ function tegnSendt(){ const el=document.getElementById("sendt-liste"); if(!sendt
 let internData=[];
 function lytIntern(){ const qy=query(collection(db,"olsenpost"),where("til","array-contains",MIT_NR)); onSnapshot(qy,snap=>{ internData=snap.docs.map(d=>({id:d.id,...d.data()})); internData.sort((a,b)=>{ const ta=(a.sendt?.seconds?a.sendt.seconds*1000:0)||a.sendt_lokal||0; const tb=(b.sendt?.seconds?b.sendt.seconds*1000:0)||b.sendt_lokal||0; return tb-ta; }); if(document.getElementById("omr-intern").style.display!=="none")tegnIntern(); }); }
 function tegnIntern(){ const el=document.getElementById("intern-indbakke-liste"); if(!internData.length){el.innerHTML='<div class="tom">Ingen interne beskeder endnu.</div>';return;} el.innerHTML='<div class="kort"><h2>Dine interne beskeder</h2></div>'+internData.map(m=>`<div class="mail-kort"><div class="mail-top"><span class="mail-fra">${escHtml(m.fra_navn)}</span><span class="mail-tid">${tidTekst(m.sendt)}</span></div><div class="mail-tekst">${escHtml(m.tekst)}</div></div>`).join(""); }
-window.sendIntern=async function(){ const tekst=document.getElementById("tekst-intern").value.trim(); const statusEl=document.getElementById("send-intern-status"); const knap=document.getElementById("send-intern-knap"); if(!valgteIntern.size){visS(statusEl,"fejl","Vælg mindst én modtager.");return;} if(!tekst){visS(statusEl,"fejl","Skriv en besked.");return;} knap.disabled=true; try{ const modtagere=[...valgteIntern.keys()]; const navne=[...valgteIntern.values()].map(d=>typeof d==="string"?d:d.navn); await addDoc(collection(db,"olsenpost"),{fra_nr:MIT_NR,fra_navn:MIT_NAVN,til:modtagere,til_navne:navne,tekst,type:"besked",sendt:serverTimestamp(),sendt_lokal:Date.now(),set_af:[],svar:[]}); visS(statusEl,"ok","💬 Besked sendt til "+modtagere.length+" modtager"+(modtagere.length===1?"":"e")+"."); document.getElementById("tekst-intern").value=""; valgteIntern.clear();tegnValgte("intern"); document.querySelectorAll("#modtager-liste-intern input").forEach(cb=>cb.checked=false); }catch(e){ visS(statusEl,"fejl","Kunne ikke sende. Prøv igen."); } knap.disabled=false; };
+window.sendIntern=async function(){ const tekst=document.getElementById("tekst-intern").value.trim(); const statusEl=document.getElementById("send-intern-status"); const knap=document.getElementById("send-intern-knap"); if(!valgteIntern.size){visS(statusEl,"fejl","Vælg mindst én modtager.");return;} if(!tekst){visS(statusEl,"fejl","Skriv en besked.");return;} knap.disabled=true; try{ const modtagere=[...valgteIntern.keys()]; const navne=[...valgteIntern.values()].map(d=>typeof d==="string"?d:d.navn); await addDoc(collection(db,"olsenpost"),{fra_nr:MIT_NR,fra_navn:MIT_NAVN,til:modtagere,til_navne:navne,tekst,type:"besked",sendt:serverTimestamp(),sendt_lokal:Date.now(),set_af:[],svar:[]}); visS(statusEl,"ok","💬 Besked sendt!"); document.getElementById("tekst-intern").value=""; valgteIntern.clear();tegnValgte("intern"); document.querySelectorAll("#modtager-liste-intern input").forEach(cb=>cb.checked=false); }catch(e){ visS(statusEl,"fejl","Kunne ikke sende. Prøv igen."); } knap.disabled=false; };
 window.visFane=function(navn){ ["send","indbakke","sendt","intern"].forEach(f=>{ document.getElementById("omr-"+f).style.display=(f===navn)?"block":"none"; document.getElementById("fane-"+f).classList.toggle("aktiv",f===navn); }); if(navn==="indbakke")tegnIndbakke(); if(navn==="sendt")tegnSendt(); if(navn==="intern")tegnIntern(); };
 hentModtagere(); lytIndbakke(); lytSendt(); lytIntern();
 </script>
 </body>
-</html>
