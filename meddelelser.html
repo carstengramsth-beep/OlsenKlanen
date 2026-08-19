@@ -378,6 +378,7 @@ window.filtrerIntern = function(){
 
 /* ════════ SEND RIGTIG MAIL via EmailJS ════════ */
 window.sendMail = async function(){
+   if (!ER_POSTANSVARLIG) { alert("Kun postansvarlige kan sende mails til medlemmer."); return; }
   const emne = document.getElementById("emne").value.trim();
   const tekst = document.getElementById("tekst-mail").value.trim();
   const statusEl = document.getElementById("send-mail-status");
@@ -649,6 +650,11 @@ hentModtagere();
 lytIndbakke();
 lytSendt();
 lytIntern();
+if (!ER_POSTANSVARLIG) {
+  document.getElementById("fane-send").style.display = "none";
+  document.getElementById("omr-send").style.display = "none";
+  visFane("indbakke");
+}
 </script>
 
 </body>
