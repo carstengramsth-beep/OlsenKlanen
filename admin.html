@@ -325,6 +325,9 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
       <div class="nav-item" data-panel="video" onclick="visPanel('video',this)">
         <span class="nav-ikon">📹</span>Videomøde
       </div>
+      <div class="nav-item" data-panel="vagtplan" onclick="visPanel('vagtplan',this);tegnVagtplanAdmin();">
+        <span class="nav-ikon">📅</span>Vagtplan
+      </div>
       <!-- ══ NY KNAP: OlsenBanden Center ══ -->
       <div class="nav-item" onclick="window.location.href='olsenbanden.html'" style="background:rgba(184,137,42,0.12);border-left:3px solid var(--guld);">
         <span class="nav-ikon">🔐</span>OlsenBanden Center
@@ -598,6 +601,14 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
         </div>
       </div>
  
+      <div class="panel" id="panel-vagtplan">
+        <div class="side-overskrift"><div class="side-titel">Vagtplan</div><div class="side-sub">Hvem har vagten og svarer på post@olsenklanen.dk — alle 5 kan ændre</div></div>
+        <div class="kort">
+          <div class="kort-header"><div class="kort-titel">Postansvarlige</div></div>
+          <div class="kort-body" style="padding:0"><table class="tabel"><thead><tr><th>Navn</th><th>Status</th><th>Vagtdato</th><th></th></tr></thead><tbody id="vagtplan-tbody"><tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--tekst-lys)">Henter vagtplan…</td></tr></tbody></table></div>
+        </div>
+      </div>
+
       <div class="panel" id="panel-log">
         <div class="side-overskrift"><div class="side-titel">Aktivitetslog</div><div class="side-sub">Alle handlinger i systemet logges automatisk</div></div>
         <div class="kort">
@@ -702,6 +713,8 @@ window.fb={
   afvisMedlem:id=>updateDoc(doc(db,'godkendelser',id),{status:'afvist',behandlet:serverTimestamp()}),
   logHandling:(tekst,bruger)=>addDoc(collection(db,'log'),{tekst,bruger,tidspunkt:serverTimestamp()}),
   hentLog:async()=>{const q=query(collection(db,'log'),orderBy('tidspunkt','desc'),limit(50));const s=await getDocs(q);return s.docs.map(d=>({id:d.id,...d.data()}));},
+  hentVagtplan:async()=>{const s=await getDoc(doc(db,'olsenpost','vagtplan'));return s.exists()?s.data():{};},
+  gemVagtplan:data=>setDoc(doc(db,'olsenpost','vagtplan'),data),
   gemIndstillinger:d=>updateDoc(doc(db,'system','indstillinger'),d).catch(()=>addDoc(collection(db,'system'),{...d,id:'indstillinger'})),
   hentUdviklingslog:async()=>{const q=query(collection(db,'udviklingslog'),orderBy('dato','desc'),limit(50));const s=await getDocs(q);return s.docs.map(d=>({id:d.id,...d.data()}));},
   gemUdviklingslogEntry:d=>addDoc(collection(db,'udviklingslog'),{...d,oprettet:serverTimestamp()}),
@@ -734,7 +747,45 @@ window.fb={
 let aktivBruger=null;let aktivRolle=null;
 window.haandterAuth=async function(user){if(!user){visLoginSide();return;}const email=user.email.toLowerCase();try{const snap=await window.fb.hentBruger(email);if(!snap.exists()){await window.fb.logUd();visLoginBesked('fejl','Du har ikke adgang til admin-panelet. Kontakt Carsten.');return;}const rolle=snap.data().rolle;if(rolle==='administrator')aktivRolle='admin';else if(rolle==='redaktør')aktivRolle='redaktor';else{await window.fb.logUd();visLoginBesked('fejl','Du har ikke adgang.');return;}}catch(e){await window.fb.logUd();visLoginBesked('fejl','Fejl ved adgangskontrol. Prøv igen.');return;}aktivBruger=user;opsætAdminPanel(user);};
 function opsætAdminPanel(user){const email=user.email.toLowerCase();const initia=user.displayName?user.displayName[0].toUpperCase():email[0].toUpperCase();const navn=user.displayName||email;const rolleT=aktivRolle==='admin'?'Administrator':'Redaktør';document.getElementById('bruger-navn').textContent=navn;document.getElementById('bruger-rolle-tekst').textContent=rolleT;document.getElementById('bruger-avatar').textContent=initia;document.getElementById('topbar-rolle-badge').textContent=rolleT;document.getElementById('admin-nav').style.display=aktivRolle==='admin'?'block':'none';document.getElementById('login-side').style.display='none';document.getElementById('admin-side').style.display='block';document.getElementById('overblik-dato').textContent='OlsenKlanen · '+new Date().toLocaleDateString('da-DK',{weekday:'long',year:'numeric',month:'long',day:'numeric'});document.getElementById('nyhed-dato').valueAsDate=new Date();startPresence(email,user.displayName||email);startDndLytter();startPostkasseLytter();startChatLytter();const egetKort=document.querySelector(`.bruger-kort[data-email="${email}"]`);if(egetKort)egetKort.querySelector('.online-prik')?.classList.add('aktiv');indlaesAltData();}
-async function indlaesAltData(){await Promise.allSettled([indlaesNyheder(),indlaesBegivenheder(),indlaesGodkendelser(),hentDatastatus(),indlaesBilleder(),indlaesUdviklingslog(),aktivRolle==='admin'?hentLog():Promise.resolve()]);}
+async function indlaesAltData(){await Promise.allSettled([indlaesNyheder(),indlaesBegivenheder(),indlaesGodkendelser(),hentDatastatus(),indlaesBilleder(),indlaesUdviklingslog(),tegnVagtplanAdmin(),aktivRolle==='admin'?hentLog():Promise.resolve()]);}
+
+/* ── Vagtplan (postansvarlige for OlsenPost) ── */
+async function tegnVagtplanAdmin(){
+  const tbody=document.getElementById('vagtplan-tbody');
+  if(!tbody) return;
+  let vagtData={};
+  try{ vagtData=await window.fb.hentVagtplan(); }catch(e){ console.log('Vagtplan-fejl:',e); }
+  tbody.innerHTML=ALLE_BRUGERE.map(b=>{
+    const info=vagtData[b.email]||{aktiv:false,dato:''};
+    return `<tr data-email="${b.email}">
+      <td>${escHtml(b.navn)}</td>
+      <td><button class="btn ${info.aktiv?'btn-mos':'btn-lys'} btn-sm" onclick="skiftVagtAdmin('${b.email}')">${info.aktiv?'✅ På vagt':'❌ Ikke på vagt'}</button></td>
+      <td><input type="date" class="vagt-dato-admin" value="${info.dato||''}" style="padding:4px 8px;border:1px solid var(--kant);border-radius:4px;font-family:inherit"></td>
+      <td><button class="btn btn-lys btn-sm" onclick="gemVagtDatoAdmin('${b.email}')">Gem dato</button></td>
+    </tr>`;
+  }).join('');
+}
+async function skiftVagtAdmin(email){
+  try{
+    const data=await window.fb.hentVagtplan();
+    const nu=data[email]||{aktiv:false,dato:''};
+    data[email]={...nu,aktiv:!nu.aktiv};
+    await window.fb.gemVagtplan(data);
+    tegnVagtplanAdmin();
+  }catch(e){ visToast('Fejl: '+e.message,true); }
+}
+async function gemVagtDatoAdmin(email){
+  const rad=document.querySelector(`#vagtplan-tbody tr[data-email="${email}"]`);
+  const dato=rad?rad.querySelector('.vagt-dato-admin').value:'';
+  try{
+    const data=await window.fb.hentVagtplan();
+    const nu=data[email]||{aktiv:false,dato:''};
+    data[email]={...nu,dato};
+    await window.fb.gemVagtplan(data);
+    visToast('Vagtdato gemt');
+    tegnVagtplanAdmin();
+  }catch(e){ visToast('Fejl: '+e.message,true); }
+}
 function visLoginSide(){document.getElementById('admin-side').style.display='none';document.getElementById('login-side').style.display='flex';aktivBruger=null;aktivRolle=null;}
 async function logInd(){const email=document.getElementById('login-email').value.trim();const kode=document.getElementById('login-kode').value;if(!email||!kode){visLoginBesked('fejl','Udfyld email og adgangskode');return;}const knap=document.getElementById('login-knap');knap.disabled=true;knap.classList.add('loading');knap.textContent='';try{await window.fb.logInd(email,kode);}catch(e){visLoginBesked('fejl',fejlTekst(e.code));knap.disabled=false;knap.classList.remove('loading');knap.textContent='Log ind';}}
 function logUd(){if(aktivBruger){window.fb.fjernPresence(aktivBruger.email);window.fb.saetDnd(emailNoegle(aktivBruger.email),false);}dndAktiv=false;if(aktivBruger&&aktivBruger._hoveddoer){window.location.href='forside.html';return;}window.fb.logUd();}

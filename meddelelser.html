@@ -55,6 +55,13 @@ textarea:focus { outline: none; border-color: #2d5016; }
 .knap.grå { background: #e8e2cd; color: #555; }
 .knap.grå:hover { background: #ddd6bd; }
 
+.vagt-tabel-el { width: 100%; border-collapse: collapse; font-size: 15px; }
+.vagt-tabel-el th { text-align: left; font-size: 13px; color: #888; padding: 6px 8px; border-bottom: 2px solid #e0d8bd; }
+.vagt-tabel-el td { padding: 8px; border-bottom: 1px solid #f0ead8; vertical-align: middle; }
+.vagt-status { border: none; border-radius: 14px; padding: 6px 14px; font-size: 13px; font-family: inherit; cursor: pointer; font-weight: bold; }
+.vagt-status.paa { background: #d4edda; color: #155724; }
+.vagt-status.ikke { background: #f8d7da; color: #721c24; }
+
 .status { margin-top: 12px; font-size: 14px; padding: 10px 14px; border-radius: 6px; display: none; }
 .status.ok { display: block; background: #d4edda; color: #155724; }
 .status.fejl { display: block; background: #f8d7da; color: #721c24; }
@@ -126,6 +133,7 @@ try {
     <button class="fane" id="fane-indbakke" onclick="visFane('indbakke')">📥 Indkomne mails <span class="badge" id="badge-ny" style="display:none">0</span></button>
     <button class="fane" id="fane-sendt" onclick="visFane('sendt')">📤 Sendte mails</button>
     <button class="fane" id="fane-intern" onclick="visFane('intern')">💬 Intern besked</button>
+    <button class="fane" id="fane-vagt" onclick="visFane('vagt')" style="display:none">📅 Postvagt</button>
   </div>
 
   <!-- ════════ SEND MAIL ════════ -->
@@ -202,13 +210,25 @@ try {
     <div id="intern-indbakke-liste"><div class="indlaeser">Henter interne beskeder …</div></div>
   </div>
 
+  <!-- ════════ POSTVAGT (kun postansvarlige) ════════ -->
+  <div id="omr-vagt" style="display:none">
+    <div class="info-boks">
+      <strong>📅 Ugens postvagt</strong>
+      Markér hvem der har vagten og forventes at svare på indkomne mails til post@olsenklanen.dk.
+      Bemærk: dette styrer ikke selv mail-videresendelsen hos Simply.com — det er kun en oversigt til jer 5.
+    </div>
+    <div class="kort">
+      <div id="vagt-tabel"><div class="indlaeser">Henter vagtplan …</div></div>
+    </div>
+  </div>
+
 </div>
 
 <div class="bund">OlsenPost · post@olsenklanen.dk · klanens fælles postkasse</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc,
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc,
          query, where, orderBy, onSnapshot, serverTimestamp, arrayUnion }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -232,7 +252,10 @@ const MIT_NAVN = hent("ok_navn") || ("Medlem " + MIT_NR);
 const ER_POSTANSVARLIG = POSTANSVARLIGE.includes(MIT_NR);
 
 document.getElementById("mit-navn").textContent = MIT_NAVN + " (nr. " + MIT_NR + ")";
-if (ER_POSTANSVARLIG) document.getElementById("admin-chip").style.display = "inline";
+if (ER_POSTANSVARLIG) {
+  document.getElementById("admin-chip").style.display = "inline";
+  document.getElementById("fane-vagt").style.display = "inline-block";
+}
 
 // EmailJS initialisering — bruges til at sende rigtige mails
 // Public key sættes her når EmailJS er oprettet
@@ -270,6 +293,12 @@ function tidTekst(ts){
 function vis(el, type, tekst){ el.className = "status " + type; el.textContent = tekst; }
 function enc(s){ return String(s).replace(/"/g,"&quot;"); }
 function escHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+// Modtagerens "Svar"-knap skal gå til den postansvarlige, der faktisk sendte mailen — ikke til den fælles postkasse.
+function mitEmail(){
+  const eget = alleModtagere.find(m => m.nr === MIT_NR);
+  return (eget && eget.email) || "post@olsenklanen.dk";
+}
 
 /* ════════ MODTAGERLISTER FRA KARTOTEKET ════════ */
 let alleModtagere = []; // {nr, navn, email, soegetekst}
@@ -392,7 +421,7 @@ window.sendMail = async function(){
   vis(statusEl, "ok", "⏳ Sender mail …");
 
   const dato = new Date().toLocaleDateString("da-DK", {day:"numeric", month:"long", year:"numeric"});
-  const signatur = `\n\n---\nMed venlig hilsen\n${MIT_NAVN}\npå vegne af Familieforeningen Olsenklanen\npost@olsenklanen.dk`;
+  const signatur = `\n\n---\nMed venlig hilsen\n${MIT_NAVN}\npå vegne af Familieforeningen Olsenklanen\n${mitEmail()}`;
   const beskedMedSignatur = tekst + signatur;
 
   let sendt = 0;
@@ -425,7 +454,7 @@ window.sendMail = async function(){
           to_email: email,
           to_name: navn,
           from_name: "Familieforeningen Olsenklanen",
-          reply_to: "post@olsenklanen.dk",
+          reply_to: mitEmail(),
           subject: emne,
           message: beskedMedSignatur,
           afsender_navn: MIT_NAVN
@@ -468,7 +497,7 @@ window.sendSvarMail = async function(id, tilEmail, tilNavn, origEmne) {
   if (!tekst) { if(statusEl) { statusEl.className="status fejl"; statusEl.textContent="Skriv et svar først."; statusEl.style.display="block"; } return; }
 
   const emne = origEmne.startsWith("Re:") ? origEmne : "Re: " + origEmne;
-  const signatur = `\n\n---\nMed venlig hilsen\n${MIT_NAVN}\npå vegne af Familieforeningen Olsenklanen\npost@olsenklanen.dk`;
+  const signatur = `\n\n---\nMed venlig hilsen\n${MIT_NAVN}\npå vegne af Familieforeningen Olsenklanen\n${mitEmail()}`;
 
   try {
     // Opdater i Firestore
@@ -486,7 +515,7 @@ window.sendSvarMail = async function(id, tilEmail, tilNavn, origEmne) {
         to_email: tilEmail,
         to_name: tilNavn,
         from_name: "Familieforeningen Olsenklanen",
-        reply_to: "post@olsenklanen.dk",
+        reply_to: mitEmail(),
         subject: emne,
         message: tekst + signatur,
         afsender_navn: MIT_NAVN
@@ -636,13 +665,79 @@ window.sendIntern = async function(){
 
 /* ════════ FANER ════════ */
 window.visFane = function(navn){
-  ["send","indbakke","sendt","intern"].forEach(f => {
+  ["send","indbakke","sendt","intern","vagt"].forEach(f => {
     document.getElementById("omr-"+f).style.display = (f===navn)?"block":"none";
     document.getElementById("fane-"+f).classList.toggle("aktiv", f===navn);
   });
   if (navn === "indbakke") tegnIndbakke();
   if (navn === "sendt") tegnSendt();
   if (navn === "intern") tegnIntern();
+  if (navn === "vagt") tegnVagtplan();
+};
+
+/* ════════ POSTVAGT ════════ */
+// Samme liste og samme Firestore-dokument (olsenpost/vagtplan) bruges også i admin.html,
+// nøglet på e-mail, så begge steder altid viser den samme vagtplan.
+const POSTVAGT_GRUPPE = [
+  { email: 'cg@gallerieg.dk',  navn: 'Carsten Gram' },
+  { email: 'kurt@vormslev.dk', navn: 'Kurt Vormslev Olsen' },
+  { email: 'safi@dr.dk',       navn: 'Sanne Gram Fadel' },
+  { email: 'tvo@ishoejby.dk',  navn: 'Tommy Vormslev Olsen' },
+  { email: 'kld@inmobia.com',  navn: 'Karin Lund' },
+];
+
+async function tegnVagtplan(){
+  const el = document.getElementById("vagt-tabel");
+  el.innerHTML = '<div class="indlaeser">Henter vagtplan …</div>';
+  let vagtData = {};
+  try {
+    const snap = await getDoc(doc(db, "olsenpost", "vagtplan"));
+    if (snap.exists()) vagtData = snap.data();
+  } catch(e) { console.log("Vagtplan-fejl:", e); }
+
+  const rows = POSTVAGT_GRUPPE.map(p => {
+    const info = vagtData[p.email] || { aktiv:false, dato:"" };
+    return { email: p.email, navn: p.navn, aktiv: !!info.aktiv, dato: info.dato || "" };
+  });
+
+  el.innerHTML = `
+    <table class="vagt-tabel-el">
+      <thead><tr><th>Navn</th><th>Status</th><th>Vagtdato</th><th></th></tr></thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr data-email="${enc(r.email)}">
+            <td>${escHtml(r.navn)}</td>
+            <td>
+              <button class="vagt-status ${r.aktiv?'paa':'ikke'}" onclick="skiftVagt('${enc(r.email)}')">
+                ${r.aktiv ? '✅ På vagt' : '❌ Ikke på vagt'}
+              </button>
+            </td>
+            <td><input type="date" class="felt vagt-dato" value="${r.dato}" style="width:auto"></td>
+            <td><button class="knap lille" onclick="gemVagtDato('${enc(r.email)}')">Gem dato</button></td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>`;
+}
+
+window.skiftVagt = async function(email){
+  const snap = await getDoc(doc(db, "olsenpost", "vagtplan"));
+  const data = snap.exists() ? snap.data() : {};
+  const nu = data[email] || { aktiv:false, dato:"" };
+  data[email] = { ...nu, aktiv: !nu.aktiv };
+  await setDoc(doc(db, "olsenpost", "vagtplan"), data);
+  tegnVagtplan();
+};
+
+window.gemVagtDato = async function(email){
+  const rad = document.querySelector(`#vagt-tabel tr[data-email="${email}"]`);
+  const dato = rad ? rad.querySelector(".vagt-dato").value : "";
+  const snap = await getDoc(doc(db, "olsenpost", "vagtplan"));
+  const data = snap.exists() ? snap.data() : {};
+  const nu = data[email] || { aktiv:false, dato:"" };
+  data[email] = { ...nu, dato };
+  await setDoc(doc(db, "olsenpost", "vagtplan"), data);
+  tegnVagtplan();
 };
 
 /* ── Start ── */
