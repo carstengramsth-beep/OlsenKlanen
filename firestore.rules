@@ -83,7 +83,18 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    match /{document=**} {
+ match /olsenpost_mail/{id} {
+      allow read, write: if true;
+    }
+
+    match /olsenpost_indkomne/{id} {
+      allow read, write: if true;
+    }
+
+    match /olsenpost/{id} {
+      allow read, write: if true;
+    }    
+match /{document=**} {
       allow read, write: if false;
     }
 
