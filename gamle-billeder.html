@@ -54,11 +54,13 @@ label { display: block; font-size: 14px; color: #555; margin-bottom: 6px; margin
 .kommentar-form button { background: #2d5016; color: #f5e6a8; border: none; font-family: inherit; font-size: 13px; padding: 8px 14px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
 .kommentar-form button:hover { background: #3a6b1d; }
 
-.forhaandsvisning { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
-.forhaand-kort { width: 140px; text-align: center; background: #fdfbf5; border: 1px solid #e0d8bd; border-radius: 6px; padding: 8px; }
-.forhaand-billede-omraade { width: 100%; height: 110px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #e8e2cd; border-radius: 4px; }
-.forhaand-billede-omraade img { max-width: 100%; max-height: 100%; transition: transform .2s ease; }
-.forhaand-kort button { margin-top: 6px; background: #eef3e3; border: 1px solid #c3d3a6; border-radius: 14px; font-family: inherit; font-size: 12px; padding: 5px 10px; cursor: pointer; color: #2d5016; }
+.forhaandsvisning { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; }
+.forhaand-kort { width: 270px; text-align: center; background: #fdfbf5; border: 1px solid #e0d8bd; border-radius: 6px; padding: 8px; }
+.forhaand-billede-omraade { width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #e8e2cd; border-radius: 4px; }
+.forhaand-billede-omraade canvas { max-width: 100%; cursor: crosshair; touch-action: none; }
+.forhaand-hint { font-size: 11px; color: #999; font-style: italic; margin-top: 4px; }
+.forhaand-knap-rk { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+.forhaand-kort button { background: #eef3e3; border: 1px solid #c3d3a6; border-radius: 14px; font-family: inherit; font-size: 12px; padding: 5px 10px; cursor: pointer; color: #2d5016; }
 .forhaand-kort button:hover { background: #e0ebcd; }
 
 .tom { text-align: center; color: #999; font-style: italic; padding: 40px 20px; }
@@ -248,50 +250,121 @@ window.sendKommentar = async function(billedeId){
   }
 };
 
-/* ════════ FORHÅNDSVISNING + RET OP-KNAP ════════ */
-let valgteFiler = []; // { fil, grader }
+/* ════════ FORHÅNDSVISNING + RET OP + BESKÆRING ════════ */
+let valgteFiler = []; // { fil, grader, img, beskaering: {x,y,w,h} i naturlig (roteret) pixel-størrelse, eller null }
+const FV_MAX_BREDDE = 260;
 
-window.visForhaandsvisning = function(){
+window.visForhaandsvisning = async function(){
   const filInput = document.getElementById("billede-fil");
-  valgteFiler = Array.from(filInput.files).map(fil => ({ fil, grader: 0 }));
+  const filer = Array.from(filInput.files);
+  valgteFiler = filer.map(fil => ({ fil, grader: 0, img: null, beskaering: null }));
+  await Promise.all(valgteFiler.map(v => new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => { v.img = img; resolve(); };
+    img.onerror = () => resolve();
+    img.src = URL.createObjectURL(v.fil);
+  })));
   tegnForhaandsvisning();
 };
+
+function roteretMaal(v){
+  const byttet = (v.grader === 90 || v.grader === 270);
+  return { w: byttet ? v.img.height : v.img.width, h: byttet ? v.img.width : v.img.height };
+}
 
 function tegnForhaandsvisning(){
   const el = document.getElementById("forhaandsvisning");
   el.innerHTML = valgteFiler.map((v, i) => `
     <div class="forhaand-kort">
       <div class="forhaand-billede-omraade">
-        <img src="${URL.createObjectURL(v.fil)}" style="transform: rotate(${v.grader}deg)">
+        <canvas id="fv-canvas-${i}"></canvas>
       </div>
-      <button type="button" onclick="roterForhaandsvisning(${i})">↻ Ret op</button>
+      <div class="forhaand-hint">Træk med musen for at beskære</div>
+      <div class="forhaand-knap-rk">
+        <button type="button" onclick="roterForhaandsvisning(${i})">↻ Ret op</button>
+        <button type="button" onclick="nulstilBeskaering(${i})">✕ Nulstil</button>
+      </div>
     </div>`).join("");
+  valgteFiler.forEach((v, i) => { if (v.img) tegnForhaandCanvas(i); });
+}
+
+function tegnForhaandCanvas(i){
+  const v = valgteFiler[i];
+  const { w: naturW, h: naturH } = roteretMaal(v);
+  const skala = Math.min(FV_MAX_BREDDE / naturW, 1);
+  const cv = document.getElementById("fv-canvas-" + i);
+  cv.width = Math.round(naturW * skala);
+  cv.height = Math.round(naturH * skala);
+  v._skala = skala;
+  const ctx = cv.getContext("2d");
+  ctx.save();
+  ctx.translate(cv.width/2, cv.height/2);
+  ctx.rotate(v.grader * Math.PI / 180);
+  ctx.drawImage(v.img, -v.img.width*skala/2, -v.img.height*skala/2, v.img.width*skala, v.img.height*skala);
+  ctx.restore();
+
+  if (v.beskaering) {
+    const b = v.beskaering;
+    ctx.fillStyle = "rgba(0,0,0,0.45)";
+    ctx.fillRect(0, 0, cv.width, b.y*skala);
+    ctx.fillRect(0, (b.y+b.h)*skala, cv.width, cv.height - (b.y+b.h)*skala);
+    ctx.fillRect(0, b.y*skala, b.x*skala, b.h*skala);
+    ctx.fillRect((b.x+b.w)*skala, b.y*skala, cv.width - (b.x+b.w)*skala, b.h*skala);
+    ctx.strokeStyle = "#f5e6a8";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(b.x*skala, b.y*skala, b.w*skala, b.h*skala);
+  }
+
+  let traekker = false, start = null;
+  cv.onmousedown = e => {
+    traekker = true;
+    const r = cv.getBoundingClientRect();
+    start = { x: (e.clientX - r.left) * (cv.width/r.width), y: (e.clientY - r.top) * (cv.height/r.height) };
+  };
+  cv.onmousemove = e => {
+    if (!traekker) return;
+    const r = cv.getBoundingClientRect();
+    const nu = { x: (e.clientX - r.left) * (cv.width/r.width), y: (e.clientY - r.top) * (cv.height/r.height) };
+    const x = Math.min(start.x, nu.x), y = Math.min(start.y, nu.y);
+    const w = Math.abs(nu.x - start.x), h = Math.abs(nu.y - start.y);
+    v.beskaering = { x: x/skala, y: y/skala, w: w/skala, h: h/skala };
+    tegnForhaandCanvas(i);
+  };
+  cv.onmouseup = cv.onmouseleave = () => { traekker = false; };
 }
 
 window.roterForhaandsvisning = function(i){
   valgteFiler[i].grader = (valgteFiler[i].grader + 90) % 360;
-  tegnForhaandsvisning();
+  valgteFiler[i].beskaering = null;
+  tegnForhaandCanvas(i);
 };
 
-function roterTilBlob(fil, grader){
-  return new Promise((resolve, reject) => {
-    if (!grader) { resolve(fil); return; }
-    const img = new Image();
-    const url = URL.createObjectURL(fil);
-    img.onload = () => {
-      const byttet = (grader === 90 || grader === 270);
-      const cv = document.createElement("canvas");
-      cv.width = byttet ? img.height : img.width;
-      cv.height = byttet ? img.width : img.height;
-      const ctx = cv.getContext("2d");
-      ctx.translate(cv.width/2, cv.height/2);
-      ctx.rotate(grader * Math.PI / 180);
-      ctx.drawImage(img, -img.width/2, -img.height/2);
-      URL.revokeObjectURL(url);
-      cv.toBlob(b => resolve(b), "image/jpeg", 0.92);
-    };
-    img.onerror = reject;
-    img.src = url;
+window.nulstilBeskaering = function(i){
+  valgteFiler[i].beskaering = null;
+  tegnForhaandCanvas(i);
+};
+
+function beskaerOgRoterTilBlob(v){
+  return new Promise(resolve => {
+    const { w: naturW, h: naturH } = roteretMaal(v);
+    const roteretCv = document.createElement("canvas");
+    roteretCv.width = naturW;
+    roteretCv.height = naturH;
+    const rctx = roteretCv.getContext("2d");
+    rctx.translate(naturW/2, naturH/2);
+    rctx.rotate(v.grader * Math.PI / 180);
+    rctx.drawImage(v.img, -v.img.width/2, -v.img.height/2);
+
+    if (v.beskaering && v.beskaering.w > 4 && v.beskaering.h > 4) {
+      const b = v.beskaering;
+      const udCv = document.createElement("canvas");
+      udCv.width = Math.round(b.w);
+      udCv.height = Math.round(b.h);
+      udCv.getContext("2d").drawImage(roteretCv, b.x, b.y, b.w, b.h, 0, 0, udCv.width, udCv.height);
+      udCv.toBlob(blob => resolve(blob), "image/jpeg", 0.92);
+    } else {
+      roteretCv.toBlob(blob => resolve(blob), "image/jpeg", 0.92);
+    }
   });
 }
 
@@ -309,7 +382,7 @@ window.uploadBilleder = async function(){
   let lagt = 0, fejl = 0;
   for (const v of valgteFiler) {
     try {
-      const data = await roterTilBlob(v.fil, v.grader);
+      const data = await beskaerOgRoterTilBlob(v);
       const sti = `gamle_billeder/${Date.now()}_${v.fil.name.replace(/[^\w.\-]/g,"_")}`;
       await uploadBytes(ref(storage, sti), data);
       await addDoc(collection(db, "gamle_billeder"), {
