@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen · Gamle billeder</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; padding-bottom: 60px; }
+
+.topbar { background: #2d5016; color: #f5e6a8; padding: 16px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.topbar h1 { font-size: 22px; font-weight: normal; }
+.topbar .user { display: flex; align-items: center; gap: 14px; font-style: italic; font-size: 15px; }
+.hjem-knap { color: #f5e6a8; text-decoration: none; padding: 6px 14px; border: 1px solid #f5e6a8; border-radius: 4px; font-size: 14px; font-style: normal; cursor: pointer; background: transparent; }
+.hjem-knap:hover { background: rgba(245,230,168,0.15); }
+
+.wrap { max-width: 1000px; margin: 0 auto; padding: 20px; }
+
+.info-boks { background: #f3f8e9; border: 1px solid #8ba864; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; font-size: 14px; color: #2d5016; }
+.info-boks strong { display: block; margin-bottom: 6px; }
+
+.kort { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 18px 20px; margin-bottom: 20px; }
+.kort h2 { font-size: 17px; color: #2d5016; margin-bottom: 14px; font-weight: bold; }
+
+.felt { width: 100%; padding: 10px 12px; font-family: inherit; font-size: 15px; border: 1px solid #c8bfa0; border-radius: 6px; background: #fdfbf5; }
+.felt:focus { outline: none; border-color: #2d5016; }
+label { display: block; font-size: 14px; color: #555; margin-bottom: 6px; margin-top: 12px; }
+
+.knap { background: #2d5016; color: #f5e6a8; border: none; font-family: inherit; font-size: 16px; padding: 11px 26px; border-radius: 6px; cursor: pointer; margin-top: 14px; }
+.knap:hover { background: #3a6b1d; }
+.knap:disabled { background: #b5b5a5; cursor: default; }
+
+.status { margin-top: 12px; font-size: 14px; padding: 10px 14px; border-radius: 6px; display: none; }
+.status.ok { display: block; background: #d4edda; color: #155724; }
+.status.fejl { display: block; background: #f8d7da; color: #721c24; }
+
+.galleri { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+.billede-kort { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; }
+.billede-kort img { width: 100%; height: 260px; object-fit: cover; display: block; cursor: zoom-in; background: #e8e2cd; }
+.billede-krop { padding: 12px 14px 16px; }
+.billede-uploader { font-size: 12px; color: #999; font-style: italic; margin-bottom: 10px; }
+
+.kommentarer { border-top: 1px solid #f0ead8; padding-top: 10px; margin-top: 4px; }
+.kommentar { font-size: 14px; margin-bottom: 8px; }
+.kommentar .navn { font-weight: bold; color: #2d5016; }
+.kommentar .tid { font-size: 11px; color: #999; margin-left: 6px; }
+.ingen-kommentarer { font-size: 13px; color: #999; font-style: italic; margin-bottom: 8px; }
+
+.kommentar-form { display: flex; gap: 6px; margin-top: 10px; }
+.kommentar-form input { flex: 1; padding: 8px 10px; font-family: inherit; font-size: 13px; border: 1px solid #c8bfa0; border-radius: 6px; background: #fdfbf5; }
+.kommentar-form button { background: #2d5016; color: #f5e6a8; border: none; font-family: inherit; font-size: 13px; padding: 8px 14px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+.kommentar-form button:hover { background: #3a6b1d; }
+
+.tom { text-align: center; color: #999; font-style: italic; padding: 40px 20px; }
+.indlaeser { text-align: center; color: #888; padding: 30px; font-style: italic; }
+
+.lup { position: fixed; inset: 0; background: rgba(20,18,8,.92); display: none; align-items: center; justify-content: center; z-index: 400; padding: 1rem; }
+.lup.vis { display: flex; }
+.lup img { max-width: 95vw; max-height: 90vh; border-radius: 6px; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+.lup-luk { position: fixed; top: 1rem; right: 1rem; background: #fff; color: #222; width: 44px; height: 44px; border-radius: 50%; border: none; font-size: 1.3rem; cursor: pointer; font-weight: 700; }
+
+.bund { position: fixed; bottom: 0; left: 0; right: 0; background: #2d5016; color: #f5e6a8; text-align: center; padding: 8px; font-size: 13px; font-style: italic; }
+</style>
+</head>
+<body>
+
+<script>
+try {
+  function hent(navn){ return sessionStorage.getItem(navn) || localStorage.getItem(navn) || ""; }
+  const niveau = hent("ok_niveau"), navn = hent("ok_navn"), nr = hent("ok_nr");
+  if (niveau || navn || nr) {
+    if (niveau) sessionStorage.setItem("ok_niveau", niveau);
+    if (navn)   sessionStorage.setItem("ok_navn", navn);
+    if (nr)     sessionStorage.setItem("ok_nr", nr);
+  } else {
+    window.location.href = "login.html";
+  }
+} catch(e) {}
+</script>
+
+<div class="topbar">
+  <h1>🗂️ Gamle billeder</h1>
+  <div class="user">
+    <span id="mit-navn"></span>
+    <a class="hjem-knap" href="forside.html">🏠 Til forsiden</a>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="info-boks">
+    <strong>📷 Familiens billedarkiv</strong>
+    Gamle billeder fra klanens historie — hjælp med at gætte hvem der er på billederne, og hvornår de er taget.
+    Skriv en kommentar under billedet. Ligger der flere gamle billeder rundt om i hjemmene, kan de lægges op herunder.
+  </div>
+
+  <div class="kort">
+    <h2>Læg et gammelt billede op</h2>
+    <label for="billede-fil">Vælg ét eller flere billeder</label>
+    <input type="file" id="billede-fil" class="felt" accept="image/*" multiple>
+    <button class="knap" id="upload-knap" onclick="uploadBilleder()">📤 Læg op</button>
+    <div class="status" id="upload-status"></div>
+  </div>
+
+  <div id="galleri-liste"><div class="indlaeser">Henter billeder …</div></div>
+
+</div>
+
+<div class="lup" id="lup" onclick="lukLup()">
+  <button class="lup-luk" onclick="lukLup()">✕</button>
+  <img id="lup-img" src="">
+</div>
+
+<div class="bund">Gamle billeder · OlsenKlanens familiearkiv</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+function hent(n){ return sessionStorage.getItem(n) || localStorage.getItem(n) || ""; }
+const MIT_NR   = hent("ok_nr");
+const MIT_NAVN = hent("ok_navn") || ("Medlem " + MIT_NR);
+document.getElementById("mit-navn").textContent = MIT_NAVN + " (nr. " + MIT_NR + ")";
+
+function escHtml(s){ return String(s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function tidTekst(t){
+  if (!t) return "";
+  const dato = t.seconds ? new Date(t.seconds*1000) : new Date(t);
+  return dato.toLocaleDateString("da-DK", {day:"numeric", month:"long", year:"numeric"});
+}
+
+let billeder = [];
+let kommentarer = {};
+
+async function hentAlt(){
+  const [bSnap, kSnap] = await Promise.all([
+    getDocs(query(collection(db, "gamle_billeder"), orderBy("uploadet_lokal", "desc"))),
+    getDocs(collection(db, "gamle_billeder_kommentarer"))
+  ]);
+  billeder = bSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  kommentarer = {};
+  kSnap.docs.forEach(d => {
+    const k = d.data();
+    if (!kommentarer[k.billede_id]) kommentarer[k.billede_id] = [];
+    kommentarer[k.billede_id].push(k);
+  });
+  Object.values(kommentarer).forEach(liste => liste.sort((a,b) => (a.tid_lokal||0) - (b.tid_lokal||0)));
+  await tegnGalleri();
+}
+
+async function tegnGalleri(){
+  const el = document.getElementById("galleri-liste");
+  if (!billeder.length) { el.innerHTML = '<div class="tom">Ingen billeder lagt op endnu — vær den første!</div>'; return; }
+
+  const kort = await Promise.all(billeder.map(async b => {
+    let url = b.url_cache;
+    if (!url) {
+      try { url = await getDownloadURL(ref(storage, b.storage_sti)); } catch(e) { return ""; }
+    }
+    const mineKommentarer = kommentarer[b.id] || [];
+    const kommentarHtml = mineKommentarer.length
+      ? mineKommentarer.map(k => `<div class="kommentar"><span class="navn">${escHtml(k.fra_navn)}:</span> ${escHtml(k.tekst)} <span class="tid">${tidTekst(k.tid)}</span></div>`).join("")
+      : '<div class="ingen-kommentarer">Ingen kommentarer endnu — ved du hvem det er?</div>';
+    return `
+      <div class="billede-kort">
+        <img src="${url}" onclick="visStort('${url}')" loading="lazy">
+        <div class="billede-krop">
+          <div class="billede-uploader">Lagt op af ${escHtml(b.uploadet_af_navn||"ukendt")} · ${tidTekst(b.uploadet)}</div>
+          <div class="kommentarer" id="kom-${b.id}">${kommentarHtml}</div>
+          <div class="kommentar-form">
+            <input type="text" id="kom-felt-${b.id}" placeholder="Hvem er det, og hvornår ca.?" maxlength="300">
+            <button onclick="sendKommentar('${b.id}')">Skriv</button>
+          </div>
+        </div>
+      </div>`;
+  }));
+  el.innerHTML = kort.join("");
+}
+
+window.sendKommentar = async function(billedeId){
+  const felt = document.getElementById("kom-felt-" + billedeId);
+  const tekst = felt.value.trim();
+  if (!tekst) return;
+  felt.disabled = true;
+  try {
+    await addDoc(collection(db, "gamle_billeder_kommentarer"), {
+      billede_id: billedeId,
+      fra_nr: MIT_NR,
+      fra_navn: MIT_NAVN,
+      tekst: tekst,
+      tid: serverTimestamp(),
+      tid_lokal: Date.now()
+    });
+    felt.value = "";
+    await hentAlt();
+  } catch(e) {
+    console.log("Kommentar-fejl:", e);
+    alert("Kunne ikke gemme kommentaren. Prøv igen.");
+  } finally {
+    felt.disabled = false;
+  }
+};
+
+window.uploadBilleder = async function(){
+  const filInput = document.getElementById("billede-fil");
+  const statusEl = document.getElementById("upload-status");
+  const knap = document.getElementById("upload-knap");
+  const filer = filInput.files;
+  if (!filer.length) { statusEl.className = "status fejl"; statusEl.textContent = "Vælg mindst ét billede først."; statusEl.style.display = "block"; return; }
+
+  knap.disabled = true;
+  statusEl.className = "status ok";
+  statusEl.textContent = "⏳ Lægger billeder op …";
+  statusEl.style.display = "block";
+
+  let lagt = 0, fejl = 0;
+  for (const fil of filer) {
+    try {
+      const sti = `gamle_billeder/${Date.now()}_${fil.name.replace(/[^\w.\-]/g,"_")}`;
+      await uploadBytes(ref(storage, sti), fil);
+      await addDoc(collection(db, "gamle_billeder"), {
+        storage_sti: sti,
+        uploadet_af_nr: MIT_NR,
+        uploadet_af_navn: MIT_NAVN,
+        uploadet: serverTimestamp(),
+        uploadet_lokal: Date.now()
+      });
+      lagt++;
+    } catch(e) {
+      console.log("Upload-fejl:", e);
+      fejl++;
+    }
+  }
+  statusEl.className = fejl ? "status fejl" : "status ok";
+  statusEl.textContent = fejl ? `Lagt ${lagt} op, ${fejl} fejlede.` : `✅ ${lagt} billede${lagt===1?"":"r"} lagt op.`;
+  filInput.value = "";
+  knap.disabled = false;
+  await hentAlt();
+};
+
+window.visStort = function(url){
+  document.getElementById("lup-img").src = url;
+  document.getElementById("lup").classList.add("vis");
+};
+window.lukLup = function(){
+  document.getElementById("lup").classList.remove("vis");
+};
+
+hentAlt();
+</script>
+</body>
+</html>
