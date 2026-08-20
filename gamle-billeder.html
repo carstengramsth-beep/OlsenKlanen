@@ -55,7 +55,9 @@ label { display: block; font-size: 14px; color: #555; margin-bottom: 6px; margin
 .kommentar-form button:hover { background: #3a6b1d; }
 
 .forhaandsvisning { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; }
-.forhaand-kort { width: 270px; text-align: center; background: #fdfbf5; border: 1px solid #e0d8bd; border-radius: 6px; padding: 8px; }
+.forhaand-kort { width: 270px; text-align: center; background: #fdfbf5; border: 1px solid #e0d8bd; border-radius: 6px; padding: 8px; position: relative; }
+.forhaand-fjern { position: absolute; top: 4px; right: 4px; z-index: 5; width: 24px; height: 24px; padding: 0 !important; border-radius: 50% !important; background: #c0392b !important; border: none !important; color: #fff !important; font-size: 13px; line-height: 1; cursor: pointer; }
+.forhaand-fjern:hover { background: #a93226 !important; }
 .forhaand-billede-omraade { width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #e8e2cd; border-radius: 4px; }
 .forhaand-billede-omraade canvas { max-width: 100%; cursor: crosshair; touch-action: none; }
 .forhaand-hint { font-size: 11px; color: #999; font-style: italic; margin-top: 4px; }
@@ -276,16 +278,21 @@ function tegnForhaandsvisning(){
   const el = document.getElementById("forhaandsvisning");
   el.innerHTML = valgteFiler.map((v, i) => `
     <div class="forhaand-kort">
+      <button type="button" class="forhaand-fjern" onclick="fjernForhaandsbillede(${i})" title="Fjern billede">✕</button>
       <div class="forhaand-billede-omraade">
         <canvas id="fv-canvas-${i}"></canvas>
       </div>
       <div class="forhaand-hint">Træk med musen for at beskære</div>
       <div class="forhaand-knap-rk">
         <button type="button" onclick="roterForhaandsvisning(${i})">↻ Ret op</button>
-        <button type="button" onclick="nulstilBeskaering(${i})">✕ Nulstil</button>
+        <button type="button" onclick="nulstilBeskaering(${i})">Nulstil beskæring</button>
       </div>
     </div>`).join("");
-  valgteFiler.forEach((v, i) => { if (v.img) tegnForhaandCanvas(i); });
+  valgteFiler.forEach((v, i) => {
+    if (!v.img) return;
+    tegnForhaandCanvas(i);
+    paasaetForhaandTraek(i);
+  });
 }
 
 function tegnForhaandCanvas(i){
@@ -314,23 +321,41 @@ function tegnForhaandCanvas(i){
     ctx.lineWidth = 2;
     ctx.strokeRect(b.x*skala, b.y*skala, b.w*skala, b.h*skala);
   }
+}
 
-  let traekker = false, start = null;
-  cv.onmousedown = e => {
-    traekker = true;
+function paasaetForhaandTraek(i){
+  const v = valgteFiler[i];
+  const cv = document.getElementById("fv-canvas-" + i);
+  v._traekker = false;
+  v._start = null;
+
+  const til = e => {
+    const p = e.touches ? e.touches[0] : e;
     const r = cv.getBoundingClientRect();
-    start = { x: (e.clientX - r.left) * (cv.width/r.width), y: (e.clientY - r.top) * (cv.height/r.height) };
+    return { x: (p.clientX - r.left) * (cv.width/r.width), y: (p.clientY - r.top) * (cv.height/r.height) };
   };
-  cv.onmousemove = e => {
-    if (!traekker) return;
-    const r = cv.getBoundingClientRect();
-    const nu = { x: (e.clientX - r.left) * (cv.width/r.width), y: (e.clientY - r.top) * (cv.height/r.height) };
-    const x = Math.min(start.x, nu.x), y = Math.min(start.y, nu.y);
-    const w = Math.abs(nu.x - start.x), h = Math.abs(nu.y - start.y);
-    v.beskaering = { x: x/skala, y: y/skala, w: w/skala, h: h/skala };
+  const start = e => {
+    e.preventDefault();
+    v._traekker = true;
+    v._start = til(e);
+  };
+  const flyt = e => {
+    if (!v._traekker) return;
+    e.preventDefault();
+    const nu = til(e);
+    const x = Math.min(v._start.x, nu.x), y = Math.min(v._start.y, nu.y);
+    const w = Math.abs(nu.x - v._start.x), h = Math.abs(nu.y - v._start.y);
+    v.beskaering = { x: x/v._skala, y: y/v._skala, w: w/v._skala, h: h/v._skala };
     tegnForhaandCanvas(i);
   };
-  cv.onmouseup = cv.onmouseleave = () => { traekker = false; };
+  const slut = () => { v._traekker = false; };
+
+  cv.addEventListener("mousedown", start);
+  cv.addEventListener("mousemove", flyt);
+  window.addEventListener("mouseup", slut);
+  cv.addEventListener("touchstart", start, { passive: false });
+  cv.addEventListener("touchmove", flyt, { passive: false });
+  cv.addEventListener("touchend", slut);
 }
 
 window.roterForhaandsvisning = function(i){
@@ -342,6 +367,11 @@ window.roterForhaandsvisning = function(i){
 window.nulstilBeskaering = function(i){
   valgteFiler[i].beskaering = null;
   tegnForhaandCanvas(i);
+};
+
+window.fjernForhaandsbillede = function(i){
+  valgteFiler.splice(i, 1);
+  tegnForhaandsvisning();
 };
 
 function beskaerOgRoterTilBlob(v){
