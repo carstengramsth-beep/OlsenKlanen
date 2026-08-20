@@ -147,6 +147,10 @@ try {
 
       <label for="sog-mail">Til hvem? (søg på navn)</label>
       <input type="text" id="sog-mail" class="felt" placeholder="Søg på navn …" oninput="filtrerMail()" autocomplete="off">
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button type="button" class="knap lille" onclick="vaelgAlleMail()">☑️ Vælg alle</button>
+        <button type="button" class="knap lille grå" onclick="nulstilAlleMail()">✕ Fravælg alle</button>
+      </div>
       <div class="modtager-liste" id="modtager-liste-mail">
         <div class="indlaeser">Henter medlemmer …</div>
       </div>
@@ -400,6 +404,19 @@ window.filtrerMail = function(){
   const s = document.getElementById("sog-mail").value.trim().toLowerCase();
   tegnModtagere(s ? alleModtagere.filter(m => m.soegetekst.includes(s)) : alleModtagere, "mail");
 };
+
+window.vaelgAlleMail = function(){
+  document.querySelectorAll('#modtager-liste-mail input[type=checkbox]').forEach(cb => {
+    cb.checked = true;
+    valgteMail.set(cb.dataset.nr, {navn: cb.dataset.navn, email: cb.dataset.email});
+  });
+  tegnValgte("mail");
+};
+window.nulstilAlleMail = function(){
+  valgteMail.clear();
+  document.querySelectorAll('#modtager-liste-mail input[type=checkbox]').forEach(cb => cb.checked = false);
+  tegnValgte("mail");
+};
 window.filtrerIntern = function(){
   const s = document.getElementById("sog-intern").value.trim().toLowerCase();
   tegnModtagere(s ? alleModtagere.filter(m => m.soegetekst.includes(s)) : alleModtagere, "intern");
@@ -457,7 +474,8 @@ window.sendMail = async function(){
           reply_to: mitEmail(),
           subject: emne,
           message: beskedMedSignatur,
-          afsender_navn: MIT_NAVN
+          afsender_navn: MIT_NAVN,
+          name: MIT_NAVN
         });
       }
       sendt++;
@@ -518,7 +536,8 @@ window.sendSvarMail = async function(id, tilEmail, tilNavn, origEmne) {
         reply_to: mitEmail(),
         subject: emne,
         message: tekst + signatur,
-        afsender_navn: MIT_NAVN
+        afsender_navn: MIT_NAVN,
+        name: MIT_NAVN
       });
     }
 
