@@ -45,6 +45,7 @@ label { display: block; font-size: 14px; color: #555; margin-bottom: 6px; margin
 .kommentar .navn { font-weight: bold; color: #2d5016; }
 .kommentar .tid { font-size: 11px; color: #999; margin-left: 6px; }
 .ingen-kommentarer { font-size: 13px; color: #999; font-style: italic; margin-bottom: 8px; }
+.vis-alle-knap { display: block; background: none; border: none; color: #2d5016; font-family: inherit; font-size: 12px; text-decoration: underline; cursor: pointer; padding: 0 0 8px; }
 
 .kommentar-form { display: flex; gap: 6px; margin-top: 10px; }
 .kommentar-form input { flex: 1; padding: 8px 10px; font-family: inherit; font-size: 13px; border: 1px solid #c8bfa0; border-radius: 6px; background: #fdfbf5; }
@@ -173,9 +174,22 @@ async function tegnGalleri(){
       try { url = await getDownloadURL(ref(storage, b.storage_sti)); } catch(e) { return ""; }
     }
     const mineKommentarer = kommentarer[b.id] || [];
-    const kommentarHtml = mineKommentarer.length
-      ? mineKommentarer.map(k => `<div class="kommentar"><span class="navn">${escHtml(k.fra_navn)}:</span> ${escHtml(k.tekst)} <span class="tid">${tidTekst(k.tid)}</span></div>`).join("")
-      : '<div class="ingen-kommentarer">Ingen kommentarer endnu — ved du hvem det er?</div>';
+    let kommentarHtml;
+    if (!mineKommentarer.length) {
+      kommentarHtml = '<div class="ingen-kommentarer">Ingen kommentarer endnu — ved du hvem det er?</div>';
+    } else {
+      const enKommentarHtml = k => `<div class="kommentar"><span class="navn">${escHtml(k.fra_navn)}:</span> ${escHtml(k.tekst)} <span class="tid">${tidTekst(k.tid)}</span></div>`;
+      const nyeste = mineKommentarer[mineKommentarer.length - 1];
+      const tidligere = mineKommentarer.slice(0, -1);
+      if (tidligere.length) {
+        kommentarHtml = `
+          <button type="button" class="vis-alle-knap" id="vis-knap-${b.id}" onclick="skiftKommentarer('${b.id}')" data-luk="Skjul tidligere kommentarer" data-vis="Vis alle ${mineKommentarer.length} kommentarer">Vis alle ${mineKommentarer.length} kommentarer</button>
+          <div id="tidl-${b.id}" style="display:none">${tidligere.map(enKommentarHtml).join("")}</div>
+          ${enKommentarHtml(nyeste)}`;
+      } else {
+        kommentarHtml = enKommentarHtml(nyeste);
+      }
+    }
     return `
       <div class="billede-kort">
         <img src="${url}" onclick="visStort('${url}')" loading="lazy">
@@ -191,6 +205,14 @@ async function tegnGalleri(){
   }));
   el.innerHTML = kort.join("");
 }
+
+window.skiftKommentarer = function(billedeId){
+  const el = document.getElementById("tidl-" + billedeId);
+  const knap = document.getElementById("vis-knap-" + billedeId);
+  const visNu = el.style.display !== "none";
+  el.style.display = visNu ? "none" : "block";
+  knap.textContent = visNu ? knap.dataset.vis : knap.dataset.luk;
+};
 
 window.sendKommentar = async function(billedeId){
   const felt = document.getElementById("kom-felt-" + billedeId);
