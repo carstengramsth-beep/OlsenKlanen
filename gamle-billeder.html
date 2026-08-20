@@ -63,7 +63,9 @@ label { display: block; font-size: 14px; color: #555; margin-bottom: 6px; margin
 .forhaand-billede-omraade { width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #e8e2cd; border-radius: 4px; }
 .forhaand-billede-omraade canvas { max-width: 100%; cursor: crosshair; touch-action: none; }
 .forhaand-hint { font-size: 11px; color: #999; font-style: italic; margin-top: 4px; }
-.forhaand-knap-rk { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+.forhaand-knap-rk { display: flex; gap: 6px; justify-content: center; margin-top: 6px; flex-wrap: wrap; }
+.forhaand-fin-label { display: block; font-size: 12px; color: #555; margin: 10px 0 2px; text-align: left; }
+.forhaand-fin-slider { width: 100%; }
 .forhaand-kort button { background: #eef3e3; border: 1px solid #c3d3a6; border-radius: 14px; font-family: inherit; font-size: 12px; padding: 5px 10px; cursor: pointer; color: #2d5016; }
 .forhaand-kort button:hover { background: #e0ebcd; }
 
@@ -270,13 +272,13 @@ window.sendKommentar = async function(billedeId){
 };
 
 /* ════════ FORHÅNDSVISNING + RET OP + BESKÆRING ════════ */
-let valgteFiler = []; // { fil, grader, img, beskaering: {x,y,w,h} i naturlig (roteret) pixel-størrelse, eller null }
+let valgteFiler = []; // { fil, grader, fin, img, beskaering: {x,y,w,h} i naturlig (roteret) pixel-størrelse, eller null }
 const FV_MAX_BREDDE = 260;
 
 window.visForhaandsvisning = async function(){
   const filInput = document.getElementById("billede-fil");
   const filer = Array.from(filInput.files);
-  valgteFiler = filer.map(fil => ({ fil, grader: 0, img: null, beskaering: null }));
+  valgteFiler = filer.map(fil => ({ fil, grader: 0, fin: 0, img: null, beskaering: null }));
   await Promise.all(valgteFiler.map(v => new Promise(resolve => {
     const img = new Image();
     img.onload = () => { v.img = img; resolve(); };
@@ -286,9 +288,15 @@ window.visForhaandsvisning = async function(){
   tegnForhaandsvisning();
 };
 
+function samletVinkel(v){ return v.grader + v.fin; }
+
 function roteretMaal(v){
-  const byttet = (v.grader === 90 || v.grader === 270);
-  return { w: byttet ? v.img.height : v.img.width, h: byttet ? v.img.width : v.img.height };
+  const rad = samletVinkel(v) * Math.PI / 180;
+  const w = v.img.width, h = v.img.height;
+  return {
+    w: Math.abs(w*Math.cos(rad)) + Math.abs(h*Math.sin(rad)),
+    h: Math.abs(w*Math.sin(rad)) + Math.abs(h*Math.cos(rad))
+  };
 }
 
 function tegnForhaandsvisning(){
@@ -299,11 +307,13 @@ function tegnForhaandsvisning(){
       <div class="forhaand-billede-omraade">
         <canvas id="fv-canvas-${i}"></canvas>
       </div>
-      <div class="forhaand-hint">Træk med musen for at beskære</div>
+      <div class="forhaand-hint">Træk med musen for at markere det udsnit, du vil beholde — det bruges automatisk, når du trykker "Læg op"</div>
       <div class="forhaand-knap-rk">
-        <button type="button" onclick="roterForhaandsvisning(${i})">↻ Ret op</button>
+        <button type="button" onclick="roterForhaandsvisning(${i})">↻ Ret op (90°)</button>
         <button type="button" onclick="nulstilBeskaering(${i})">Nulstil beskæring</button>
       </div>
+      <label class="forhaand-fin-label">Finjustér vinkel: <span id="fv-fin-vaerdi-${i}">0°</span></label>
+      <input type="range" class="forhaand-fin-slider" id="fv-fin-${i}" min="-45" max="45" step="0.5" value="0" oninput="finjusterForhaandsvisning(${i}, this.value)">
     </div>`).join("");
   valgteFiler.forEach((v, i) => {
     if (!v.img) return;
@@ -323,7 +333,7 @@ function tegnForhaandCanvas(i){
   const ctx = cv.getContext("2d");
   ctx.save();
   ctx.translate(cv.width/2, cv.height/2);
-  ctx.rotate(v.grader * Math.PI / 180);
+  ctx.rotate(samletVinkel(v) * Math.PI / 180);
   ctx.drawImage(v.img, -v.img.width*skala/2, -v.img.height*skala/2, v.img.width*skala, v.img.height*skala);
   ctx.restore();
 
@@ -381,6 +391,13 @@ window.roterForhaandsvisning = function(i){
   tegnForhaandCanvas(i);
 };
 
+window.finjusterForhaandsvisning = function(i, vaerdi){
+  valgteFiler[i].fin = Number(vaerdi);
+  valgteFiler[i].beskaering = null;
+  document.getElementById("fv-fin-vaerdi-" + i).textContent = Number(vaerdi).toFixed(1) + "°";
+  tegnForhaandCanvas(i);
+};
+
 window.nulstilBeskaering = function(i){
   valgteFiler[i].beskaering = null;
   tegnForhaandCanvas(i);
@@ -399,7 +416,7 @@ function beskaerOgRoterTilBlob(v){
     roteretCv.height = naturH;
     const rctx = roteretCv.getContext("2d");
     rctx.translate(naturW/2, naturH/2);
-    rctx.rotate(v.grader * Math.PI / 180);
+    rctx.rotate(samletVinkel(v) * Math.PI / 180);
     rctx.drawImage(v.img, -v.img.width/2, -v.img.height/2);
 
     if (v.beskaering && v.beskaering.w > 4 && v.beskaering.h > 4) {
