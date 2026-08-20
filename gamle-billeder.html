@@ -52,6 +52,13 @@ label { display: block; font-size: 14px; color: #555; margin-bottom: 6px; margin
 .kommentar-form button { background: #2d5016; color: #f5e6a8; border: none; font-family: inherit; font-size: 13px; padding: 8px 14px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
 .kommentar-form button:hover { background: #3a6b1d; }
 
+.forhaandsvisning { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+.forhaand-kort { width: 140px; text-align: center; background: #fdfbf5; border: 1px solid #e0d8bd; border-radius: 6px; padding: 8px; }
+.forhaand-billede-omraade { width: 100%; height: 110px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #e8e2cd; border-radius: 4px; }
+.forhaand-billede-omraade img { max-width: 100%; max-height: 100%; transition: transform .2s ease; }
+.forhaand-kort button { margin-top: 6px; background: #eef3e3; border: 1px solid #c3d3a6; border-radius: 14px; font-family: inherit; font-size: 12px; padding: 5px 10px; cursor: pointer; color: #2d5016; }
+.forhaand-kort button:hover { background: #e0ebcd; }
+
 .tom { text-align: center; color: #999; font-style: italic; padding: 40px 20px; }
 .indlaeser { text-align: center; color: #888; padding: 30px; font-style: italic; }
 
@@ -98,7 +105,8 @@ try {
   <div class="kort">
     <h2>Læg et gammelt billede op</h2>
     <label for="billede-fil">Vælg ét eller flere billeder</label>
-    <input type="file" id="billede-fil" class="felt" accept="image/*" multiple>
+    <input type="file" id="billede-fil" class="felt" accept="image/*" multiple onchange="visForhaandsvisning()">
+    <div class="forhaandsvisning" id="forhaandsvisning"></div>
     <button class="knap" id="upload-knap" onclick="uploadBilleder()">📤 Læg op</button>
     <div class="status" id="upload-status"></div>
   </div>
@@ -238,12 +246,58 @@ window.sendKommentar = async function(billedeId){
   }
 };
 
+/* ════════ FORHÅNDSVISNING + RET OP-KNAP ════════ */
+let valgteFiler = []; // { fil, grader }
+
+window.visForhaandsvisning = function(){
+  const filInput = document.getElementById("billede-fil");
+  valgteFiler = Array.from(filInput.files).map(fil => ({ fil, grader: 0 }));
+  tegnForhaandsvisning();
+};
+
+function tegnForhaandsvisning(){
+  const el = document.getElementById("forhaandsvisning");
+  el.innerHTML = valgteFiler.map((v, i) => `
+    <div class="forhaand-kort">
+      <div class="forhaand-billede-omraade">
+        <img src="${URL.createObjectURL(v.fil)}" style="transform: rotate(${v.grader}deg)">
+      </div>
+      <button type="button" onclick="roterForhaandsvisning(${i})">↻ Ret op</button>
+    </div>`).join("");
+}
+
+window.roterForhaandsvisning = function(i){
+  valgteFiler[i].grader = (valgteFiler[i].grader + 90) % 360;
+  tegnForhaandsvisning();
+};
+
+function roterTilBlob(fil, grader){
+  return new Promise((resolve, reject) => {
+    if (!grader) { resolve(fil); return; }
+    const img = new Image();
+    const url = URL.createObjectURL(fil);
+    img.onload = () => {
+      const byttet = (grader === 90 || grader === 270);
+      const cv = document.createElement("canvas");
+      cv.width = byttet ? img.height : img.width;
+      cv.height = byttet ? img.width : img.height;
+      const ctx = cv.getContext("2d");
+      ctx.translate(cv.width/2, cv.height/2);
+      ctx.rotate(grader * Math.PI / 180);
+      ctx.drawImage(img, -img.width/2, -img.height/2);
+      URL.revokeObjectURL(url);
+      cv.toBlob(b => resolve(b), "image/jpeg", 0.92);
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
 window.uploadBilleder = async function(){
   const filInput = document.getElementById("billede-fil");
   const statusEl = document.getElementById("upload-status");
   const knap = document.getElementById("upload-knap");
-  const filer = filInput.files;
-  if (!filer.length) { statusEl.className = "status fejl"; statusEl.textContent = "Vælg mindst ét billede først."; statusEl.style.display = "block"; return; }
+  if (!valgteFiler.length) { statusEl.className = "status fejl"; statusEl.textContent = "Vælg mindst ét billede først."; statusEl.style.display = "block"; return; }
 
   knap.disabled = true;
   statusEl.className = "status ok";
@@ -251,10 +305,11 @@ window.uploadBilleder = async function(){
   statusEl.style.display = "block";
 
   let lagt = 0, fejl = 0;
-  for (const fil of filer) {
+  for (const v of valgteFiler) {
     try {
-      const sti = `gamle_billeder/${Date.now()}_${fil.name.replace(/[^\w.\-]/g,"_")}`;
-      await uploadBytes(ref(storage, sti), fil);
+      const data = await roterTilBlob(v.fil, v.grader);
+      const sti = `gamle_billeder/${Date.now()}_${v.fil.name.replace(/[^\w.\-]/g,"_")}`;
+      await uploadBytes(ref(storage, sti), data);
       await addDoc(collection(db, "gamle_billeder"), {
         storage_sti: sti,
         uploadet_af_nr: MIT_NR,
@@ -271,6 +326,8 @@ window.uploadBilleder = async function(){
   statusEl.className = fejl ? "status fejl" : "status ok";
   statusEl.textContent = fejl ? `Lagt ${lagt} op, ${fejl} fejlede.` : `✅ ${lagt} billede${lagt===1?"":"r"} lagt op.`;
   filInput.value = "";
+  valgteFiler = [];
+  document.getElementById("forhaandsvisning").innerHTML = "";
   knap.disabled = false;
   await hentAlt();
 };
