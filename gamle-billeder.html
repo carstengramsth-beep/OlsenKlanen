@@ -37,7 +37,9 @@ label { display: block; font-size: 14px; color: #555; margin-bottom: 6px; margin
 .galleri { column-count: 1; column-gap: 18px; }
 @media (min-width: 620px) { .galleri { column-count: 2; } }
 @media (min-width: 920px) { .galleri { column-count: 3; } }
-.billede-kort { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; break-inside: avoid; margin-bottom: 18px; display: inline-block; width: 100%; }
+.billede-kort { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; break-inside: avoid; margin-bottom: 18px; display: inline-block; width: 100%; position: relative; }
+.slet-billede-knap { position: absolute; top: 8px; right: 8px; z-index: 5; width: 30px; height: 30px; border-radius: 50%; background: rgba(192,57,43,0.9); border: none; color: #fff; font-size: 14px; cursor: pointer; }
+.slet-billede-knap:hover { background: #c0392b; }
 .billede-kort img { width: 100%; height: auto; display: block; cursor: zoom-in; background: #e8e2cd; }
 .billede-krop { padding: 12px 14px 16px; }
 .billede-uploader { font-size: 12px; color: #999; font-style: italic; margin-bottom: 10px; }
@@ -130,9 +132,9 @@ try {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp }
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, doc, deleteDoc, where }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL }
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -204,8 +206,10 @@ async function tegnGalleri(){
         kommentarHtml = enKommentarHtml(nyeste);
       }
     }
+    const kanSlette = b.uploadet_af_nr === MIT_NR;
     return `
       <div class="billede-kort">
+        ${kanSlette ? `<button type="button" class="slet-billede-knap" onclick="sletBillede('${b.id}','${b.storage_sti}')" title="Slet billede">🗑</button>` : ""}
         <img src="${url}" onclick="visStort('${url}')" loading="lazy">
         <div class="billede-krop">
           <div class="billede-uploader">Lagt op af ${escHtml(b.uploadet_af_navn||"ukendt")} · ${tidTekst(b.uploadet)}</div>
@@ -219,6 +223,20 @@ async function tegnGalleri(){
   }));
   el.innerHTML = kort.join("");
 }
+
+window.sletBillede = async function(billedeId, storageSti){
+  if (!confirm("Slet dette billede og alle dets kommentarer?")) return;
+  try {
+    await deleteObject(ref(storage, storageSti)).catch(() => {});
+    await deleteDoc(doc(db, "gamle_billeder", billedeId));
+    const kSnap = await getDocs(query(collection(db, "gamle_billeder_kommentarer"), where("billede_id", "==", billedeId)));
+    await Promise.all(kSnap.docs.map(d => deleteDoc(d.ref)));
+    await hentAlt();
+  } catch(e) {
+    console.log("Slette-fejl:", e);
+    alert("Kunne ikke slette billedet. Prøv igen.");
+  }
+};
 
 window.skiftKommentarer = function(billedeId){
   const el = document.getElementById("tidl-" + billedeId);
