@@ -196,6 +196,10 @@ try {
 
       <label for="sog-intern">Til hvem?</label>
       <input type="text" id="sog-intern" class="felt" placeholder="Søg på navn eller nummer …" oninput="filtrerIntern()" autocomplete="off">
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button type="button" class="knap lille" onclick="vaelgAlleIntern()">☑️ Vælg alle</button>
+        <button type="button" class="knap lille grå" onclick="nulstilAlleIntern()">✕ Fravælg alle</button>
+      </div>
       <div class="modtager-liste" id="modtager-liste-intern">
         <div class="indlaeser">Henter medlemmer …</div>
       </div>
@@ -420,6 +424,19 @@ window.nulstilAlleMail = function(){
 window.filtrerIntern = function(){
   const s = document.getElementById("sog-intern").value.trim().toLowerCase();
   tegnModtagere(s ? alleModtagere.filter(m => m.soegetekst.includes(s)) : alleModtagere, "intern");
+};
+
+window.vaelgAlleIntern = function(){
+  document.querySelectorAll('#modtager-liste-intern input[type=checkbox]').forEach(cb => {
+    cb.checked = true;
+    valgteIntern.set(cb.dataset.nr, {navn: cb.dataset.navn, email: cb.dataset.email});
+  });
+  tegnValgte("intern");
+};
+window.nulstilAlleIntern = function(){
+  valgteIntern.clear();
+  document.querySelectorAll('#modtager-liste-intern input[type=checkbox]').forEach(cb => cb.checked = false);
+  tegnValgte("intern");
 };
 
 /* ════════ SEND RIGTIG MAIL via EmailJS ════════ */
