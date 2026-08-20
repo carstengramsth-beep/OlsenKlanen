@@ -17,6 +17,10 @@ service cloud.firestore {
            == 'administrator';
     }
 
+    function erPostansvarlig() {
+      return request.auth != null && request.auth.token.postansvarlig == true;
+    }
+
     match /brugere/{email} {
       allow read: if erAutoriseret();
       allow create, update: if erAdministrator();
@@ -40,17 +44,14 @@ service cloud.firestore {
     }
 
     match /log/{id} {
-      allow read, write: if erAutoriseret();
+      allow read: if request.auth != null;
+      allow write: if erAutoriseret();
     }
 
     match /udviklingslog/{id} {
-      allow read, write: if erAutoriseret();
-
-      match /kommentarer/{kid} {
-        allow read: if erAutoriseret();
-        allow create: if erAutoriseret();
-        allow update, delete: if erAdministrator();
-      }
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+      match /{sub=**} { allow read, write: if request.auth != null; }
     }
 
     match /system/{id} {
@@ -71,6 +72,11 @@ service cloud.firestore {
       allow write: if true;
     }
 
+    match /hjemmeside_nyheder/{id} {
+      allow read: if true;
+      allow write: if true;
+    }
+
     match /opslagstavle/{id} {
       allow read: if true;
       allow create: if request.resource.data.keys().hasAll(['tekst','forfatter'])
@@ -83,18 +89,27 @@ service cloud.firestore {
       allow delete: if false;
     }
 
- match /olsenpost_mail/{id} {
-      allow read, write: if true;
+    match /olsenpost_mail/{id} {
+      allow read: if true;
+      allow write: if erPostansvarlig();
     }
 
     match /olsenpost_indkomne/{id} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if erPostansvarlig();
     }
 
     match /olsenpost/{id} {
       allow read, write: if true;
-    }    
-match /{document=**} {
+    }
+
+    match /gamle_billeder/{id} {
+      allow read, write: if true;
+    }
+    match /gamle_billeder_kommentarer/{id} {
+      allow read, write: if true;
+    }
+    match /{document=**} {
       allow read, write: if false;
     }
 
