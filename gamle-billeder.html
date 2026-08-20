@@ -206,10 +206,9 @@ async function tegnGalleri(){
         kommentarHtml = enKommentarHtml(nyeste);
       }
     }
-    const kanSlette = b.uploadet_af_nr === MIT_NR;
     return `
       <div class="billede-kort">
-        ${kanSlette ? `<button type="button" class="slet-billede-knap" onclick="sletBillede('${b.id}','${b.storage_sti}')" title="Slet billede">🗑</button>` : ""}
+        <button type="button" class="slet-billede-knap" onclick="sletBillede('${b.id}','${b.storage_sti}')" title="Slet billede">🗑</button>
         <img src="${url}" onclick="visStort('${url}')" loading="lazy">
         <div class="billede-krop">
           <div class="billede-uploader">Lagt op af ${escHtml(b.uploadet_af_navn||"ukendt")} · ${tidTekst(b.uploadet)}</div>
