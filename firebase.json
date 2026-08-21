@@ -6,6 +6,9 @@
   "database": {
     "rules": "database.rules.json"
   },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "functions": [
     {
       "source": "functions",
@@ -19,6 +22,7 @@
       "firebase.json",
       "firestore.rules",
       "database.rules.json",
+      "storage.rules",
       ".firebaserc",
       "functions/**",
       "*.docx",

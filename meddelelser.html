@@ -172,7 +172,12 @@ try {
       <input type="text" id="emne" class="felt" placeholder="Skriv emne her …" maxlength="100">
 
       <label for="tekst-mail">Din besked</label>
-      <textarea id="tekst-mail" placeholder="Skriv din besked her …&#10;&#10;Hilsen og dit navn tilføjes automatisk nederst."></textarea>
+      <textarea id="tekst-mail" placeholder="Skriv din besked her …&#10;&#10;Hilsen og dit navn tilføjes automatisk nederst.&#10;&#10;Tip: du kan indsætte (Ctrl+V) et kopieret billede direkte her i feltet."></textarea>
+
+      <label for="vedhaeft-fil">Vedhæft et billede (valgfrit)</label>
+      <input type="file" id="vedhaeft-fil" class="felt" accept="image/*">
+      <div class="hint">Eller indsæt (Ctrl+V) et kopieret billede direkte i beskedfeltet ovenfor. Billedet lægges i arkivet, og mailen får automatisk et link, modtageren kan klikke på.</div>
+      <div id="vedhaeft-forhaandsvisning"></div>
 
       <button class="knap" id="send-mail-knap" onclick="sendMail()">📨 Send mail fra post@olsenklanen.dk</button>
       <div class="status" id="send-mail-status"></div>
@@ -250,6 +255,7 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, setD
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -263,6 +269,7 @@ const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 const auth = getAuth(app);
 const funcs = getFunctions(app, "europe-west1");
+const storage = getStorage(app);
 
 // De 5 postansvarlige (medlemsnumre)
 const POSTANSVARLIGE = ["8-B", "19-A", "22-B", "23-B", "48-B"];
@@ -446,6 +453,41 @@ window.fjernValgt = function(type, nr){
   if (cb) cb.checked = false;
 };
 
+/* ════════ VEDHÆFTET BILLEDE (fil-valg eller indsæt kopieret billede) ════════ */
+let vedhaeftetFil = null;
+
+function visVedhaeftPreview(fil){
+  vedhaeftetFil = fil;
+  const el = document.getElementById("vedhaeft-forhaandsvisning");
+  el.innerHTML = `
+    <div style="margin-top:10px; display:flex; align-items:center; gap:10px;">
+      <img src="${URL.createObjectURL(fil)}" style="max-width:120px; max-height:120px; border-radius:6px; border:1px solid #c8bfa0;">
+      <button type="button" onclick="fjernVedhaeft()" style="background:#f8d7da; border:1px solid #e0a8ae; color:#721c24; border-radius:14px; padding:6px 12px; cursor:pointer; font-family:inherit;">✕ Fjern billede</button>
+    </div>`;
+}
+
+window.fjernVedhaeft = function(){
+  vedhaeftetFil = null;
+  document.getElementById("vedhaeft-forhaandsvisning").innerHTML = "";
+  document.getElementById("vedhaeft-fil").value = "";
+};
+
+document.getElementById("vedhaeft-fil").addEventListener("change", e => {
+  if (e.target.files[0]) visVedhaeftPreview(e.target.files[0]);
+});
+
+document.getElementById("tekst-mail").addEventListener("paste", e => {
+  const items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith("image/")) {
+      const fil = item.getAsFile();
+      if (fil) { visVedhaeftPreview(fil); e.preventDefault(); }
+      break;
+    }
+  }
+});
+
 window.filtrerMail = function(){
   const s = document.getElementById("sog-mail").value.trim().toLowerCase();
   tegnModtagere(s ? alleModtagere.filter(m => m.soegetekst.includes(s)) : alleModtagere, "mail");
@@ -497,9 +539,26 @@ window.sendMail = async function(){
   knap.disabled = true;
   vis(statusEl, "ok", "⏳ Sender mail …");
 
+  let vedhaeftUrl = null;
+  if (vedhaeftetFil) {
+    try {
+      vis(statusEl, "ok", "⏳ Lægger billede op …");
+      const sti = `olsenpost_vedhaeftninger/${Date.now()}_${vedhaeftetFil.name.replace(/[^\w.\-]/g,"_")}`;
+      await uploadBytes(ref(storage, sti), vedhaeftetFil);
+      vedhaeftUrl = await getDownloadURL(ref(storage, sti));
+      vis(statusEl, "ok", "⏳ Sender mail …");
+    } catch(e) {
+      console.log("Vedhæft-fejl:", e);
+      knap.disabled = false;
+      vis(statusEl, "fejl", "Kunne ikke lægge billedet op. Prøv igen.");
+      return;
+    }
+  }
+
   const dato = new Date().toLocaleDateString("da-DK", {day:"numeric", month:"long", year:"numeric"});
+  const billedLinje = vedhaeftUrl ? `\n\n📎 Se billedet her: ${vedhaeftUrl}` : "";
   const signatur = `\n\n---\nMed venlig hilsen\n${MIT_NAVN}\npå vegne af Familieforeningen Olsenklanen\n${mitEmail()}`;
-  const beskedMedSignatur = tekst + signatur;
+  const beskedMedSignatur = tekst + billedLinje + signatur;
 
   let sendt = 0;
   let fejl = 0;
@@ -517,7 +576,7 @@ window.sendMail = async function(){
         til_navn: navn,
         til_email: email,
         emne: emne,
-        tekst: tekst,
+        tekst: tekst + billedLinje,
         sendt: serverTimestamp(),
         sendt_lokal: Date.now(),
         besvaret: false,
@@ -555,6 +614,7 @@ window.sendMail = async function(){
 
   document.getElementById("emne").value = "";
   document.getElementById("tekst-mail").value = "";
+  fjernVedhaeft();
   valgteMail.clear(); tegnValgte("mail");
   document.querySelectorAll('#modtager-liste-mail input').forEach(cb => cb.checked = false);
   knap.disabled = false;
