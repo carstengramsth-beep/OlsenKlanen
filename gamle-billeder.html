@@ -72,6 +72,8 @@ label { display: block; font-size: 14px; color: #555; margin-bottom: 6px; margin
 .forhaand-slider-rk input[type=range] { width: 100%; }
 .forhaand-kort button { background: #eef3e3; border: 1px solid #c3d3a6; border-radius: 16px; font-family: inherit; font-size: 15px; padding: 9px 18px; cursor: pointer; color: #2d5016; }
 .forhaand-kort button:hover { background: #e0ebcd; }
+.forhaand-knap-vigtig { background: #2d5016 !important; border-color: #2d5016 !important; color: #f5e6a8 !important; font-weight: bold; }
+.forhaand-knap-vigtig:hover { background: #3a6b1d !important; }
 
 .tom { text-align: center; color: #999; font-style: italic; padding: 40px 20px; }
 .indlaeser { text-align: center; color: #888; padding: 30px; font-style: italic; }
@@ -334,8 +336,11 @@ function tegnForhaandsvisning(){
         <canvas id="fv-canvas-${i}"></canvas>
       </div>
       <div class="forhaand-knap-rk">
-        <button type="button" onclick="roterForhaandsvisning(${i})">↻ Drej billedet 90°</button>
+        <button type="button" class="forhaand-knap-vigtig" onclick="beskaerNu(${i})">✂️ Beskær nu</button>
         <button type="button" onclick="nulstilBeskaering(${i})">✕ Ryd markeret udsnit</button>
+      </div>
+      <div class="forhaand-knap-rk">
+        <button type="button" onclick="roterForhaandsvisning(${i})">↻ Drej billedet 90°</button>
       </div>
       <div class="forhaand-slider-rk">
         <label for="fv-fin-${i}">↔️ Ret små skævheder: <span id="fv-fin-vaerdi-${i}">0°</span></label>
@@ -448,6 +453,50 @@ window.nulstilBeskaering = function(i){
   valgteFiler[i].beskaering = null;
   tegnForhaandCanvas(i);
   opdaterFvStatus(i);
+};
+
+window.beskaerNu = function(i){
+  const v = valgteFiler[i];
+  if (!v.beskaering || v.beskaering.w <= 4 || v.beskaering.h <= 4) {
+    alert("Træk med musen hen over billedet for at markere det udsnit, du vil beholde — og tryk så på \"Beskær nu\".");
+    return;
+  }
+  const { w: naturW, h: naturH } = roteretMaal(v);
+  const roteretCv = document.createElement("canvas");
+  roteretCv.width = naturW;
+  roteretCv.height = naturH;
+  const rctx = roteretCv.getContext("2d");
+  rctx.translate(naturW/2, naturH/2);
+  rctx.rotate(samletVinkel(v) * Math.PI / 180);
+  rctx.filter = "brightness(" + v.lys + "%)";
+  rctx.drawImage(v.img, -v.img.width/2, -v.img.height/2);
+  rctx.filter = "none";
+
+  const b = v.beskaering;
+  const udCv = document.createElement("canvas");
+  udCv.width = Math.round(b.w);
+  udCv.height = Math.round(b.h);
+  udCv.getContext("2d").drawImage(roteretCv, b.x, b.y, b.w, b.h, 0, 0, udCv.width, udCv.height);
+
+  // Billedet er nu selve det beskårne udsnit — drej/lys/udsnit nulstilles, da de er "brændt ind"
+  v.img = udCv;
+  v.grader = 0;
+  v.fin = 0;
+  v.lys = 100;
+  v.beskaering = null;
+
+  const finSlider = document.getElementById("fv-fin-" + i);
+  if (finSlider) finSlider.value = 0;
+  const finVaerdi = document.getElementById("fv-fin-vaerdi-" + i);
+  if (finVaerdi) finVaerdi.textContent = "0°";
+  const lysSlider = document.getElementById("fv-lys-" + i);
+  if (lysSlider) lysSlider.value = 100;
+  const lysVaerdi = document.getElementById("fv-lys-vaerdi-" + i);
+  if (lysVaerdi) lysVaerdi.textContent = "Normal";
+
+  tegnForhaandCanvas(i);
+  const statusEl = document.getElementById("fv-status-" + i);
+  if (statusEl) statusEl.textContent = "✅ Beskåret! Du kan stadig dreje eller justere lys på det nye udsnit.";
 };
 
 function opdaterFvStatus(i){
