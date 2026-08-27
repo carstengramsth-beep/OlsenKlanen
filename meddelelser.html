@@ -402,6 +402,7 @@ async function hentModtagere() {
     alleModtagere = liste;
     tegnModtagere(liste, "mail");
     tegnModtagere(liste, "intern");
+    forudvaelgFraLink();
   } catch(e) {
     console.log("Modtager-fejl:", e);
   }
@@ -492,6 +493,22 @@ window.filtrerMail = function(){
   const s = document.getElementById("sog-mail").value.trim().toLowerCase();
   tegnModtagere(s ? alleModtagere.filter(m => m.soegetekst.includes(s)) : alleModtagere, "mail");
 };
+
+function forudvaelgFraLink(){
+  const param = new URLSearchParams(window.location.search);
+  const husstand = param.get("husstand");
+  const emne = param.get("emne");
+  if (emne) {
+    const emneFelt = document.getElementById("emne");
+    if (emneFelt) emneFelt.value = emne;
+  }
+  if (!husstand) return;
+  alleModtagere
+    .filter(m => m.nr.startsWith(husstand + "-") && m.email)
+    .forEach(m => valgteMail.set(m.nr, { navn: m.navn, email: m.email }));
+  tegnModtagere(alleModtagere, "mail");
+  tegnValgte("mail");
+}
 
 window.vaelgAlleMail = function(){
   document.querySelectorAll('#modtager-liste-mail input[type=checkbox]').forEach(cb => {

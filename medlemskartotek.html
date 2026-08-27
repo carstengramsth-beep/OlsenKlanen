@@ -811,6 +811,7 @@ function byggKort(m) {
         ? `<button class="rediger-knap ${erEgen ? 'egen-rediger' : ''}" data-nr="${m.nr}" style="display:inline-block">✏️ Rediger</button>`
         : `<button class="rediger-knap ${erEgen ? 'egen-rediger' : ''}" data-nr="${m.nr}">✏️ Rediger</button>`}
       <button class="brev-knap" data-brev-nr="${m.nr}">📋 Velkomstbrev</button>
+      <button class="brev-knap post-knap" data-post-nr="${m.nr}">✉️ Send velkomstmail</button>
     </div>`;
   return el;
 }
@@ -1032,6 +1033,12 @@ document.getElementById('grid').addEventListener('click', e => {
   if (e.target.closest('.rediger-knap')) {
     e.stopPropagation();
     aabneEditModal(e.target.closest('.rediger-knap').dataset.nr);
+    return;
+  }
+  if (e.target.closest('.post-knap')) {
+    e.stopPropagation();
+    const nr = e.target.closest('.post-knap').dataset.postNr;
+    window.location.href = "meddelelser.html?husstand=" + encodeURIComponent(nr) + "&emne=" + encodeURIComponent("Velkommen til OlsenKlanen");
     return;
   }
   if (e.target.closest('.brev-knap')) {
