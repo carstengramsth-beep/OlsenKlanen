@@ -985,8 +985,10 @@ function lavVelkomstbrev(nr) {
   .knap-linje a{background:#1B4332;color:#fff;text-decoration:none;padding:9px 24px;border-radius:6px;font-weight:bold}
   .print-vejledning{background:#eef4ea;border-radius:6px;padding:10px 16px;font-size:13px;color:#40613a;margin:12px 0}
   .fod{margin-top:12px;padding-top:8px;border-top:1px solid #9a7d0a;font-size:12px;color:#555}
-.print-knap{display:block;margin:12px auto 0;background:#1B4332;color:#fff;border:none;padding:11px 30px;font-size:15px;font-weight:bold;border-radius:6px;cursor:pointer;font-family:Georgia,serif;letter-spacing:.5px}
+.print-knap{display:inline-block;margin:12px 6px 0;background:#1B4332;color:#fff;border:none;padding:11px 26px;font-size:15px;font-weight:bold;border-radius:6px;cursor:pointer;font-family:Georgia,serif;letter-spacing:.5px;text-decoration:none}
 .print-knap:hover{background:#2d6e50}
+.knap-rk{text-align:center}
+@media print{.knap-rk{display:none}}
 .afsender{margin-top:10px;padding-top:8px;border-top:1px solid #9a7d0a;font-size:12px;color:#888;text-align:center;line-height:1.5}
 @media print{.print-knap{display:none}}
   @media print{ .print-vejledning{display:none} }
@@ -994,8 +996,11 @@ function lavVelkomstbrev(nr) {
 <h1>OlsenKlanen</h1>
 <p class="under">Familiens egen hjemmeside</p>
  
-<p class="print-vejledning">📄 <b>Sådan gemmer du brevet som PDF:</b> Tryk på knappen nedenfor (eller Ctrl+P). Vælg <b>"Gem som PDF"</b>, og giv den navnet <b>Velkomstbrev-${m.nr}</b>. Denne grå boks og knappen kommer ikke med i PDF'en.</p>
+<p class="print-vejledning">📄 <b>Sådan gemmer du brevet som PDF:</b> Tryk på knappen nedenfor (eller Ctrl+P). Vælg <b>"Gem som PDF"</b>, og giv den navnet <b>Velkomstbrev-${m.nr}</b>. Denne grå boks og knapperne kommer ikke med i PDF'en.</p>
+<div class="knap-rk">
 <button class="print-knap" onclick="window.print()">🖨️ Gem som PDF / Print</button>
+<a class="print-knap" href="meddelelser.html?husstand=${encodeURIComponent(m.nr)}&emne=${encodeURIComponent('Velkommen til OlsenKlanen')}">✉️ Send som velkomstmail</a>
+</div>
  
 <p>Kære ${husstandsNavn},</p>
 <p>Velkommen til OlsenKlanen — vores helt egen familieside. Her holder vi sammen på det hele: navne og fødselsdage, billeder gennem årene, familiens historie, og en videofon, hvor vi kan se og snakke sammen.</p>
