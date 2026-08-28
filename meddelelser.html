@@ -413,9 +413,13 @@ async function hentModtagere() {
     alleModtagere = liste;
     tegnModtagere(liste, "mail");
     tegnModtagere(liste, "intern");
-    forudvaelgFraLink();
+    forudvaelgModtagereFraLink();
   } catch(e) {
     console.log("Modtager-fejl:", e);
+    ["modtager-liste-mail", "modtager-liste-intern"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '<div class="tom">Kunne ikke hente medlemmer. Genindlæs siden (Ctrl+F5) og prøv igen.</div>';
+    });
   }
 }
 
@@ -506,10 +510,12 @@ window.filtrerMail = function(){
 };
 
 let velkomstbrevTekst = "";
+let husstandFraLink = null;
 
-function forudvaelgFraLink(){
+// Udfylder emne + brevtekst med det samme — venter ikke på medlemslisten
+function forudvaelgFraLinkOevrigt(){
   const param = new URLSearchParams(window.location.search);
-  const husstand = param.get("husstand");
+  husstandFraLink = param.get("husstand");
   const emne = param.get("emne");
   const brev = param.get("brev");
   if (emne) {
@@ -521,9 +527,14 @@ function forudvaelgFraLink(){
     document.getElementById("velkomstbrev-boks").style.display = "block";
     document.getElementById("velkomstbrev-forhaandsvisning").textContent = brev;
   }
-  if (!husstand) return;
+}
+forudvaelgFraLinkOevrigt();
+
+// Vælger modtagere fra husstanden — kræver at medlemslisten er hentet først
+function forudvaelgModtagereFraLink(){
+  if (!husstandFraLink) return;
   alleModtagere
-    .filter(m => m.nr.startsWith(husstand + "-") && m.email)
+    .filter(m => m.nr.startsWith(husstandFraLink + "-") && m.email)
     .forEach(m => valgteMail.set(m.nr, { navn: m.navn, email: m.email }));
   tegnModtagere(alleModtagere, "mail");
   tegnValgte("mail");
