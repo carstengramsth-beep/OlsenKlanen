@@ -943,6 +943,45 @@ function renderGrid() {
   synlige.forEach(m => grid.appendChild(byggKort(m)));
 }
  
+// ── Ren tekst-udgave af velkomstbrevet (til brug i OlsenPost-mail) ──
+function byggVelkomstTekst(m) {
+  const husstandsNavn = visNavn(m);
+  const kode = m.kode || 'Olsen-' + String(m.nr).split('-')[0];
+  const personer = (m.familiemedlemmer || []).filter(p => (visPersonNavn(p) || p.navn));
+  let loginLinjer;
+  if (personer.length) {
+    loginLinjer = personer.map((p, i) => {
+      const bogstav = String.fromCharCode(65 + i);
+      const persNr = String(m.nr).includes('-') ? m.nr : (m.nr + '-' + bogstav);
+      return `${visPersonNavn(p) || p.navn}: ${persNr}`;
+    }).join('\n');
+  } else {
+    loginLinjer = `${husstandsNavn}: ${m.nr}`;
+  }
+  return `Kære ${husstandsNavn},
+
+Velkommen til OlsenKlanen — vores helt egen familieside. Her holder vi sammen på det hele: navne og fødselsdage, billeder gennem årene, familiens historie, og en videofon, hvor vi kan se og snakke sammen.
+
+SÅDAN LOGGER DU IND
+Gå ind på https://www.olsenklanen.dk og log ind med dit personlige medlemsnummer og PIN-koden nedenfor:
+
+${loginLinjer}
+
+Fælles start-PIN: ${kode}
+
+SKIFT DIN PIN-KODE
+PIN-koden ovenfor er blot en startkode. Vil du have den ændret til noget, du selv vælger, så sig til Carsten eller Karin — så retter vi den for dig.
+
+FØRSTE GANG: BEKRÆFT DINE OPLYSNINGER
+Når du er logget ind, så gå ind i Medlemskartoteket, find dit eget navn og klik på det. Klik på ✏️ Rediger, og tjek at navn, fødselsdag, adresse, telefon og mail passer — ret det, der er forkert.
+
+Har du en mærkedag på vej — fødselsdag, jubilæum eller diamantbryllup? Så tryk på ➕ Begivenhed, vælg type og dato, og skriv gerne en lille besked til forsiden, som vises på selve dagen.
+
+Til sidst trykker du på den gule knap ✓ Bekræft data og medlemskab nederst. Så er dine rettelser gemt, og du er registreret som aktivt medlem.
+
+Vi glæder os til at se dig aktiv derinde. Har du spørgsmål, så sig endelig til.`;
+}
+
 // ── VELKOMSTBREV (kun admin) ──────────────────────────────────
 function lavVelkomstbrev(nr) {
   const m = data.find(x => sammeNr(x.nr, nr));
@@ -999,7 +1038,7 @@ function lavVelkomstbrev(nr) {
 <p class="print-vejledning">📄 <b>Sådan gemmer du brevet som PDF:</b> Tryk på knappen nedenfor (eller Ctrl+P). Vælg <b>"Gem som PDF"</b>, og giv den navnet <b>Velkomstbrev-${m.nr}</b>. Denne grå boks og knapperne kommer ikke med i PDF'en.</p>
 <div class="knap-rk">
 <button class="print-knap" onclick="window.print()">🖨️ Gem som PDF / Print</button>
-<a class="print-knap" href="meddelelser.html?husstand=${encodeURIComponent(m.nr)}&emne=${encodeURIComponent('Velkommen til OlsenKlanen')}">✉️ Send som velkomstmail</a>
+<a class="print-knap" href="meddelelser.html?husstand=${encodeURIComponent(m.nr)}&emne=${encodeURIComponent('Velkommen til OlsenKlanen')}&brev=${encodeURIComponent(byggVelkomstTekst(m))}">✉️ Send som velkomstmail</a>
 </div>
  
 <p>Kære ${husstandsNavn},</p>
@@ -1043,7 +1082,9 @@ document.getElementById('grid').addEventListener('click', e => {
   if (e.target.closest('.post-knap')) {
     e.stopPropagation();
     const nr = e.target.closest('.post-knap').dataset.postNr;
-    window.location.href = "meddelelser.html?husstand=" + encodeURIComponent(nr) + "&emne=" + encodeURIComponent("Velkommen til OlsenKlanen");
+    const m = data.find(x => sammeNr(x.nr, nr));
+    const brevTekst = m ? byggVelkomstTekst(m) : '';
+    window.location.href = "meddelelser.html?husstand=" + encodeURIComponent(nr) + "&emne=" + encodeURIComponent("Velkommen til OlsenKlanen") + "&brev=" + encodeURIComponent(brevTekst);
     return;
   }
   if (e.target.closest('.brev-knap')) {

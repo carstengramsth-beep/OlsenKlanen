@@ -498,9 +498,14 @@ function forudvaelgFraLink(){
   const param = new URLSearchParams(window.location.search);
   const husstand = param.get("husstand");
   const emne = param.get("emne");
+  const brev = param.get("brev");
   if (emne) {
     const emneFelt = document.getElementById("emne");
     if (emneFelt) emneFelt.value = emne;
+  }
+  if (brev) {
+    const tekstFelt = document.getElementById("tekst-mail");
+    if (tekstFelt && !tekstFelt.value) tekstFelt.value = brev;
   }
   if (!husstand) return;
   alleModtagere
