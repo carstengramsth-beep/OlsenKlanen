@@ -172,7 +172,18 @@ try {
       <input type="text" id="emne" class="felt" placeholder="Skriv emne her …" maxlength="100">
 
       <label for="tekst-mail">Din besked</label>
-      <textarea id="tekst-mail" placeholder="Skriv din besked her …&#10;&#10;Hilsen og dit navn tilføjes automatisk nederst.&#10;&#10;Tip: du kan indsætte (Ctrl+V) et kopieret billede direkte her i feltet."></textarea>
+      <textarea id="tekst-mail" placeholder="Skriv din personlige besked her …&#10;&#10;Hilsen og dit navn tilføjes automatisk nederst.&#10;&#10;Tip: du kan indsætte (Ctrl+V) et kopieret billede direkte her i feltet."></textarea>
+
+      <div id="velkomstbrev-boks" style="display:none; margin-top:10px;">
+        <label style="display:flex; align-items:center; gap:8px; margin-top:0;">
+          <input type="checkbox" id="inkluder-velkomstbrev" checked style="width:18px; height:18px;">
+          Vedlæg velkomstbrevets login-oplysninger nederst i mailen
+        </label>
+        <details style="margin-top:6px;">
+          <summary style="cursor:pointer; font-size:13px; color:#555;">Se hvad der bliver vedlagt</summary>
+          <div id="velkomstbrev-forhaandsvisning" style="white-space:pre-wrap; font-size:13px; color:#555; background:#fdfbf5; border:1px solid #e0d8bd; border-radius:6px; padding:10px; margin-top:6px;"></div>
+        </details>
+      </div>
 
       <label for="vedhaeft-fil">Vedhæft et billede (valgfrit)</label>
       <input type="file" id="vedhaeft-fil" class="felt" accept="image/*">
@@ -494,6 +505,8 @@ window.filtrerMail = function(){
   tegnModtagere(s ? alleModtagere.filter(m => m.soegetekst.includes(s)) : alleModtagere, "mail");
 };
 
+let velkomstbrevTekst = "";
+
 function forudvaelgFraLink(){
   const param = new URLSearchParams(window.location.search);
   const husstand = param.get("husstand");
@@ -504,8 +517,9 @@ function forudvaelgFraLink(){
     if (emneFelt) emneFelt.value = emne;
   }
   if (brev) {
-    const tekstFelt = document.getElementById("tekst-mail");
-    if (tekstFelt && !tekstFelt.value) tekstFelt.value = brev;
+    velkomstbrevTekst = brev;
+    document.getElementById("velkomstbrev-boks").style.display = "block";
+    document.getElementById("velkomstbrev-forhaandsvisning").textContent = brev;
   }
   if (!husstand) return;
   alleModtagere
@@ -550,13 +564,18 @@ window.sendMail = async function(){
    if (!ER_POSTANSVARLIG) { alert("Kun postansvarlige kan sende mails til medlemmer."); return; }
    if (!auth.currentUser) { alert("Bekræft din PIN-kode øverst på siden først."); return; }
   const emne = document.getElementById("emne").value.trim();
-  const tekst = document.getElementById("tekst-mail").value.trim();
+  const personligTekst = document.getElementById("tekst-mail").value.trim();
+  const inkluderKnap = document.getElementById("inkluder-velkomstbrev");
+  const inkluderVelkomst = velkomstbrevTekst && inkluderKnap && inkluderKnap.checked;
+  const tekst = inkluderVelkomst
+    ? (personligTekst ? personligTekst + "\n\n" + velkomstbrevTekst : velkomstbrevTekst)
+    : personligTekst;
   const statusEl = document.getElementById("send-mail-status");
   const knap = document.getElementById("send-mail-knap");
 
   if (!valgteMail.size) { vis(statusEl, "fejl", "Vælg mindst én modtager."); return; }
   if (!emne)            { vis(statusEl, "fejl", "Skriv et emne."); return; }
-  if (!tekst)           { vis(statusEl, "fejl", "Skriv en besked."); return; }
+  if (!tekst)           { vis(statusEl, "fejl", "Skriv en besked, eller vedlæg velkomstbrevet."); return; }
 
   knap.disabled = true;
   vis(statusEl, "ok", "⏳ Sender mail …");
@@ -637,6 +656,8 @@ window.sendMail = async function(){
   document.getElementById("emne").value = "";
   document.getElementById("tekst-mail").value = "";
   fjernVedhaeft();
+  velkomstbrevTekst = "";
+  document.getElementById("velkomstbrev-boks").style.display = "none";
   valgteMail.clear(); tegnValgte("mail");
   document.querySelectorAll('#modtager-liste-mail input').forEach(cb => cb.checked = false);
   knap.disabled = false;
