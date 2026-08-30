@@ -191,9 +191,9 @@ try {
       <div class="hint">Eller indsæt (Ctrl+V) et kopieret billede direkte i beskedfeltet ovenfor. Billedet lægges i arkivet, og mailen får automatisk et link, modtageren kan klikke på.</div>
       <div id="vedhaeft-forhaandsvisning"></div>
 
-      <div id="billedbibliotek-boks" style="margin-top:10px; display:none;">
-        <div class="hint" style="margin-bottom:6px;">Eller genbrug et tidligere billede:</div>
-        <div id="billedbibliotek-liste" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:6px;"></div>
+      <div id="billedbibliotek-boks" style="margin-top:14px;">
+        <div class="hint" style="margin-bottom:6px;">Eller genbrug et tidligere billede fra biblioteket:</div>
+        <div id="billedbibliotek-liste" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:6px;"><div class="indlaeser">Henter …</div></div>
       </div>
 
       <button class="knap" id="send-mail-knap" onclick="sendMail()">📨 Send mail fra post@olsenklanen.dk</button>
@@ -536,24 +536,61 @@ window.fjernValgt = function(type, nr){
   if (type === "mail") gemKladde();
 };
 
-/* ════════ VEDHÆFTET BILLEDE (fil-valg eller indsæt kopieret billede) ════════ */
+/* ════════ VEDHÆFTET BILLEDE (fil-valg, indsæt kopieret billede, eller genbrug fra bibliotek) ════════ */
 let vedhaeftetFil = null;
+let vedhaeftetEksisterendeUrl = null;
 
 function visVedhaeftPreview(fil){
   vedhaeftetFil = fil;
+  vedhaeftetEksisterendeUrl = null;
   const el = document.getElementById("vedhaeft-forhaandsvisning");
   el.innerHTML = `
-    <div style="margin-top:10px; display:flex; align-items:center; gap:10px;">
+    <div style="margin-top:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
       <img src="${URL.createObjectURL(fil)}" style="max-width:120px; max-height:120px; border-radius:6px; border:1px solid #c8bfa0;">
-      <button type="button" onclick="fjernVedhaeft()" style="background:#f8d7da; border:1px solid #e0a8ae; color:#721c24; border-radius:14px; padding:6px 12px; cursor:pointer; font-family:inherit;">✕ Fjern billede</button>
+      <div>
+        <label for="vedhaeft-navn" style="margin:0 0 4px;">Navn på billedet (valgfrit, så du kan genkende det i biblioteket senere)</label>
+        <input type="text" id="vedhaeft-navn" class="felt" placeholder="fx Forsiden 30/8" maxlength="60">
+      </div>
+      <button type="button" onclick="fjernVedhaeft()" style="background:#f8d7da; border:1px solid #e0a8ae; color:#721c24; border-radius:14px; padding:6px 12px; cursor:pointer; font-family:inherit; align-self:flex-start;">✕ Fjern billede</button>
     </div>`;
 }
 
+window.vaelgFraBibliotek = function(url, navn){
+  vedhaeftetFil = null;
+  vedhaeftetEksisterendeUrl = url;
+  const el = document.getElementById("vedhaeft-forhaandsvisning");
+  el.innerHTML = `
+    <div style="margin-top:10px; display:flex; align-items:center; gap:10px;">
+      <img src="${url}" style="max-width:120px; max-height:120px; border-radius:6px; border:1px solid #c8bfa0;">
+      <div style="font-size:13px; color:#555;">${escHtml(navn || "(uden navn)")}</div>
+      <button type="button" onclick="fjernVedhaeft()" style="background:#f8d7da; border:1px solid #e0a8ae; color:#721c24; border-radius:14px; padding:6px 12px; cursor:pointer; font-family:inherit;">✕ Fjern billede</button>
+    </div>`;
+};
+
 window.fjernVedhaeft = function(){
   vedhaeftetFil = null;
+  vedhaeftetEksisterendeUrl = null;
   document.getElementById("vedhaeft-forhaandsvisning").innerHTML = "";
   document.getElementById("vedhaeft-fil").value = "";
 };
+
+async function hentBilledbibliotek(){
+  const el = document.getElementById("billedbibliotek-liste");
+  try {
+    const snap = await getDocs(query(collection(db, "olsenpost_billeder"), orderBy("uploadet_lokal", "desc")));
+    const billeder = snap.docs.map(d => d.data()).slice(0, 15);
+    if (!billeder.length) { el.innerHTML = '<div class="hint" style="margin:0;">Ingen billeder i biblioteket endnu — det fyldes op, når I vedhæfter nye billeder.</div>'; return; }
+    el.innerHTML = billeder.map(b => `
+      <div style="flex:0 0 auto; text-align:center; cursor:pointer; width:80px;" onclick="vaelgFraBibliotek('${b.url}','${escHtml(b.navn || '').replace(/'/g,"&#39;")}')">
+        <img src="${b.url}" style="width:80px; height:80px; object-fit:cover; border-radius:6px; border:1px solid #c8bfa0;">
+        <div style="font-size:11px; color:#555; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(b.navn || "uden navn")}</div>
+      </div>`).join("");
+  } catch(e) {
+    console.log("Billedbibliotek-fejl:", e);
+    el.innerHTML = '<div class="hint" style="margin:0;">Kunne ikke hente biblioteket.</div>';
+  }
+}
+hentBilledbibliotek();
 
 document.getElementById("vedhaeft-fil").addEventListener("change", e => {
   if (e.target.files[0]) visVedhaeftPreview(e.target.files[0]);
@@ -707,13 +744,23 @@ window.sendMail = async function(){
   knap.disabled = true;
   vis(statusEl, "ok", "⏳ Sender mail …");
 
-  let vedhaeftUrl = null;
+  let vedhaeftUrl = vedhaeftetEksisterendeUrl || null;
   if (vedhaeftetFil) {
     try {
       vis(statusEl, "ok", "⏳ Lægger billede op …");
       const sti = `olsenpost_vedhaeftninger/${Date.now()}_${vedhaeftetFil.name.replace(/[^\w.\-]/g,"_")}`;
       await uploadBytes(ref(storage, sti), vedhaeftetFil);
       vedhaeftUrl = await getDownloadURL(ref(storage, sti));
+      const navnFelt = document.getElementById("vedhaeft-navn");
+      await addDoc(collection(db, "olsenpost_billeder"), {
+        storage_sti: sti,
+        url: vedhaeftUrl,
+        navn: (navnFelt && navnFelt.value.trim()) || "",
+        uploadet_af_navn: MIT_NAVN,
+        uploadet: serverTimestamp(),
+        uploadet_lokal: Date.now()
+      });
+      hentBilledbibliotek();
       vis(statusEl, "ok", "⏳ Sender mail …");
     } catch(e) {
       console.log("Vedhæft-fejl:", e);

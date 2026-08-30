@@ -103,6 +103,11 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    match /olsenpost_billeder/{id} {
+      allow read: if true;
+      allow write: if erPostansvarlig();
+    }
+
     match /gamle_billeder/{id} {
       allow read, write: if true;
     }
