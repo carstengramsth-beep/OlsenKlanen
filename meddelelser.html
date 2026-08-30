@@ -143,6 +143,7 @@ try {
     <button class="fane" id="fane-sendt" onclick="visFane('sendt')">📤 Sendte mails</button>
     <button class="fane" id="fane-intern" onclick="visFane('intern')">💬 Intern besked</button>
     <button class="fane" id="fane-vagt" onclick="visFane('vagt')" style="display:none">📅 Postvagt</button>
+    <button class="fane" id="fane-hjaelp" onclick="visFane('hjaelp')">❓ Sådan virker det</button>
   </div>
 
   <!-- ════════ SEND MAIL ════════ -->
@@ -252,6 +253,65 @@ try {
     </div>
     <div class="kort">
       <div id="vagt-tabel"><div class="indlaeser">Henter vagtplan …</div></div>
+    </div>
+  </div>
+
+  <!-- ════════ SÅDAN VIRKER DET (hjælp) ════════ -->
+  <div id="omr-hjaelp" style="display:none">
+    <div class="info-boks">
+      <strong>❓ Brugsanvisning til OlsenPost</strong>
+      En hurtig genopfriskning — så du ikke skal huske det hele udenad.
+    </div>
+
+    <div class="kort">
+      <h2>Hvem må sende mail?</h2>
+      <p class="hint">Kun de 5 postansvarlige kan sende mail med post@olsenklanen.dk som afsender: Carsten Gram, Kurt Vormslev Olsen, Sanne Gram Fadel, Tommy Vormslev Olsen og Karin Lund. Det er låst af selve databasen, ikke kun af hjemmesiden — så ingen andre kan omgå det.</p>
+    </div>
+
+    <div class="kort">
+      <h2>🔒 Første gang du åbner OlsenPost</h2>
+      <p class="hint">Er du en af de 5, bliver du bedt om at bekræfte din PIN-kode (samme PIN, som du logger ind med) øverst på siden. Det skal du kun gøre én gang pr. besøg — det er en sikkerhedstjek, der beviser, at det virkelig er dig.</p>
+    </div>
+
+    <div class="kort">
+      <h2>📨 Send en almindelig mail til et medlem</h2>
+      <p class="hint">
+        1. Gå til fanen "Send mail til medlem".<br>
+        2. Søg på navn, og klik for at vælge modtager(e) — du kan vælge flere ved at søge og klikke igen for hver.<br>
+        3. Brug "Vælg alle" for at ramme alle medlemmer med registreret mail på én gang (ryd søgefeltet først, ellers rammer den kun de søgte).<br>
+        4. Skriv emne og din besked.<br>
+        5. Vedhæft evt. et billede: vælg en fil, eller indsæt (Ctrl+V) et kopieret billede direkte i beskedfeltet. Billedet lægges i arkivet, og modtageren får et link — ikke en rigtig vedhæftet fil.<br>
+        6. Tryk "Send mail fra post@olsenklanen.dk".
+      </p>
+    </div>
+
+    <div class="kort">
+      <h2>✉️ Send en velkomst-/aktiveringsmail</h2>
+      <p class="hint">
+        Gå til <b>Medlemskartoteket</b>, find husstanden, og klik enten "✉️ Send velkomstmail" på selve kortet, eller åbn "📋 Velkomstbrev" først og klik knappen der.<br><br>
+        Det tager dig til OlsenPost med husstandens medlemmer, emnet og selve brevteksten (login-numre og PIN) allerede udfyldt. Du kan altid:<br>
+        • Skrive en personlig besked i "Din besked" — den kommer først, brevteksten nedenunder.<br>
+        • Fjerne krydset i "Vedlæg velkomstbrevets login-oplysninger", hvis du ikke vil have det med.<br>
+        • Fjerne modtagere, du ikke vil sende til, i den grønne "Du sender til"-boks.
+      </p>
+    </div>
+
+    <div class="kort">
+      <h2>💬 Forskellen på "Send mail" og "Intern besked"</h2>
+      <p class="hint">
+        <b>Send mail til medlem</b> sender en rigtig e-mail til medlemmets private mailadresse — kun de 5 må gøre det.<br>
+        <b>Intern besked</b> vises kun inde på selve hjemmesiden, ikke i privat mail — det må alle medlemmer bruge, ikke kun de 5.
+      </p>
+    </div>
+
+    <div class="kort">
+      <h2>📅 Postvagt</h2>
+      <p class="hint">En oversigt, hvor I 5 selv markerer, om I er "på vagt" og forventes at svare på indkomne mails. Det styrer ikke noget teknisk — det er kun til overblik for jer selv.</p>
+    </div>
+
+    <div class="kort">
+      <h2>📥 Indkomne mails — kendt begrænsning</h2>
+      <p class="hint">Rigtige svar, der sendes til post@olsenklanen.dk, lander <b>ikke</b> automatisk her endnu — det kræver en teknisk robot, der ikke er bygget færdig. Indtil da videresendes rigtige mails til post@olsenklanen.dk i stedet direkte til jeres egne private mailadresser via Simply.coms videresendelse.</p>
     </div>
   </div>
 
@@ -859,7 +919,7 @@ window.sendIntern = async function(){
 
 /* ════════ FANER ════════ */
 window.visFane = function(navn){
-  ["send","indbakke","sendt","intern","vagt"].forEach(f => {
+  ["send","indbakke","sendt","intern","vagt","hjaelp"].forEach(f => {
     document.getElementById("omr-"+f).style.display = (f===navn)?"block":"none";
     document.getElementById("fane-"+f).classList.toggle("aktiv", f===navn);
   });
