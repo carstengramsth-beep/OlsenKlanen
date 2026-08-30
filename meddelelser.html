@@ -191,6 +191,11 @@ try {
       <div class="hint">Eller indsæt (Ctrl+V) et kopieret billede direkte i beskedfeltet ovenfor. Billedet lægges i arkivet, og mailen får automatisk et link, modtageren kan klikke på.</div>
       <div id="vedhaeft-forhaandsvisning"></div>
 
+      <div id="billedbibliotek-boks" style="margin-top:10px; display:none;">
+        <div class="hint" style="margin-bottom:6px;">Eller genbrug et tidligere billede:</div>
+        <div id="billedbibliotek-liste" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:6px;"></div>
+      </div>
+
       <button class="knap" id="send-mail-knap" onclick="sendMail()">📨 Send mail fra post@olsenklanen.dk</button>
       <div class="status" id="send-mail-status"></div>
     </div>
@@ -326,7 +331,7 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, setD
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getStorage, ref, uploadBytes, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -504,6 +509,7 @@ function tegnModtagere(liste, type) {
       const email = e.target.dataset.email;
       if (e.target.checked) valgte.set(nr, {navn, email}); else valgte.delete(nr);
       tegnValgte(type);
+      if (type === "mail") gemKladde();
     });
   });
 }
@@ -527,6 +533,7 @@ window.fjernValgt = function(type, nr){
   tegnValgte(type);
   const cb = document.querySelector(`#modtager-liste-${type} input[data-nr="${nr}"]`);
   if (cb) cb.checked = false;
+  if (type === "mail") gemKladde();
 };
 
 /* ════════ VEDHÆFTET BILLEDE (fil-valg eller indsæt kopieret billede) ════════ */
@@ -590,12 +597,59 @@ function forudvaelgFraLinkOevrigt(){
 }
 forudvaelgFraLinkOevrigt();
 
+/* ════════ KLADDE (auto-gem, så tekst ikke går tabt ved genindlæsning) ════════ */
+const KLADDE_NOEGLE = "olsenpost_kladde_mail";
+
+window.gemKladde = function(){
+  try {
+    const kladde = {
+      emne: document.getElementById("emne").value,
+      tekst: document.getElementById("tekst-mail").value,
+      modtagere: Array.from(valgteMail.entries()),
+      velkomstbrevTekst: velkomstbrevTekst,
+      inkluderVelkomst: document.getElementById("inkluder-velkomstbrev") ? document.getElementById("inkluder-velkomstbrev").checked : true
+    };
+    localStorage.setItem(KLADDE_NOEGLE, JSON.stringify(kladde));
+  } catch(e) { console.log("Kunne ikke gemme kladde:", e); }
+};
+
+window.ryddKladde = function(){
+  try { localStorage.removeItem(KLADDE_NOEGLE); } catch(e) {}
+};
+
+function genskabKladdeHvisIngenLink(){
+  const param = new URLSearchParams(window.location.search);
+  if (param.get("husstand") || param.get("emne") || param.get("brev")) return; // et link har altid forrang
+  try {
+    const raa = localStorage.getItem(KLADDE_NOEGLE);
+    if (!raa) return;
+    const kladde = JSON.parse(raa);
+    if (kladde.emne) document.getElementById("emne").value = kladde.emne;
+    if (kladde.tekst) document.getElementById("tekst-mail").value = kladde.tekst;
+    if (Array.isArray(kladde.modtagere)) {
+      kladde.modtagere.forEach(([nr, data]) => valgteMail.set(nr, data));
+    }
+    if (kladde.velkomstbrevTekst) {
+      velkomstbrevTekst = kladde.velkomstbrevTekst;
+      document.getElementById("velkomstbrev-boks").style.display = "block";
+      document.getElementById("velkomstbrev-forhaandsvisning").textContent = velkomstbrevTekst;
+      document.getElementById("inkluder-velkomstbrev").checked = !!kladde.inkluderVelkomst;
+    }
+  } catch(e) { console.log("Kunne ikke genskabe kladde:", e); }
+}
+genskabKladdeHvisIngenLink();
+
+document.getElementById("emne").addEventListener("input", gemKladde);
+document.getElementById("tekst-mail").addEventListener("input", gemKladde);
+document.getElementById("inkluder-velkomstbrev") && document.getElementById("inkluder-velkomstbrev").addEventListener("change", gemKladde);
+
 // Vælger modtagere fra husstanden — kræver at medlemslisten er hentet først
 function forudvaelgModtagereFraLink(){
-  if (!husstandFraLink) return;
-  alleModtagere
-    .filter(m => m.nr.startsWith(husstandFraLink + "-") && m.email)
-    .forEach(m => valgteMail.set(m.nr, { navn: m.navn, email: m.email }));
+  if (husstandFraLink) {
+    alleModtagere
+      .filter(m => m.nr.startsWith(husstandFraLink + "-") && m.email)
+      .forEach(m => valgteMail.set(m.nr, { navn: m.navn, email: m.email }));
+  }
   tegnModtagere(alleModtagere, "mail");
   tegnValgte("mail");
 }
@@ -606,11 +660,13 @@ window.vaelgAlleMail = function(){
     valgteMail.set(cb.dataset.nr, {navn: cb.dataset.navn, email: cb.dataset.email});
   });
   tegnValgte("mail");
+  gemKladde();
 };
 window.nulstilAlleMail = function(){
   valgteMail.clear();
   document.querySelectorAll('#modtager-liste-mail input[type=checkbox]').forEach(cb => cb.checked = false);
   tegnValgte("mail");
+  gemKladde();
 };
 window.filtrerIntern = function(){
   const s = document.getElementById("sog-intern").value.trim().toLowerCase();
@@ -731,6 +787,7 @@ window.sendMail = async function(){
   document.getElementById("velkomstbrev-boks").style.display = "none";
   valgteMail.clear(); tegnValgte("mail");
   document.querySelectorAll('#modtager-liste-mail input').forEach(cb => cb.checked = false);
+  ryddKladde();
   knap.disabled = false;
   if (document.getElementById("omr-sendt").style.display !== "none") tegnSendt();
 };
