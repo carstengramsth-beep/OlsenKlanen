@@ -7,7 +7,9 @@
   "main": "index.js",
   "dependencies": {
     "firebase-admin": "^14.3.0",
-    "firebase-functions": "^7.3.2"
+    "firebase-functions": "^7.3.2",
+    "imapflow": "^1.7.6",
+    "mailparser": "^3.9.17"
   },
   "private": true
 }

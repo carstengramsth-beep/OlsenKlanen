@@ -7,6 +7,15 @@
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "anmodet", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "olsenpost_mail",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "til_email", "order": "ASCENDING" },
+        { "fieldPath": "besvaret", "order": "ASCENDING" },
+        { "fieldPath": "sendt_lokal", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
