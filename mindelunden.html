@@ -166,6 +166,20 @@ body {
 }
 .omtale-tekst { font-size: 13px; color: #2c3e1f; line-height: 1.5; white-space: pre-wrap; }
 .omtale-fra { font-size: 11.5px; color: #8a8a70; margin-top: 4px; font-style: italic; }
+.omtale-ret-knap {
+  margin-top: 6px;
+  background: none;
+  border: 1px solid #c89e3c;
+  color: #8a6500;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 11.5px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.omtale-ret-knap:hover { background: #fff8e1; }
+.omtale-annuller-knap { background: #8a8a70; margin-left: 6px; }
+.omtale-annuller-knap:hover { background: #6b6b55; }
 
 .omtale-form {
   margin-top: 12px;
@@ -230,7 +244,7 @@ body {
 <script type="module">
 import { initializeApp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, serverTimestamp }
+import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -261,6 +275,13 @@ function maaSkriveOmtale(afdoedHusstandsNr) {
   if (!MIT_NR) return false;
   if (MIT_NIVEAU === 'admin') return true;
   return husstandsAf(MIT_NR) === husstandsAf(afdoedHusstandsNr);
+}
+
+// Kun forfatteren selv og administratorer må rette et mindeord
+function kanRetteOmtale(o) {
+  if (!MIT_NR) return false;
+  if (MIT_NIVEAU === 'admin') return true;
+  return !!o.fra_nr && String(o.fra_nr).trim() === String(MIT_NR).trim();
 }
 
 // Stabil nøgle til at identificere en bestemt afdød person på tværs af sidevisninger
@@ -311,7 +332,8 @@ function mindekortHtml(p) {
     ? `<div class="omtale-liste">${omtalerListe.map(o => `
         <div class="omtale-rad">
           <div class="omtale-tekst">${escHtmlMinde(o.tekst)}</div>
-          <div class="omtale-fra">— ${escHtmlMinde(o.fra_navn || 'Anonym')}${o.dato ? ', ' + escHtmlMinde(o.dato) : ''}</div>
+          <div class="omtale-fra">— ${escHtmlMinde(o.fra_navn || 'Anonym')}${o.dato ? ', ' + escHtmlMinde(o.dato) : ''}${o.redigeret_dato ? ' (rettet ' + escHtmlMinde(o.redigeret_dato) + ')' : ''}</div>
+          ${kanRetteOmtale(o) ? `<button type="button" class="omtale-ret-knap" data-id="${enc(o.id)}">✏️ Ret</button>` : ''}
         </div>`).join('')}</div>`
     : '';
 
@@ -352,7 +374,7 @@ async function hentOmtaler() {
       const o = d.data();
       if (!o.noegle) return;
       if (!map[o.noegle]) map[o.noegle] = [];
-      map[o.noegle].push(o);
+      map[o.noegle].push({ ...o, id: d.id });
     });
     // Ældste omtale først
     Object.values(map).forEach(liste => liste.sort((a, b) => (a.tidsstempel_lokal||0) - (b.tidsstempel_lokal||0)));
@@ -448,6 +470,61 @@ document.getElementById('indhold').addEventListener('click', async e => {
     const besked = (err && err.message) ? err.message : String(err);
     if (statusEl) statusEl.textContent = '✗ Kunne ikke gemme. Fejlkode: ' + kode + ' — ' + besked;
     knap.disabled = false;
+  }
+});
+
+// ── RET ET EKSISTERENDE MINDEORD ─────────────────────────────────
+document.getElementById('indhold').addEventListener('click', async e => {
+  const retKnap      = e.target.closest('.omtale-ret-knap');
+  const gemKnap      = e.target.closest('.omtale-gem-knap');
+  const annullerKnap = e.target.closest('.omtale-annuller-knap');
+  if (!retKnap && !gemKnap && !annullerKnap) return;
+
+  if (annullerKnap) {
+    hentAfdoede();
+    return;
+  }
+
+  if (retKnap) {
+    const rad = retKnap.closest('.omtale-rad');
+    const nuvaerende = rad.querySelector('.omtale-tekst').textContent;
+    rad.innerHTML = `
+      <textarea class="omtale-input omtale-ret-felt">${escHtmlMinde(nuvaerende)}</textarea>
+      <button type="button" class="omtale-knap omtale-gem-knap" data-id="${enc(retKnap.dataset.id)}">Gem rettelse</button>
+      <button type="button" class="omtale-knap omtale-annuller-knap">Annuller</button>
+      <div class="omtale-status"></div>`;
+    rad.querySelector('.omtale-ret-felt').focus();
+    return;
+  }
+
+  if (gemKnap) {
+    const rad      = gemKnap.closest('.omtale-rad');
+    const felt     = rad.querySelector('.omtale-ret-felt');
+    const statusEl = rad.querySelector('.omtale-status');
+    const tekst    = felt.value.trim();
+
+    if (!tekst) {
+      statusEl.textContent = 'Teksten må ikke være tom.';
+      return;
+    }
+    gemKnap.disabled = true;
+    statusEl.textContent = '⏳ Gemmer…';
+
+    try {
+      const idagVis = new Date().toLocaleDateString('da-DK', { day:'numeric', month:'long', year:'numeric' });
+      await updateDoc(doc(db, 'mindelunden_omtaler', gemKnap.dataset.id), {
+        tekst,
+        redigeret_dato: idagVis,
+        redigeret_lokal: Date.now()
+      });
+      hentAfdoede();
+    } catch (err) {
+      console.error('Rettelse kunne ikke gemmes:', err);
+      const kode   = (err && err.code) ? err.code : 'ukendt';
+      const besked = (err && err.message) ? err.message : String(err);
+      statusEl.textContent = '✗ Kunne ikke gemme rettelsen. Fejlkode: ' + kode + ' — ' + besked;
+      gemKnap.disabled = false;
+    }
   }
 });
 
