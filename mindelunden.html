@@ -149,6 +149,56 @@ body {
   margin-top: 10px;
 }
 
+.mindekort.fremhaev {
+  animation: fremhaevPuls 1.4s ease-in-out 3;
+}
+@keyframes fremhaevPuls {
+  0%, 100% { box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+  50% { box-shadow: 0 0 0 4px rgba(200,158,60,0.65); }
+}
+
+.omtale-liste { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.omtale-rad {
+  background: #f9f6ee;
+  border-left: 3px solid #c89e3c;
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+.omtale-tekst { font-size: 13px; color: #2c3e1f; line-height: 1.5; white-space: pre-wrap; }
+.omtale-fra { font-size: 11.5px; color: #8a8a70; margin-top: 4px; font-style: italic; }
+
+.omtale-form {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #d8cfa8;
+}
+.omtale-input {
+  width: 100%;
+  min-height: 54px;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid #d8cfa8;
+  border-radius: 5px;
+  background: #fdfbf5;
+  resize: vertical;
+}
+.omtale-input:focus { outline: none; border-color: #2d5016; }
+.omtale-knap {
+  margin-top: 6px;
+  background: #2d5016;
+  color: #f5e6a8;
+  border: none;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 12.5px;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+.omtale-knap:hover { background: #3a6b1d; }
+.omtale-knap:disabled { background: #b5b5a5; cursor: default; }
+.omtale-status { font-size: 12px; color: #b03030; margin-top: 5px; }
+
 @media (max-width: 480px) {
   .grid { grid-template-columns: 1fr; }
 }
@@ -180,7 +230,7 @@ body {
 <script type="module">
 import { initializeApp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs }
+import { getFirestore, collection, getDocs, addDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -195,6 +245,28 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
+
+// ── Genkend evt. login (samme "fordør"-system som resten af sitet) ──
+function hentSession(n) { return sessionStorage.getItem(n) || localStorage.getItem(n) || ''; }
+const MIT_NR     = hentSession('ok_nr');
+const MIT_NAVN   = hentSession('ok_navn') || (MIT_NR ? ('Medlem ' + MIT_NR) : '');
+const MIT_NIVEAU = (hentSession('ok_niveau') || '').trim().toLowerCase();
+
+function husstandsAf(nr) {
+  return String(nr == null ? '' : nr).trim().split('-')[0].trim();
+}
+
+// Familien omkring den afdøde (samme husstand) + administratorer må skrive omtale
+function maaSkriveOmtale(afdoedHusstandsNr) {
+  if (!MIT_NR) return false;
+  if (MIT_NIVEAU === 'admin') return true;
+  return husstandsAf(MIT_NR) === husstandsAf(afdoedHusstandsNr);
+}
+
+// Stabil nøgle til at identificere en bestemt afdød person på tværs af sidevisninger
+function personNoegle(husstandsNr, navn) {
+  return husstandsNr + '::' + navn;
+}
 
 const MAANEDER = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december'];
 
@@ -223,6 +295,7 @@ function beregnAlder(foedselsdato, doedsdato) {
 
 function mindekortHtml(p) {
   const navn = visPersonNavn(p) || '(Navn mangler)';
+  const noegle = personNoegle(p.husstandsNr, navn);
   const alder = beregnAlder(p.foedselsdato, p.status_dato);
   const fotoHtml = p.foto
     ? `<img src="${p.foto}" alt="${navn}">`
@@ -233,22 +306,66 @@ function mindekortHtml(p) {
     p.status_dato ? formatDato(p.status_dato) : ''
   ].filter(Boolean).join(' — ');
 
+  const omtalerListe = (omtalerPrPerson[noegle] || []);
+  const omtalerHtml = omtalerListe.length
+    ? `<div class="omtale-liste">${omtalerListe.map(o => `
+        <div class="omtale-rad">
+          <div class="omtale-tekst">${escHtmlMinde(o.tekst)}</div>
+          <div class="omtale-fra">— ${escHtmlMinde(o.fra_navn || 'Anonym')}${o.dato ? ', ' + escHtmlMinde(o.dato) : ''}</div>
+        </div>`).join('')}</div>`
+    : '';
+
+  const kanSkrive = maaSkriveOmtale(p.husstandsNr);
+  const omtaleFormHtml = kanSkrive
+    ? `<div class="omtale-form" data-noegle="${noegle}">
+        <textarea class="omtale-input" placeholder="Skriv nogle ord til minde om ${navn}…"></textarea>
+        <button type="button" class="omtale-knap" data-noegle="${noegle}" data-husstand="${p.husstandsNr}" data-navn="${enc(navn)}">💬 Tilføj mindeord</button>
+        <div class="omtale-status" data-status="${noegle}"></div>
+      </div>`
+    : '';
+
   return `
-    <div class="mindekort">
+    <div class="mindekort" data-noegle="${noegle}">
       <div class="mindekort-foto">${fotoHtml}</div>
       <div class="mindekort-krop">
         <div class="mindekort-navn">${navn}</div>
         <div class="mindekort-datoer">${datoLinje || 'Datoer ikke registreret'}</div>
         ${alder !== null ? `<div class="mindekort-alder">Blev ${alder} år</div>` : ''}
         ${p.mindeord ? `<div class="mindekort-mindeord">${p.mindeord.replace(/</g,'&lt;')}</div>` : ''}
+        ${omtalerHtml}
+        ${omtaleFormHtml}
         ${p.husstandsNr ? `<div class="mindekort-husstand">Data fra husstand nr. ${p.husstandsNr}</div>` : ''}
       </div>
     </div>`;
 }
 
+function enc(s){ return String(s).replace(/"/g,'&quot;'); }
+function escHtmlMinde(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+let omtalerPrPerson = {}; // { "husstandsNr::navn": [ {fra_navn, tekst, dato}, ... ] }
+
+async function hentOmtaler() {
+  try {
+    const snap = await getDocs(collection(db, 'mindelunden_omtaler'));
+    const map = {};
+    snap.forEach(d => {
+      const o = d.data();
+      if (!o.noegle) return;
+      if (!map[o.noegle]) map[o.noegle] = [];
+      map[o.noegle].push(o);
+    });
+    // Ældste omtale først
+    Object.values(map).forEach(liste => liste.sort((a, b) => (a.tidsstempel_lokal||0) - (b.tidsstempel_lokal||0)));
+    omtalerPrPerson = map;
+  } catch (e) {
+    omtalerPrPerson = {};
+  }
+}
+
 async function hentAfdoede() {
   const indhold = document.getElementById('indhold');
   try {
+    await hentOmtaler();
     const snap = await getDocs(collection(db, 'membres'));
     const afdoede = [];
 
@@ -269,23 +386,79 @@ async function hentAfdoede() {
       return;
     }
 
-    // Nyeste dødsfald øverst; personer uden dødsdato til sidst
+    // Ældste født øverst; personer uden fødselsdato til sidst
     afdoede.sort((a, b) => {
-      const da = a.status_dato || '';
-      const db_ = b.status_dato || '';
-      if (da && db_) return da < db_ ? 1 : -1;
+      const da = a.foedselsdato || '';
+      const db_ = b.foedselsdato || '';
+      if (da && db_) return da < db_ ? -1 : 1;
       if (da && !db_) return -1;
       if (!da && db_) return 1;
       return 0;
     });
 
     indhold.innerHTML = `<div class="grid">${afdoede.map(mindekortHtml).join('')}</div>`;
+    haandterVisFraLink();
   } catch (err) {
     indhold.innerHTML = '<div class="tom-besked">⚠️ Kunne ikke hente data fra databasen. Tjek din internetforbindelse og genindlæs siden.</div>';
   }
 }
 
 hentAfdoede();
+
+// ── GEM NY OMTALE ────────────────────────────────────────────────
+document.getElementById('indhold').addEventListener('click', async e => {
+  const knap = e.target.closest('.omtale-knap');
+  if (!knap) return;
+  const noegle    = knap.dataset.noegle;
+  const husstand  = knap.dataset.husstand;
+  const navn      = knap.dataset.navn;
+  const form      = knap.closest('.omtale-form');
+  const tekstFelt = form.querySelector('.omtale-input');
+  const statusEl  = document.querySelector(`[data-status="${noegle}"]`);
+  const tekst     = tekstFelt.value.trim();
+
+  if (!tekst) {
+    if (statusEl) statusEl.textContent = 'Skriv venligst nogle ord først.';
+    return;
+  }
+  knap.disabled = true;
+  if (statusEl) statusEl.textContent = '⏳ Gemmer…';
+
+  try {
+    const idagVis = new Date().toLocaleDateString('da-DK', { day:'numeric', month:'long', year:'numeric' });
+    await addDoc(collection(db, 'mindelunden_omtaler'), {
+      noegle,
+      husstandsNr: husstand,
+      personNavn: navn,
+      fra_nr: MIT_NR || '',
+      fra_navn: MIT_NAVN || 'Anonym',
+      tekst,
+      dato: idagVis,
+      tidsstempel: serverTimestamp(),
+      tidsstempel_lokal: Date.now()
+    });
+    tekstFelt.value = '';
+    if (statusEl) statusEl.textContent = '';
+    hentAfdoede();
+  } catch (err) {
+    if (statusEl) statusEl.textContent = '✗ Kunne ikke gemme — prøv igen.';
+    knap.disabled = false;
+  }
+});
+
+// ── Kom fra et link med ?vis=NØGLE: åbn, scroll til og fremhæv den rette person ──
+function haandterVisFraLink() {
+  let vis;
+  try { vis = new URLSearchParams(window.location.search).get('vis'); } catch(e) { return; }
+  if (!vis) return;
+  setTimeout(() => {
+    const kort = document.querySelector(`.mindekort[data-noegle="${CSS && CSS.escape ? CSS.escape(vis) : vis}"]`);
+    if (!kort) return;
+    kort.classList.add('fremhaev');
+    kort.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => kort.classList.remove('fremhaev'), 4500);
+  }, 300);
+}
 
 // ── LYSBOKS (klik for at forstørre billede) ────────────────────
 const lysboksOverlay  = document.getElementById('lysboks-overlay');
