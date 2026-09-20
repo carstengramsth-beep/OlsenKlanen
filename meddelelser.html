@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen · OlsenPost</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; padding-bottom: 60px; }
+
+.topbar { background: #2d5016; color: #f5e6a8; padding: 16px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.topbar h1 { font-size: 22px; font-weight: normal; }
+.topbar .user { display: flex; align-items: center; gap: 14px; font-style: italic; font-size: 15px; }
+.hjem-knap { color: #f5e6a8; text-decoration: none; padding: 6px 14px; border: 1px solid #f5e6a8; border-radius: 4px; font-size: 14px; font-style: normal; cursor: pointer; background: transparent; }
+.hjem-knap:hover { background: rgba(245,230,168,0.15); }
+
+.wrap { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+.faner { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #d8cfae; flex-wrap: wrap; }
+.fane { background: none; border: none; font-family: inherit; font-size: 16px; color: #888; padding: 10px 18px; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; display: flex; align-items: center; gap: 8px; }
+.fane.aktiv { color: #2d5016; font-weight: bold; border-bottom-color: #2d5016; }
+.fane .badge { background: #c0392b; color: #fff; border-radius: 10px; font-size: 12px; padding: 1px 8px; min-width: 20px; text-align: center; }
+
+.kort { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 18px 20px; margin-bottom: 16px; }
+.kort h2 { font-size: 17px; color: #2d5016; margin-bottom: 14px; font-weight: bold; }
+
+label { display: block; font-size: 14px; color: #555; margin-bottom: 6px; margin-top: 12px; }
+
+.felt { width: 100%; padding: 10px 12px; font-family: inherit; font-size: 15px; border: 1px solid #c8bfa0; border-radius: 6px; background: #fdfbf5; }
+.felt:focus { outline: none; border-color: #2d5016; }
+
+.modtager-liste { max-height: 220px; overflow-y: auto; border: 1px solid #e0d8bd; border-radius: 6px; margin-top: 8px; background: #fdfbf5; }
+.modtager-rk { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f0ead8; font-size: 15px; }
+.modtager-rk:last-child { border-bottom: none; }
+.modtager-rk:hover { background: #faf3dc; }
+.modtager-rk input { width: 18px; height: 18px; cursor: pointer; }
+.modtager-navn { flex: 1; }
+.modtager-nr { background: #2d5016; color: #f5e6a8; padding: 2px 9px; border-radius: 10px; font-size: 13px; }
+.modtager-email { font-size: 12px; color: #999; font-style: italic; }
+
+.valgte-boks { margin-top: 12px; padding: 12px 14px; background: #f3f8e9; border: 2px solid #8ba864; border-radius: 8px; display: none; }
+.valgte-boks.vis { display: block; }
+.valgte-boks .overskrift { font-size: 14px; font-weight: bold; color: #2d5016; margin-bottom: 8px; margin-top: 0; }
+.valgte { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { background: #e8f0d8; border: 1px solid #b9c99a; border-radius: 14px; padding: 4px 10px 4px 12px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.chip button { background: none; border: none; color: #2d5016; cursor: pointer; font-size: 15px; line-height: 1; padding: 0; }
+
+textarea { width: 100%; min-height: 120px; padding: 10px 12px; font-family: inherit; font-size: 15px; border: 1px solid #c8bfa0; border-radius: 6px; background: #fdfbf5; resize: vertical; }
+textarea:focus { outline: none; border-color: #2d5016; }
+
+.knap { background: #2d5016; color: #f5e6a8; border: none; font-family: inherit; font-size: 16px; padding: 11px 26px; border-radius: 6px; cursor: pointer; margin-top: 14px; }
+.knap:hover { background: #3a6b1d; }
+.knap:disabled { background: #b5b5a5; cursor: default; }
+.knap.lille { font-size: 13px; padding: 6px 14px; margin-top: 0; }
+.knap.grå { background: #e8e2cd; color: #555; }
+.knap.grå:hover { background: #ddd6bd; }
+
+.vagt-tabel-el { width: 100%; border-collapse: collapse; font-size: 15px; }
+.vagt-tabel-el th { text-align: left; font-size: 13px; color: #888; padding: 6px 8px; border-bottom: 2px solid #e0d8bd; }
+.vagt-tabel-el td { padding: 8px; border-bottom: 1px solid #f0ead8; vertical-align: middle; }
+.vagt-status { border: none; border-radius: 14px; padding: 6px 14px; font-size: 13px; font-family: inherit; cursor: pointer; font-weight: bold; }
+.vagt-status.paa { background: #d4edda; color: #155724; }
+.vagt-status.ikke { background: #f8d7da; color: #721c24; }
+
+.status { margin-top: 12px; font-size: 14px; padding: 10px 14px; border-radius: 6px; display: none; }
+.status.ok { display: block; background: #d4edda; color: #155724; }
+.status.fejl { display: block; background: #f8d7da; color: #721c24; }
+
+/* Mail-visning */
+.mail-kort { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 16px 20px; margin-bottom: 12px; border-left: 4px solid #c89e3c; }
+.mail-kort.ulaest { border-left-color: #c0392b; background: #fffdf6; }
+.mail-kort.besvaret { border-left-color: #2d7a2d; }
+.mail-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.mail-fra { font-weight: bold; color: #2c3e1f; font-size: 15px; }
+.mail-emne { font-size: 14px; color: #555; font-style: italic; }
+.mail-tid { font-size: 12px; color: #999; white-space: nowrap; }
+.mail-tekst { font-size: 15px; color: #333; margin: 8px 0; white-space: pre-wrap; line-height: 1.6; border-top: 1px solid #f0ead8; padding-top: 10px; }
+.mail-status { font-size: 12px; color: #2d7a2d; font-style: italic; margin-top: 8px; }
+.mail-status.ikke-besvaret { color: #c89e3c; }
+
+.svar-omr { margin-top: 14px; padding-top: 14px; border-top: 1px dashed #ddd6bd; }
+.svar-omr h4 { font-size: 14px; color: #2d5016; margin-bottom: 10px; }
+.svar-knapper { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+.svar-knap { background: #eef3e3; border: 1px solid #c3d3a6; border-radius: 16px; font-family: inherit; font-size: 13px; padding: 6px 13px; cursor: pointer; color: #2d5016; }
+.svar-knap:hover { background: #e0ebcd; }
+
+.tom { text-align: center; color: #999; font-style: italic; padding: 40px 20px; }
+.indlaeser { text-align: center; color: #888; padding: 30px; font-style: italic; }
+.hint { font-size: 13px; color: #888; margin-bottom: 4px; font-style: italic; }
+
+/* Info-boks */
+.info-boks { background: #f3f8e9; border: 1px solid #8ba864; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; font-size: 14px; color: #2d5016; }
+.info-boks strong { display: block; margin-bottom: 6px; }
+
+.bund { position: fixed; bottom: 0; left: 0; right: 0; background: #2d5016; color: #f5e6a8; text-align: center; padding: 8px; font-size: 13px; font-style: italic; }
+
+/* Admin-markering */
+.admin-chip { background: #2d5016; color: #f5e6a8; font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-left: 8px; }
+</style>
+
+<script>
+try {
+  function hent(navn){ return sessionStorage.getItem(navn) || localStorage.getItem(navn) || ""; }
+  const niveau = hent("ok_niveau"), navn = hent("ok_navn"), nr = hent("ok_nr");
+  if (niveau || navn || nr) {
+    if (niveau) sessionStorage.setItem("ok_niveau", niveau);
+    if (navn)   sessionStorage.setItem("ok_navn", navn);
+    if (nr)     sessionStorage.setItem("ok_nr", nr);
+  } else {
+    window.location.href = "login.html";
+  }
+} catch(e) {}
+</script>
+
+<!-- EmailJS til afsendelse via Simply SMTP -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>📬 OlsenPost</h1>
+  <div class="user">
+    <span id="mit-navn"></span>
+    <span class="admin-chip" id="admin-chip" style="display:none">Postansvarlig</span>
+    <a class="hjem-knap" href="forside.html">🏠 Til forsiden</a>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="kort" id="pin-bekraeft-boks" style="display:none; border:2px solid #c89e3c;">
+    <h2>🔒 Bekræft din PIN-kode</h2>
+    <p class="hint">Som postansvarlig skal du bekræfte din PIN-kode, før du kan sende mail eller se indkomne mails. Det er en sikkerhedsopdatering — det skal du kun gøre én gang pr. besøg.</p>
+    <label for="pin-bekraeft-felt">Din PIN-kode</label>
+    <input type="password" id="pin-bekraeft-felt" class="felt" autocomplete="off">
+    <button class="knap" id="pin-bekraeft-knap" onclick="bekraeftPin()">🔓 Bekræft</button>
+    <div class="status" id="pin-bekraeft-status"></div>
+  </div>
+
+  <div class="faner">
+    <button class="fane aktiv" id="fane-send" onclick="visFane('send')">📨 Send mail til medlem</button>
+    <button class="fane" id="fane-indbakke" onclick="visFane('indbakke')">📥 Indkomne mails <span class="badge" id="badge-ny" style="display:none">0</span></button>
+    <button class="fane" id="fane-sendt" onclick="visFane('sendt')">📤 Sendte mails</button>
+    <button class="fane" id="fane-intern" onclick="visFane('intern')">💬 Intern besked</button>
+    <button class="fane" id="fane-vagt" onclick="visFane('vagt')" style="display:none">📅 Postvagt</button>
+    <button class="fane" id="fane-hjaelp" onclick="visFane('hjaelp')">❓ Sådan virker det</button>
+  </div>
+
+  <!-- ════════ SEND MAIL ════════ -->
+  <div id="omr-send">
+    <div class="info-boks">
+      <strong>📮 Mails sendes fra post@olsenklanen.dk</strong>
+      Modtageren ser at mailen kommer fra Familieforeningen Olsenklanen — ikke fra din private mail.
+    </div>
+    <div class="kort">
+      <h2>Send mail til et eller flere medlemmer</h2>
+
+      <label for="sog-mail">Til hvem? (søg på navn)</label>
+      <input type="text" id="sog-mail" class="felt" placeholder="Søg på navn …" oninput="filtrerMail()" autocomplete="off">
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button type="button" class="knap lille" onclick="vaelgAlleMail()">☑️ Vælg alle</button>
+        <button type="button" class="knap lille grå" onclick="nulstilAlleMail()">✕ Fravælg alle</button>
+      </div>
+      <div class="modtager-liste" id="modtager-liste-mail">
+        <div class="indlaeser">Henter medlemmer …</div>
+      </div>
+      <div class="valgte-boks" id="valgte-boks-mail">
+        <div class="overskrift">📬 Du sender til:</div>
+        <div class="valgte" id="valgte-mail"></div>
+      </div>
+
+      <label for="emne">Emne</label>
+      <input type="text" id="emne" class="felt" placeholder="Skriv emne her …" maxlength="100">
+
+      <label for="tekst-mail">Din besked</label>
+      <textarea id="tekst-mail" placeholder="Skriv din personlige besked her …&#10;&#10;Hilsen og dit navn tilføjes automatisk nederst.&#10;&#10;Tip: du kan indsætte (Ctrl+V) et kopieret billede direkte her i feltet."></textarea>
+
+      <div id="velkomstbrev-boks" style="display:none; margin-top:10px;">
+        <label style="display:flex; align-items:center; gap:8px; margin-top:0;">
+          <input type="checkbox" id="inkluder-velkomstbrev" checked style="width:18px; height:18px;">
+          Vedlæg velkomstbrevets login-oplysninger nederst i mailen
+        </label>
+        <details style="margin-top:6px;">
+          <summary style="cursor:pointer; font-size:13px; color:#555;">Se hvad der bliver vedlagt</summary>
+          <div id="velkomstbrev-forhaandsvisning" style="white-space:pre-wrap; font-size:13px; color:#555; background:#fdfbf5; border:1px solid #e0d8bd; border-radius:6px; padding:10px; margin-top:6px;"></div>
+        </details>
+      </div>
+
+      <label for="vedhaeft-fil">Vedhæft et billede (valgfrit)</label>
+      <input type="file" id="vedhaeft-fil" class="felt" accept="image/*">
+      <div class="hint">Eller indsæt (Ctrl+V) et kopieret billede direkte i beskedfeltet ovenfor. Billedet lægges i arkivet, og mailen får automatisk et link, modtageren kan klikke på.</div>
+      <div id="vedhaeft-forhaandsvisning"></div>
+
+      <div id="billedbibliotek-boks" style="margin-top:14px;">
+        <div class="hint" style="margin-bottom:6px;">Eller genbrug et tidligere billede fra biblioteket:</div>
+        <div id="billedbibliotek-liste" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:6px;"><div class="indlaeser">Henter …</div></div>
+      </div>
+
+      <button class="knap" id="send-mail-knap" onclick="sendMail()">📨 Send mail fra post@olsenklanen.dk</button>
+      <div class="status" id="send-mail-status"></div>
+    </div>
+  </div>
+
+  <!-- ════════ INDKOMNE MAILS ════════ -->
+  <div id="omr-indbakke" style="display:none">
+    <div class="info-boks">
+      <strong>📥 Indkomne mails til post@olsenklanen.dk</strong>
+      Her ser alle 5 postansvarlige de samme mails. Den der svarer, sætter sit navn på svaret.
+    </div>
+    <div id="indbakke-liste"><div class="indlaeser">Henter post …</div></div>
+  </div>
+
+  <!-- ════════ SENDTE MAILS ════════ -->
+  <div id="omr-sendt" style="display:none">
+    <div id="sendt-liste"><div class="indlaeser">Henter sendte mails …</div></div>
+  </div>
+
+  <!-- ════════ INTERN BESKED (det eksisterende system) ════════ -->
+  <div id="omr-intern" style="display:none">
+    <div class="info-boks">
+      <strong>💬 Interne beskeder mellem klanmedlemmer</strong>
+      Disse beskeder sendes kun inde i hjemmesiden — ikke til medlemmernes private mail.
+    </div>
+    <div class="kort">
+      <h2>Skriv intern besked</h2>
+      <p class="hint">Bruges til korte beskeder direkte på siden — modtageren ser dem når de logger ind.</p>
+
+      <label for="sog-intern">Til hvem?</label>
+      <input type="text" id="sog-intern" class="felt" placeholder="Søg på navn eller nummer …" oninput="filtrerIntern()" autocomplete="off">
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button type="button" class="knap lille" onclick="vaelgAlleIntern()">☑️ Vælg alle</button>
+        <button type="button" class="knap lille grå" onclick="nulstilAlleIntern()">✕ Fravælg alle</button>
+      </div>
+      <div class="modtager-liste" id="modtager-liste-intern">
+        <div class="indlaeser">Henter medlemmer …</div>
+      </div>
+      <div class="valgte-boks" id="valgte-boks-intern">
+        <div class="overskrift">📬 Du sender til:</div>
+        <div class="valgte" id="valgte-intern"></div>
+      </div>
+
+      <label for="tekst-intern">Din besked</label>
+      <textarea id="tekst-intern" placeholder="Skriv din besked her …" maxlength="500"></textarea>
+
+      <button class="knap" id="send-intern-knap" onclick="sendIntern()">💬 Send intern besked</button>
+      <div class="status" id="send-intern-status"></div>
+    </div>
+
+    <div id="intern-indbakke-liste"><div class="indlaeser">Henter interne beskeder …</div></div>
+  </div>
+
+  <!-- ════════ POSTVAGT (kun postansvarlige) ════════ -->
+  <div id="omr-vagt" style="display:none">
+    <div class="info-boks">
+      <strong>📅 Ugens postvagt</strong>
+      Markér hvem der har vagten og forventes at svare på indkomne mails til post@olsenklanen.dk.
+      Bemærk: dette styrer ikke selv mail-videresendelsen hos Simply.com — det er kun en oversigt til jer 5.
+    </div>
+    <div class="kort">
+      <div id="vagt-tabel"><div class="indlaeser">Henter vagtplan …</div></div>
+    </div>
+  </div>
+
+  <!-- ════════ SÅDAN VIRKER DET (hjælp) ════════ -->
+  <div id="omr-hjaelp" style="display:none">
+    <div class="info-boks">
+      <strong>❓ Brugsanvisning til OlsenPost</strong>
+      En hurtig genopfriskning — så du ikke skal huske det hele udenad.
+    </div>
+
+    <div class="kort">
+      <h2>Hvem må sende mail?</h2>
+      <p class="hint">Kun de 5 postansvarlige kan sende mail med post@olsenklanen.dk som afsender: Carsten Gram, Kurt Vormslev Olsen, Sanne Gram Fadel, Tommy Vormslev Olsen og Karin Lund. Det er låst af selve databasen, ikke kun af hjemmesiden — så ingen andre kan omgå det.</p>
+    </div>
+
+    <div class="kort">
+      <h2>🔒 Første gang du åbner OlsenPost</h2>
+      <p class="hint">Er du en af de 5, bliver du bedt om at bekræfte din PIN-kode (samme PIN, som du logger ind med) øverst på siden. Det skal du kun gøre én gang pr. besøg — det er en sikkerhedstjek, der beviser, at det virkelig er dig.</p>
+    </div>
+
+    <div class="kort">
+      <h2>📨 Send en almindelig mail til et medlem</h2>
+      <p class="hint">
+        1. Gå til fanen "Send mail til medlem".<br>
+        2. Søg på navn, og klik for at vælge modtager(e) — du kan vælge flere ved at søge og klikke igen for hver.<br>
+        3. Brug "Vælg alle" for at ramme alle medlemmer med registreret mail på én gang (ryd søgefeltet først, ellers rammer den kun de søgte).<br>
+        4. Skriv emne og din besked.<br>
+        5. Vedhæft evt. et billede: vælg en fil, eller indsæt (Ctrl+V) et kopieret billede direkte i beskedfeltet. Billedet lægges i arkivet, og modtageren får et link — ikke en rigtig vedhæftet fil.<br>
+        6. Tryk "Send mail fra post@olsenklanen.dk".
+      </p>
+    </div>
+
+    <div class="kort">
+      <h2>✉️ Send en velkomst-/aktiveringsmail</h2>
+      <p class="hint">
+        Gå til <b>Medlemskartoteket</b>, find husstanden, og klik enten "✉️ Send velkomstmail" på selve kortet, eller åbn "📋 Velkomstbrev" først og klik knappen der.<br><br>
+        Det tager dig til OlsenPost med husstandens medlemmer, emnet og selve brevteksten (login-numre og PIN) allerede udfyldt. Du kan altid:<br>
+        • Skrive en personlig besked i "Din besked" — den kommer først, brevteksten nedenunder.<br>
+        • Fjerne krydset i "Vedlæg velkomstbrevets login-oplysninger", hvis du ikke vil have det med.<br>
+        • Fjerne modtagere, du ikke vil sende til, i den grønne "Du sender til"-boks.
+      </p>
+    </div>
+
+    <div class="kort">
+      <h2>💬 Forskellen på "Send mail" og "Intern besked"</h2>
+      <p class="hint">
+        <b>Send mail til medlem</b> sender en rigtig e-mail til medlemmets private mailadresse — kun de 5 må gøre det.<br>
+        <b>Intern besked</b> vises kun inde på selve hjemmesiden, ikke i privat mail — det må alle medlemmer bruge, ikke kun de 5.
+      </p>
+    </div>
+
+    <div class="kort">
+      <h2>📅 Postvagt</h2>
+      <p class="hint">En oversigt, hvor I 5 selv markerer, om I er "på vagt" og forventes at svare på indkomne mails. Det styrer ikke noget teknisk — det er kun til overblik for jer selv.</p>
+    </div>
+
+    <div class="kort">
+      <h2>📥 Indkomne mails — kendt begrænsning</h2>
+      <p class="hint">Rigtige svar, der sendes til post@olsenklanen.dk, lander <b>ikke</b> automatisk her endnu — det kræver en teknisk robot, der ikke er bygget færdig. Indtil da videresendes rigtige mails til post@olsenklanen.dk i stedet direkte til jeres egne private mailadresser via Simply.coms videresendelse.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="bund">OlsenPost · post@olsenklanen.dk · klanens fælles postkasse</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc,
+         query, where, orderBy, onSnapshot, serverTimestamp, arrayUnion }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
+import { getStorage, ref, uploadBytes, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const auth = getAuth(app);
+const funcs = getFunctions(app, "europe-west1");
+const storage = getStorage(app);
+
+// De 5 postansvarlige (medlemsnumre)
+const POSTANSVARLIGE = ["8-B", "19-A", "22-B", "23-B", "48-B"];
+
+function hent(n){ return sessionStorage.getItem(n) || localStorage.getItem(n) || ""; }
+const MIT_NR   = hent("ok_nr");
+const MIT_NAVN = hent("ok_navn") || ("Medlem " + MIT_NR);
+const ER_POSTANSVARLIG = POSTANSVARLIGE.includes(MIT_NR);
+
+document.getElementById("mit-navn").textContent = MIT_NAVN + " (nr. " + MIT_NR + ")";
+if (ER_POSTANSVARLIG) {
+  document.getElementById("admin-chip").style.display = "inline";
+  document.getElementById("fane-vagt").style.display = "inline-block";
+  document.getElementById("pin-bekraeft-boks").style.display = "block";
+}
+
+/* ════════ SIKKERHEDS-BRO: PIN → Firebase Auth med postansvarlig-claim ════════ */
+window.bekraeftPin = async function(){
+  const felt = document.getElementById("pin-bekraeft-felt");
+  const knap = document.getElementById("pin-bekraeft-knap");
+  const statusEl = document.getElementById("pin-bekraeft-status");
+  const pin = felt.value.trim();
+  if (!pin) { statusEl.className = "status fejl"; statusEl.textContent = "Skriv din PIN-kode."; statusEl.style.display = "block"; return; }
+
+  knap.disabled = true;
+  statusEl.className = "status ok";
+  statusEl.textContent = "⏳ Bekræfter …";
+  statusEl.style.display = "block";
+  try {
+    const logInPostansvarlig = httpsCallable(funcs, "logInPostansvarlig");
+    const res = await logInPostansvarlig({ nr: MIT_NR, pin });
+    await signInWithCustomToken(auth, res.data.token);
+    felt.value = "";
+    document.getElementById("pin-bekraeft-boks").style.display = "none";
+    statusEl.style.display = "none";
+  } catch(e) {
+    console.log("PIN-bekræftelse fejlede:", e);
+    statusEl.className = "status fejl";
+    statusEl.textContent = e.message && e.message.includes("PIN") ? "Forkert PIN-kode." : "Kunne ikke bekræfte. Prøv igen.";
+  } finally {
+    knap.disabled = false;
+  }
+};
+
+// EmailJS initialisering — bruges til at sende rigtige mails
+// Public key sættes her når EmailJS er oprettet
+const EMAILJS_PUBLIC_KEY = "76jQOeDv73Qw2zgmU";
+const EMAILJS_SERVICE_ID = "service_oo888vl";
+const EMAILJS_TEMPLATE_ID = "template_543ms2z";
+let emailJSKlar = false;
+try {
+  emailjs.init(EMAILJS_PUBLIC_KEY);
+  emailJSKlar = true;
+} catch(e) { console.log("EmailJS ikke initialiseret endnu"); }
+
+/* ════════ HJÆLPEFUNKTIONER ════════ */
+function foedselsTal(p) {
+  const r = String((p && (p.foedselsdato || p.fodselsdato || p.foed || p.dato)) || "").trim();
+  if (!r) return 99999999;
+  let m = r.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return Number(m[1] + m[2] + m[3]);
+  m = r.match(/^(\d{2})-(\d{2})-(\d{4})/);
+  if (m) return Number(m[3] + m[2] + m[1]);
+  m = r.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);
+  if (m) return Number(m[3] + m[2].padStart(2,"0") + m[1].padStart(2,"0"));
+  return 99999999;
+}
+
+function tidTekst(ts){
+  if (!ts) return "";
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const nu = new Date();
+  const kl = d.toLocaleTimeString("da-DK", {hour:"2-digit", minute:"2-digit"});
+  if (d.toDateString() === nu.toDateString()) return "i dag kl. " + kl;
+  return d.toLocaleDateString("da-DK", {day:"numeric", month:"long"}) + " kl. " + kl;
+}
+
+function vis(el, type, tekst){ el.className = "status " + type; el.textContent = tekst; }
+function enc(s){ return String(s).replace(/"/g,"&quot;"); }
+function escHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+// Modtagerens "Svar"-knap skal gå til den postansvarlige, der faktisk sendte mailen — ikke til den fælles postkasse.
+function mitEmail(){
+  const eget = alleModtagere.find(m => m.nr === MIT_NR);
+  return (eget && eget.email) || "post@olsenklanen.dk";
+}
+
+/* ════════ MODTAGERLISTER FRA KARTOTEKET ════════ */
+let alleModtagere = []; // {nr, navn, email, soegetekst}
+
+const valgteMail   = new Map();
+const valgteIntern = new Map();
+
+async function hentModtagere() {
+  try {
+    const snap = await getDocs(collection(db, "membres"));
+    const liste = [];
+    snap.forEach(d => {
+      const husstandNr = d.id;
+      const data = d.data();
+      const medlemmer = data.familiemedlemmer || [];
+
+      const voksne = medlemmer
+        .filter(p => p.rolle !== "barn" && (p.fornavn || p.navn || "").trim())
+        .slice()
+        .sort((a, b) => foedselsTal(a) - foedselsTal(b));
+
+      voksne.forEach((p, i) => {
+        const fornavn = (p.fornavn || (p.navn || "").split(/\s+/)[0] || "").trim();
+        const efternavn = (p.efternavn || "").trim();
+        const fuldt = [fornavn, efternavn].filter(Boolean).join(" ") || ("Medlem " + husstandNr);
+        const bogstav = String.fromCharCode("A".charCodeAt(0) + i);
+        const nr = husstandNr + "-" + bogstav;
+        const email = (p.email || data.email || "").trim();
+        liste.push({ nr, navn: fuldt, email, soegetekst: (fuldt + " " + nr).toLowerCase() });
+      });
+
+      let barnTael = 0;
+      medlemmer.filter(p => p.rolle === "barn").forEach(p => {
+        barnTael++;
+        const fornavn = (p.fornavn || (p.navn || "").split(/\s+/)[0] || "").trim();
+        const efternavn = (p.efternavn || "").trim();
+        const fuldt = [fornavn, efternavn].filter(Boolean).join(" ") || ("Medlem " + husstandNr);
+        const nr = husstandNr + "-" + barnTael;
+        const email = (p.email || "").trim();
+        liste.push({ nr, navn: fuldt, email, soegetekst: (fuldt + " " + nr).toLowerCase() });
+      });
+    });
+    liste.sort((a,b) => a.navn.localeCompare(b.navn, "da"));
+
+    // ── FJERN DUBLETTER ─────────────────────────────────────────
+    // Samme e-mailadresse må kun optræde én gang på listen, uanset
+    // hvor mange gange den findes i data (fx pga. dobbelt-registrerede
+    // husstande). Uden dette blev "Vælg alle" ved en fejl til at sende
+    // det samme brev flere gange til den samme adresse.
+    const setEmails = new Set();
+    const listeUnik = [];
+    liste.forEach(m => {
+      const emailNoegle = (m.email || "").trim().toLowerCase();
+      if (emailNoegle) {
+        if (setEmails.has(emailNoegle)) return; // spring dublet over
+        setEmails.add(emailNoegle);
+      }
+      listeUnik.push(m);
+    });
+
+    alleModtagere = listeUnik;
+    tegnModtagere(listeUnik, "mail");
+    tegnModtagere(listeUnik, "intern");
+    forudvaelgModtagereFraLink();
+  } catch(e) {
+    console.log("Modtager-fejl:", e);
+    ["modtager-liste-mail", "modtager-liste-intern"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '<div class="tom">Kunne ikke hente medlemmer. Genindlæs siden (Ctrl+F5) og prøv igen.</div>';
+    });
+  }
+}
+
+function tegnModtagere(liste, type) {
+  const el = document.getElementById("modtager-liste-" + type);
+  if (!liste.length) { el.innerHTML = '<div class="tom">Ingen match.</div>'; return; }
+  const valgte = type === "mail" ? valgteMail : valgteIntern;
+  // Vis kun medlemmer med email i mail-fanen
+  const vis = type === "mail" ? liste.filter(m => m.email) : liste;
+  if (!vis.length) { el.innerHTML = '<div class="tom">Ingen medlemmer med mailadresse fundet.</div>'; return; }
+  el.innerHTML = vis.map(m => `
+    <label class="modtager-rk">
+      <input type="checkbox" data-nr="${m.nr}" data-navn="${enc(m.navn)}" data-email="${enc(m.email)}" ${valgte.has(m.nr)?"checked":""}>
+      <span class="modtager-navn">${m.navn}</span>
+      <span class="modtager-nr">nr. ${m.nr}</span>
+      ${type==="mail" && m.email ? `<span class="modtager-email">${m.email}</span>` : ''}
+    </label>`).join("");
+  el.querySelectorAll("input").forEach(cb => {
+    cb.addEventListener("change", e => {
+      const nr = e.target.dataset.nr;
+      const navn = e.target.dataset.navn;
+      const email = e.target.dataset.email;
+      if (e.target.checked) valgte.set(nr, {navn, email}); else valgte.delete(nr);
+      tegnValgte(type);
+      if (type === "mail") gemKladde();
+    });
+  });
+}
+
+function tegnValgte(type) {
+  const el = document.getElementById("valgte-" + type);
+  const boks = document.getElementById("valgte-boks-" + type);
+  const valgte = type === "mail" ? valgteMail : valgteIntern;
+  if (!valgte.size) { el.innerHTML = ""; boks.classList.remove("vis"); return; }
+  boks.classList.add("vis");
+  let html = "";
+  valgte.forEach((data, nr) => {
+    const navn = typeof data === "string" ? data : data.navn;
+    html += `<span class="chip">${navn} <button onclick="fjernValgt('${type}','${nr}')" title="Fjern">✕</button></span>`;
+  });
+  el.innerHTML = html;
+}
+
+window.fjernValgt = function(type, nr){
+  if (type === "mail") valgteMail.delete(nr); else valgteIntern.delete(nr);
+  tegnValgte(type);
+  const cb = document.querySelector(`#modtager-liste-${type} input[data-nr="${nr}"]`);
+  if (cb) cb.checked = false;
+  if (type === "mail") gemKladde();
+};
+
+/* ════════ VEDHÆFTET BILLEDE (fil-valg, indsæt kopieret billede, eller genbrug fra bibliotek) ════════ */
+let vedhaeftetFil = null;
+let vedhaeftetEksisterendeUrl = null;
+
+function visVedhaeftPreview(fil){
+  vedhaeftetFil = fil;
+  vedhaeftetEksisterendeUrl = null;
+  const el = document.getElementById("vedhaeft-forhaandsvisning");
+  el.innerHTML = `
+    <div style="margin-top:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+      <img src="${URL.createObjectURL(fil)}" style="max-width:120px; max-height:120px; border-radius:6px; border:1px solid #c8bfa0;">
+      <div>
+        <label for="vedhaeft-navn" style="margin:0 0 4px;">Navn på billedet (valgfrit, så du kan genkende det i biblioteket senere)</label>
+        <input type="text" id="vedhaeft-navn" class="felt" placeholder="fx Forsiden 30/8" maxlength="60">
+      </div>
+      <button type="button" onclick="fjernVedhaeft()" style="background:#f8d7da; border:1px solid #e0a8ae; color:#721c24; border-radius:14px; padding:6px 12px; cursor:pointer; font-family:inherit; align-self:flex-start;">✕ Fjern billede</button>
+    </div>`;
+}
+
+window.vaelgFraBibliotek = function(url, navn){
+  vedhaeftetFil = null;
+  vedhaeftetEksisterendeUrl = url;
+  const el = document.getElementById("vedhaeft-forhaandsvisning");
+  el.innerHTML = `
+    <div style="margin-top:10px; display:flex; align-items:center; gap:10px;">
+      <img src="${url}" style="max-width:120px; max-height:120px; border-radius:6px; border:1px solid #c8bfa0;">
+      <div style="font-size:13px; color:#555;">${escHtml(navn || "(uden navn)")}</div>
+      <button type="button" onclick="fjernVedhaeft()" style="background:#f8d7da; border:1px solid #e0a8ae; color:#721c24; border-radius:14px; padding:6px 12px; cursor:pointer; font-family:inherit;">✕ Fjern billede</button>
+    </div>`;
+};
+
+window.fjernVedhaeft = function(){
+  vedhaeftetFil = null;
+  vedhaeftetEksisterendeUrl = null;
+  document.getElementById("vedhaeft-forhaandsvisning").innerHTML = "";
+  document.getElementById("vedhaeft-fil").value = "";
+};
+
+async function hentBilledbibliotek(){
+  const el = document.getElementById("billedbibliotek-liste");
+  try {
+    const snap = await getDocs(query(collection(db, "olsenpost_billeder"), orderBy("uploadet_lokal", "desc")));
+    const billeder = snap.docs.map(d => d.data()).slice(0, 15);
+    if (!billeder.length) { el.innerHTML = '<div class="hint" style="margin:0;">Ingen billeder i biblioteket endnu — det fyldes op, når I vedhæfter nye billeder.</div>'; return; }
+    el.innerHTML = billeder.map(b => `
+      <div style="flex:0 0 auto; text-align:center; cursor:pointer; width:80px;" onclick="vaelgFraBibliotek('${b.url}','${escHtml(b.navn || '').replace(/'/g,"&#39;")}')">
+        <img src="${b.url}" style="width:80px; height:80px; object-fit:cover; border-radius:6px; border:1px solid #c8bfa0;">
+        <div style="font-size:11px; color:#555; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(b.navn || "uden navn")}</div>
+      </div>`).join("");
+  } catch(e) {
+    console.log("Billedbibliotek-fejl:", e);
+    el.innerHTML = '<div class="hint" style="margin:0;">Kunne ikke hente biblioteket.</div>';
+  }
+}
+hentBilledbibliotek();
+
+document.getElementById("vedhaeft-fil").addEventListener("change", e => {
+  if (e.target.files[0]) visVedhaeftPreview(e.target.files[0]);
+});
+
+document.getElementById("tekst-mail").addEventListener("paste", e => {
+  const items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith("image/")) {
+      const fil = item.getAsFile();
+      if (fil) { visVedhaeftPreview(fil); e.preventDefault(); }
+      break;
+    }
+  }
+});
+
+window.filtrerMail = function(){
+  const s = document.getElementById("sog-mail").value.trim().toLowerCase();
+  tegnModtagere(s ? alleModtagere.filter(m => m.soegetekst.includes(s)) : alleModtagere, "mail");
+};
+
+let velkomstbrevTekst = "";
+let husstandFraLink = null;
+
+// Udfylder emne + brevtekst med det samme — venter ikke på medlemslisten
+function forudvaelgFraLinkOevrigt(){
+  const param = new URLSearchParams(window.location.search);
+  husstandFraLink = param.get("husstand");
+  const emne = param.get("emne");
+  const brev = param.get("brev");
+  if (emne) {
+    const emneFelt = document.getElementById("emne");
+    if (emneFelt) emneFelt.value = emne;
+  }
+  if (brev) {
+    velkomstbrevTekst = brev;
+    document.getElementById("velkomstbrev-boks").style.display = "block";
+    document.getElementById("velkomstbrev-forhaandsvisning").textContent = brev;
+  }
+}
+forudvaelgFraLinkOevrigt();
+
+/* ════════ KLADDE (auto-gem, så tekst ikke går tabt ved genindlæsning) ════════ */
+const KLADDE_NOEGLE = "olsenpost_kladde_mail";
+
+window.gemKladde = function(){
+  try {
+    const kladde = {
+      emne: document.getElementById("emne").value,
+      tekst: document.getElementById("tekst-mail").value,
+      modtagere: Array.from(valgteMail.entries()),
+      velkomstbrevTekst: velkomstbrevTekst,
+      inkluderVelkomst: document.getElementById("inkluder-velkomstbrev") ? document.getElementById("inkluder-velkomstbrev").checked : true
+    };
+    localStorage.setItem(KLADDE_NOEGLE, JSON.stringify(kladde));
+  } catch(e) { console.log("Kunne ikke gemme kladde:", e); }
+};
+
+window.ryddKladde = function(){
+  try { localStorage.removeItem(KLADDE_NOEGLE); } catch(e) {}
+};
+
+function genskabKladdeHvisIngenLink(){
+  const param = new URLSearchParams(window.location.search);
+  if (param.get("husstand") || param.get("emne") || param.get("brev")) return; // et link har altid forrang
+  try {
+    const raa = localStorage.getItem(KLADDE_NOEGLE);
+    if (!raa) return;
+    const kladde = JSON.parse(raa);
+    if (kladde.emne) document.getElementById("emne").value = kladde.emne;
+    if (kladde.tekst) document.getElementById("tekst-mail").value = kladde.tekst;
+    if (Array.isArray(kladde.modtagere)) {
+      kladde.modtagere.forEach(([nr, data]) => valgteMail.set(nr, data));
+    }
+    if (kladde.velkomstbrevTekst) {
+      velkomstbrevTekst = kladde.velkomstbrevTekst;
+      document.getElementById("velkomstbrev-boks").style.display = "block";
+      document.getElementById("velkomstbrev-forhaandsvisning").textContent = velkomstbrevTekst;
+      document.getElementById("inkluder-velkomstbrev").checked = !!kladde.inkluderVelkomst;
+    }
+  } catch(e) { console.log("Kunne ikke genskabe kladde:", e); }
+}
+genskabKladdeHvisIngenLink();
+
+document.getElementById("emne").addEventListener("input", gemKladde);
+document.getElementById("tekst-mail").addEventListener("input", gemKladde);
+document.getElementById("inkluder-velkomstbrev") && document.getElementById("inkluder-velkomstbrev").addEventListener("change", gemKladde);
+
+// Vælger modtagere fra husstanden — kræver at medlemslisten er hentet først
+function forudvaelgModtagereFraLink(){
+  if (husstandFraLink) {
+    alleModtagere
+      .filter(m => m.nr.startsWith(husstandFraLink + "-") && m.email)
+      .forEach(m => valgteMail.set(m.nr, { navn: m.navn, email: m.email }));
+  }
+  tegnModtagere(alleModtagere, "mail");
+  tegnValgte("mail");
+}
+
+window.vaelgAlleMail = function(){
+  document.querySelectorAll('#modtager-liste-mail input[type=checkbox]').forEach(cb => {
+    cb.checked = true;
+    valgteMail.set(cb.dataset.nr, {navn: cb.dataset.navn, email: cb.dataset.email});
+  });
+  tegnValgte("mail");
+  gemKladde();
+};
+window.nulstilAlleMail = function(){
+  valgteMail.clear();
+  document.querySelectorAll('#modtager-liste-mail input[type=checkbox]').forEach(cb => cb.checked = false);
+  tegnValgte("mail");
+  gemKladde();
+};
+window.filtrerIntern = function(){
+  const s = document.getElementById("sog-intern").value.trim().toLowerCase();
+  tegnModtagere(s ? alleModtagere.filter(m => m.soegetekst.includes(s)) : alleModtagere, "intern");
+};
+
+window.vaelgAlleIntern = function(){
+  document.querySelectorAll('#modtager-liste-intern input[type=checkbox]').forEach(cb => {
+    cb.checked = true;
+    valgteIntern.set(cb.dataset.nr, {navn: cb.dataset.navn, email: cb.dataset.email});
+  });
+  tegnValgte("intern");
+};
+window.nulstilAlleIntern = function(){
+  valgteIntern.clear();
+  document.querySelectorAll('#modtager-liste-intern input[type=checkbox]').forEach(cb => cb.checked = false);
+  tegnValgte("intern");
+};
+
+/* ════════ SEND RIGTIG MAIL via EmailJS ════════ */
+window.sendMail = async function(){
+   if (!ER_POSTANSVARLIG) { alert("Kun postansvarlige kan sende mails til medlemmer."); return; }
+   if (!auth.currentUser) { alert("Bekræft din PIN-kode øverst på siden først."); return; }
+  const emne = document.getElementById("emne").value.trim();
+  const personligTekst = document.getElementById("tekst-mail").value.trim();
+  const inkluderKnap = document.getElementById("inkluder-velkomstbrev");
+  const inkluderVelkomst = velkomstbrevTekst && inkluderKnap && inkluderKnap.checked;
+  const tekst = inkluderVelkomst
+    ? (personligTekst ? personligTekst + "\n\n" + velkomstbrevTekst : velkomstbrevTekst)
+    : personligTekst;
+  const statusEl = document.getElementById("send-mail-status");
+  const knap = document.getElementById("send-mail-knap");
+
+  if (!valgteMail.size) { vis(statusEl, "fejl", "Vælg mindst én modtager."); return; }
+  if (!emne)            { vis(statusEl, "fejl", "Skriv et emne."); return; }
+  if (!tekst)           { vis(statusEl, "fejl", "Skriv en besked, eller vedlæg velkomstbrevet."); return; }
+
+  knap.disabled = true;
+  vis(statusEl, "ok", "⏳ Sender mail …");
+
+  let vedhaeftUrl = vedhaeftetEksisterendeUrl || null;
+  if (vedhaeftetFil) {
+    try {
+      vis(statusEl, "ok", "⏳ Lægger billede op …");
+      const sti = `olsenpost_vedhaeftninger/${Date.now()}_${vedhaeftetFil.name.replace(/[^\w.\-]/g,"_")}`;
+      await uploadBytes(ref(storage, sti), vedhaeftetFil);
+      vedhaeftUrl = await getDownloadURL(ref(storage, sti));
+      const navnFelt = document.getElementById("vedhaeft-navn");
+      await addDoc(collection(db, "olsenpost_billeder"), {
+        storage_sti: sti,
+        url: vedhaeftUrl,
+        navn: (navnFelt && navnFelt.value.trim()) || "",
+        uploadet_af_navn: MIT_NAVN,
+        uploadet: serverTimestamp(),
+        uploadet_lokal: Date.now()
+      });
+      hentBilledbibliotek();
+      vis(statusEl, "ok", "⏳ Sender mail …");
+    } catch(e) {
+      console.log("Vedhæft-fejl:", e);
+      knap.disabled = false;
+      vis(statusEl, "fejl", "Kunne ikke lægge billedet op. Prøv igen.");
+      return;
+    }
+  }
+
+  const dato = new Date().toLocaleDateString("da-DK", {day:"numeric", month:"long", year:"numeric"});
+  const billedLinje = vedhaeftUrl ? `\n\n📎 Se billedet her: ${vedhaeftUrl}` : "";
+  const signatur = `\n\n---\nMed venlig hilsen\n${MIT_NAVN}\npå vegne af Familieforeningen Olsenklanen\n${mitEmail()}`;
+  const beskedMedSignatur = tekst + billedLinje + signatur;
+
+  let sendt = 0;
+  let fejl = 0;
+
+  for (const [nr, data] of valgteMail) {
+    const email = data.email;
+    const navn = data.navn;
+    if (!email) continue;
+    try {
+      // Gem i Firestore
+      await addDoc(collection(db, "olsenpost_mail"), {
+        fra_nr: MIT_NR,
+        fra_navn: MIT_NAVN,
+        til_nr: nr,
+        til_navn: navn,
+        til_email: email,
+        emne: emne,
+        tekst: tekst + billedLinje,
+        sendt: serverTimestamp(),
+        sendt_lokal: Date.now(),
+        besvaret: false,
+        besvaret_af: null,
+        besvaret_tid: null
+      });
+
+      // Send via EmailJS hvis klar
+      if (emailJSKlar && EMAILJS_PUBLIC_KEY !== "INDSÆT_PUBLIC_KEY_HER") {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_email: email,
+          to_name: navn,
+          from_name: "Familieforeningen Olsenklanen",
+          reply_to: "post@olsenklanen.dk",
+          subject: emne,
+          message: beskedMedSignatur,
+          afsender_navn: MIT_NAVN,
+          name: MIT_NAVN
+        });
+      }
+      sendt++;
+    } catch(e) {
+      console.log("Mail-fejl til", email, e);
+      fejl++;
+    }
+  }
+
+  if (EMAILJS_PUBLIC_KEY === "INDSÆT_PUBLIC_KEY_HER") {
+    vis(statusEl, "ok", `📋 Besked gemt til ${sendt} modtager${sendt===1?'':'e'} — EmailJS skal opsættes for at sende rigtig mail.`);
+  } else if (fejl === 0) {
+    vis(statusEl, "ok", `✅ Mail sendt til ${sendt} modtager${sendt===1?'':'e'} fra post@olsenklanen.dk`);
+  } else {
+    vis(statusEl, "fejl", `Sendt til ${sendt}, fejl ved ${fejl}. Tjek at modtagerne har mailadresse.`);
+  }
+
+  document.getElementById("emne").value = "";
+  document.getElementById("tekst-mail").value = "";
+  fjernVedhaeft();
+  velkomstbrevTekst = "";
+  document.getElementById("velkomstbrev-boks").style.display = "none";
+  valgteMail.clear(); tegnValgte("mail");
+  document.querySelectorAll('#modtager-liste-mail input').forEach(cb => cb.checked = false);
+  ryddKladde();
+  knap.disabled = false;
+  if (document.getElementById("omr-sendt").style.display !== "none") tegnSendt();
+};
+
+/* ════════ SVAR PÅ INDKOMMET MAIL ════════ */
+window.visReplySvar = function(id, tilEmail, tilNavn) {
+  const omr = document.getElementById("svar-omr-" + id);
+  if (omr) omr.style.display = omr.style.display === "none" ? "block" : "none";
+};
+
+window.sendSvarMail = async function(id, tilEmail, tilNavn, origEmne) {
+  if (!auth.currentUser) { alert("Bekræft din PIN-kode øverst på siden først."); return; }
+  const tekstEl = document.getElementById("svar-tekst-" + id);
+  const tekst = tekstEl ? tekstEl.value.trim() : "";
+  const statusEl = document.getElementById("svar-status-" + id);
+
+  if (!tekst) { if(statusEl) { statusEl.className="status fejl"; statusEl.textContent="Skriv et svar først."; statusEl.style.display="block"; } return; }
+
+  const emne = origEmne.startsWith("Re:") ? origEmne : "Re: " + origEmne;
+  const signatur = `\n\n---\nMed venlig hilsen\n${MIT_NAVN}\npå vegne af Familieforeningen Olsenklanen\n${mitEmail()}`;
+
+  try {
+    // Opdater i Firestore
+    await updateDoc(doc(db, "olsenpost_indkomne", id), {
+      besvaret: true,
+      besvaret_af: MIT_NAVN,
+      besvaret_af_nr: MIT_NR,
+      besvaret_tid: serverTimestamp(),
+      svar_tekst: tekst
+    });
+
+    // Send via EmailJS
+    if (emailJSKlar && EMAILJS_PUBLIC_KEY !== "INDSÆT_PUBLIC_KEY_HER") {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email: tilEmail,
+        to_name: tilNavn,
+        from_name: "Familieforeningen Olsenklanen",
+        reply_to: mitEmail(),
+        subject: emne,
+        message: tekst + signatur,
+        afsender_navn: MIT_NAVN,
+        name: MIT_NAVN
+      });
+    }
+
+    if(statusEl) { statusEl.className="status ok"; statusEl.textContent="✅ Svar sendt fra post@olsenklanen.dk"; statusEl.style.display="block"; }
+    if(tekstEl) tekstEl.value = "";
+  } catch(e) {
+    console.log("Svar-fejl:", e);
+    if(statusEl) { statusEl.className="status fejl"; statusEl.textContent="Kunne ikke sende svar. Prøv igen."; statusEl.style.display="block"; }
+  }
+};
+
+/* ════════ INDKOMNE MAILS (fra Firestore) ════════ */
+let indbakkeData = [];
+function lytIndbakke(){
+  onSnapshot(collection(db, "olsenpost_indkomne"), snap => {
+    indbakkeData = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    indbakkeData.sort((a,b) => {
+      const ta = a.modtaget?.seconds ? a.modtaget.seconds*1000 : (a.modtaget_lokal || 0);
+      const tb = b.modtaget?.seconds ? b.modtaget.seconds*1000 : (b.modtaget_lokal || 0);
+      return tb - ta;
+    });
+    const nye = indbakkeData.filter(m => !m.besvaret).length;
+    const badge = document.getElementById("badge-ny");
+    if (nye > 0) { badge.style.display = "inline-block"; badge.textContent = nye; }
+    else badge.style.display = "none";
+    if (document.getElementById("omr-indbakke").style.display !== "none") tegnIndbakke();
+  }, e => console.log("Indbakke-fejl:", e));
+}
+
+function tegnIndbakke(){
+  const el = document.getElementById("indbakke-liste");
+  if (!indbakkeData.length) {
+    el.innerHTML = '<div class="tom">Ingen indkomne mails endnu.<br><br>Mails sendt til post@olsenklanen.dk vises her.</div>';
+    return;
+  }
+  el.innerHTML = indbakkeData.map(m => `
+    <div class="mail-kort ${m.besvaret ? 'besvaret' : 'ulaest'}">
+      <div class="mail-top">
+        <span class="mail-fra">Fra: ${escHtml(m.fra_navn || m.fra_email || 'Ukendt')}</span>
+        <span class="mail-tid">${tidTekst(m.modtaget)}</span>
+      </div>
+      <div class="mail-emne">Emne: ${escHtml(m.emne || '(intet emne)')}</div>
+      <div class="mail-tekst">${escHtml(m.tekst || '')}</div>
+      ${m.besvaret
+        ? `<div class="mail-status">✅ Besvaret af ${escHtml(m.besvaret_af)} — ${tidTekst(m.besvaret_tid)}</div>`
+        : `<div class="mail-status ikke-besvaret">⏳ Ikke besvaret endnu</div>`
+      }
+      ${!m.besvaret && ER_POSTANSVARLIG ? `
+        <div class="svar-omr" id="svar-omr-${m.id}" style="display:none">
+          <h4>✍️ Skriv svar — sendes fra post@olsenklanen.dk til ${escHtml(m.fra_email || '')}</h4>
+          <textarea id="svar-tekst-${m.id}" class="felt" style="min-height:80px" placeholder="Skriv dit svar her …"></textarea>
+          <br>
+          <button class="knap lille" onclick="sendSvarMail('${m.id}','${enc(m.fra_email||'')}','${enc(m.fra_navn||'')}','${enc(m.emne||'')}')">📨 Send svar</button>
+          <div class="status" id="svar-status-${m.id}"></div>
+        </div>
+        <button class="knap lille grå" style="margin-top:10px" onclick="visReplySvar('${m.id}')">↩ Svar på denne mail</button>
+      ` : ''}
+    </div>`).join("");
+}
+
+/* ════════ SENDTE MAILS ════════ */
+let sendtData = [];
+function lytSendt(){
+  const qy = query(collection(db, "olsenpost_mail"), where("fra_nr", "==", MIT_NR));
+  onSnapshot(qy, snap => {
+    sendtData = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    sendtData.sort((a,b) => {
+      const ta = a.sendt?.seconds ? a.sendt.seconds*1000 : (a.sendt_lokal||0);
+      const tb = b.sendt?.seconds ? b.sendt.seconds*1000 : (b.sendt_lokal||0);
+      return tb - ta;
+    });
+    if (document.getElementById("omr-sendt").style.display !== "none") tegnSendt();
+  });
+}
+
+function tegnSendt(){
+  const el = document.getElementById("sendt-liste");
+  if (!sendtData.length) { el.innerHTML = '<div class="tom">Du har ikke sendt nogen mails endnu.</div>'; return; }
+  el.innerHTML = sendtData.map(m => `
+    <div class="mail-kort">
+      <div class="mail-top">
+        <span class="mail-fra">Til: ${escHtml(m.til_navn)} — ${escHtml(m.til_email||'')}</span>
+        <span class="mail-tid">${tidTekst(m.sendt)}</span>
+      </div>
+      <div class="mail-emne">Emne: ${escHtml(m.emne||'')}</div>
+      <div class="mail-tekst">${escHtml(m.tekst||'')}</div>
+    </div>`).join("");
+}
+
+/* ════════ INTERN BESKED (eksisterende system) ════════ */
+let internData = [];
+function lytIntern(){
+  const qy = query(collection(db, "olsenpost"), where("til", "array-contains", MIT_NR));
+  onSnapshot(qy, snap => {
+    internData = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    internData.sort((a,b) => {
+      const ta = (a.sendt?.seconds ? a.sendt.seconds*1000 : 0) || a.sendt_lokal || 0;
+      const tb = (b.sendt?.seconds ? b.sendt.seconds*1000 : 0) || b.sendt_lokal || 0;
+      return tb - ta;
+    });
+    if (document.getElementById("omr-intern").style.display !== "none") tegnIntern();
+  });
+}
+
+function tegnIntern(){
+  const el = document.getElementById("intern-indbakke-liste");
+  if (!internData.length) { el.innerHTML = '<div class="tom">Ingen interne beskeder endnu.</div>'; return; }
+  el.innerHTML = '<div class="kort"><h2>Dine interne beskeder</h2></div>' + internData.map(m => `
+    <div class="mail-kort">
+      <div class="mail-top">
+        <span class="mail-fra">${escHtml(m.fra_navn)}</span>
+        <span class="mail-tid">${tidTekst(m.sendt)}</span>
+      </div>
+      <div class="mail-tekst">${escHtml(m.tekst)}</div>
+    </div>`).join("");
+}
+
+window.sendIntern = async function(){
+  const tekst = document.getElementById("tekst-intern").value.trim();
+  const statusEl = document.getElementById("send-intern-status");
+  const knap = document.getElementById("send-intern-knap");
+  if (!valgteIntern.size) { vis(statusEl, "fejl", "Vælg mindst én modtager."); return; }
+  if (!tekst)             { vis(statusEl, "fejl", "Skriv en besked."); return; }
+  knap.disabled = true;
+  try {
+    const modtagere = [...valgteIntern.keys()];
+    const navne = [...valgteIntern.values()].map(d => typeof d === "string" ? d : d.navn);
+    await addDoc(collection(db, "olsenpost"), {
+      fra_nr: MIT_NR, fra_navn: MIT_NAVN,
+      til: modtagere, til_navne: navne,
+      tekst, type: "besked",
+      sendt: serverTimestamp(), sendt_lokal: Date.now(),
+      set_af: [], svar: []
+    });
+    vis(statusEl, "ok", "💬 Besked sendt til " + modtagere.length + " modtager" + (modtagere.length===1?"":"e") + ".");
+    document.getElementById("tekst-intern").value = "";
+    valgteIntern.clear(); tegnValgte("intern");
+    document.querySelectorAll('#modtager-liste-intern input').forEach(cb => cb.checked = false);
+  } catch(e) {
+    vis(statusEl, "fejl", "Kunne ikke sende. Prøv igen.");
+  }
+  knap.disabled = false;
+};
+
+/* ════════ FANER ════════ */
+window.visFane = function(navn){
+  ["send","indbakke","sendt","intern","vagt","hjaelp"].forEach(f => {
+    document.getElementById("omr-"+f).style.display = (f===navn)?"block":"none";
+    document.getElementById("fane-"+f).classList.toggle("aktiv", f===navn);
+  });
+  if (navn === "indbakke") tegnIndbakke();
+  if (navn === "sendt") tegnSendt();
+  if (navn === "intern") tegnIntern();
+  if (navn === "vagt") tegnVagtplan();
+};
+
+/* ════════ POSTVAGT ════════ */
+// Samme liste og samme Firestore-dokument (olsenpost/vagtplan) bruges også i admin.html,
+// nøglet på e-mail, så begge steder altid viser den samme vagtplan.
+const POSTVAGT_GRUPPE = [
+  { email: 'cg@gallerieg.dk',  navn: 'Carsten Gram' },
+  { email: 'kurt@vormslev.dk', navn: 'Kurt Vormslev Olsen' },
+  { email: 'safi@dr.dk',       navn: 'Sanne Gram Fadel' },
+  { email: 'tvo@ishoejby.dk',  navn: 'Tommy Vormslev Olsen' },
+  { email: 'kld@inmobia.com',  navn: 'Karin Lund' },
+];
+
+async function tegnVagtplan(){
+  const el = document.getElementById("vagt-tabel");
+  el.innerHTML = '<div class="indlaeser">Henter vagtplan …</div>';
+  let vagtData = {};
+  try {
+    const snap = await getDoc(doc(db, "olsenpost", "vagtplan"));
+    if (snap.exists()) vagtData = snap.data();
+  } catch(e) { console.log("Vagtplan-fejl:", e); }
+
+  const rows = POSTVAGT_GRUPPE.map(p => {
+    const info = vagtData[p.email] || { aktiv:false, dato:"" };
+    return { email: p.email, navn: p.navn, aktiv: !!info.aktiv, dato: info.dato || "" };
+  });
+
+  el.innerHTML = `
+    <table class="vagt-tabel-el">
+      <thead><tr><th>Navn</th><th>Status</th><th>Vagtdato</th><th></th></tr></thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr data-email="${enc(r.email)}">
+            <td>${escHtml(r.navn)}</td>
+            <td>
+              <button class="vagt-status ${r.aktiv?'paa':'ikke'}" onclick="skiftVagt('${enc(r.email)}')">
+                ${r.aktiv ? '✅ På vagt' : '❌ Ikke på vagt'}
+              </button>
+            </td>
+            <td><input type="date" class="felt vagt-dato" value="${r.dato}" style="width:auto"></td>
+            <td><button class="knap lille" onclick="gemVagtDato('${enc(r.email)}')">Gem dato</button></td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>`;
+}
+
+window.skiftVagt = async function(email){
+  const snap = await getDoc(doc(db, "olsenpost", "vagtplan"));
+  const data = snap.exists() ? snap.data() : {};
+  const nu = data[email] || { aktiv:false, dato:"" };
+  data[email] = { ...nu, aktiv: !nu.aktiv };
+  await setDoc(doc(db, "olsenpost", "vagtplan"), data);
+  tegnVagtplan();
+};
+
+window.gemVagtDato = async function(email){
+  const rad = document.querySelector(`#vagt-tabel tr[data-email="${email}"]`);
+  const dato = rad ? rad.querySelector(".vagt-dato").value : "";
+  const snap = await getDoc(doc(db, "olsenpost", "vagtplan"));
+  const data = snap.exists() ? snap.data() : {};
+  const nu = data[email] || { aktiv:false, dato:"" };
+  data[email] = { ...nu, dato };
+  await setDoc(doc(db, "olsenpost", "vagtplan"), data);
+  tegnVagtplan();
+};
+
+/* ── Start ── */
+hentModtagere();
+lytIndbakke();
+lytSendt();
+lytIntern();
+if (!ER_POSTANSVARLIG) {
+  document.getElementById("fane-send").style.display = "none";
+  document.getElementById("omr-send").style.display = "none";
+  visFane("indbakke");
+}
+</script>
+
+</body>
+</html>
