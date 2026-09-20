@@ -449,7 +449,7 @@ async function hentModtagere() {
       const medlemmer = data.familiemedlemmer || [];
 
       const voksne = medlemmer
-        .filter(p => p.rolle !== "barn" && (p.fornavn || p.navn || "").trim())
+        .filter(p => p.rolle !== "barn" && p.status !== "afdød" && p.status !== "udmeldt" && (p.fornavn || p.navn || "").trim())
         .slice()
         .sort((a, b) => foedselsTal(a) - foedselsTal(b));
 
