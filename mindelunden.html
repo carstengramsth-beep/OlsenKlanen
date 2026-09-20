@@ -197,7 +197,7 @@ body {
 }
 .omtale-knap:hover { background: #3a6b1d; }
 .omtale-knap:disabled { background: #b5b5a5; cursor: default; }
-.omtale-status { font-size: 12px; color: #b03030; margin-top: 5px; }
+.omtale-status { font-size: 12px; color: #b03030; margin-top: 5px; word-break: break-word; }
 
 @media (max-width: 480px) {
   .grid { grid-template-columns: 1fr; }
@@ -358,6 +358,7 @@ async function hentOmtaler() {
     Object.values(map).forEach(liste => liste.sort((a, b) => (a.tidsstempel_lokal||0) - (b.tidsstempel_lokal||0)));
     omtalerPrPerson = map;
   } catch (e) {
+    console.error('Mindeord kunne ikke hentes:', e);
     omtalerPrPerson = {};
   }
 }
@@ -399,6 +400,7 @@ async function hentAfdoede() {
     indhold.innerHTML = `<div class="grid">${afdoede.map(mindekortHtml).join('')}</div>`;
     haandterVisFraLink();
   } catch (err) {
+    console.error('Mindelunden kunne ikke hentes:', err);
     indhold.innerHTML = '<div class="tom-besked">⚠️ Kunne ikke hente data fra databasen. Tjek din internetforbindelse og genindlæs siden.</div>';
   }
 }
@@ -441,7 +443,10 @@ document.getElementById('indhold').addEventListener('click', async e => {
     if (statusEl) statusEl.textContent = '';
     hentAfdoede();
   } catch (err) {
-    if (statusEl) statusEl.textContent = '✗ Kunne ikke gemme — prøv igen.';
+    console.error('Mindeord kunne ikke gemmes:', err);
+    const kode   = (err && err.code) ? err.code : 'ukendt';
+    const besked = (err && err.message) ? err.message : String(err);
+    if (statusEl) statusEl.textContent = '✗ Kunne ikke gemme. Fejlkode: ' + kode + ' — ' + besked;
     knap.disabled = false;
   }
 });
