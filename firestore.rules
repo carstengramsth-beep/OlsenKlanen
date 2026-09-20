@@ -114,6 +114,15 @@ service cloud.firestore {
     match /gamle_billeder_kommentarer/{id} {
       allow read, write: if true;
     }
+
+    match /arkiv/{id} {
+      allow read, write: if true;
+    }
+
+    match /mindelunden_omtaler/{id} {
+      allow read, write: if true;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
