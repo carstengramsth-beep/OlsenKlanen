@@ -315,8 +315,8 @@ try {
     </div>
 
     <div class="kort">
-      <h2>📥 Indkomne mails — kendt begrænsning</h2>
-      <p class="hint">Rigtige svar, der sendes til post@olsenklanen.dk, lander <b>ikke</b> automatisk her endnu — det kræver en teknisk robot, der ikke er bygget færdig. Indtil da videresendes rigtige mails til post@olsenklanen.dk i stedet direkte til jeres egne private mailadresser via Simply.coms videresendelse.</p>
+      <h2>📥 Indkomne mails</h2>
+      <p class="hint">Svar og andre mails til post@olsenklanen.dk hentes automatisk ind her (der tjekkes hvert 5. minut). Alle 5 ser de samme mails. Den der svarer, sætter sit navn på svaret. Derudover videresender Simply.com mails til post@olsenklanen.dk til de postansvarliges private mailadresser.</p>
     </div>
   </div>
 
@@ -804,6 +804,7 @@ window.sendMail = async function(){
       await addDoc(collection(db, "olsenpost_mail"), {
         fra_nr: MIT_NR,
         fra_navn: MIT_NAVN,
+        fra_email: mitEmail(),
         til_nr: nr,
         til_navn: navn,
         til_email: email,
@@ -821,7 +822,7 @@ window.sendMail = async function(){
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
           to_email: email,
           to_name: navn,
-          from_name: "Familieforeningen Olsenklanen",
+          from_name: MIT_NAVN + " – Olsenklanen",
           reply_to: "post@olsenklanen.dk",
           subject: emne,
           message: beskedMedSignatur,
@@ -888,7 +889,7 @@ window.sendSvarMail = async function(id, tilEmail, tilNavn, origEmne) {
       await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
         to_email: tilEmail,
         to_name: tilNavn,
-        from_name: "Familieforeningen Olsenklanen",
+        from_name: MIT_NAVN + " – Olsenklanen",
         reply_to: mitEmail(),
         subject: emne,
         message: tekst + signatur,
