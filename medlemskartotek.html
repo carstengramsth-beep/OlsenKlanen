@@ -356,6 +356,7 @@ body.kan-redigere .historisk-btn-wrapper{display:none}
   <span>🔑 Du er logget ind som <strong id="admin-bjaelke-rolle">Administrator</strong> — <span id="admin-bjaelke-navn"></span></span>
   <div style="display:flex;gap:.5rem;align-items:center">
     <button id="ret-alle-ind-knap" style="background:var(--guld);color:var(--tekst);border:none;padding:.4rem .8rem;border-radius:4px;font-weight:600;cursor:pointer;font-size:12px">🛡️ Sæt dataansvarlige automatisk</button>
+    <button id="laas-numre-knap" style="background:var(--guld);color:var(--tekst);border:none;padding:.4rem .8rem;border-radius:4px;font-weight:600;cursor:pointer;font-size:12px">🔒 Lås numre for bekræftede husstande</button>
     <button id="admin-log-ud">Log ud</button>
   </div>
 </div>
@@ -620,6 +621,7 @@ body.kan-redigere .historisk-btn-wrapper{display:none}
   <img id="lysboks-billede" src="" alt="">
 </div>
  
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script type="module">
 import { initializeApp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -713,8 +715,13 @@ function sikrPersonNavnedele(p) {
 function sikrFasteBogstaver(personer) {
   const voksne = personer.filter(p => p.rolle !== 'barn');
   const brugte = new Set(voksne.filter(p => p.bogstav).map(p => p.bogstav));
+  // Bogstaver i låste numre (fx "45-B") er også optaget
+  personer.forEach(p => {
+    const del = String(p.fastNr || '').split('-')[1];
+    if (del && /^[A-ZÆØÅ]$/.test(del)) brugte.add(del);
+  });
   const mangler = sorterAEldstOEverst(
-    voksne.filter(p => !p.bogstav && p.status !== 'afdød' && p.status !== 'udmeldt')
+    voksne.filter(p => !p.bogstav && !p.fastNr && p.status !== 'afdød' && p.status !== 'udmeldt')
   );
   let kandidat = 0;
   mangler.forEach(p => {
@@ -725,6 +732,133 @@ function sikrFasteBogstaver(personer) {
   });
 }
  
+// ── FASTE MEDLEMSNUMRE ───────────────────────────────────────
+// Før husstanden har bekræftet, er numrene FORELØBIGE (voksne: fast bogstav,
+// børn: efter alder). Når husstanden bekræfter, gemmes nummeret på personen
+// som p.fastNr — og derefter ændrer det sig ALDRIG, uanset rettelser.
+function erAktivPerson(p) { return p.status !== 'afdød' && p.status !== 'udmeldt'; }
+
+function beregnPersonNr(husNr, personer, p) {
+  if (p.fastNr) return String(p.fastNr);
+  personer = personer || [];
+  if (p.rolle === 'barn') {
+    const brugte = new Set(personer
+      .map(x => String(x.fastNr || '').split('-')[1])
+      .filter(d => d && /^\d+$/.test(d)).map(Number));
+    const uden = sorterAEldstOEverst(personer.filter(x => x.rolle === 'barn' && !x.fastNr));
+    const idx = uden.indexOf(p);
+    if (idx < 0) return String(husNr);
+    let tal = 0;
+    for (let i = 0; i <= idx; i++) { tal++; while (brugte.has(tal)) tal++; }
+    return `${husNr}-${tal}`;
+  }
+  if (!erAktivPerson(p) || !p.bogstav) return String(husNr);
+  return `${husNr}-${p.bogstav}`;
+}
+
+// Lås numrene for alle aktive personer, der endnu ikke har et fast nummer.
+function laasNumre(husNr, personer) {
+  personer = personer || [];
+  sikrFasteBogstaver(personer);
+  const nye = personer
+    .filter(p => !p.fastNr && erAktivPerson(p) && (visPersonNavn(p) || p.navn || '').trim())
+    .map(p => [p, beregnPersonNr(husNr, personer, p)]);
+  let antal = 0;
+  nye.forEach(([p, nr]) => { if (nr.includes('-')) { p.fastNr = nr; antal++; } });
+  return antal;
+}
+
+function nummerOversigt(husNr, personer) {
+  personer = personer || [];
+  sikrFasteBogstaver(personer);
+  return personer
+    .filter(p => erAktivPerson(p) && (visPersonNavn(p) || p.navn || '').trim())
+    .map(p => ({ navn: (visPersonNavn(p) || p.navn).trim(), nr: beregnPersonNr(husNr, personer, p) }));
+}
+
+// Kvittering på skærmen + mail til husstanden + besked til de postansvarlige
+const NR_EMAILJS_PUBLIC_KEY  = "76jQOeDv73Qw2zgmU";
+const NR_EMAILJS_SERVICE_ID  = "service_oo888vl";
+const NR_EMAILJS_TEMPLATE_ID = "template_543ms2z";
+const NR_POSTANSVARLIGE      = ["8-B", "19-A", "22-B", "23-B", "48-B"];
+
+async function visNummerKvittering(husNr, m, info) {
+  if (!info) return;
+  const aendringer = info.efter.filter(e => {
+    const f = info.foer.find(x => x.navn === e.navn);
+    return !f || f.nr !== e.nr;
+  });
+  if (!info.foersteGang && !aendringer.length) return;
+
+  const oversigt = info.efter.map(e => `${e.navn}: ${e.nr}`).join('\n');
+  const noter = aendringer.map(e => {
+    const f = info.foer.find(x => x.navn === e.navn);
+    return f
+      ? `• ${e.navn} har fået nyt medlemsnummer: ${e.nr} (før ${f.nr}). Brug det nye nummer, når du logger ind.`
+      : `• ${e.navn} er ny i husstanden og har fået medlemsnummer ${e.nr}.`;
+  }).join('\n');
+  const indledning = info.foersteGang
+    ? 'Jeres medlemsnumre er nu låst og ændrer sig ikke fremover:'
+    : 'Jeres medlemsnumre er opdateret. De låste numre er:';
+
+  alert(`🔒 ${indledning}\n\n${oversigt}` +
+        (noter ? `\n\nBemærk:\n${noter}` : '\n\nIngen numre er ændret.') +
+        `\n\nI får også numrene tilsendt på mail.`);
+
+  const husNavn = (typeof visKortNavn === 'function' ? visKortNavn(m) : '') || `husstand nr. ${husNr}`;
+  const mailTekst =
+`Kære ${husNavn},
+
+Tak fordi I har bekræftet jeres oplysninger i OlsenKlanen. ${indledning}
+
+${oversigt}
+${noter ? '\n' + noter + '\n' : ''}
+PIN-koden er den samme som før.
+
+Gem gerne denne mail, så I altid har jeres medlemsnumre ved hånden.
+
+Mange varme hilsner
+OlsenBanden
+Familieforeningen Olsenklanen
+post@olsenklanen.dk · https://www.olsenklanen.dk`;
+
+  // Mail til husstanden
+  try {
+    const adresser = (m.email || '').split('/').map(e => e.trim()).filter(e => e.includes('@'));
+    if (window.emailjs && adresser.length) {
+      emailjs.init(NR_EMAILJS_PUBLIC_KEY);
+      for (const adr of adresser) {
+        await emailjs.send(NR_EMAILJS_SERVICE_ID, NR_EMAILJS_TEMPLATE_ID, {
+          to_email: adr,
+          to_name: husNavn,
+          from_name: "Familieforeningen Olsenklanen",
+          reply_to: "post@olsenklanen.dk",
+          subject: "Jeres medlemsnumre i OlsenKlanen",
+          message: mailTekst,
+          afsender_navn: "Familieforeningen Olsenklanen",
+          name: "Familieforeningen Olsenklanen"
+        });
+      }
+    }
+  } catch (e) { console.log('Nummer-mail kunne ikke sendes:', e); }
+
+  // Besked til de fem postansvarlige i OlsenPost
+  try {
+    await addDoc(collection(db, 'olsenpost'), {
+      fra_nr: String(husNr),
+      fra_navn: 'Medlemskartoteket (automatisk)',
+      til: NR_POSTANSVARLIGE,
+      til_navne: NR_POSTANSVARLIGE,
+      tekst: `🔒 Husstand nr. ${husNr} (${husNavn}) har ${info.foersteGang ? 'bekræftet og fået låst medlemsnumre' : 'fået opdateret medlemsnumre'}:\n\n${oversigt}` + (noter ? `\n\n${noter}` : ''),
+      type: 'besked',
+      sendt: new Date(),
+      sendt_lokal: Date.now(),
+      set_af: [],
+      svar: []
+    });
+  } catch (e) { console.log('Besked til postansvarlige fejlede:', e); }
+}
+
 // Sortér personer ældst øverst (efter fødselsdato). Personer uden dato kommer til sidst.
 function sorterAEldstOEverst(personer) {
   return [...personer].sort((a, b) => {
@@ -831,7 +965,7 @@ function byggKort(m) {
   }
  
   const familieHtml = ROLLE_GRUPPER
-    .map(g => byggPersonGruppe((m.familiemedlemmer||[]).filter(p => p.rolle === g.rolle), g.label, m.nr, 1, voksenBogstavKort))
+    .map(g => byggPersonGruppe((m.familiemedlemmer||[]).filter(p => p.rolle === g.rolle), g.label, m.nr, 1, voksenBogstavKort, m.familiemedlemmer || []))
     .join('');
  
   const begiHtml = (m.begivenheder || []).length
@@ -942,6 +1076,12 @@ async function bekraeftMedlemskab(nr) {
   const medlemmer = (m.familiemedlemmer || []).map(p => visPersonNavn(p)).filter(Boolean);
  
   m.medlemskab_bekraeftet = { dato: idag, tid: new Date().toTimeString().slice(0,5), email: email, medlemmer: medlemmer, nr: nr, kilde: 'bekraeft-knap' };
+  // Lås medlemsnumrene
+  const _foer = nummerOversigt(nr, JSON.parse(JSON.stringify(m.familiemedlemmer || [])));
+  const _foersteGang = !m.numre_laast;
+  laasNumre(nr, m.familiemedlemmer || []);
+  if (!m.numre_laast) m.numre_laast = { dato: idag, tid: new Date().toTimeString().slice(0,5), kilde: 'bekraeft-knap' };
+  const _nummerInfo = { foer: _foer, efter: nummerOversigt(nr, m.familiemedlemmer || []), foersteGang: _foersteGang };
   // Opdater også husstandens email hvis den blev rettet
   if (email && (m.email || '').split('/')[0].trim() !== email) {
     m.email = email;
@@ -950,13 +1090,14 @@ async function bekraeftMedlemskab(nr) {
     await setDoc(doc(db, 'membres', nr), m);
     alert('Tak! Jeres medlemskab er bekræftet. ✓');
     renderGrid();
+    await visNummerKvittering(nr, m, _nummerInfo);
   } catch(e) {
     alert('Kunne ikke gemme bekræftelsen. Prøv igen.');
     m.medlemskab_bekraeftet = null;
   }
 }
  
-function byggPersonGruppe(personer, label, husstandsNr, boernStart, voksenBogstavKort) {
+function byggPersonGruppe(personer, label, husstandsNr, boernStart, voksenBogstavKort, alleIHus) {
   if (!personer.length) return '';
   const sorteret = sorterAEldstOEverst(personer);
   return `<div style="margin-bottom:.8rem">
@@ -964,7 +1105,9 @@ function byggPersonGruppe(personer, label, husstandsNr, boernStart, voksenBogsta
     ${sorteret.map((p, i) => {
       const erBarn = p.rolle === 'barn';
       let personNr = husstandsNr;
-      if (erBarn) {
+      if (alleIHus) {
+        personNr = (p.fastNr ? '🔒 ' : '') + beregnPersonNr(husstandsNr, alleIHus, p);
+      } else if (erBarn) {
         personNr = `${husstandsNr}-${boernStart + i}`;
       } else if (voksenBogstavKort) {
         const bg = voksenBogstavKort(p);
@@ -1038,8 +1181,7 @@ function byggVelkomstTekst(m) {
   let loginLinjer;
   if (personer.length) {
     loginLinjer = personer.map((p) => {
-      const suffix = p.rolle === 'barn' ? String(bornSorteret.indexOf(p) + 1) : (p.bogstav || '');
-      const persNr = suffix ? `${m.nr}-${suffix}` : `${m.nr}`;
+      const persNr = beregnPersonNr(m.nr, m.familiemedlemmer || [], p);
       return `${visPersonNavn(p) || p.navn}: ${persNr}`;
     }).join('\n');
   } else {
@@ -1064,7 +1206,7 @@ Når du er logget ind, så gå ind i Medlemskartoteket, find dit eget navn og kl
 
 Har du en mærkedag på vej — fødselsdag, jubilæum eller diamantbryllup? Så tryk på ➕ Begivenhed, vælg type og dato, og skriv gerne en lille besked til forsiden, som vises på selve dagen (f.eks. "Der er morgenkaffe kl. 8.00 — alle er velkomne").
 
-Til sidst trykker du på den gule knap ✓ Bekræft data og medlemskab nederst. Så er dine rettelser gemt, og du er registreret som aktivt medlem.
+Til sidst trykker du på den gule knap ✓ Bekræft data og medlemskab nederst. Så er dine rettelser gemt, og du er registreret som aktivt medlem. Samtidig bliver jeres medlemsnumre låst, så de aldrig ændrer sig — og I får dem tilsendt på mail.
 
 Lille tip: Hvis "Rediger" ikke dukker op, så log helt ud (øverst til højre) og ind igen med dit eget medlemsnummer. Så kommer knappen frem.
 
@@ -1086,8 +1228,7 @@ function lavVelkomstbrev(nr) {
   let loginRaekker;
   if (personer.length) {
     loginRaekker = personer.map((p) => {
-      const suffix = p.rolle === 'barn' ? String(bornSorteretBrev.indexOf(p) + 1) : (p.bogstav || '');
-      const persNr = suffix ? `${m.nr}-${suffix}` : `${m.nr}`;
+      const persNr = beregnPersonNr(m.nr, m.familiemedlemmer || [], p);
       return `<tr><td>${visPersonNavn(p) || p.navn}</td><td><b>${persNr}</b></td></tr>`;
     }).join('');
   } else {
@@ -1147,7 +1288,7 @@ function lavVelkomstbrev(nr) {
 <h2>Første gang: bekræft dine oplysninger</h2>
 <p>Når du er logget ind, så gå ind i <b>Medlemskartoteket</b>, find dit eget navn og klik på det. Klik på <b>✏️ Rediger</b>, og tjek at navn, fødselsdag, adresse, telefon og mail passer — ret det, der er forkert.</p>
 <p>Har du en <b>mærkedag</b> på vej — fødselsdag, jubilæum eller diamantbryllup? Så tryk på <b>➕ Begivenhed</b>, vælg type og dato, og skriv gerne en lille <b>besked til forsiden</b>, som vises på selve dagen (f.eks. "Der er morgenkaffe kl. 8.00 — alle er velkomne").</p>
-<p>Til sidst trykker du på den gule knap <b>✓ Bekræft data og medlemskab</b> nederst. Så er dine rettelser gemt, og du er registreret som aktivt medlem.</p>
+<p>Til sidst trykker du på den gule knap <b>✓ Bekræft data og medlemskab</b> nederst. Så er dine rettelser gemt, og du er registreret som aktivt medlem. Samtidig bliver jeres medlemsnumre låst, så de aldrig ændrer sig — og I får dem tilsendt på mail.</p>
 <p><i>Lille tip: Hvis "Rediger" ikke dukker op, så log helt ud (øverst til højre) og ind igen med dit eget medlemsnummer. Så kommer knappen frem.</i></p>
  
 <p>Vi glæder os til at se dig aktiv derinde. Har du spørgsmål, så ring eller skriv til en af os i OlsenBanden.</p>
@@ -1262,9 +1403,7 @@ function renderPersonEdit() {
   el.innerHTML = visningsRaekke.map(({ p, origIndex }) => {
     const i = origIndex; // bevarer korrekt reference til data-felter og sletning
     const erBarn = p.rolle === 'barn';
-    const medlemsNr = erBarn
-      ? `${aktivtNr}-${barnTillaegsNr(p)}`
-      : `${aktivtNr}${voksenBogstav(p) ? '-' + voksenBogstav(p) : ''}`;
+    const medlemsNr = (p.fastNr ? '🔒 ' : '') + beregnPersonNr(aktivtNr, personListe, p);
     const visningsNavn = visPersonNavn(p) || '(nyt medlem)';
     const nuvStatus = p.status || 'aktiv';
     return `
@@ -1820,6 +1959,28 @@ async function gemData() {
   const linje2  = [postnummer, by].filter(Boolean).join(' ');
   const adresse = [vej, linje2].filter(Boolean).join('\n');
   const tidl    = data.find(x => x.nr === gammelNr) || {};
+
+  // ── FASTE MEDLEMSNUMRE ──
+  // Eget kort gemmes = bekræftelse → numrene låses. Er husstanden allerede låst,
+  // får nye personer automatisk næste ledige nummer — de andres numre røres ikke.
+  const _husFoer = JSON.parse(JSON.stringify(tidl.familiemedlemmer || []));
+  if (nytNr !== gammelNr) {
+    personListe.forEach(p => {
+      if (p.fastNr) p.fastNr = nytNr + '-' + String(p.fastNr).split('-').slice(1).join('-');
+    });
+  }
+  const _skalLaase = !!((egetNr && sammeHusstand(egetNr, gammelNr)) || tidl.numre_laast);
+  let _nummerInfo = null;
+  let _numreLaast = tidl.numre_laast || null;
+  if (_skalLaase) {
+    const _foer = nummerOversigt(gammelNr, _husFoer);
+    laasNumre(nytNr, personListe);
+    if (!_numreLaast) {
+      const _n = new Date();
+      _numreLaast = { dato: _n.toISOString().slice(0,10), tid: _n.toTimeString().slice(0,5), kilde: 'gem-rettelse' };
+    }
+    _nummerInfo = { foer: _foer, efter: nummerOversigt(nytNr, personListe), foersteGang: !tidl.numre_laast };
+  }
  
   // Ryd op i medlemmer: synkronisér det samlede navn ud fra navnedelene,
   // og behold kun medlemmer der har et navn.
@@ -1848,6 +2009,7 @@ async function gemData() {
     begivenheder:     begiListe.filter(b => b.dato || b.beskrivelse || b.besked),
     sidstRedigeret:   new Date().toISOString(),
     medlemskab_bekraeftet: _bekraeftelse,
+    numre_laast: _numreLaast,
     sidstRedigeretAf: auth.currentUser?.email || (familieSession ? `Medlem nr. ${familieSession.nr}` : 'ukendt')
   };
  
@@ -1899,6 +2061,7 @@ async function gemData() {
     visStatus('ok', '✓ Gemt og bekræftet i database!');
     editGemKnap.disabled = false;
     renderGrid();
+    if (_nummerInfo) { renderPersonEdit(); await visNummerKvittering(nytNr, opdateret, _nummerInfo); }
   } catch (err) {
     editGemKnap.disabled = false;
     visStatus('fejl', '✗ ' + (err.message || 'Kunne ikke gemme — prøv igen.'));
@@ -2093,6 +2256,32 @@ document.getElementById('login-knap').addEventListener('click', () => {
 });
 document.getElementById('admin-log-ud').addEventListener('click', () => signOut(auth));
  
+// ── LÅS NUMRE FOR ALLEREDE BEKRÆFTEDE HUSSTANDE (engangs-knap for OlsenBanden) ──
+document.getElementById('laas-numre-knap').addEventListener('click', async () => {
+  if (!document.body.classList.contains('kan-redigere')) { alert('Kun OlsenBanden kan gøre dette.'); return; }
+  const kandidater = data.filter(m => m.medlemskab_bekraeftet && !m.numre_laast);
+  if (!kandidater.length) { alert('Alle bekræftede husstande har allerede låste numre. Intet at gøre.'); return; }
+  const ok = confirm(
+    `${kandidater.length} husstande har bekræftet, men har endnu ikke låste numre.\n\n` +
+    `Numrene låses PRÆCIS som de står på kortene i dag. Der sendes ingen mails.\n\nVil du fortsætte?`);
+  if (!ok) return;
+  const knap = document.getElementById('laas-numre-knap');
+  knap.disabled = true; knap.textContent = '⏳ Låser…';
+  let laast = 0, fejl = 0;
+  for (const m of kandidater) {
+    try {
+      laasNumre(m.nr, m.familiemedlemmer || []);
+      const n = new Date();
+      m.numre_laast = { dato: n.toISOString().slice(0,10), tid: n.toTimeString().slice(0,5), kilde: 'engangs-laasning' };
+      await setDoc(doc(db, 'membres', m.nr), m);
+      laast++;
+    } catch (e) { console.log('Låse-fejl', m.nr, e); m.numre_laast = null; fejl++; }
+  }
+  knap.disabled = false; knap.textContent = '🔒 Lås numre for bekræftede husstande';
+  renderGrid();
+  alert(`🔒 Færdig. Numre låst for ${laast} husstande.` + (fejl ? ` ${fejl} fejlede — prøv knappen igen.` : ''));
+});
+
 // ── SÆT DATAANSVARLIGE AUTOMATISK (engangs-knap for OlsenBanden) ──
 document.getElementById('ret-alle-ind-knap').addEventListener('click', async () => {
   if (!document.body.classList.contains('kan-redigere')) {
