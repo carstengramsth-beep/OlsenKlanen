@@ -436,6 +436,11 @@
   // Returnerer personobjektet, eller null hvis ikke fundet.
   function findPerson(d, hus, del) {
     if (!del) return null;
+    // LÅSTE NUMRE: matcher personens faste nummer (fx "45-B") direkte
+    const fast = (d.familiemedlemmer || []).find(p =>
+      String(p.fastNr || "").trim().toUpperCase() === (hus + "-" + del).toUpperCase());
+    if (fast) return fast;
+    if (d.numre_laast) return null; // husstanden er låst, og nummeret findes ikke
     // Bogstav -> voksen efter alder
     if (/^[A-ZÆØÅ]$/.test(del)) {
       const index = del.charCodeAt(0) - "A".charCodeAt(0); // A=0, B=1, C=2 ...
@@ -593,7 +598,7 @@
  
     // voksne er allerede sorteret aeldst-foerst, saa index 0 = A, 1 = B ...
     voksne.forEach((p, i) => {
-      const bogstav = String.fromCharCode("A".charCodeAt(0) + i);
+      const bogstav = p.fastNr ? String(p.fastNr).split("-").slice(1).join("-") : String.fromCharCode("A".charCodeAt(0) + i);
       const navn = personNavnAf(p);
       const b = document.createElement("button");
       b.className = "knap";
@@ -612,6 +617,7 @@
   // ---- Find bogstavet (A/B/C...) for en valgt voksen ud fra alder ----
   function bogstavForPerson(d, valgtPerson) {
     if (!valgtPerson) return "";
+    if (valgtPerson.fastNr) return String(valgtPerson.fastNr).split("-").slice(1).join("-");
     if (valgtPerson.rolle === "barn") return ""; // boern bruger tal, ikke bogstav
     const voksne = voksneEfterAlder(d);
     const i = voksne.findIndex(p => p === valgtPerson
@@ -631,7 +637,9 @@
  
     // Fuldt medlemsnummer med bogstav/tal, fx "8-B" eller "55-1".
     let fuldtNr = nr;
-    if (valgtPerson) {
+    if (valgtPerson && valgtPerson.fastNr) {
+      fuldtNr = String(valgtPerson.fastNr);          // låst nummer har altid forrang
+    } else if (valgtPerson) {
       if (valgtPerson.rolle === "barn") {
         // BARN: gem fuldt nummer.
         // 1) eksplicit medlemsnummer hvis sat i kartoteket
