@@ -756,6 +756,14 @@ function beregnPersonNr(husNr, personer, p) {
   return `${husNr}-${p.bogstav}`;
 }
 
+// Afdøde, der BEVIDST er valgt til at blive nævnt i velkomstbrevet (kræver mindeord)
+function mindelundNavne(personer) {
+  return (personer || [])
+    .filter(p => p.status === 'afdød' && p.mindelund_i_brev === true && String(p.mindeord || '').trim())
+    .map(p => (visPersonNavn(p) || p.navn || '').trim())
+    .filter(Boolean);
+}
+
 // Lås numrene for alle aktive personer, der endnu ikke har et fast nummer.
 function laasNumre(husNr, personer) {
   personer = personer || [];
@@ -1177,7 +1185,7 @@ function byggVelkomstTekst(m) {
   const kode = m.kode || 'Olsen-' + String(m.nr).split('-')[0];
   sikrFasteBogstaver(m.familiemedlemmer || []);
   const bornSorteret = sorterAEldstOEverst((m.familiemedlemmer || []).filter(p => p.rolle === 'barn'));
-  const personer = (m.familiemedlemmer || []).filter(p => (visPersonNavn(p) || p.navn));
+  const personer = (m.familiemedlemmer || []).filter(p => (visPersonNavn(p) || p.navn) && erAktivPerson(p)); // afdøde/udmeldte kommer ikke med
   let loginLinjer;
   if (personer.length) {
     loginLinjer = personer.map((p) => {
@@ -1197,7 +1205,7 @@ Gå ind på https://www.olsenklanen.dk og log ind med dit personlige medlemsnumm
 ${loginLinjer}
 
 Fælles start-PIN: ${kode}
-
+${mindelundNavne(m.familiemedlemmer).length ? '\nI mindelunden: ' + mindelundNavne(m.familiemedlemmer).join(', ') + '\n' : ''}
 SKIFT DIN PIN-KODE
 PIN-koden ovenfor er blot en startkode. Vil du have den ændret til noget, du selv vælger, så sig til Carsten eller Karin — så retter vi den for dig.
 
@@ -1224,7 +1232,7 @@ function lavVelkomstbrev(nr) {
   // Personer i husstanden med hvert deres nummer (46-A, 46-B ...)
   sikrFasteBogstaver(m.familiemedlemmer || []);
   const bornSorteretBrev = sorterAEldstOEverst((m.familiemedlemmer || []).filter(p => p.rolle === 'barn'));
-  const personer = (m.familiemedlemmer || []).filter(p => (visPersonNavn(p) || p.navn));
+  const personer = (m.familiemedlemmer || []).filter(p => (visPersonNavn(p) || p.navn) && erAktivPerson(p)); // afdøde/udmeldte kommer ikke med
   let loginRaekker;
   if (personer.length) {
     loginRaekker = personer.map((p) => {
@@ -1280,6 +1288,7 @@ function lavVelkomstbrev(nr) {
 <p>Gå ind på <b>${loginUrl}</b> og log ind med dit personlige medlemsnummer og PIN-koden nedenfor:</p>
 <table>${loginRaekker}</table>
 <div class="kode-boks">Fælles start-PIN: <b>${kode}</b></div>
+${mindelundNavne(m.familiemedlemmer).length ? `<p style="text-align:center;font-style:italic;color:#555">🕯️ I mindelunden: ${mindelundNavne(m.familiemedlemmer).join(', ')}</p>` : ''}
 <div class="knap-linje"><a href="${loginUrl}">Gå til OlsenKlanen</a></div>
  
 <h2>Skift din PIN-kode</h2>
@@ -1447,6 +1456,7 @@ function renderPersonEdit() {
       <div data-mindeord-wrap="${i}" style="margin-top:.5rem;${nuvStatus==='aktiv' ? 'display:none' : ''}">
         <label style="display:block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--tekst-lys);margin-bottom:3px">💬 Mindeord (vises i Mindelunden)</label>
         <textarea data-pi="${i}" data-felt="mindeord" placeholder="Nogle varme ord til minde om…" style="width:100%;border:1px solid var(--border);padding:.5rem .65rem;font-size:12.5px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:var(--hvid);outline:none;border-radius:3px;min-height:60px;resize:vertical;line-height:1.45">${p.mindeord||''}</textarea>
+        ${nuvStatus==='afdød' ? `<label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--tekst)"><input type="checkbox" data-mindelund-pi="${i}" ${p.mindelund_i_brev === true ? 'checked' : ''}> 🕯️ Nævn i velkomstbrevet under "I mindelunden" <span style="color:var(--tekst-lys)">(kun hvis der er skrevet mindeord)</span></label>` : ''}
         ${nuvStatus==='afdød' ? `<div style="margin-top:6px"><a href="mindelunden.html?vis=${encodeURIComponent(aktivtNr + '::' + visPersonNavn(p))}" target="_blank" style="font-size:11.5px;color:var(--lilla);text-decoration:none;font-weight:600">🕯️ Se/åbn denne person i Mindelunden →</a></div>` : ''}
       </div>
       <div class="person-foto-sektion" style="margin-top:.5rem;padding-top:.5rem;border-top:1px dashed var(--border);display:flex;align-items:center;gap:10px">
@@ -1704,6 +1714,12 @@ document.getElementById('person-liste-edit').addEventListener('change', e => {
     t.value = '';
     return;
   }
+  if (t.dataset.mindelundPi !== undefined) {
+    const p = personListe[+t.dataset.mindelundPi];
+    if (p) p.mindelund_i_brev = !!t.checked;
+    markDirty();
+    return;
+  }
   if (t.dataset.pi !== undefined && t.dataset.felt === 'dataansvarlig') {
     const p = personListe[+t.dataset.pi];
     if (t.checked) {
@@ -1729,7 +1745,7 @@ document.getElementById('person-liste-edit').addEventListener('change', e => {
     const i = +t.dataset.pi;
     const p = personListe[i];
     p.status = t.value;
-    if (t.value === 'aktiv') { p.status_dato = ''; p.mindeord = ''; }
+    if (t.value === 'aktiv') { p.status_dato = ''; p.mindeord = ''; p.mindelund_i_brev = false; }
     markDirty();
     renderPersonEdit();
     return;

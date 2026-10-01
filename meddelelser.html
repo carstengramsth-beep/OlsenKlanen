@@ -645,7 +645,8 @@ let husstandFraLink = null;
 let velkomstTilstand = false;
 
 // Velkomstmail: ingen billeder, foreningen som afsender, hele brevet med
-const VELKOMST_SIGNATUR = `\n\nMange varme hilsner\nOlsenBanden\nFamilieforeningen Olsenklanen\npost@olsenklanen.dk · https://www.olsenklanen.dk`;
+// Velkomstmailen underskrives af den postansvarlige, der sender den — men aldrig med privat mail
+const VELKOMST_SIGNATUR = `\n\nMange varme hilsner\n${MIT_NAVN}\npå vegne af OlsenBanden – Familieforeningen Olsenklanen\npost@olsenklanen.dk · https://www.olsenklanen.dk`;
 
 function opdaterVelkomstVisning(){
   const vis = document.getElementById("velkomstbrev-forhaandsvisning");
@@ -846,8 +847,8 @@ window.sendMail = async function(){
   const signatur = erVelkomst
     ? VELKOMST_SIGNATUR
     : `\n\n---\nMed venlig hilsen\n${MIT_NAVN}\npå vegne af Familieforeningen Olsenklanen\n${mitEmail()}`;
-  const afsenderVist = erVelkomst ? "Familieforeningen Olsenklanen" : MIT_NAVN + " – Olsenklanen";
-  const afsenderNavn = erVelkomst ? "Familieforeningen Olsenklanen" : MIT_NAVN;
+  const afsenderVist = MIT_NAVN + " – Olsenklanen";
+  const afsenderNavn = MIT_NAVN;
   const beskedMedSignatur = tekst + billedLinje + signatur;
 
   let sendt = 0;
