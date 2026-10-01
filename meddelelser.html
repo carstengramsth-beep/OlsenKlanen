@@ -153,8 +153,14 @@ try {
       Modtageren ser at mailen kommer fra Familieforeningen Olsenklanen — ikke fra din private mail.
     </div>
     <div class="kort">
-      <h2>Send mail til et eller flere medlemmer</h2>
+      <h2 id="send-overskrift">Send mail til et eller flere medlemmer</h2>
 
+      <div id="velkomst-garanti" style="display:none; background:#e8f3e4; border:1px solid #7fa86f; border-radius:8px; padding:10px 14px; margin-bottom:10px; color:#1B4332; font-size:14px;">
+        ✅ <b>Hele velkomstbrevet sendes altid med</b> — login, medlemsnumre, PIN-kode og vejledning. Du skal ikke vælge eller tjekke noget.<br>
+        Du kan skrive en kommentar nedenfor, hvis du vil. Den kommer øverst i mailen.
+      </div>
+
+      <div id="modtager-valg-sektion">
       <label for="sog-mail">Til hvem? (søg på navn)</label>
       <input type="text" id="sog-mail" class="felt" placeholder="Søg på navn …" oninput="filtrerMail()" autocomplete="off">
       <div style="display:flex; gap:8px; margin-top:8px;">
@@ -164,6 +170,7 @@ try {
       <div class="modtager-liste" id="modtager-liste-mail">
         <div class="indlaeser">Henter medlemmer …</div>
       </div>
+      </div>
       <div class="valgte-boks" id="valgte-boks-mail">
         <div class="overskrift">📬 Du sender til:</div>
         <div class="valgte" id="valgte-mail"></div>
@@ -172,20 +179,21 @@ try {
       <label for="emne">Emne</label>
       <input type="text" id="emne" class="felt" placeholder="Skriv emne her …" maxlength="100">
 
-      <label for="tekst-mail">Din besked</label>
+      <label for="tekst-mail" id="tekst-mail-label">Din besked</label>
       <textarea id="tekst-mail" placeholder="Skriv din personlige besked her …&#10;&#10;Hilsen og dit navn tilføjes automatisk nederst.&#10;&#10;Tip: du kan indsætte (Ctrl+V) et kopieret billede direkte her i feltet."></textarea>
 
       <div id="velkomstbrev-boks" style="display:none; margin-top:10px;">
-        <label style="display:flex; align-items:center; gap:8px; margin-top:0;">
+        <label id="inkluder-velkomstbrev-label" style="display:flex; align-items:center; gap:8px; margin-top:0;">
           <input type="checkbox" id="inkluder-velkomstbrev" checked style="width:18px; height:18px;">
-          Vedlæg velkomstbrevets login-oplysninger nederst i mailen
+          Vedlæg hele velkomstbrevet i mailen (login, PIN-kode og vejledning)
         </label>
-        <details style="margin-top:6px;">
-          <summary style="cursor:pointer; font-size:13px; color:#555;">Se hvad der bliver vedlagt</summary>
+        <details open style="margin-top:6px;">
+          <summary style="cursor:pointer; font-size:13px; color:#555;">Sådan ser mailen ud hos modtageren</summary>
           <div id="velkomstbrev-forhaandsvisning" style="white-space:pre-wrap; font-size:13px; color:#555; background:#fdfbf5; border:1px solid #e0d8bd; border-radius:6px; padding:10px; margin-top:6px;"></div>
         </details>
       </div>
 
+      <div id="vedhaeft-sektion">
       <label for="vedhaeft-fil">Vedhæft et billede (valgfrit)</label>
       <input type="file" id="vedhaeft-fil" class="felt" accept="image/*">
       <div class="hint">Eller indsæt (Ctrl+V) et kopieret billede direkte i beskedfeltet ovenfor. Billedet lægges i arkivet, og mailen får automatisk et link, modtageren kan klikke på.</div>
@@ -194,6 +202,7 @@ try {
       <div id="billedbibliotek-boks" style="margin-top:14px;">
         <div class="hint" style="margin-bottom:6px;">Eller genbrug et tidligere billede fra biblioteket:</div>
         <div id="billedbibliotek-liste" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:6px;"><div class="indlaeser">Henter …</div></div>
+      </div>
       </div>
 
       <button class="knap" id="send-mail-knap" onclick="sendMail()">📨 Send mail fra post@olsenklanen.dk</button>
@@ -618,6 +627,7 @@ document.getElementById("tekst-mail").addEventListener("paste", e => {
   if (!items) return;
   for (const item of items) {
     if (item.type.startsWith("image/")) {
+      if (velkomstTilstand) { e.preventDefault(); alert("Der kan ikke vedhæftes billeder til en velkomstmail."); break; }
       const fil = item.getAsFile();
       if (fil) { visVedhaeftPreview(fil); e.preventDefault(); }
       break;
@@ -632,6 +642,45 @@ window.filtrerMail = function(){
 
 let velkomstbrevTekst = "";
 let husstandFraLink = null;
+let velkomstTilstand = false;
+
+// Velkomstmail: ingen billeder, foreningen som afsender, hele brevet med
+const VELKOMST_SIGNATUR = `\n\nMange varme hilsner\nOlsenBanden\nFamilieforeningen Olsenklanen\npost@olsenklanen.dk · https://www.olsenklanen.dk`;
+
+function opdaterVelkomstVisning(){
+  const vis = document.getElementById("velkomstbrev-forhaandsvisning");
+  if (!vis) return;
+  if (!velkomstTilstand) { vis.textContent = velkomstbrevTekst; return; }
+  const kommentar = document.getElementById("tekst-mail").value.trim();
+  vis.textContent = (kommentar ? kommentar + "\n\n" : "") + velkomstbrevTekst + VELKOMST_SIGNATUR;
+}
+
+function saetVelkomstTilstand(til){
+  velkomstTilstand = !!til;
+  const skjul = (id, ja) => { const el = document.getElementById(id); if (el) el.style.display = ja ? "none" : ""; };
+  skjul("modtager-valg-sektion", til);
+  skjul("inkluder-velkomstbrev-label", til);
+  const garanti = document.getElementById("velkomst-garanti");
+  if (garanti) garanti.style.display = til ? "block" : "none";
+  const cb = document.getElementById("inkluder-velkomstbrev");
+  if (cb && til) cb.checked = true;
+  const overskrift = document.getElementById("send-overskrift");
+  if (overskrift) overskrift.textContent = til ? "✉️ Velkomstmail til ny husstand" : "Send mail til et eller flere medlemmer";
+  const lbl = document.getElementById("tekst-mail-label");
+  if (lbl) lbl.textContent = til ? "Din kommentar (valgfrit) — kommer øverst i mailen" : "Din besked";
+  const emneFelt = document.getElementById("emne");
+  if (emneFelt) emneFelt.readOnly = !!til;
+  opdaterVelkomstVisning();
+  const sek = document.getElementById("vedhaeft-sektion");
+  if (sek) sek.style.display = til ? "none" : "";
+  if (til && typeof window.fjernVedhaeft === "function") { try { window.fjernVedhaeft(); } catch(e) {} }
+  const knap = document.getElementById("send-mail-knap");
+  if (knap) knap.textContent = til ? "📨 Send velkomstmail fra post@olsenklanen.dk" : "📨 Send mail fra post@olsenklanen.dk";
+  const felt = document.getElementById("tekst-mail");
+  if (felt) felt.placeholder = til
+    ? "F.eks.: Hej – dejligt at du er med!\n\nLad feltet stå tomt, hvis du ikke vil skrive noget. Velkomstbrevet kommer med uanset hvad."
+    : "Skriv din personlige besked her …\n\nHilsen og dit navn tilføjes automatisk nederst.\n\nTip: du kan indsætte (Ctrl+V) et kopieret billede direkte her i feltet.";
+}
 
 // Udfylder emne + brevtekst med det samme — venter ikke på medlemslisten
 function forudvaelgFraLinkOevrigt(){
@@ -647,6 +696,7 @@ function forudvaelgFraLinkOevrigt(){
     velkomstbrevTekst = brev;
     document.getElementById("velkomstbrev-boks").style.display = "block";
     document.getElementById("velkomstbrev-forhaandsvisning").textContent = brev;
+    saetVelkomstTilstand(true);
   }
 }
 forudvaelgFraLinkOevrigt();
@@ -688,6 +738,7 @@ function genskabKladdeHvisIngenLink(){
       document.getElementById("velkomstbrev-boks").style.display = "block";
       document.getElementById("velkomstbrev-forhaandsvisning").textContent = velkomstbrevTekst;
       document.getElementById("inkluder-velkomstbrev").checked = !!kladde.inkluderVelkomst;
+      saetVelkomstTilstand(true);
     }
   } catch(e) { console.log("Kunne ikke genskabe kladde:", e); }
 }
@@ -695,6 +746,7 @@ genskabKladdeHvisIngenLink();
 
 document.getElementById("emne").addEventListener("input", gemKladde);
 document.getElementById("tekst-mail").addEventListener("input", gemKladde);
+document.getElementById("tekst-mail").addEventListener("input", opdaterVelkomstVisning);
 document.getElementById("inkluder-velkomstbrev") && document.getElementById("inkluder-velkomstbrev").addEventListener("change", gemKladde);
 
 // Vælger modtagere fra husstanden — kræver at medlemslisten er hentet først
@@ -747,22 +799,24 @@ window.sendMail = async function(){
   const emne = document.getElementById("emne").value.trim();
   const personligTekst = document.getElementById("tekst-mail").value.trim();
   const inkluderKnap = document.getElementById("inkluder-velkomstbrev");
-  const inkluderVelkomst = velkomstbrevTekst && inkluderKnap && inkluderKnap.checked;
+  if (velkomstTilstand && !velkomstbrevTekst) { alert("Velkomstbrevet mangler. Gå tilbage til Medlemskartoteket og tryk 'Send velkomstmail' igen."); return; }
+  const inkluderVelkomst = velkomstTilstand ? true : (velkomstbrevTekst && inkluderKnap && inkluderKnap.checked);
   const tekst = inkluderVelkomst
     ? (personligTekst ? personligTekst + "\n\n" + velkomstbrevTekst : velkomstbrevTekst)
     : personligTekst;
   const statusEl = document.getElementById("send-mail-status");
   const knap = document.getElementById("send-mail-knap");
 
-  if (!valgteMail.size) { vis(statusEl, "fejl", "Vælg mindst én modtager."); return; }
+  if (!valgteMail.size) { vis(statusEl, "fejl", velkomstTilstand ? "Husstanden har ingen mailadresse i Medlemskartoteket. Tilføj en mail der først." : "Vælg mindst én modtager."); return; }
   if (!emne)            { vis(statusEl, "fejl", "Skriv et emne."); return; }
   if (!tekst)           { vis(statusEl, "fejl", "Skriv en besked, eller vedlæg velkomstbrevet."); return; }
 
   knap.disabled = true;
   vis(statusEl, "ok", "⏳ Sender mail …");
 
-  let vedhaeftUrl = vedhaeftetEksisterendeUrl || null;
-  if (vedhaeftetFil) {
+  const erVelkomst = velkomstTilstand && inkluderVelkomst;
+  let vedhaeftUrl = erVelkomst ? null : (vedhaeftetEksisterendeUrl || null);
+  if (vedhaeftetFil && !erVelkomst) {
     try {
       vis(statusEl, "ok", "⏳ Lægger billede op …");
       const sti = `olsenpost_vedhaeftninger/${Date.now()}_${vedhaeftetFil.name.replace(/[^\w.\-]/g,"_")}`;
@@ -789,7 +843,11 @@ window.sendMail = async function(){
 
   const dato = new Date().toLocaleDateString("da-DK", {day:"numeric", month:"long", year:"numeric"});
   const billedLinje = vedhaeftUrl ? `\n\n📎 Se billedet her: ${vedhaeftUrl}` : "";
-  const signatur = `\n\n---\nMed venlig hilsen\n${MIT_NAVN}\npå vegne af Familieforeningen Olsenklanen\n${mitEmail()}`;
+  const signatur = erVelkomst
+    ? VELKOMST_SIGNATUR
+    : `\n\n---\nMed venlig hilsen\n${MIT_NAVN}\npå vegne af Familieforeningen Olsenklanen\n${mitEmail()}`;
+  const afsenderVist = erVelkomst ? "Familieforeningen Olsenklanen" : MIT_NAVN + " – Olsenklanen";
+  const afsenderNavn = erVelkomst ? "Familieforeningen Olsenklanen" : MIT_NAVN;
   const beskedMedSignatur = tekst + billedLinje + signatur;
 
   let sendt = 0;
@@ -810,6 +868,7 @@ window.sendMail = async function(){
         til_email: email,
         emne: emne,
         tekst: tekst + billedLinje,
+        type: erVelkomst ? "velkomstmail" : "mail",
         sendt: serverTimestamp(),
         sendt_lokal: Date.now(),
         besvaret: false,
@@ -822,12 +881,12 @@ window.sendMail = async function(){
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
           to_email: email,
           to_name: navn,
-          from_name: MIT_NAVN + " – Olsenklanen",
+          from_name: afsenderVist,
           reply_to: "post@olsenklanen.dk",
           subject: emne,
           message: beskedMedSignatur,
-          afsender_navn: MIT_NAVN,
-          name: MIT_NAVN
+          afsender_navn: afsenderNavn,
+          name: afsenderNavn
         });
       }
       sendt++;
@@ -850,6 +909,7 @@ window.sendMail = async function(){
   fjernVedhaeft();
   velkomstbrevTekst = "";
   document.getElementById("velkomstbrev-boks").style.display = "none";
+  saetVelkomstTilstand(false);
   valgteMail.clear(); tegnValgte("mail");
   document.querySelectorAll('#modtager-liste-mail input').forEach(cb => cb.checked = false);
   ryddKladde();
