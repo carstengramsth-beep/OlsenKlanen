@@ -513,6 +513,14 @@ function udfyldFraGf(){
     document.getElementById("d-til").value = isoPlus(gf, 1);
   }
 }
+// Til visning: mangler skovturens sted/datoer, bruges generalforsamlingens
+// (fredag–søndag omkring en lørdag). Intet gemmes herved.
+function visSted(d){ return d.sted || d.gf_sted || ""; }
+function visDatoer(d){
+  if (d.datoer) return d.datoer;
+  if (d.gf_dato && new Date(d.gf_dato + "T12:00:00").getDay() === 6) return periodeTekst(isoPlus(d.gf_dato, -1), isoPlus(d.gf_dato, 1));
+  return "";
+}
 window.gfAendret = function(){ udfyldFraGf(); visDatoerTekst(); };
 
 window.skjulDetForm = function(){ document.getElementById("det-form").classList.add("skjul"); };
@@ -661,8 +669,8 @@ async function visAar(){
   if (!referat && aar <= new Date().getFullYear())
     referat = detRaekkeHtml("📄 Referat", '<span style="color:#aaa;font-style:italic;">ikke lagt ind endnu</span>');
   let html = fejl +
-    detRaekke("Sted / lejr", d.sted) +
-    detRaekke("Datoer", d.datoer) +
+    detRaekke("Sted / lejr", visSted(d)) +
+    detRaekke("Datoer", visDatoer(d)) +
     detRaekke("Bemærkning", d.note) +
     detRaekke("Ankomst", d.ankomst) +
     detRaekke("Afgang", d.afgang) +
@@ -698,8 +706,8 @@ function visOversigt(){
     <tbody>${aarListe.map(a => { const d = AAR_DATA[a]; return `
       <tr class="${a === DET_AKTUELT_AAR ? "valgt" : ""}" onclick="vaelgAar(${a})" title="Klik for at se ${a}">
         <td><button class="aar-link" onclick="event.stopPropagation();vaelgAar(${a})">${a}</button></td>
-        <td>${d.sted ? escHtml(d.sted) : mangler}</td>
-        <td>${d.datoer ? escHtml(d.datoer) : mangler}</td>
+        <td>${visSted(d) ? escHtml(visSted(d)) : mangler}</td>
+        <td>${visDatoer(d) ? escHtml(visDatoer(d)) : mangler}</td>
         <td class="aar-ref">${d.referat ? '<span style="color:#2d5016;font-weight:bold;" title="Referat er lagt ind">✓</span>' : '<span style="color:#ccc;" title="Intet referat endnu">–</span>'}</td>
       </tr>`; }).join("")}
     </tbody></table>`;
