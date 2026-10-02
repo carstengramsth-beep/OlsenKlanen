@@ -552,6 +552,7 @@ function tegnValgte(type) {
     html += `<span class="chip">${navn} <button onclick="fjernValgt('${type}','${nr}')" title="Fjern">✕</button></span>`;
   });
   el.innerHTML = html;
+  if (type === "mail") { try { opdaterVelkomstVisning(); } catch(e) {} }
 }
 
 window.fjernValgt = function(type, nr){
@@ -648,12 +649,20 @@ let velkomstTilstand = false;
 // Velkomstmailen underskrives af den postansvarlige, der sender den — men aldrig med privat mail
 const VELKOMST_SIGNATUR = `\n\nMange varme hilsner\n${MIT_NAVN}\npå vegne af OlsenBanden – Familieforeningen Olsenklanen\npost@olsenklanen.dk · https://www.olsenklanen.dk`;
 
+// Velkomstmailen hilser på den person, der modtager den ("Kære Carsten Gram,")
+function personligHilsen(tekst, navn){
+  if (!navn) return tekst;
+  return tekst.replace(/^Kære [^\n]*,$/m, `Kære ${navn},`);
+}
+
 function opdaterVelkomstVisning(){
   const vis = document.getElementById("velkomstbrev-forhaandsvisning");
   if (!vis) return;
   if (!velkomstTilstand) { vis.textContent = velkomstbrevTekst; return; }
   const kommentar = document.getElementById("tekst-mail").value.trim();
-  vis.textContent = (kommentar ? kommentar + "\n\n" : "") + velkomstbrevTekst + VELKOMST_SIGNATUR;
+  let foersteNavn = "";
+  for (const [, d] of valgteMail) { foersteNavn = (d && d.navn) || ""; break; }
+  vis.textContent = personligHilsen((kommentar ? kommentar + "\n\n" : "") + velkomstbrevTekst + VELKOMST_SIGNATUR, foersteNavn);
 }
 
 function saetVelkomstTilstand(til){
@@ -868,7 +877,7 @@ window.sendMail = async function(){
         til_navn: navn,
         til_email: email,
         emne: emne,
-        tekst: tekst + billedLinje,
+        tekst: erVelkomst ? personligHilsen(tekst, navn) : tekst + billedLinje,
         type: erVelkomst ? "velkomstmail" : "mail",
         sendt: serverTimestamp(),
         sendt_lokal: Date.now(),
@@ -885,7 +894,7 @@ window.sendMail = async function(){
           from_name: afsenderVist,
           reply_to: "post@olsenklanen.dk",
           subject: emne,
-          message: beskedMedSignatur,
+          message: erVelkomst ? personligHilsen(beskedMedSignatur, navn) : beskedMedSignatur,
           afsender_navn: afsenderNavn,
           name: afsenderNavn
         });
