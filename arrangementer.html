@@ -523,6 +523,7 @@ async function hentKomite(aar){
       const husTlf   = m.tlf || "";
       const husEmail = (m.email || "").split("/")[0].trim();
       (m.familiemedlemmer || []).forEach(p => {
+        if (p.status === "afdød" || p.status === "udmeldt") return; // kun levende, aktive medlemmer
         const aarListe = String(p.komite_aar || "").split(",").map(s => s.trim());
         if (aarListe.includes(aarStr)) {
           medlemmer.push({
@@ -543,7 +544,11 @@ function komiteRaekke(medlemmer){
     const kontakt = [m.tlf, m.email].filter(Boolean).join(" · ");
     return `<div style="margin-bottom:4px;"><strong>${escHtml(m.navn)}</strong>${kontakt ? ` <span style="color:#888;font-size:13px;">— ${escHtml(kontakt)}</span>` : ""}</div>`;
   }).join("");
-  return `<div class="hist-row"><div style="min-width:160px;font-weight:bold;color:#2d5016;">Arrangementskomité</div><div style="flex:1;">${linjer}</div></div>`;
+  const mails = [...new Set(medlemmer.map(m => m.email).filter(e => e && e.includes("@")))];
+  const skrivTilAlle = mails.length
+    ? `<div style="margin-top:6px;"><a href="mailto:${mails.join(",")}?subject=${encodeURIComponent("Arrangementskomitéen " + DET_AKTUELT_AAR)}" style="color:#2d5016;font-weight:bold;font-size:13px;">✉️ Skriv til hele komitéen</a></div>`
+    : "";
+  return `<div class="hist-row"><div style="min-width:160px;font-weight:bold;color:#2d5016;">Arrangementskomité ${DET_AKTUELT_AAR}</div><div style="flex:1;">${linjer}${skrivTilAlle}</div></div>`;
 }
 
 // Indbygget historisk data (bruges hvis intet er gemt i databasen for året)
@@ -616,7 +621,11 @@ async function hentDet(){
       html += `<div style="margin-top:12px;font-size:12px;color:#aaa;font-style:italic;">Senest opdateret af ${escHtml(d.opdateret_af)}${od ? " · " + od : ""}</div>`;
     }
     el.innerHTML = html;
-  } catch(e){ el.innerHTML = '<div class="tom-besked">Kunne ikke hente oplysninger.</div>'; console.log(e); }
+  } catch(e){
+    // Komitéen kommer fra kartoteket og vises, selv om de øvrige oplysninger ikke kan hentes
+    el.innerHTML = komiteRaekke(komite) + '<div class="tom-besked">Kunne ikke hente de øvrige oplysninger.</div>';
+    console.log(e);
+  }
 }
 
 opdaterAarVisning();
