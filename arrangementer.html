@@ -672,8 +672,8 @@ async function hentReferater(){
   el.innerHTML = aarListe.map((a, i) => `
     <details style="margin-bottom:8px;border:1px solid #e5ddc7;border-radius:6px;overflow:hidden;">
       <summary style="cursor:pointer;padding:10px 14px;background:#f7f2e3;font-weight:bold;color:#2d5016;">📄 Generalforsamling ${a}</summary>
+      ${ER_ADMIN ? `<div style="padding:12px 14px 0;"><button class="knap knap-guld knap-lille" onclick="retRef('${a}')">✎ Ret referat</button></div>` : ""}
       <div style="padding:14px;white-space:pre-wrap;line-height:1.55;">${escHtml(refs[a])}</div>
-      ${ER_ADMIN ? `<div style="padding:0 14px 12px;"><button class="knap knap-graa knap-lille" onclick="retRef('${a}')">✎ Ret referat</button></div>` : ""}
     </details>`).join("");
   window._referater = refs;
 }
