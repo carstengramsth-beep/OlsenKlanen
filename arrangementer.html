@@ -175,6 +175,7 @@ try {
       <!-- REDIGERINGSFORMULAR: alt for året, inkl. referatet -->
       <div class="skjul" id="det-form" style="background:#faf6ea;padding:16px;border-radius:6px;margin-top:14px;">
         <p style="font-size:13px;color:#666;margin-bottom:6px;">Du retter oplysninger for <strong id="det-form-aar">2027</strong>. Udfyld de felter, der er kendt — også for tidligere år, så historien bevares.</p>
+        <p class="skjul" id="det-forslag" style="font-size:13px;background:#fff6d6;border:1px solid #e0c56a;border-radius:5px;padding:8px 10px;margin-bottom:8px;">💡 Nogle felter er udfyldt med forslag. Tjek dem — og tryk så <strong>Gem oplysninger</strong>.</p>
         <label>Sted / lejr</label>
         <input type="text" id="d-sted" placeholder="Holmsborg, Sønderjylland">
         <div class="to-kol">
@@ -402,6 +403,16 @@ const INDBYGGET = {
   }
 };
 
+// Forslag, der sættes ind i "Ret året", når feltet er tomt eller blot en pladsholder
+// ("data rettes"). De gemmes først, når en admin trykker "Gem oplysninger".
+const FORSLAG = {
+  2025: {
+    sted: "Tonneshøj, Haderslev",
+    dato_fra: "2025-05-23", dato_til: "2025-05-25",
+    gf_dato: "2025-05-24", gf_sted: "Tonneshøj, Haderslev"
+  }
+};
+
 // Standard-år = næste kommende skovtur (typisk maj). Efter maj peges på næste år.
 function standardAar(){
   const nu = new Date();
@@ -468,8 +479,16 @@ window.visDetForm = function(){
   if (!DATA_OK){ alert("Oplysningerne kunne ikke hentes. Genindlæs siden, og prøv igen."); return; }
   const d = AAR_DATA[DET_AKTUELT_AAR] || {};
   Object.keys(FELTER).forEach(id => { document.getElementById(id).value = d[FELTER[id]] || ""; });
+  const forslag = FORSLAG[DET_AKTUELT_AAR] || {};
+  let brugtForslag = false;
+  Object.keys(FELTER).forEach(id => {
+    const felt = document.getElementById(id), f = forslag[FELTER[id]];
+    if (f && (!felt.value.trim() || /data rettes/i.test(felt.value))){ felt.value = f; brugtForslag = true; }
+  });
+  if (brugtForslag && forslag.dato_fra) document.getElementById("d-datoer").value = "";
   udfyldFraGf();
   visDatoerTekst();
+  document.getElementById("det-forslag").classList.toggle("skjul", !brugtForslag);
   document.getElementById("det-form-aar").textContent = DET_AKTUELT_AAR;
   document.getElementById("det-form").classList.remove("skjul");
   document.getElementById("det-form").scrollIntoView({behavior:"smooth"});
