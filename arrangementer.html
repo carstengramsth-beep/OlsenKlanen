@@ -175,10 +175,14 @@ try {
       <!-- REDIGERINGSFORMULAR: alt for året, inkl. referatet -->
       <div class="skjul" id="det-form" style="background:#faf6ea;padding:16px;border-radius:6px;margin-top:14px;">
         <p style="font-size:13px;color:#666;margin-bottom:6px;">Du retter oplysninger for <strong id="det-form-aar">2027</strong>. Udfyld de felter, der er kendt — også for tidligere år, så historien bevares.</p>
+        <label>Sted / lejr</label>
+        <input type="text" id="d-sted" placeholder="Holmsborg, Sønderjylland">
         <div class="to-kol">
-          <div><label>Sted / lejr</label><input type="text" id="d-sted" placeholder="Holmsborg, Sønderjylland"></div>
-          <div><label>Datoer</label><input type="text" id="d-datoer" placeholder="7.–9. maj 2027"></div>
+          <div><label>Første dag (normalt fredag)</label><input type="date" id="d-fra" onchange="fraValgt()"></div>
+          <div><label>Sidste dag (normalt søndag)</label><input type="date" id="d-til" onchange="visDatoerTekst()"></div>
         </div>
+        <input type="hidden" id="d-datoer">
+        <div id="d-datoer-vis" style="font-size:13px;color:#666;margin-top:4px;">Vælg første dag — så sættes sidste dag selv til søndag.</div>
         <div class="to-kol">
           <div><label>Ankomst</label><input type="text" id="d-ankomst" placeholder="fredag fra kl. 16:00"></div>
           <div><label>Afgang</label><input type="text" id="d-afgang" placeholder="søndag senest kl. 12:00"></div>
@@ -204,8 +208,8 @@ try {
         <label>Link til årets billeder (valgfri)</label>
         <input type="text" id="d-billeder" placeholder="f.eks. skovtur2025.html eller en adresse, der begynder med https://">
         <div class="to-kol">
-          <div><label>Generalforsamling — dato</label><input type="date" id="d-gf-dato"></div>
-          <div><label>Generalforsamling — sted</label><input type="text" id="d-gf-sted" placeholder="f.eks. Eriksminde, Rørvig"></div>
+          <div><label>Generalforsamling — dato</label><input type="date" id="d-gf-dato" onchange="gfAendret()"></div>
+          <div><label>Generalforsamling — sted</label><input type="text" id="d-gf-sted" placeholder="f.eks. Eriksminde, Rørvig" onchange="gfAendret()"></div>
         </div>
         <label>Referat fra generalforsamlingen — sæt hele teksten ind her</label>
         <textarea id="d-referat" rows="14" placeholder="Indsæt referatet her…" style="min-height:160px"></textarea>
@@ -369,7 +373,7 @@ import { setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-fire
 
 // Formularfelt -> feltnavn i databasen
 const FELTER = {
-  "d-sted":"sted", "d-datoer":"datoer", "d-ankomst":"ankomst", "d-afgang":"afgang",
+  "d-sted":"sted", "d-fra":"dato_fra", "d-til":"dato_til", "d-datoer":"datoer", "d-ankomst":"ankomst", "d-afgang":"afgang",
   "d-pris":"pris", "d-frist":"frist", "d-betaling":"betaling",
   "d-kontakt-navn":"kontaktNavn", "d-kontakt-tlf":"kontaktTlf",
   "d-medbring":"medbring", "d-program":"program", "d-note":"note",
@@ -464,10 +468,53 @@ window.visDetForm = function(){
   if (!DATA_OK){ alert("Oplysningerne kunne ikke hentes. Genindlæs siden, og prøv igen."); return; }
   const d = AAR_DATA[DET_AKTUELT_AAR] || {};
   Object.keys(FELTER).forEach(id => { document.getElementById(id).value = d[FELTER[id]] || ""; });
+  udfyldFraGf();
+  visDatoerTekst();
   document.getElementById("det-form-aar").textContent = DET_AKTUELT_AAR;
   document.getElementById("det-form").classList.remove("skjul");
   document.getElementById("det-form").scrollIntoView({behavior:"smooth"});
 };
+// ---- Skovturens datoer: to datofelter (fra–til) i stedet for fri tekst ----
+function isoPlus(iso, dage){
+  const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + dage);
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+// "4.–6. juni 2021" eller "30. maj – 1. juni 2021"
+function periodeTekst(fra, til){
+  if (!fra) return "";
+  const a = new Date(fra + "T12:00:00");
+  if (!til || til === fra) return datoTekst(fra);
+  const b = new Date(til + "T12:00:00");
+  if (a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear())
+    return a.getDate() + ".–" + b.getDate() + ". " + MAANEDER[b.getMonth()] + " " + b.getFullYear();
+  return a.getDate() + ". " + MAANEDER[a.getMonth()] + " – " + datoTekst(til);
+}
+// Første dag valgt: sidste dag bliver to dage senere (fredag -> søndag)
+window.fraValgt = function(){
+  const fra = document.getElementById("d-fra").value, til = document.getElementById("d-til");
+  if (fra && (!til.value || til.value < fra)) til.value = isoPlus(fra, 2);
+  visDatoerTekst();
+};
+window.visDatoerTekst = function(){
+  const fra = document.getElementById("d-fra").value, til = document.getElementById("d-til").value;
+  const skjult = document.getElementById("d-datoer"), vis = document.getElementById("d-datoer-vis");
+  if (fra) skjult.value = periodeTekst(fra, til);
+  vis.textContent = skjult.value ? "Vises som: " + skjult.value
+                                 : "Vælg første dag — så sættes sidste dag selv til søndag.";
+};
+// Tomt sted og tomme datoer for skovturen udfyldes ud fra generalforsamlingen
+// (den holdes om lørdagen på skovturen: fredag–søndag)
+function udfyldFraGf(){
+  const sted = document.getElementById("d-sted"), gfSted = document.getElementById("d-gf-sted").value.trim();
+  if (!sted.value.trim() && gfSted) sted.value = gfSted;
+  const fra = document.getElementById("d-fra"), gf = document.getElementById("d-gf-dato").value;
+  if (!fra.value && !document.getElementById("d-datoer").value && gf && new Date(gf + "T12:00:00").getDay() === 6){
+    fra.value = isoPlus(gf, -1);
+    document.getElementById("d-til").value = isoPlus(gf, 1);
+  }
+}
+window.gfAendret = function(){ udfyldFraGf(); visDatoerTekst(); };
+
 window.skjulDetForm = function(){ document.getElementById("det-form").classList.add("skjul"); };
 
 // Link til årets billeder: en side her på hjemmesiden eller en https-adresse
@@ -483,12 +530,15 @@ window.gemDet = async function(){
   const aar = DET_AKTUELT_AAR;
   if (!maaRedigereAaret(aar)) return;
   const gemt = AAR_DATA[aar] || {};
+  udfyldFraGf(); visDatoerTekst();
   const data = { aar };
   Object.keys(FELTER).forEach(id => { data[FELTER[id]] = document.getElementById(id).value.trim(); });
   if (data.billeder_link){
     data.billeder_link = sikkertLink(data.billeder_link);
     if (!data.billeder_link){ alert("Linket til årets billeder skal være en adresse, der begynder med https:// — eller navnet på en side her på hjemmesiden, f.eks. skovtur2025.html"); return; }
   }
+  if (data.dato_til && data.dato_fra && data.dato_til < data.dato_fra){ alert("Sidste dag ligger før første dag. Ret datoerne."); return; }
+  if (data.dato_fra && parseInt(data.dato_fra.slice(0,4), 10) !== aar){ alert("Skovturens første dag ligger ikke i " + aar + ". Ret datoen, eller skift år."); return; }
   if (data.gf_dato && parseInt(data.gf_dato.slice(0,4), 10) !== aar){ alert("Datoen for generalforsamlingen ligger ikke i " + aar + ". Ret datoen, eller skift år."); return; }
   if (!harIndhold(data) && !harIndhold(gemt)){ alert("Udfyld mindst ét felt, før du gemmer."); return; }
   // Et tomt referatfelt fjerner aldrig et gemt referat uden at spørge først
