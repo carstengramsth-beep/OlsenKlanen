@@ -104,7 +104,7 @@ try {
       <button class="knap knap-guld knap-lille skjul" id="ref-ny-knap" onclick="visRefForm()">+ Tilføj generalforsamling</button>
     </div>
     <div class="boks-body">
-      <p style="font-size:13px;color:#888;margin-bottom:12px;">Generalforsamlingen holdes på skovturen. Klik på et år for at læse referatet.</p>
+      <p style="font-size:13px;color:#888;margin-bottom:12px;">Generalforsamlingen holdes på skovturen. Klik på et årstal for at se dato, sted og referat for det år. Der vises kun ét år ad gangen.</p>
 
       <div class="skjul" id="ref-form" style="background:#faf6ea;padding:14px;border-radius:6px;margin-bottom:14px;">
         <label>Skovtur-år (det år generalforsamlingen blev holdt)</label>
@@ -680,6 +680,14 @@ async function hentReferater(){
     });
   } catch(e){ console.log("Referater:", e); }
   window._gf = gf;
+  visReferater();
+}
+
+// Der vises kun ét år ad gangen: klik på et årstal i overblikket for at se det års data.
+let REF_VALGT_AAR = null;
+function visReferater(){
+  const el = document.getElementById("ref-liste");
+  const gf = window._gf || {};
   const aarListe = Object.keys(gf).sort((a,b) => b - a);
   if (!aarListe.length){ el.innerHTML = '<div class="tom-besked">Ingen generalforsamlinger lagt ind endnu.</div>'; return; }
   const mangler = t => `<span style="color:#aaa;font-style:italic;">${t}</span>`;
@@ -687,21 +695,31 @@ async function hentReferater(){
     <div style="margin-bottom:16px;">
       <div style="font-weight:bold;color:#2d5016;">Overblik — hvor og hvornår</div>
       ${aarListe.map(a => `
-      <div class="hist-row">
-        <div class="hist-aar">${a}</div>
+      <div class="hist-row" onclick="vaelgRefAar('${a}')" title="Klik for at se ${a}" style="cursor:pointer;padding:10px 8px;border-radius:4px;${a === REF_VALGT_AAR ? "background:#f7f2e3;" : ""}">
+        <div class="hist-aar" style="text-decoration:underline;">${a}</div>
         <div class="hist-sted">${gf[a].sted ? `<strong>${escHtml(gf[a].sted)}</strong>` : mangler("sted ikke registreret")}</div>
         <div class="hist-dato">${gf[a].dato ? datoTekst(gf[a].dato) : mangler("dato ikke registreret")}</div>
-        ${ER_ADMIN ? `<button class="knap knap-graa knap-lille" onclick="retRef('${a}')">✎ Ret</button>` : ""}
+        ${ER_ADMIN ? `<button class="knap knap-graa knap-lille" onclick="event.stopPropagation();retRef('${a}')">✎ Ret</button>` : ""}
       </div>`).join("")}
     </div>`;
-  const referater = aarListe.filter(a => gf[a].referat).map(a => `
-    <details style="margin-bottom:8px;border:1px solid #e5ddc7;border-radius:6px;overflow:hidden;">
-      <summary style="cursor:pointer;padding:10px 14px;background:#f7f2e3;font-weight:bold;color:#2d5016;">📄 Generalforsamling ${a}${[datoTekst(gf[a].dato), escHtml(gf[a].sted)].filter(Boolean).map(t => ` <span style="font-weight:normal;color:#666;">· ${t}</span>`).join("")}</summary>
+  const a = REF_VALGT_AAR;
+  const valgt = (a && gf[a]) ? `
+    <div style="border:1px solid #e5ddc7;border-radius:6px;overflow:hidden;">
+      <div style="padding:10px 14px;background:#f7f2e3;font-weight:bold;color:#2d5016;">📄 Generalforsamling ${a}${[datoTekst(gf[a].dato), escHtml(gf[a].sted)].filter(Boolean).map(t => ` <span style="font-weight:normal;color:#666;">· ${t}</span>`).join("")}</div>
       ${ER_ADMIN ? `<div style="padding:12px 14px 0;"><button class="knap knap-guld knap-lille" onclick="retRef('${a}')">✎ Ret referat, dato og sted</button></div>` : ""}
-      <div style="padding:14px;white-space:pre-wrap;line-height:1.55;">${escHtml(gf[a].referat)}</div>
-    </details>`).join("");
-  el.innerHTML = overblik + referater;
+      ${gf[a].referat
+        ? `<div style="padding:14px;white-space:pre-wrap;line-height:1.55;">${escHtml(gf[a].referat)}</div>`
+        : `<div class="tom-besked" style="padding:14px;">Der er ikke lagt et referat ind for ${a}.</div>`}
+    </div>`
+    : '<div class="tom-besked">Klik på et årstal i overblikket for at se det års generalforsamling.</div>';
+  el.innerHTML = overblik + valgt;
 }
+// Klik på et år viser det år (og kun det); klik igen lukker det
+window.vaelgRefAar = function(aar){
+  REF_VALGT_AAR = (REF_VALGT_AAR === String(aar)) ? null : String(aar);
+  skjulRefForm();
+  visReferater();
+};
 
 // Fylder formularen med det, der er gemt for året. Felter, brugeren selv har
 // skrevet i, bliver ikke overskrevet, når der kun skiftes årstal.
@@ -725,7 +743,7 @@ window.visRefForm = function(aar){
   document.getElementById("ref-form").scrollIntoView({behavior:"smooth"});
 };
 window.skjulRefForm = function(){ document.getElementById("ref-form").classList.add("skjul"); };
-window.retRef = function(aar){ visRefForm(aar); };
+window.retRef = function(aar){ REF_VALGT_AAR = String(aar); visReferater(); visRefForm(aar); };
 
 window.gemRef = async function(){
   const aar = parseInt(document.getElementById("ref-aar").value, 10);
@@ -745,6 +763,7 @@ window.gemRef = async function(){
     if (tekst) data.referat = tekst; // et tomt tekstfelt sletter aldrig et gemt referat
     await setDoc(ref_, data, { merge: true });
     skjulRefForm();
+    REF_VALGT_AAR = String(aar);
     await hentReferater();
     if (aar === DET_AKTUELT_AAR) await hentDet();
     alert("✓ Generalforsamlingen " + aar + " er gemt.");
