@@ -420,6 +420,7 @@ function standardAar(){
   return (nu.getMonth() >= 5) ? nu.getFullYear() + 1 : nu.getFullYear();
 }
 let DET_AKTUELT_AAR = standardAar();
+let AABN_ALT = false;   // klik i oversigten åbner alt for året, også referatet
 const urlAar = parseInt(new URLSearchParams(location.search).get("aar"), 10);
 if (urlAar > 1900 && urlAar < 2100) DET_AKTUELT_AAR = urlAar;
 
@@ -461,7 +462,7 @@ function skiftAar(aar, rul){
 window.aarTilbage = function(){ skiftAar(DET_AKTUELT_AAR - 1); };
 window.aarFrem    = function(){ skiftAar(DET_AKTUELT_AAR + 1); };
 // Klik på et år i oversigten: årets side skifter til det år
-window.vaelgAar   = function(aar){ skiftAar(parseInt(aar, 10), true); };
+window.vaelgAar   = function(aar){ AABN_ALT = true; skiftAar(parseInt(aar, 10), true); };
 
 window.nytAar = async function(){
   if (!DATA_OK){ alert("Oplysningerne kunne ikke hentes. Genindlæs siden, og prøv igen."); return; }
@@ -593,8 +594,10 @@ function detRaekkeHtml(label, html){
 
 // Lang tekst som foldbar blok (klik på titlen for at åbne/lukke)
 function detFold(titel, vaerdi){
+  const aaben = AABN_ALT ? " open" : "";
+  AABN_ALT = false;
   if(!vaerdi) return "";
-  return `<details style="margin-top:8px;border:1px solid #e5ddc7;border-radius:6px;overflow:hidden;">
+  return `<details${aaben} style="margin-top:8px;border:1px solid #e5ddc7;border-radius:6px;overflow:hidden;">
     <summary style="cursor:pointer;padding:10px 14px;background:#f7f2e3;font-weight:bold;color:#2d5016;">${titel}</summary>
     <div style="padding:14px;white-space:pre-wrap;line-height:1.55;">${escHtml(vaerdi)}</div>
   </details>`;
