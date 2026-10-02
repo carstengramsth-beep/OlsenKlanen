@@ -53,10 +53,24 @@ textarea { min-height: 70px; resize: vertical; }
 .hist-sted { flex: 1; }
 .hist-dato { font-size: 13px; color: #888; min-width: 110px; }
 
+.det-label { min-width: 160px; font-weight: bold; color: #2d5016; }
+.aar-tabel { width: 100%; border-collapse: collapse; font-size: 14px; }
+.aar-tabel th { text-align: left; font-size: 12px; color: #888; letter-spacing: 1px; text-transform: uppercase; padding: 6px 8px; border-bottom: 2px solid #f0ead8; }
+.aar-tabel td { padding: 10px 8px; border-bottom: 1px solid #f0ead8; vertical-align: baseline; }
+.aar-tabel tbody tr:last-child td { border-bottom: none; }
+.aar-tabel tbody tr { cursor: pointer; }
+.aar-tabel tbody tr:hover { background: #faf6ea; }
+.aar-tabel tbody tr.valgt { background: #f7f2e3; }
+.aar-tabel .aar-ref { text-align: center; width: 70px; }
+.aar-link { background: none; border: none; padding: 0; font: inherit; font-weight: bold; color: #2d5016; text-decoration: underline; cursor: pointer; }
+
 @media (max-width: 700px) {
   .to-kol { grid-template-columns: 1fr; }
   .event-row { flex-direction: column; gap: 6px; }
   .event-dato { min-width: 0; }
+  .hist-row { flex-direction: column; gap: 2px; }
+  .det-label { min-width: 0; }
+  .aar-tabel th, .aar-tabel td { padding: 8px 4px; }
 }
 </style>
 <script>
@@ -94,91 +108,6 @@ try {
     </div>
     <div class="boks-body">
       <div id="event-liste"><div class="tom-besked">Henter begivenheder…</div></div>
-    </div>
-  </div>
-
-  <!-- REFERATER FRA GENERALFORSAMLINGEN -->
-  <div class="boks" id="referater">
-    <div class="boks-header">
-      <span>📄 REFERATER FRA GENERALFORSAMLINGEN</span>
-      <button class="knap knap-guld knap-lille skjul" id="ref-ny-knap" onclick="visRefForm()">+ Tilføj generalforsamling</button>
-    </div>
-    <div class="boks-body">
-      <p style="font-size:13px;color:#888;margin-bottom:12px;">Generalforsamlingen holdes på skovturen. Klik på et årstal for at se dato, sted og referat for det år. Der vises kun ét år ad gangen.</p>
-
-      <div class="skjul" id="ref-form" style="background:#faf6ea;padding:14px;border-radius:6px;margin-bottom:14px;">
-        <label>Skovtur-år (det år generalforsamlingen blev holdt)</label>
-        <input type="number" id="ref-aar" placeholder="f.eks. 2025" style="max-width:160px;" onchange="refAarSkiftet()">
-        <label>Dato for generalforsamlingen</label>
-        <input type="date" id="ref-dato" style="max-width:200px;">
-        <label>Sted — hvor blev generalforsamlingen holdt</label>
-        <input type="text" id="ref-sted" placeholder="f.eks. Eriksminde, Rørvig">
-        <label>Referat — sæt hele teksten ind her (kan udelades, hvis du kun vil registrere dato og sted)</label>
-        <textarea id="ref-tekst" rows="14" placeholder="Indsæt referatet her…"></textarea>
-        <div class="form-knapper">
-          <button class="knap" id="ref-gem" onclick="gemRef()">Gem</button>
-          <button class="knap knap-graa" onclick="skjulRefForm()">Annullér</button>
-        </div>
-      </div>
-
-      <div id="ref-liste"><div class="tom-besked">Henter referater…</div></div>
-    </div>
-  </div>
-
-  <!-- HULLEBILAG: SKOVTUR — PRAKTISKE OPLYSNINGER (år-baseret) -->
-  <div class="boks">
-    <div class="boks-header">
-      <span>🏕️ SKOVTUR · PRAKTISKE OPLYSNINGER</span>
-      <button class="knap knap-guld knap-lille skjul" id="det-ret-knap" onclick="visDetForm()">✎ Ret oplysninger</button>
-    </div>
-    <div class="boks-body">
-      <!-- ÅRSVÆLGER -->
-      <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #f0ead8;">
-        <button class="knap knap-graa knap-lille" onclick="aarTilbage()" title="Tidligere år">◀</button>
-        <div style="text-align:center;min-width:120px;">
-          <div style="font-size:22px;font-weight:bold;color:#2d5016;" id="det-aar-vis">2027</div>
-          <div style="font-size:11px;color:#aaa;" id="det-aar-noter"></div>
-        </div>
-        <button class="knap knap-graa knap-lille" onclick="aarFrem()" title="Senere år">▶</button>
-      </div>
-
-      <!-- VISNING -->
-      <div id="det-visning"><div class="tom-besked">Henter oplysninger…</div></div>
-
-      <!-- REDIGERINGSFORMULAR (hullebilag) -->
-      <div class="skjul" id="det-form" style="background:#faf6ea;padding:16px;border-radius:6px;">
-        <p style="font-size:13px;color:#666;margin-bottom:6px;">Du retter oplysninger for <strong id="det-form-aar">2027</strong>. Udfyld de felter, der er kendt — også for tidligere år, så historien bevares.</p>
-        <div class="to-kol">
-          <div><label>Sted / lejr</label><input type="text" id="d-sted" placeholder="Holmsborg, Sønderjylland"></div>
-          <div><label>Datoer</label><input type="text" id="d-datoer" placeholder="7.–9. maj 2027"></div>
-        </div>
-        <div class="to-kol">
-          <div><label>Ankomst</label><input type="text" id="d-ankomst" placeholder="fredag fra kl. 16:00"></div>
-          <div><label>Afgang</label><input type="text" id="d-afgang" placeholder="søndag senest kl. 12:00"></div>
-        </div>
-        <div class="to-kol">
-          <div><label>Pris pr. husstand</label><input type="text" id="d-pris" placeholder="f.eks. 350 kr."></div>
-          <div><label>Tilmeldingsfrist</label><input type="text" id="d-frist" placeholder="f.eks. 1. april 2027"></div>
-        </div>
-        <label>Betaling til (konto / MobilePay)</label>
-        <input type="text" id="d-betaling" placeholder="f.eks. MobilePay 12345 eller reg. 1234 konto 5678901">
-        <label>Arrangementskomité</label>
-        <div style="font-size:13px;color:#666;background:#fff;border:1px solid #cfc8b5;border-radius:5px;padding:9px 10px;">Komitéen vises automatisk ud fra kartoteket. Sæt årstallet i feltet "🏕️ Arrangementskomité — år" på de pågældende medlemmer i medlemskartoteket.</div>
-        <div class="to-kol">
-          <div><label>Kontaktperson</label><input type="text" id="d-kontakt-navn" placeholder="navn"></div>
-          <div><label>Telefon</label><input type="text" id="d-kontakt-tlf" placeholder="telefonnummer"></div>
-        </div>
-        <label>Medbring</label>
-        <textarea id="d-medbring" placeholder="sovepose, gummistøvler, godt humør…"></textarea>
-        <label>Program / praktisk info</label>
-        <textarea id="d-program" placeholder="program, måltider, aktiviteter, andet vigtigt…"></textarea>
-        <label>Referat</label>
-        <textarea id="d-referat" placeholder="indsæt eller skriv referatet fra skovturen / generalforsamlingen…" style="min-height:120px"></textarea>
-        <div class="form-knapper">
-          <button class="knap" id="d-gem" onclick="gemDet()">Gem oplysninger</button>
-          <button class="knap knap-graa" onclick="skjulDetForm()">Annullér</button>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -220,32 +149,80 @@ try {
     </div>
   </div>
 
-  <!-- SKOVTUR-HISTORIK -->
-  <div class="boks">
+  <!-- ÅRETS SIDE: alt om ét års skovtur samlet (skovtur_detaljer/skovturÅÅÅÅ) -->
+  <div class="boks" id="aarets-side">
     <div class="boks-header">
-      <span>🌲 SKOVTUR-HISTORIK</span>
-      <button class="knap knap-guld knap-lille" onclick="visHistForm()">+ Tilføj år</button>
+      <span>🏕️ SKOVTUREN · ÅRETS SIDE</span>
+      <span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+        <button class="knap knap-guld knap-lille skjul" id="det-nyt-knap" onclick="nytAar()" title="Opret et nyt år — også et tidligere år">+ Nyt år</button>
+        <button class="knap knap-guld knap-lille skjul" id="det-ret-knap" onclick="visDetForm()">✎ Ret året</button>
+      </span>
     </div>
     <div class="boks-body">
-      <p style="font-size:13px;color:#888;margin-bottom:12px;">Hjælp med at samle klanens historie — hvor og hvornår var skovturen gennem årene?</p>
-
-      <div class="skjul" id="hist-form" style="background:#faf6ea;padding:14px;border-radius:6px;margin-bottom:14px;">
-        <input type="hidden" id="h-id">
-        <div class="to-kol">
-          <div><label>År</label><input type="number" id="h-aar" placeholder="2025"></div>
-          <div><label>Datoer (valgfri)</label><input type="text" id="h-dato" placeholder="f.eks. 30. maj – 1. juni"></div>
+      <!-- ÅRSVÆLGER -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #f0ead8;">
+        <button class="knap knap-graa knap-lille" onclick="aarTilbage()" title="Tidligere år">◀</button>
+        <div style="text-align:center;min-width:120px;">
+          <div style="font-size:22px;font-weight:bold;color:#2d5016;" id="det-aar-vis">2027</div>
+          <div style="font-size:11px;color:#aaa;">Skovtur og generalforsamling</div>
         </div>
-        <label>Sted</label>
-        <input type="text" id="h-sted" placeholder="f.eks. Eriksminde i Rørvig">
-        <label>Note (valgfri)</label>
-        <input type="text" id="h-note" placeholder="lille minde eller bemærkning">
-        <div class="form-knapper">
-          <button class="knap" onclick="gemHist()">Gem</button>
-          <button class="knap knap-graa" onclick="skjulHistForm()">Annullér</button>
-        </div>
+        <button class="knap knap-graa knap-lille" onclick="aarFrem()" title="Senere år">▶</button>
       </div>
 
-      <div id="hist-liste"><div class="tom-besked">Henter historik…</div></div>
+      <!-- VISNING -->
+      <div id="det-visning"><div class="tom-besked">Henter oplysninger…</div></div>
+
+      <!-- REDIGERINGSFORMULAR: alt for året, inkl. referatet -->
+      <div class="skjul" id="det-form" style="background:#faf6ea;padding:16px;border-radius:6px;margin-top:14px;">
+        <p style="font-size:13px;color:#666;margin-bottom:6px;">Du retter oplysninger for <strong id="det-form-aar">2027</strong>. Udfyld de felter, der er kendt — også for tidligere år, så historien bevares.</p>
+        <div class="to-kol">
+          <div><label>Sted / lejr</label><input type="text" id="d-sted" placeholder="Holmsborg, Sønderjylland"></div>
+          <div><label>Datoer</label><input type="text" id="d-datoer" placeholder="7.–9. maj 2027"></div>
+        </div>
+        <div class="to-kol">
+          <div><label>Ankomst</label><input type="text" id="d-ankomst" placeholder="fredag fra kl. 16:00"></div>
+          <div><label>Afgang</label><input type="text" id="d-afgang" placeholder="søndag senest kl. 12:00"></div>
+        </div>
+        <div class="to-kol">
+          <div><label>Pris pr. husstand</label><input type="text" id="d-pris" placeholder="f.eks. 350 kr."></div>
+          <div><label>Tilmeldingsfrist</label><input type="text" id="d-frist" placeholder="f.eks. 1. april 2027"></div>
+        </div>
+        <label>Betaling til (konto / MobilePay)</label>
+        <input type="text" id="d-betaling" placeholder="f.eks. MobilePay 12345 eller reg. 1234 konto 5678901">
+        <label>Arrangementskomité</label>
+        <div style="font-size:13px;color:#666;background:#fff;border:1px solid #cfc8b5;border-radius:5px;padding:9px 10px;">Komitéen vises automatisk ud fra kartoteket. Sæt årstallet i feltet "🏕️ Arrangementskomité — år" på de pågældende medlemmer i medlemskartoteket.</div>
+        <div class="to-kol">
+          <div><label>Kontaktperson</label><input type="text" id="d-kontakt-navn" placeholder="navn"></div>
+          <div><label>Telefon</label><input type="text" id="d-kontakt-tlf" placeholder="telefonnummer"></div>
+        </div>
+        <label>Medbring</label>
+        <textarea id="d-medbring" placeholder="sovepose, gummistøvler, godt humør…"></textarea>
+        <label>Program / praktisk info</label>
+        <textarea id="d-program" placeholder="program, måltider, aktiviteter, andet vigtigt…"></textarea>
+        <label>Bemærkning (valgfri)</label>
+        <input type="text" id="d-note" placeholder="lille minde eller bemærkning om året">
+        <label>Link til årets billeder (valgfri)</label>
+        <input type="text" id="d-billeder" placeholder="f.eks. skovtur2025.html eller en adresse, der begynder med https://">
+        <div class="to-kol">
+          <div><label>Generalforsamling — dato</label><input type="date" id="d-gf-dato"></div>
+          <div><label>Generalforsamling — sted</label><input type="text" id="d-gf-sted" placeholder="f.eks. Eriksminde, Rørvig"></div>
+        </div>
+        <label>Referat fra generalforsamlingen — sæt hele teksten ind her</label>
+        <textarea id="d-referat" rows="14" placeholder="Indsæt referatet her…" style="min-height:160px"></textarea>
+        <div class="form-knapper">
+          <button class="knap" id="d-gem" onclick="gemDet()">Gem oplysninger</button>
+          <button class="knap knap-graa" onclick="skjulDetForm()">Annullér</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAMLET OVERSIGT: alle år, bygget ud fra de samme data som årets side -->
+  <div class="boks">
+    <div class="boks-header"><span>🌲 ALLE SKOVTURE · OVERSIGT</span></div>
+    <div class="boks-body">
+      <p style="font-size:13px;color:#888;margin-bottom:12px;">Klik på et år for at se alt om det års skovtur ovenfor.</p>
+      <div id="aar-oversigt"><div class="tom-besked">Henter oversigt…</div></div>
     </div>
   </div>
 
@@ -383,79 +360,43 @@ async function hentEvents(){
 
 function escHtml(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
-// ============ SKOVTUR-HISTORIK ============
-window.visHistForm = function(){
-  document.getElementById("h-id").value="";
-  document.getElementById("h-aar").value="";
-  document.getElementById("h-dato").value="";
-  document.getElementById("h-sted").value="";
-  document.getElementById("h-note").value="";
-  document.getElementById("hist-form").classList.remove("skjul");
+function escAttr(s){ return escHtml(s).replace(/"/g,"&quot;"); }
+
+// ============ SKOVTUREN ÅR FOR ÅR ============
+// Alt om ét års skovtur ligger ét sted: skovtur_detaljer/skovturÅÅÅÅ.
+// Både årets side og den samlede oversigt bygges ud fra de samme data (AAR_DATA).
+import { setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// Formularfelt -> feltnavn i databasen
+const FELTER = {
+  "d-sted":"sted", "d-datoer":"datoer", "d-ankomst":"ankomst", "d-afgang":"afgang",
+  "d-pris":"pris", "d-frist":"frist", "d-betaling":"betaling",
+  "d-kontakt-navn":"kontaktNavn", "d-kontakt-tlf":"kontaktTlf",
+  "d-medbring":"medbring", "d-program":"program", "d-note":"note",
+  "d-billeder":"billeder_link", "d-gf-dato":"gf_dato", "d-gf-sted":"gf_sted", "d-referat":"referat"
 };
-window.skjulHistForm = function(){ document.getElementById("hist-form").classList.add("skjul"); };
+function harIndhold(d){ return !!d && Object.values(FELTER).some(f => d[f]); }
 
-window.gemHist = async function(){
-  const aar = document.getElementById("h-aar").value.trim();
-  const sted = document.getElementById("h-sted").value.trim();
-  if(!aar || !sted){ alert("År og sted skal udfyldes."); return; }
-  const data = {
-    aar: parseInt(aar,10), sted,
-    dato: document.getElementById("h-dato").value.trim(),
-    note: document.getElementById("h-note").value.trim(),
-    ejer_nr: MIT_NR, ejer_navn: MIT_NAVN
-  };
-  const id = document.getElementById("h-id").value;
-  try {
-    if(id){ await updateDoc(doc(db,"skovtur_historik",id), data); }
-    else  { await addDoc(collection(db,"skovtur_historik"), data); }
-    skjulHistForm(); await hentHist();
-  } catch(e){ alert("Kunne ikke gemme: " + e.message); }
+// Indbygget historisk data (ligger under det, der er gemt i databasen for året)
+const INDBYGGET = {
+  2025: {
+    billeder_link: "skovtur2025.html"
+  },
+  2026: {
+    sted: "Eriksminde, Eriksmindevej 15, 4581 Rørvig",
+    datoer: "29. — 31. maj 2026",
+    ankomst: "fredag fra kl. 16:30",
+    afgang: "søndag (efter rengøring)",
+    pris: "Deltagergebyr hele weekenden: voksne 225 kr. · børn (3-15 år) 75 kr. — Kun lørdag: 100/50 kr. — Aftensmad fredag: 60/30 kr. — Morgenmad søndag: 35/20 kr. Kontingent 2026: 200 kr. pr. husstand.",
+    frist: "3. maj 2026",
+    betaling: "Reg. 1551 — Konto 1231790 (husk tekst ved betaling, fx \"Vi kommer: 2x vok. fre-søn / 2x aft.mad fre. / 2x mo mad sø.\")",
+    medbring: "Bemærk: husdyr, lejrbål og telte/campingvogne er ikke tilladt.",
+    gf_dato: "2026-05-30",
+    gf_sted: "Eriksminde, Rørvig",
+    program: "Vi mødes på Eriksminde — et gensyn med det velkendte hus i skovbrynet, som vi besøgte i 2014, 2020 og 2022. Ca. 3 km fra Rørvig by og havn, 5 minutter fra vandet.\n\nForan huset er et åbent område med fodboldmål og rige muligheder for leg og spil. Kolonien har 54 sengepladser fordelt i 1-, 2- og 4-personers rum, en stor spisesal, opholdsstue og aktivitetsrum.\n\nI prisen er indregnet: leje fra fredag kl. 16:30 til søndag, morgenbord lørdag, fælles aktiviteter samt rengøring søndag. Drikkevarer kan købes til familievenlige priser.",
+    referat: "Referat fra generalforsamlingen — Familieskovtur 2026\nLørdag den 30. maj 2026\n\nCarsten blev valgt til dirigent på oldermandens forslag. Carsten takkede for valget og lagde op til et generationsskifte på dirigentpladsen; han foreslog, at Sanne overtager rollen som dirigent, og hun blev valgt af klanen. Carsten opfordrede til at synge skovturssangen.\n\nFormanden fik ordet: det var et godt sted sidste år, men formanden var ikke tilfreds med udfaldet af konkurrencerne — pointfordelingen var ikke rimelig. Uretfærdige, men gode konkurrencer, sagde formanden. Der kom en hilsen fra Lise, som kiggede forbi sidste år og gerne vil komme igen næste år.\n\nRegnskab: Sanne gav ordet til Tommy, klanens kasserer, der fremlagde regnskabet. Det gik fint sidste år. Tommy pointerede, at der nu er udgifter til hjemmesiden, hvilket giver et underskud på den post, som ikke har været der tidligere. Der er i princippet overskud i Jylland, men underskud pga. websitet. Der er gebyrer på bank og MobilePay, som der ikke er noget at gøre ved.\n\nValg af bestyrelse: Tommy genvalgt. Karin genvalgt in absentia til sekretær.\n\nKontingent 2027: Kontingentet fortsætter på 200 kr. pr. husstand.\n\nKommende skovture: Næste år (2027) er Sønderjylland — Holmsborg er valgt, 7.–9. maj. Skovturen om 2 år (2028): Sjælland.\n\nArrangementskomité: Simon, Tine, Iben, Kristine og Henrik, Tommy og Jette.\n\nEventuelt: Man rydder selv op efter egen mad og pakker det væk — det er ikke opvaskeholdet, der skal stå for det. Facebook-billeder skal i de rigtige album; Tine laver albummer klar inden skovturen og hjælper med at få billederne i de rigtige album i stedet for ud på forsiden. Indeværende arrangementskomité har til opgave at finde næste års komité inden skovturen.\n\nNy hjemmeside: Carsten fremlagde et oplæg til en ny hjemmesidemodel. Tommy havde konstateret, at hjemmesiden belaster foreningens økonomi, og har sammen med Kurt, Karin og Sanne søgt en billigere løsning. Carsten fortalte historien om hjemmesiden, som han har programmeret, og præsenterede den nye side, der skal erstatte Minisite. Indtil videre er den nye side gratis. Det aftales, at der lægges en budgetplan for, hvad det koster, når der kommer en terabyte billeder ind. Det bliver et mere sikkert system, og man kan se en deltagerliste. Folk opfordres til at finde de originale billeder frem i stedet for de komprimerede Facebook-billeder. Carsten introducerede \"Videofon\" og \"Mindelunden\". Der er tilslutning til sitet.\n\nVi husker dette år som året, hvor Simon blev hentet i ambulance kl. 4 om morgenen.\n\nEfter generalforsamlingen blev folk opfordret til at skrive sig på aktiviteter, og der blev taget fællesfoto i gården. Oldefars sang blev sunget. Generalforsamlingen er hermed slut.\n\nRef. Trine Gram"
+  }
 };
-
-window.retHist = function(h){
-  document.getElementById("h-id").value=h.id;
-  document.getElementById("h-aar").value=h.aar;
-  document.getElementById("h-dato").value=h.dato||"";
-  document.getElementById("h-sted").value=h.sted||"";
-  document.getElementById("h-note").value=h.note||"";
-  document.getElementById("hist-form").classList.remove("skjul");
-  document.getElementById("hist-form").scrollIntoView({behavior:"smooth"});
-};
-
-window.sletHist = async function(id){
-  if(!confirm("Slet dette år fra historikken?")) return;
-  try { await deleteDoc(doc(db,"skovtur_historik",id)); await hentHist(); }
-  catch(e){ alert("Kunne ikke slette: " + e.message); }
-};
-
-async function hentHist(){
-  const el = document.getElementById("hist-liste");
-  try {
-    const snap = await getDocs(collection(db,"skovtur_historik"));
-    let liste = [];
-    snap.forEach(d => liste.push({ id:d.id, ...d.data() }));
-    liste.sort((a,b) => (b.aar||0) - (a.aar||0));
-    if(!liste.length){ el.innerHTML = '<div class="tom-besked">Ingen år registreret endnu.</div>'; return; }
-    el.innerHTML = liste.map(h => {
-      let handlinger = "";
-      if(maaTilpasse(h.ejer_nr)){
-        handlinger = `<span style="white-space:nowrap;">
-          <button class="knap knap-graa knap-lille" onclick='retHist(${JSON.stringify(h).replace(/'/g,"&#39;")})'>Ret</button>
-          <button class="knap knap-roed knap-lille" onclick="sletHist('${h.id}')">Slet</button>
-        </span>`;
-      }
-      return `<div class="hist-row">
-        <div class="hist-aar">${h.aar||""}</div>
-        <div class="hist-sted"><strong>${escHtml(h.sted)}</strong>${h.note ? ` — <span style="color:#888;font-size:13px;">${escHtml(h.note)}</span>` : ""}</div>
-        <div class="hist-dato">${escHtml(h.dato||"")}</div>
-        ${handlinger}
-      </div>`;
-    }).join("");
-  } catch(e){ el.innerHTML = '<div class="tom-besked">Kunne ikke hente historik.</div>'; console.log(e); }
-}
-
-// ============ HULLEBILAG: SKOVTUR DETALJER (år-baseret) ============
-import { getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // Standard-år = næste kommende skovtur (typisk maj). Efter maj peges på næste år.
 function standardAar(){
@@ -464,74 +405,134 @@ function standardAar(){
   return (nu.getMonth() >= 5) ? nu.getFullYear() + 1 : nu.getFullYear();
 }
 let DET_AKTUELT_AAR = standardAar();
+const urlAar = parseInt(new URLSearchParams(location.search).get("aar"), 10);
+if (urlAar > 1900 && urlAar < 2100) DET_AKTUELT_AAR = urlAar;
 
-function opdaterAarVisning(){
-  document.getElementById("det-aar-vis").textContent = DET_AKTUELT_AAR;
-  document.getElementById("det-form-aar").textContent = DET_AKTUELT_AAR;
-  // Ret-knap kun synlig hvis man må redigere netop dette år
-  const knap = document.getElementById("det-ret-knap");
-  if (maaRedigereAaret(DET_AKTUELT_AAR)) knap.classList.remove("skjul");
-  else knap.classList.add("skjul");
+let AAR_DATA = {};   // { 2026: { sted, datoer, referat, … } } — ét samlet sæt pr. år
+let DATA_OK = false; // false, hvis databasen ikke kunne læses (så må der ikke rettes)
+
+async function hentAlleAar(){
+  const alle = {};
+  // Felter, der står i databasen, vinder over de indbyggede — også når de er tomme
+  const flet = (aar, d) => { aar = parseInt(aar, 10); if (aar) alle[aar] = { ...(alle[aar] || {}), ...d, aar }; };
+  Object.keys(INDBYGGET).forEach(a => flet(a, INDBYGGET[a]));
+  try {
+    const snap = await getDocs(collection(db,"skovtur_detaljer"));
+    snap.forEach(ds => { const d = ds.data(); flet(parseInt(String(ds.id).replace("skovtur",""), 10) || d.aar, d); });
+    DATA_OK = true;
+  } catch(e){ DATA_OK = false; console.log("Skovtur-år:", e); }
+  // Den gamle "skovtur_historik" ligger som backup: den udfylder kun felter,
+  // som slet ikke findes på året i skovtur_detaljer. Der skrives aldrig til den.
+  try {
+    const snap = await getDocs(collection(db,"skovtur_historik"));
+    snap.forEach(ds => {
+      const h = ds.data(), aar = parseInt(h.aar, 10), d = alle[aar] || {}, ekstra = {};
+      if (d.sted === undefined && h.sted) ekstra.sted = h.sted;
+      if (d.datoer === undefined && h.dato) ekstra.datoer = h.dato;
+      if (d.note === undefined && h.note) ekstra.note = h.note;
+      if (Object.keys(ekstra).length) flet(aar, ekstra);
+    });
+  } catch(e){ console.log("Skovtur-historik (backup):", e); }
+  AAR_DATA = alle;
 }
 
-window.aarTilbage = function(){ DET_AKTUELT_AAR--; skjulDetForm(); opdaterAarVisning(); hentDet(); };
-window.aarFrem    = function(){ DET_AKTUELT_AAR++; skjulDetForm(); opdaterAarVisning(); hentDet(); };
+function skiftAar(aar, rul){
+  DET_AKTUELT_AAR = aar;
+  skjulDetForm();
+  visOversigt();
+  if (rul) document.getElementById("aarets-side").scrollIntoView({behavior:"smooth"});
+  return visAar();
+}
+window.aarTilbage = function(){ skiftAar(DET_AKTUELT_AAR - 1); };
+window.aarFrem    = function(){ skiftAar(DET_AKTUELT_AAR + 1); };
+// Klik på et år i oversigten: årets side skifter til det år
+window.vaelgAar   = function(aar){ skiftAar(parseInt(aar, 10), true); };
+
+window.nytAar = async function(){
+  if (!DATA_OK){ alert("Oplysningerne kunne ikke hentes. Genindlæs siden, og prøv igen."); return; }
+  const medIndhold = Object.keys(AAR_DATA).map(Number).filter(a => harIndhold(AAR_DATA[a]));
+  const forslag = Math.max(new Date().getFullYear(), ...medIndhold) + 1;
+  const svar = prompt("Hvilket år vil du oprette? Skriv årstallet — det må også gerne være et tidligere år, f.eks. 2019:", forslag);
+  if (svar === null) return;
+  const aar = parseInt(svar, 10);
+  if (!aar || aar < 1900 || aar > 2100){ alert("Skriv et gyldigt årstal, f.eks. 2025."); return; }
+  await skiftAar(aar);
+  visDetForm();
+};
 
 window.visDetForm = function(){
+  if (!DATA_OK){ alert("Oplysningerne kunne ikke hentes. Genindlæs siden, og prøv igen."); return; }
+  const d = AAR_DATA[DET_AKTUELT_AAR] || {};
+  Object.keys(FELTER).forEach(id => { document.getElementById(id).value = d[FELTER[id]] || ""; });
+  document.getElementById("det-form-aar").textContent = DET_AKTUELT_AAR;
   document.getElementById("det-form").classList.remove("skjul");
   document.getElementById("det-form").scrollIntoView({behavior:"smooth"});
 };
 window.skjulDetForm = function(){ document.getElementById("det-form").classList.add("skjul"); };
 
+// Link til årets billeder: en side her på hjemmesiden eller en https-adresse
+function sikkertLink(u){
+  u = (u || "").trim();
+  if (/^www\./i.test(u)) u = "https://" + u;
+  if (/^https?:\/\/[^\s"'<>]+$/i.test(u)) return u;
+  if (/^[\w\-.\/]+\.html([?#][\w\-=&%.]*)?$/i.test(u)) return u;
+  return "";
+}
+
 window.gemDet = async function(){
-  const data = {
-    aar:         DET_AKTUELT_AAR,
-    sted:        document.getElementById("d-sted").value.trim(),
-    datoer:      document.getElementById("d-datoer").value.trim(),
-    ankomst:     document.getElementById("d-ankomst").value.trim(),
-    afgang:      document.getElementById("d-afgang").value.trim(),
-    pris:        document.getElementById("d-pris").value.trim(),
-    frist:       document.getElementById("d-frist").value.trim(),
-    betaling:    document.getElementById("d-betaling").value.trim(),
-    kontaktNavn: document.getElementById("d-kontakt-navn").value.trim(),
-    kontaktTlf:  document.getElementById("d-kontakt-tlf").value.trim(),
-    medbring:    document.getElementById("d-medbring").value.trim(),
-    program:     document.getElementById("d-program").value.trim(),
-    referat:     document.getElementById("d-referat").value.trim(),
-    opdateret_af: MIT_NAVN, opdateret_dato: new Date().toISOString()
-  };
+  const aar = DET_AKTUELT_AAR;
+  if (!maaRedigereAaret(aar)) return;
+  const gemt = AAR_DATA[aar] || {};
+  const data = { aar };
+  Object.keys(FELTER).forEach(id => { data[FELTER[id]] = document.getElementById(id).value.trim(); });
+  if (data.billeder_link){
+    data.billeder_link = sikkertLink(data.billeder_link);
+    if (!data.billeder_link){ alert("Linket til årets billeder skal være en adresse, der begynder med https:// — eller navnet på en side her på hjemmesiden, f.eks. skovtur2025.html"); return; }
+  }
+  if (data.gf_dato && parseInt(data.gf_dato.slice(0,4), 10) !== aar){ alert("Datoen for generalforsamlingen ligger ikke i " + aar + ". Ret datoen, eller skift år."); return; }
+  if (!harIndhold(data) && !harIndhold(gemt)){ alert("Udfyld mindst ét felt, før du gemmer."); return; }
+  // Et tomt referatfelt fjerner aldrig et gemt referat uden at spørge først
+  if (!data.referat && gemt.referat){
+    if (!confirm("Referatfeltet er tomt.\n\nTryk OK for at fjerne det gemte referat for " + aar + ".\nTryk Annullér for at beholde referatet (resten gemmes stadig).")) delete data.referat;
+  }
+  data.opdateret_af = MIT_NAVN; data.opdateret_dato = new Date().toISOString();
   const btn = document.getElementById("d-gem"); btn.disabled = true; btn.textContent = "Gemmer…";
   try {
-    // merge: bevarer felter, som ikke står i denne formular (f.eks. generalforsamlingens dato og sted)
-    await setDoc(doc(db,"skovtur_detaljer","skovtur"+DET_AKTUELT_AAR), data, { merge: true });
-    skjulDetForm(); await hentDet();
+    // merge: felter, som ikke står i formularen, bliver liggende på året
+    await setDoc(doc(db,"skovtur_detaljer","skovtur"+aar), data, { merge: true });
+    await hentAlleAar();
+    await skiftAar(aar);
   } catch(e){ alert("Kunne ikke gemme: " + e.message); }
   btn.disabled = false; btn.textContent = "Gem oplysninger";
 };
 
 function detRaekke(label, vaerdi){
   if(!vaerdi) return "";
-  return `<div class="hist-row"><div style="min-width:160px;font-weight:bold;color:#2d5016;">${label}</div><div style="flex:1;white-space:pre-wrap;">${escHtml(vaerdi)}</div></div>`;
+  return `<div class="hist-row"><div class="det-label">${label}</div><div style="flex:1;white-space:pre-wrap;">${escHtml(vaerdi)}</div></div>`;
+}
+function detRaekkeHtml(label, html){
+  return `<div class="hist-row"><div class="det-label">${label}</div><div style="flex:1;">${html}</div></div>`;
 }
 
 // Lang tekst som foldbar blok (klik på titlen for at åbne/lukke)
 function detFold(titel, vaerdi){
   if(!vaerdi) return "";
   return `<details style="margin-top:8px;border:1px solid #e5ddc7;border-radius:6px;overflow:hidden;">
-    <summary style="cursor:pointer;padding:10px 14px;background:#f7f2e3;font-weight:bold;color:#2d5016;list-style:none;">${titel}</summary>
+    <summary style="cursor:pointer;padding:10px 14px;background:#f7f2e3;font-weight:bold;color:#2d5016;">${titel}</summary>
     <div style="padding:14px;white-space:pre-wrap;line-height:1.55;">${escHtml(vaerdi)}</div>
   </details>`;
 }
 
 // Fast link til foreningens vedtægter (vises altid)
 function vedtaegtLink(){
-  return `<div class="hist-row"><div style="min-width:160px;font-weight:bold;color:#2d5016;">📜 Vedtægter</div><div style="flex:1;"><a href="vedtaegter.html" style="color:#2d5016;font-weight:600;">Læs foreningens vedtægter →</a></div></div>`;
+  return detRaekkeHtml("📜 Vedtægter", `<a href="vedtaegter.html" style="color:#2d5016;font-weight:600;">Læs foreningens vedtægter →</a>`);
 }
 
-function nulstilDetForm(){
-  ["d-sted","d-datoer","d-ankomst","d-afgang","d-pris","d-frist","d-betaling","d-kontakt-navn","d-kontakt-tlf","d-medbring","d-program","d-referat"].forEach(id => {
-    document.getElementById(id).value = "";
-  });
+function billederLink(aar, link){
+  link = sikkertLink(link);
+  if(!link) return "";
+  const ekstern = /^https?:/i.test(link) ? ' target="_blank" rel="noopener"' : "";
+  return detRaekkeHtml("📷 Årets billeder", `<a href="${escAttr(link)}"${ekstern} style="color:#2d5016;font-weight:600;">Se billederne fra skovturen ${aar} →</a>`);
 }
 
 // Navn fra person-objekt (samme logik som kartoteket)
@@ -542,13 +543,18 @@ function personNavn(p){
 
 // Henter komité-medlemmer for et givet år fra membres-kartoteket.
 // Email/telefon hører til husstanden (m.email / m.tlf).
+let MEMBRES = null; // kartoteket hentes kun én gang pr. sidevisning
 async function hentKomite(aar){
   const aarStr = String(aar);
   let medlemmer = [];
   try {
-    const snap = await getDocs(collection(db,"membres"));
-    snap.forEach(docSnap => {
-      const m = docSnap.data();
+    if (!MEMBRES){
+      const snap = await getDocs(collection(db,"membres"));
+      const alle = [];
+      snap.forEach(docSnap => alle.push(docSnap.data()));
+      MEMBRES = alle;
+    }
+    MEMBRES.forEach(m => {
       const husTlf   = m.tlf || "";
       const husEmail = (m.email || "").split("/")[0].trim();
       (m.familiemedlemmer || []).forEach(p => {
@@ -567,7 +573,7 @@ async function hentKomite(aar){
   return medlemmer;
 }
 
-function komiteRaekke(medlemmer){
+function komiteRaekke(medlemmer, aar){
   if(!medlemmer.length) return "";
   const linjer = medlemmer.map(m => {
     const kontakt = [m.tlf, m.email].filter(Boolean).join(" · ");
@@ -575,209 +581,89 @@ function komiteRaekke(medlemmer){
   }).join("");
   const mails = [...new Set(medlemmer.map(m => m.email).filter(e => e && e.includes("@")))];
   const skrivTilAlle = mails.length
-    ? `<div style="margin-top:6px;"><a href="mailto:${mails.join(",")}?subject=${encodeURIComponent("Arrangementskomitéen " + DET_AKTUELT_AAR)}" style="color:#2d5016;font-weight:bold;font-size:13px;">✉️ Skriv til hele komitéen</a></div>`
+    ? `<div style="margin-top:6px;"><a href="mailto:${escAttr(mails.join(","))}?subject=${encodeURIComponent("Arrangementskomitéen " + aar)}" style="color:#2d5016;font-weight:bold;font-size:13px;">✉️ Skriv til hele komitéen</a></div>`
     : "";
-  return `<div class="hist-row"><div style="min-width:160px;font-weight:bold;color:#2d5016;">Arrangementskomité ${DET_AKTUELT_AAR}</div><div style="flex:1;">${linjer}${skrivTilAlle}</div></div>`;
+  return detRaekkeHtml("Arrangementskomité " + aar, linjer + skrivTilAlle);
 }
 
-// Indbygget historisk data (bruges hvis intet er gemt i databasen for året)
-const INDBYGGET = {
-  2026: {
-    sted: "Eriksminde, Eriksmindevej 15, 4581 Rørvig",
-    datoer: "29. — 31. maj 2026",
-    ankomst: "fredag fra kl. 16:30",
-    afgang: "søndag (efter rengøring)",
-    pris: "Deltagergebyr hele weekenden: voksne 225 kr. · børn (3-15 år) 75 kr. — Kun lørdag: 100/50 kr. — Aftensmad fredag: 60/30 kr. — Morgenmad søndag: 35/20 kr. Kontingent 2026: 200 kr. pr. husstand.",
-    frist: "3. maj 2026",
-    betaling: "Reg. 1551 — Konto 1231790 (husk tekst ved betaling, fx \"Vi kommer: 2x vok. fre-søn / 2x aft.mad fre. / 2x mo mad sø.\")",
-    medbring: "Bemærk: husdyr, lejrbål og telte/campingvogne er ikke tilladt.",
-    gf_dato: "2026-05-30",
-    gf_sted: "Eriksminde, Rørvig",
-    program: "Vi mødes på Eriksminde — et gensyn med det velkendte hus i skovbrynet, som vi besøgte i 2014, 2020 og 2022. Ca. 3 km fra Rørvig by og havn, 5 minutter fra vandet.\n\nForan huset er et åbent område med fodboldmål og rige muligheder for leg og spil. Kolonien har 54 sengepladser fordelt i 1-, 2- og 4-personers rum, en stor spisesal, opholdsstue og aktivitetsrum.\n\nI prisen er indregnet: leje fra fredag kl. 16:30 til søndag, morgenbord lørdag, fælles aktiviteter samt rengøring søndag. Drikkevarer kan købes til familievenlige priser.",
-    referat: "Referat fra generalforsamlingen — Familieskovtur 2026\nLørdag den 30. maj 2026\n\nCarsten blev valgt til dirigent på oldermandens forslag. Carsten takkede for valget og lagde op til et generationsskifte på dirigentpladsen; han foreslog, at Sanne overtager rollen som dirigent, og hun blev valgt af klanen. Carsten opfordrede til at synge skovturssangen.\n\nFormanden fik ordet: det var et godt sted sidste år, men formanden var ikke tilfreds med udfaldet af konkurrencerne — pointfordelingen var ikke rimelig. Uretfærdige, men gode konkurrencer, sagde formanden. Der kom en hilsen fra Lise, som kiggede forbi sidste år og gerne vil komme igen næste år.\n\nRegnskab: Sanne gav ordet til Tommy, klanens kasserer, der fremlagde regnskabet. Det gik fint sidste år. Tommy pointerede, at der nu er udgifter til hjemmesiden, hvilket giver et underskud på den post, som ikke har været der tidligere. Der er i princippet overskud i Jylland, men underskud pga. websitet. Der er gebyrer på bank og MobilePay, som der ikke er noget at gøre ved.\n\nValg af bestyrelse: Tommy genvalgt. Karin genvalgt in absentia til sekretær.\n\nKontingent 2027: Kontingentet fortsætter på 200 kr. pr. husstand.\n\nKommende skovture: Næste år (2027) er Sønderjylland — Holmsborg er valgt, 7.–9. maj. Skovturen om 2 år (2028): Sjælland.\n\nArrangementskomité: Simon, Tine, Iben, Kristine og Henrik, Tommy og Jette.\n\nEventuelt: Man rydder selv op efter egen mad og pakker det væk — det er ikke opvaskeholdet, der skal stå for det. Facebook-billeder skal i de rigtige album; Tine laver albummer klar inden skovturen og hjælper med at få billederne i de rigtige album i stedet for ud på forsiden. Indeværende arrangementskomité har til opgave at finde næste års komité inden skovturen.\n\nNy hjemmeside: Carsten fremlagde et oplæg til en ny hjemmesidemodel. Tommy havde konstateret, at hjemmesiden belaster foreningens økonomi, og har sammen med Kurt, Karin og Sanne søgt en billigere løsning. Carsten fortalte historien om hjemmesiden, som han har programmeret, og præsenterede den nye side, der skal erstatte Minisite. Indtil videre er den nye side gratis. Det aftales, at der lægges en budgetplan for, hvad det koster, når der kommer en terabyte billeder ind. Det bliver et mere sikkert system, og man kan se en deltagerliste. Folk opfordres til at finde de originale billeder frem i stedet for de komprimerede Facebook-billeder. Carsten introducerede \"Videofon\" og \"Mindelunden\". Der er tilslutning til sitet.\n\nVi husker dette år som året, hvor Simon blev hentet i ambulance kl. 4 om morgenen.\n\nEfter generalforsamlingen blev folk opfordret til at skrive sig på aktiviteter, og der blev taget fællesfoto i gården. Oldefars sang blev sunget. Generalforsamlingen er hermed slut.\n\nRef. Trine Gram"
-  }
-};
-
-async function hentDet(){
+// ---- Årets side: alt for det valgte år samlet ----
+let VIS_NR = 0;
+async function visAar(){
+  const aar = DET_AKTUELT_AAR, nr = ++VIS_NR;
   const el = document.getElementById("det-visning");
-  const maa = maaRedigereAaret(DET_AKTUELT_AAR);
-  // Hent komité fra kartoteket (uafhængigt af om der er gemt detaljer)
-  const komite = await hentKomite(DET_AKTUELT_AAR);
-  try {
-    const snap = await getDoc(doc(db,"skovtur_detaljer","skovtur"+DET_AKTUELT_AAR));
-    let d = snap.exists() ? snap.data() : (INDBYGGET[DET_AKTUELT_AAR] || null);
-    if(!d){
-      nulstilDetForm();
-      let tom = komiteRaekke(komite) + vedtaegtLink();
-      const harData = komiteRaekke(komite);
-      if(!harData){
-        tom = (maa
-          ? '<div class="tom-besked">Ingen oplysninger for ' + DET_AKTUELT_AAR + ' endnu. Tryk “✎ Ret oplysninger” for at udfylde.</div>'
-          : '<div class="tom-besked">Ingen oplysninger for ' + DET_AKTUELT_AAR + ' endnu.</div>') + vedtaegtLink();
-      }
-      el.innerHTML = tom;
-      return;
-    }
-    document.getElementById("d-sted").value = d.sted||"";
-    document.getElementById("d-datoer").value = d.datoer||"";
-    document.getElementById("d-ankomst").value = d.ankomst||"";
-    document.getElementById("d-afgang").value = d.afgang||"";
-    document.getElementById("d-pris").value = d.pris||"";
-    document.getElementById("d-frist").value = d.frist||"";
-    document.getElementById("d-betaling").value = d.betaling||"";
-    document.getElementById("d-kontakt-navn").value = d.kontaktNavn||"";
-    document.getElementById("d-kontakt-tlf").value = d.kontaktTlf||"";
-    document.getElementById("d-medbring").value = d.medbring||"";
-    document.getElementById("d-program").value = d.program||"";
-    document.getElementById("d-referat").value = d.referat||"";
-    let kontakt = (d.kontaktNavn || d.kontaktTlf)
-      ? [d.kontaktNavn, d.kontaktTlf].filter(Boolean).join(" · ") : "";
-    let html =
-      detRaekke("Sted / lejr", d.sted) +
-      detRaekke("Datoer", d.datoer) +
-      detRaekke("Ankomst", d.ankomst) +
-      detRaekke("Afgang", d.afgang) +
-      detRaekke("Pris pr. husstand", d.pris) +
-      detRaekke("Tilmeldingsfrist", d.frist) +
-      detRaekke("Betaling til", d.betaling) +
-      komiteRaekke(komite) +
-      detRaekke("Kontakt", kontakt) +
-      detRaekke("Medbring", d.medbring) +
-      detRaekke("Program / info", d.program) +
-      detRaekke("Generalforsamling", [datoTekst(d.gf_dato), d.gf_sted].filter(Boolean).join(" · ")) +
-      detFold("📄 Referat", d.referat) +
+  document.getElementById("det-aar-vis").textContent = aar;
+  // Ret-knap kun synlig hvis man må redigere netop dette år
+  const maa = DATA_OK && maaRedigereAaret(aar);
+  document.getElementById("det-ret-knap").classList.toggle("skjul", !maa);
+  // Komitéen kommer fra kartoteket (uafhængigt af om der er gemt noget for året)
+  const komite = komiteRaekke(await hentKomite(aar), aar);
+  if (nr !== VIS_NR) return; // der er bladret videre imens
+  const d = AAR_DATA[aar] || {};
+  const fejl = DATA_OK ? "" : '<div class="tom-besked">Kunne ikke hente alle oplysninger. Prøv at genindlæse siden.</div>';
+  if (!harIndhold(d)){
+    el.innerHTML = fejl + komite +
+      (DATA_OK ? '<div class="tom-besked">Ingen oplysninger for ' + aar + ' endnu.' + (maa ? ' Tryk “✎ Ret året” for at udfylde.' : '') + '</div>' : "") +
       vedtaegtLink();
-    if(!html) html = '<div class="tom-besked">Ingen oplysninger for ' + DET_AKTUELT_AAR + ' endnu.</div>';
-    if(d.opdateret_af){
-      const od = d.opdateret_dato ? new Date(d.opdateret_dato).toLocaleDateString("da-DK") : "";
-      html += `<div style="margin-top:12px;font-size:12px;color:#aaa;font-style:italic;">Senest opdateret af ${escHtml(d.opdateret_af)}${od ? " · " + od : ""}</div>`;
-    }
-    el.innerHTML = html;
-  } catch(e){
-    // Komitéen kommer fra kartoteket og vises, selv om de øvrige oplysninger ikke kan hentes
-    el.innerHTML = komiteRaekke(komite) + '<div class="tom-besked">Kunne ikke hente de øvrige oplysninger.</div>';
-    console.log(e);
+    return;
   }
+  const kontakt = [d.kontaktNavn, d.kontaktTlf].filter(Boolean).join(" · ");
+  let referat = detFold("📄 Referat fra generalforsamlingen " + aar + ' <span style="font-weight:normal;color:#888;font-size:13px;">— klik for at læse</span>', d.referat);
+  if (!referat && aar <= new Date().getFullYear())
+    referat = detRaekkeHtml("📄 Referat", '<span style="color:#aaa;font-style:italic;">ikke lagt ind endnu</span>');
+  let html = fejl +
+    detRaekke("Sted / lejr", d.sted) +
+    detRaekke("Datoer", d.datoer) +
+    detRaekke("Bemærkning", d.note) +
+    detRaekke("Ankomst", d.ankomst) +
+    detRaekke("Afgang", d.afgang) +
+    detRaekke("Pris pr. husstand", d.pris) +
+    detRaekke("Tilmeldingsfrist", d.frist) +
+    detRaekke("Betaling til", d.betaling) +
+    komite +
+    detRaekke("Kontakt", kontakt) +
+    detRaekke("Medbring", d.medbring) +
+    detRaekke("Program / info", d.program) +
+    detRaekke("Generalforsamling", [datoTekst(d.gf_dato), d.gf_sted].filter(Boolean).join(" · ")) +
+    referat +
+    billederLink(aar, d.billeder_link) +
+    vedtaegtLink();
+  if(d.opdateret_af){
+    const od = d.opdateret_dato ? new Date(d.opdateret_dato).toLocaleDateString("da-DK") : "";
+    html += `<div style="margin-top:12px;font-size:12px;color:#aaa;font-style:italic;">Senest opdateret af ${escHtml(d.opdateret_af)}${od ? " · " + od : ""}</div>`;
+  }
+  el.innerHTML = html;
 }
 
-// ============ REFERATER FRA GENERALFORSAMLINGEN ============
-// Referat, dato og sted gemmes på skovtur-året (skovtur_detaljer/skovturÅÅÅÅ,
-// felterne "referat", "gf_dato" og "gf_sted"), så det også vises under
-// "Skovtur · praktiske oplysninger" for samme år.
-async function hentReferater(){
-  const el = document.getElementById("ref-liste");
-  const gf = {};
-  const laes = (aar, d) => {
-    if (d.referat || d.gf_dato || d.gf_sted) gf[aar] = { referat: d.referat || "", dato: d.gf_dato || "", sted: d.gf_sted || d.sted || "" };
-    else delete gf[aar];
-  };
-  Object.keys(INDBYGGET).forEach(a => laes(a, INDBYGGET[a]));
-  try {
-    const snap = await getDocs(collection(db,"skovtur_detaljer"));
-    snap.forEach(ds => {
-      const d = ds.data();
-      laes(d.aar || String(ds.id).replace("skovtur",""), d);
-    });
-  } catch(e){ console.log("Referater:", e); }
-  window._gf = gf;
-  visReferater();
+// ---- Samlet oversigt: alle år, nyeste øverst ----
+function visOversigt(){
+  const el = document.getElementById("aar-oversigt");
+  const aarListe = Object.keys(AAR_DATA).map(Number).filter(a => harIndhold(AAR_DATA[a])).sort((a,b) => b - a);
+  if (!aarListe.length){
+    el.innerHTML = '<div class="tom-besked">' + (DATA_OK ? "Ingen år lagt ind endnu." : "Kunne ikke hente oversigten. Prøv at genindlæse siden.") + '</div>';
+    return;
+  }
+  const mangler = '<span style="color:#aaa;font-style:italic;">ikke registreret</span>';
+  el.innerHTML = `<table class="aar-tabel">
+    <thead><tr><th>År</th><th>Sted</th><th>Datoer</th><th class="aar-ref">Referat</th></tr></thead>
+    <tbody>${aarListe.map(a => { const d = AAR_DATA[a]; return `
+      <tr class="${a === DET_AKTUELT_AAR ? "valgt" : ""}" onclick="vaelgAar(${a})" title="Klik for at se ${a}">
+        <td><button class="aar-link" onclick="event.stopPropagation();vaelgAar(${a})">${a}</button></td>
+        <td>${d.sted ? escHtml(d.sted) : mangler}</td>
+        <td>${d.datoer ? escHtml(d.datoer) : mangler}</td>
+        <td class="aar-ref">${d.referat ? '<span style="color:#2d5016;font-weight:bold;" title="Referat er lagt ind">✓</span>' : '<span style="color:#ccc;" title="Intet referat endnu">–</span>'}</td>
+      </tr>`; }).join("")}
+    </tbody></table>`;
 }
 
-// Der vises kun ét år ad gangen: klik på et årstal i overblikket for at se det års data.
-let REF_VALGT_AAR = null;
-function visReferater(){
-  const el = document.getElementById("ref-liste");
-  const gf = window._gf || {};
-  const aarListe = Object.keys(gf).sort((a,b) => b - a);
-  if (!aarListe.length){ el.innerHTML = '<div class="tom-besked">Ingen generalforsamlinger lagt ind endnu.</div>'; return; }
-  const mangler = t => `<span style="color:#aaa;font-style:italic;">${t}</span>`;
-  const overblik = `
-    <div style="margin-bottom:16px;">
-      <div style="font-weight:bold;color:#2d5016;">Overblik — hvor og hvornår</div>
-      ${aarListe.map(a => `
-      <div class="hist-row" onclick="vaelgRefAar('${a}')" title="Klik for at se ${a}" style="cursor:pointer;padding:10px 8px;border-radius:4px;${a === REF_VALGT_AAR ? "background:#f7f2e3;" : ""}">
-        <div class="hist-aar" style="text-decoration:underline;">${a}</div>
-        <div class="hist-sted">${gf[a].sted ? `<strong>${escHtml(gf[a].sted)}</strong>` : mangler("sted ikke registreret")}</div>
-        <div class="hist-dato">${gf[a].dato ? datoTekst(gf[a].dato) : mangler("dato ikke registreret")}</div>
-        ${ER_ADMIN ? `<button class="knap knap-graa knap-lille" onclick="event.stopPropagation();retRef('${a}')">✎ Ret</button>` : ""}
-      </div>`).join("")}
-    </div>`;
-  const a = REF_VALGT_AAR;
-  const valgt = (a && gf[a]) ? `
-    <div style="border:1px solid #e5ddc7;border-radius:6px;overflow:hidden;">
-      <div style="padding:10px 14px;background:#f7f2e3;font-weight:bold;color:#2d5016;">📄 Generalforsamling ${a}${[datoTekst(gf[a].dato), escHtml(gf[a].sted)].filter(Boolean).map(t => ` <span style="font-weight:normal;color:#666;">· ${t}</span>`).join("")}</div>
-      ${ER_ADMIN ? `<div style="padding:12px 14px 0;"><button class="knap knap-guld knap-lille" onclick="retRef('${a}')">✎ Ret referat, dato og sted</button></div>` : ""}
-      ${gf[a].referat
-        ? `<div style="padding:14px;white-space:pre-wrap;line-height:1.55;">${escHtml(gf[a].referat)}</div>`
-        : `<div class="tom-besked" style="padding:14px;">Der er ikke lagt et referat ind for ${a}.</div>`}
-    </div>`
-    : '<div class="tom-besked">Klik på et årstal i overblikket for at se det års generalforsamling.</div>';
-  el.innerHTML = overblik + valgt;
-}
-// Klik på et år viser det år (og kun det); klik igen lukker det
-window.vaelgRefAar = function(aar){
-  REF_VALGT_AAR = (REF_VALGT_AAR === String(aar)) ? null : String(aar);
-  skjulRefForm();
-  visReferater();
-};
+if (ER_ADMIN) document.getElementById("det-nyt-knap").classList.remove("skjul");
+document.getElementById("det-aar-vis").textContent = DET_AKTUELT_AAR;
 
-// Fylder formularen med det, der er gemt for året. Felter, brugeren selv har
-// skrevet i, bliver ikke overskrevet, når der kun skiftes årstal.
-let REF_INDLAEST = { dato: "", sted: "", tekst: "" };
-function fyldRefForm(aar, kunUroerte){
-  const g = (window._gf || {})[aar] || {};
-  const ny = { dato: g.dato || "", sted: g.sted || "", tekst: g.referat || "" };
-  Object.keys(ny).forEach(felt => {
-    const input = document.getElementById("ref-" + felt);
-    if (!kunUroerte || input.value === REF_INDLAEST[felt]) input.value = ny[felt];
-  });
-  REF_INDLAEST = ny;
-}
-window.refAarSkiftet = function(){ fyldRefForm(parseInt(document.getElementById("ref-aar").value, 10), true); };
-
-window.visRefForm = function(aar){
-  aar = aar || (new Date().getFullYear());
-  document.getElementById("ref-aar").value = aar;
-  fyldRefForm(aar, false);
-  document.getElementById("ref-form").classList.remove("skjul");
-  document.getElementById("ref-form").scrollIntoView({behavior:"smooth"});
-};
-window.skjulRefForm = function(){ document.getElementById("ref-form").classList.add("skjul"); };
-window.retRef = function(aar){ REF_VALGT_AAR = String(aar); visReferater(); visRefForm(aar); };
-
-window.gemRef = async function(){
-  const aar = parseInt(document.getElementById("ref-aar").value, 10);
-  const dato = document.getElementById("ref-dato").value;
-  const sted = document.getElementById("ref-sted").value.trim();
-  const tekst = document.getElementById("ref-tekst").value.trim();
-  if (!aar || aar < 1900 || aar > 2100){ alert("Skriv et gyldigt årstal, f.eks. 2025."); return; }
-  if (!tekst && !dato && !sted){ alert("Udfyld mindst dato, sted eller referat."); return; }
-  if (dato && parseInt(dato.slice(0,4), 10) !== aar){ alert("Datoen ligger ikke i " + aar + ". Ret enten årstallet eller datoen."); return; }
-  const btn = document.getElementById("ref-gem"); btn.disabled = true; btn.textContent = "Gemmer…";
-  try {
-    const ref_ = doc(db,"skovtur_detaljer","skovtur"+aar);
-    const snap = await getDoc(ref_);
-    // Findes året kun som indbygget data, så bevar de øvrige oplysninger
-    const grund = snap.exists() ? {} : { ...(INDBYGGET[aar] || {}), aar: aar };
-    const data = { ...grund, gf_dato: dato, gf_sted: sted, opdateret_af: MIT_NAVN, opdateret_dato: new Date().toISOString() };
-    if (tekst) data.referat = tekst; // et tomt tekstfelt sletter aldrig et gemt referat
-    await setDoc(ref_, data, { merge: true });
-    skjulRefForm();
-    REF_VALGT_AAR = String(aar);
-    await hentReferater();
-    if (aar === DET_AKTUELT_AAR) await hentDet();
-    alert("✓ Generalforsamlingen " + aar + " er gemt.");
-  } catch(e){ alert("Kunne ikke gemme: " + e.message); }
-  btn.disabled = false; btn.textContent = "Gem";
-};
-
-if (ER_ADMIN) document.getElementById("ref-ny-knap").classList.remove("skjul");
-
-opdaterAarVisning();
 hentEvents();
-hentHist();
-hentDet();
-hentReferater();
+(async function(){
+  await hentAlleAar();
+  visOversigt();
+  await visAar();
+})();
 </script>
 </body>
 </html>
