@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Siden findes ikke · OlsenKlanen</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; min-height: 100vh; display: flex; flex-direction: column; }
+.topbar { background: #2d5016; color: #f5e6a8; padding: 16px 30px; }
+.topbar h1 { font-size: 20px; font-weight: normal; }
+.topbar a { color: #f5e6a8; text-decoration: none; }
+.wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 30px 20px; }
+.ark { background: #fff; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 40px 30px; max-width: 520px; width: 100%; text-align: center; }
+.emoji { font-size: 54px; margin-bottom: 10px; }
+.ark h2 { font-size: 26px; color: #2d5016; margin-bottom: 10px; }
+.ark p { font-size: 16px; color: #555; margin-bottom: 26px; }
+.knapper { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.knap { display: inline-block; font-family: inherit; font-size: 16px; padding: 12px 24px; border-radius: 5px; cursor: pointer; text-decoration: none; border: 2px solid #2d5016; }
+.knap.groen { background: #2d5016; color: #f5e6a8; }
+.knap.groen:hover { background: #3a6020; border-color: #3a6020; }
+.knap.lys { background: #fff; color: #2d5016; }
+.knap.lys:hover { background: #f5e6a8; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1><a href="/forside.html">OlsenKlanen</a></h1>
+</div>
+<div class="wrap">
+  <div class="ark">
+    <div class="emoji">🌲</div>
+    <h2>Siden findes ikke</h2>
+    <p>Vi kunne desværre ikke finde den side, du ledte efter. Måske er den flyttet, eller også er der en lille fejl i linket.</p>
+    <div class="knapper">
+      <a class="knap groen" href="/forside.html">← Til forsiden</a>
+      <button class="knap lys" type="button" onclick="history.back()">Tilbage</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
