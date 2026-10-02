@@ -97,6 +97,30 @@ try {
     </div>
   </div>
 
+  <!-- REFERATER FRA GENERALFORSAMLINGEN -->
+  <div class="boks" id="referater">
+    <div class="boks-header">
+      <span>📄 REFERATER FRA GENERALFORSAMLINGEN</span>
+      <button class="knap knap-guld knap-lille skjul" id="ref-ny-knap" onclick="visRefForm()">+ Tilføj referat</button>
+    </div>
+    <div class="boks-body">
+      <p style="font-size:13px;color:#888;margin-bottom:12px;">Generalforsamlingen holdes på skovturen. Klik på et år for at læse referatet.</p>
+
+      <div class="skjul" id="ref-form" style="background:#faf6ea;padding:14px;border-radius:6px;margin-bottom:14px;">
+        <label>Skovtur-år (det år generalforsamlingen blev holdt)</label>
+        <input type="number" id="ref-aar" placeholder="f.eks. 2025" style="max-width:160px;">
+        <label>Referat — sæt hele teksten ind her</label>
+        <textarea id="ref-tekst" rows="14" placeholder="Indsæt referatet her…"></textarea>
+        <div class="form-knapper">
+          <button class="knap" id="ref-gem" onclick="gemRef()">Gem referat</button>
+          <button class="knap knap-graa" onclick="skjulRefForm()">Annullér</button>
+        </div>
+      </div>
+
+      <div id="ref-liste"><div class="tom-besked">Henter referater…</div></div>
+    </div>
+  </div>
+
   <!-- HULLEBILAG: SKOVTUR — PRAKTISKE OPLYSNINGER (år-baseret) -->
   <div class="boks">
     <div class="boks-header">
@@ -628,10 +652,68 @@ async function hentDet(){
   }
 }
 
+// ============ REFERATER FRA GENERALFORSAMLINGEN ============
+// Referatet gemmes på skovtur-året (skovtur_detaljer/skovturÅÅÅÅ, feltet "referat"),
+// så det også vises under "Skovtur · praktiske oplysninger" for samme år.
+async function hentReferater(){
+  const el = document.getElementById("ref-liste");
+  const refs = {};
+  Object.keys(INDBYGGET).forEach(a => { if (INDBYGGET[a].referat) refs[a] = INDBYGGET[a].referat; });
+  try {
+    const snap = await getDocs(collection(db,"skovtur_detaljer"));
+    snap.forEach(ds => {
+      const d = ds.data();
+      const aar = d.aar || String(ds.id).replace("skovtur","");
+      if (d.referat) refs[aar] = d.referat; else delete refs[aar];
+    });
+  } catch(e){ console.log("Referater:", e); }
+  const aarListe = Object.keys(refs).sort((a,b) => b - a);
+  if (!aarListe.length){ el.innerHTML = '<div class="tom-besked">Ingen referater lagt ind endnu.</div>'; return; }
+  el.innerHTML = aarListe.map((a, i) => `
+    <details style="margin-bottom:8px;border:1px solid #e5ddc7;border-radius:6px;overflow:hidden;">
+      <summary style="cursor:pointer;padding:10px 14px;background:#f7f2e3;font-weight:bold;color:#2d5016;">📄 Generalforsamling ${a}</summary>
+      <div style="padding:14px;white-space:pre-wrap;line-height:1.55;">${escHtml(refs[a])}</div>
+      ${ER_ADMIN ? `<div style="padding:0 14px 12px;"><button class="knap knap-graa knap-lille" onclick="retRef('${a}')">✎ Ret referat</button></div>` : ""}
+    </details>`).join("");
+  window._referater = refs;
+}
+
+window.visRefForm = function(aar, tekst){
+  document.getElementById("ref-aar").value = aar || (new Date().getFullYear());
+  document.getElementById("ref-tekst").value = tekst || "";
+  document.getElementById("ref-form").classList.remove("skjul");
+  document.getElementById("ref-form").scrollIntoView({behavior:"smooth"});
+};
+window.skjulRefForm = function(){ document.getElementById("ref-form").classList.add("skjul"); };
+window.retRef = function(aar){ visRefForm(aar, (window._referater || {})[aar] || ""); };
+
+window.gemRef = async function(){
+  const aar = parseInt(document.getElementById("ref-aar").value, 10);
+  const tekst = document.getElementById("ref-tekst").value.trim();
+  if (!aar || aar < 1900 || aar > 2100){ alert("Skriv et gyldigt årstal, f.eks. 2025."); return; }
+  if (!tekst){ alert("Sæt referatet ind i tekstfeltet."); return; }
+  const btn = document.getElementById("ref-gem"); btn.disabled = true; btn.textContent = "Gemmer…";
+  try {
+    const ref_ = doc(db,"skovtur_detaljer","skovtur"+aar);
+    const snap = await getDoc(ref_);
+    // Findes året kun som indbygget data, så bevar de øvrige oplysninger
+    const grund = snap.exists() ? {} : { ...(INDBYGGET[aar] || {}), aar: aar };
+    await setDoc(ref_, { ...grund, referat: tekst, opdateret_af: MIT_NAVN, opdateret_dato: new Date().toISOString() }, { merge: true });
+    skjulRefForm();
+    await hentReferater();
+    if (aar === DET_AKTUELT_AAR) await hentDet();
+    alert("✓ Referatet for " + aar + " er gemt.");
+  } catch(e){ alert("Kunne ikke gemme: " + e.message); }
+  btn.disabled = false; btn.textContent = "Gem referat";
+};
+
+if (ER_ADMIN) document.getElementById("ref-ny-knap").classList.remove("skjul");
+
 opdaterAarVisning();
 hentEvents();
 hentHist();
 hentDet();
+hentReferater();
 </script>
 </body>
 </html>
