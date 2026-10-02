@@ -1512,17 +1512,17 @@ function komiteAarsValg(){
   // Kommende skovtur-år (efter 1. juni peges på næste år)
   const kommende = (nu.getMonth() >= 5) ? nu.getFullYear() + 1 : nu.getFullYear();
   const iAar = nu.getFullYear();
-  let ops = '';
-  // Fra 5 år frem til 15 år tilbage; kommende skovtur-år er forvalgt
+  // Intet år er forvalgt — man skal selv vælge, så ingen kommer med ved en fejl
+  let ops = '<option value="" selected>— vælg år —</option>';
   for (let a = iAar + 5; a >= iAar - 15; a--){
-    ops += `<option value="${a}"${a === kommende ? ' selected' : ''}>${a}</option>`;
+    ops += `<option value="${a}">${a}${a === kommende ? ' (næste skovtur)' : ''}</option>`;
   }
   return ops;
 }
 function komiteChips(raw, i){
   const aar = komiteAarListe(raw).sort((a,b) => b - a);
-  if (!aar.length) return '<span style="font-size:12px;color:var(--tekst-lys);font-style:italic">Ingen år valgt</span>';
-  return aar.map(a =>
+  if (!aar.length) return '<span style="font-size:12px;color:var(--tekst-lys);font-style:italic">Ikke med i nogen arrangementskomité</span>';
+  return '<span style="font-size:12px;color:var(--tekst);margin-right:4px">Med i komitéen:</span>' + aar.map(a =>
     `<span style="display:inline-flex;align-items:center;gap:4px;background:#eef3e6;color:#2d5016;border:1px solid #cdddb8;border-radius:12px;padding:2px 8px;font-size:12px;font-weight:600">${a}<span data-komite-fjern="${i}" data-aar="${a}" style="cursor:pointer;color:#a33;font-weight:700">✕</span></span>`
   ).join('');
 }
@@ -1682,6 +1682,7 @@ document.getElementById('person-liste-edit').addEventListener('click', e => {
     const vaelg = document.querySelector(`[data-komite-vaelg="${i}"]`);
     if (!vaelg) return;
     const aar = vaelg.value;
+    if (!aar) { alert('Vælg først et årstal i rullemenuen.'); return; }
     const p = personListe[i];
     const liste = komiteAarListe(p.komite_aar);
     if (!liste.includes(aar)) {
