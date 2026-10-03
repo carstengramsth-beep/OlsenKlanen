@@ -97,6 +97,7 @@ textarea:focus { outline: none; border-color: #2d5016; }
 .gruppe-antal.roed { background: #c0392b; }
 .lille-tom { padding: 14px 20px; }
 .laest-status { color: #555; }
+.mail-kort.lukket { padding-top: 12px; padding-bottom: 12px; }
 
 /* Varsel om ulæste mails */
 .ulaest-varsel { display: none; align-items: center; gap: 14px; flex-wrap: wrap; background: #fff8e1; border: 2px solid #c89e3c; border-left: 8px solid #c0392b; border-radius: 8px; padding: 14px 18px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
@@ -267,7 +268,7 @@ try {
   <div id="omr-laest" style="display:none">
     <div class="info-boks">
       <strong>👁 Læste mails — åbnet af en af jer 5</strong>
-      Her står, hvem der har læst hver mail og hvornår. Herfra kan I svare og arkivere.
+      Tryk "📖 Åbn" for at læse en mail. Tryk "✓ Læst – luk", når du har læst den — så kommer dit navn på, og mailen lukkes. Herfra kan I også svare og arkivere.
     </div>
     <div id="laest-liste"><div class="indlaeser">Henter post …</div></div>
   </div>
@@ -1103,7 +1104,7 @@ window.sendSvarMail = async function(id) {
       besvaret_af_nr: MIT_NR,
       besvaret_tid: serverTimestamp(),
       svar_tekst: tekst,
-      ...(m.laest ? {} : laestFelter())
+      ...laestOpdatering(m)
     });
 
     // Gem svaret med hele tråden under "Sendte mails"
@@ -1144,7 +1145,7 @@ window.arkiverMail = async function(samling, id, knap){
   try {
     const m = samling === "olsenpost_indkomne" ? indbakkeData.find(x => x.id === id) : null;
     await updateDoc(doc(db, samling, id), {
-      ...(m && !m.laest ? laestFelter() : {}),
+      ...(m ? laestOpdatering(m) : {}),
       arkiveret: true,
       arkiveret_af: MIT_NAVN,
       arkiveret_af_nr: MIT_NR,
@@ -1200,22 +1201,69 @@ let startFaneValgt = false;
 function erLaest(m){ return !!(m.laest || m.besvaret); }
 function ulaesteIndkomne(){ return indbakkeData.filter(m => !m.arkiveret && !erLaest(m)); }
 
-function laestFelter(){
-  return { laest: true, laest_af: MIT_NAVN, laest_af_nr: MIT_NR, laest_tid: serverTimestamp(), laest_lokal: Date.now() };
+// Hvem af de 5 der har læst mailen: [{navn, nr, tid}]. Ældre mails har kun laest_af.
+function laesere(m){
+  if (Array.isArray(m.laest_af_liste) && m.laest_af_liste.length) return m.laest_af_liste;
+  return m.laest ? [{ navn: m.laest_af, nr: m.laest_af_nr, tid: m.laest_lokal || tidMs(m.laest_tid) }] : [];
 }
 
-// fx "Læst af Kurt 3. okt. kl. 14.05"
-function laestTekst(m){
-  if (!m.laest) return m.besvaret ? `Besvaret af ${escHtml(m.besvaret_af || 'ukendt')} ${tidTekst(m.besvaret_tid)}` : "";
-  const fornavn = String(m.laest_af || "").trim().split(/\s+/)[0] || "ukendt";
-  return `Læst af ${escHtml(fornavn)} ${tidTekst(m.laest_tid || m.laest_lokal)}`;
+// Felter, der markerer mailen som læst af mig. Tomt objekt, hvis jeg allerede står på.
+function laestOpdatering(m){
+  if (m && laesere(m).some(l => l.nr === MIT_NR)) return {};
+  const ny = { navn: MIT_NAVN, nr: MIT_NR, tid: Date.now() };
+  const felter = { laest_af_liste: arrayUnion(ny) };
+  if (!m || !m.laest) {
+    Object.assign(felter, { laest: true, laest_af: MIT_NAVN, laest_af_nr: MIT_NR, laest_tid: serverTimestamp(), laest_lokal: ny.tid });
+  } else if (!Array.isArray(m.laest_af_liste)) {
+    // Tag den første læser med over i listen
+    felter.laest_af_liste = arrayUnion(laesere(m)[0], ny);
+  }
+  return felter;
 }
+
+// fx "Læst af: Carsten i dag kl. 10.15 · Kurt i dag kl. 11.02"
+function laestTekst(m){
+  const liste = laesere(m);
+  if (!liste.length) return "Ingen har trykket \"Læst\" endnu";
+  return "Læst af: " + liste.map(l => {
+    const fornavn = String(l.navn || "").trim().split(/\s+/)[0] || "ukendt";
+    return `${escHtml(fornavn)} ${tidTekst(l.tid)}`;
+  }).join(" · ");
+}
+
+// Hvilke læste mails der er foldet ud hos mig (resten vises lukket)
+const aabneLaeste = new Set();
+
+window.aabnLaest = function(id){
+  aabneLaeste.add(id);
+  tegnIndbakke();
+};
+
+window.laestOgLuk = async function(id, knap){
+  const m = indbakkeData.find(x => x.id === id);
+  const felter = laestOpdatering(m);
+  if (Object.keys(felter).length) {
+    if (!kanSkrivePost()) return;
+    if (knap) knap.disabled = true;
+    try {
+      await updateDoc(doc(db, "olsenpost_indkomne", id), felter);
+    } catch(e) {
+      console.log("Læst-fejl:", e);
+      alert("Kunne ikke gemme, at du har læst mailen. Prøv igen.");
+      if (knap) knap.disabled = false;
+      return;
+    }
+  }
+  aabneLaeste.delete(id);
+  tegnIndbakke();
+};
 
 window.aabnOgLaes = async function(id, knap){
   if (!kanSkrivePost()) return;
   if (knap) knap.disabled = true;
   try {
-    await updateDoc(doc(db, "olsenpost_indkomne", id), laestFelter());
+    await updateDoc(doc(db, "olsenpost_indkomne", id), laestOpdatering(indbakkeData.find(x => x.id === id)));
+    aabneLaeste.add(id);
     visFane("laest");
     const kort = document.getElementById("mail-" + id);
     if (kort) {
@@ -1296,10 +1344,23 @@ function tegnUlaestKort(m){
 }
 
 function tegnLaestKort(m){
+  const laestLinje = `<div class="mail-status laest-status">👁 ${laestTekst(m)}</div>`;
+  const besvaretLinje = m.besvaret
+    ? `<div class="mail-status">✅ Besvaret af ${escHtml(m.besvaret_af || '')} — ${tidTekst(m.besvaret_tid)}</div>`
+    : `<div class="mail-status ikke-besvaret">⏳ Ikke besvaret endnu</div>`;
+  const svarAaben = (() => { const o = document.getElementById("svar-omr-" + m.id); return o && o.style.display !== "none"; })();
+  if (!aabneLaeste.has(m.id) && !svarAaben) return `
+    <div class="mail-kort lukket ${m.besvaret ? 'besvaret' : ''}" id="mail-${m.id}">${mailHoved(m)}
+      ${laestLinje}
+      ${besvaretLinje}
+      <div class="mail-handlinger">
+        <button class="knap lille" onclick="aabnLaest('${m.id}')">📖 Åbn</button>
+      </div>
+    </div>`;
   return `
     <div class="mail-kort ${m.besvaret ? 'besvaret' : ''}" id="mail-${m.id}">${mailHoved(m)}
       <div class="mail-tekst">${escHtml(m.tekst || '')}</div>
-      ${m.laest ? `<div class="mail-status laest-status">👁 ${laestTekst(m)}</div>` : ''}
+      ${laestLinje}
       ${m.besvaret
         ? `<div class="mail-status">✅ Besvaret af ${escHtml(m.besvaret_af || '')} — ${tidTekst(m.besvaret_tid)}</div>`
         : `<div class="mail-status ikke-besvaret">⏳ Ikke besvaret endnu</div>`
@@ -1317,6 +1378,7 @@ function tegnLaestKort(m){
         </div>
       ` : ''}
       <div class="mail-handlinger">
+        <button class="knap lille" onclick="laestOgLuk('${m.id}',this)">✓ Læst – luk</button>
         ${ER_POSTANSVARLIG ? `<button class="knap lille grå" onclick="visReplySvar('${m.id}')">↩ Svar på denne mail</button>` : ''}
         ${arkivKnap("olsenpost_indkomne", m.id)}
       </div>
