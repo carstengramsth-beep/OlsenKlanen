@@ -421,7 +421,7 @@ try {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc, deleteDoc,
-         query, where, orderBy, onSnapshot, serverTimestamp, arrayUnion }
+         query, where, orderBy, onSnapshot, serverTimestamp, arrayUnion, increment }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
@@ -1439,9 +1439,71 @@ function tegnSendt(){
       </div>
       <div class="mail-emne">Emne: ${escHtml(m.emne||'')}</div>
       <div class="mail-tekst">${escHtml(m.tekst||'')}</div>
-      <div class="mail-handlinger">${arkivKnap("olsenpost_mail", m.id)}</div>
+      ${m.gensendt_antal ? `<div class="arkiv-info">🔁 ${gensendtTekst(m)}</div>` : ''}
+      <div class="mail-handlinger">
+        ${ER_POSTANSVARLIG ? `<button class="knap lille grå" id="gensend-${m.id}" onclick="sendIgen('${m.id}')">🔁 Send igen</button>` : ''}
+        ${arkivKnap("olsenpost_mail", m.id)}
+      </div>
+      <div class="status" id="gensend-status-${m.id}" style="display:none"></div>
     </div>`).join("");
 }
+
+// fx "Sendt igen af Carsten 3. okt. kl. 19.45" (eller "Sendt igen 2 gange …")
+function gensendtTekst(m){
+  const fornavn = String(m.gensendt_af || "").trim().split(/\s+/)[0] || "ukendt";
+  const d = new Date(tidMs(m.gensendt_tid, m.gensendt_lokal) || Date.now());
+  const dato = d.toLocaleDateString("da-DK", {day:"numeric", month:"short"});
+  const kl = d.toLocaleTimeString("da-DK", {hour:"2-digit", minute:"2-digit"});
+  const gange = m.gensendt_antal > 1 ? ` ${m.gensendt_antal} gange — senest` : "";
+  return `Sendt igen${gange} af ${escHtml(fornavn)} ${dato} kl. ${kl}`;
+}
+
+// Samme besked som første gang. Svar har allerede signatur og citat i teksten.
+function gensendBesked(m){
+  const tekst = String(m.tekst || "");
+  if (m.type === "svar") return tekst;
+  if (m.type === "velkomstmail") return personligHilsen(tekst + VELKOMST_SIGNATUR, m.til_navn);
+  return tekst + svarSignatur();
+}
+
+/* ════════ SEND IGEN — fx hvis mailen blev afvist ════════ */
+window.sendIgen = async function(id){
+  if (!kanSkrivePost()) return;
+  const m = sendtData.find(x => x.id === id);
+  const statusEl = document.getElementById("gensend-status-" + id);
+  const visStatus = (type, t) => { if (statusEl) { statusEl.className = "status " + type; statusEl.textContent = t; statusEl.style.display = "block"; } };
+  if (!m || !m.til_email) { visStatus("fejl", "Mailen kunne ikke findes. Genindlæs siden og prøv igen."); return; }
+  if (!confirm(`Send mailen "${m.emne || '(intet emne)'}" igen til ${m.til_navn || m.til_email}?`)) return;
+
+  const knap = document.getElementById("gensend-" + id);
+  if (knap) knap.disabled = true;
+  visStatus("ok", "⏳ Sender igen …");
+  try {
+    if (emailJSKlar && EMAILJS_PUBLIC_KEY !== "INDSÆT_PUBLIC_KEY_HER") {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email: m.til_email,
+        to_name: m.til_navn || m.til_email,
+        from_name: MIT_NAVN + " – Olsenklanen",
+        reply_to: "post@olsenklanen.dk",
+        subject: m.emne || "(intet emne)",
+        message: gensendBesked(m),
+        afsender_navn: MIT_NAVN,
+        name: MIT_NAVN
+      });
+    }
+    await updateDoc(doc(db, "olsenpost_mail", id), {
+      gensendt_antal: increment(1),
+      gensendt_af: MIT_NAVN,
+      gensendt_tid: serverTimestamp(),
+      gensendt_lokal: Date.now()
+    });
+    visStatus("ok", "✅ Mailen er sendt igen fra post@olsenklanen.dk");
+  } catch(e) {
+    console.log("Send igen-fejl:", e);
+    visStatus("fejl", "Kunne ikke sende mailen igen. Prøv igen om lidt.");
+    if (knap) knap.disabled = false;
+  }
+};
 
 /* ════════ ARKIV (fælles for de 5 postansvarlige) ════════ */
 let arkivSendtData = [];
