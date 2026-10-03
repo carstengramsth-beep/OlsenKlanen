@@ -1196,7 +1196,7 @@ function tegnIndbakke(){
         ? `<div class="mail-status">✅ Besvaret af ${escHtml(m.besvaret_af || '')} — ${tidTekst(m.besvaret_tid)}</div>`
         : `<div class="mail-status ikke-besvaret">⏳ Ikke besvaret endnu</div>`
       }
-      ${!m.besvaret && ER_POSTANSVARLIG ? `
+      ${ER_POSTANSVARLIG ? `
         <div class="svar-omr" id="svar-omr-${m.id}" style="display:none">
           <h4>✍️ Skriv svar — sendes fra post@olsenklanen.dk til ${escHtml(m.fra_email || '')}</h4>
           <textarea id="svar-tekst-${m.id}" class="felt" style="min-height:80px" placeholder="Skriv dit svar her …" oninput="opdaterSvarVisning('${m.id}')"></textarea>
@@ -1209,7 +1209,7 @@ function tegnIndbakke(){
         </div>
       ` : ''}
       <div class="mail-handlinger">
-        ${!m.besvaret && ER_POSTANSVARLIG ? `<button class="knap lille grå" onclick="visReplySvar('${m.id}')">↩ Svar på denne mail</button>` : ''}
+        ${ER_POSTANSVARLIG ? `<button class="knap lille grå" onclick="visReplySvar('${m.id}')">↩ Svar på denne mail</button>` : ''}
         ${arkivKnap("olsenpost_indkomne", m.id)}
       </div>
     </div>`).join("");
