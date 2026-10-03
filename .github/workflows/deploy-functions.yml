@@ -1,0 +1,29 @@
+name: Deploy Cloud Functions
+
+# Startes med hånden (fanen Actions → "Deploy Cloud Functions" → Run workflow).
+# Lægger koden i functions/ op til Firebase (fx tjekIndkommendeMail).
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Installer pakker til functions
+        run: npm install --omit=dev
+        working-directory: functions
+
+      - name: Login med servicekonto
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$RUNNER_TEMP/sa.json"
+
+      - name: Deploy functions
+        # Uden --force: findes der functions online, som ikke er i koden, stopper deploy i stedet for at slette dem
+        run: npx --yes firebase-tools@13 deploy --only functions --project olsenklanen-familieside --non-interactive
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json

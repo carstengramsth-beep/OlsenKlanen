@@ -65,14 +65,22 @@ exports.logInPostansvarlig = onCall(async (request) => {
 
 /**
  * Tjekker løbende post@olsenklanen.dks postkasse (hos Simply.com) for nye
- * mails via IMAP. For hver ny mail:
+ * mails via IMAP.
+ *
+ * "Ny" betyder: kommet ind i postkassen efter sidste tjek — uanset om nogen
+ * allerede har åbnet den i Simplys webmail. Det huskes i
+ * olsenpost/imap_status (højeste behandlede UID). Første gang (eller hvis
+ * Simply nulstiller postkassen) bruges de ulæste mails i stedet, så hele
+ * den gamle postkasse ikke hentes ind. Samme mail hentes aldrig to gange
+ * (tjekkes på Message-ID).
+ *
+ * For hver ny mail:
  *  - Lægges den altid ind i olsenpost_indkomne, så den kan ses under
  *    "Indkomne mails" i OlsenPost.
  *  - Hvis den kan matches til en tidligere afsendt, ubesvaret mail i
  *    olsenpost_mail (samme afsender-mailadresse), markeres den oprindelige
  *    mail som besvaret.
- * Mailen markeres som læst i selve postkassen bagefter, så den ikke
- * behandles igen.
+ * Mailen markeres også som læst i selve postkassen bagefter.
  */
 exports.tjekIndkommendeMail = onSchedule(
   { schedule: "every 5 minutes", secrets: [imapAdgangskode], timeoutSeconds: 120 },
@@ -90,16 +98,40 @@ exports.tjekIndkommendeMail = onSchedule(
     try {
       const lock = await client.getMailboxLock("INBOX");
       try {
-        const ulaeste = await client.search({ seen: false });
-        if (!ulaeste || !ulaeste.length) {
+        const statusRef = db.doc("olsenpost/imap_status");
+        const statusSnap = await statusRef.get();
+        const status = statusSnap.exists ? statusSnap.data() : {};
+        const uidValidity = String(client.mailbox.uidValidity);
+        const kendtPostkasse = status.uid_validity === uidValidity && Number(status.sidste_uid) > 0;
+        let hoejesteUid = kendtPostkasse ? Number(status.sidste_uid) : 0;
+
+        const nyeUids = kendtPostkasse
+          ? await client.search({ uid: (hoejesteUid + 1) + ":*" }, { uid: true })
+          : await client.search({ seen: false }, { uid: true });
+        // "N:*" giver altid mindst den sidste mail — også selv om den er gammel
+        const uids = (nyeUids || []).filter(u => u > hoejesteUid).sort((a, b) => a - b);
+
+        if (!uids.length) {
           console.log("Ingen nye mails.");
-          return;
         }
 
-        for (const uid of ulaeste) {
+        let fejlUid = null;
+
+        for (const uid of uids) {
           try {
-            const besked = await client.fetchOne(uid, { source: true });
+            const besked = await client.fetchOne(uid, { source: true }, { uid: true });
             const parsed = await simpleParser(besked.source);
+            const messageId = String(parsed.messageId || "").trim();
+
+            // Allerede hentet ind (fx før denne ændring)? Så spring over.
+            if (messageId) {
+              const findes = await db.collection("olsenpost_indkomne")
+                .where("message_id", "==", messageId).limit(1).get();
+              if (!findes.empty) {
+                hoejesteUid = Math.max(hoejesteUid, uid);
+                continue;
+              }
+            }
 
             const fraNavn = (parsed.from && parsed.from.value[0] && parsed.from.value[0].name) || "";
             const fraEmail = ((parsed.from && parsed.from.value[0] && parsed.from.value[0].address) || "").toLowerCase().trim();
@@ -108,7 +140,8 @@ exports.tjekIndkommendeMail = onSchedule(
 
             // Spring mails fra klanens egen adresse over (undgå selv-løkker)
             if (!fraEmail || fraEmail === "post@olsenklanen.dk") {
-              await client.messageFlagsAdd(uid, ["\\Seen"]);
+              await client.messageFlagsAdd(uid, ["\\Seen"], { uid: true });
+              hoejesteUid = Math.max(hoejesteUid, uid);
               continue;
             }
 
@@ -133,6 +166,7 @@ exports.tjekIndkommendeMail = onSchedule(
               fra_email: fraEmail,
               emne,
               tekst,
+              message_id: messageId || null,
               modtaget: FieldValue.serverTimestamp(),
               modtaget_lokal: Date.now(),
               besvaret: false,
@@ -140,12 +174,32 @@ exports.tjekIndkommendeMail = onSchedule(
               besvaret_tid: null
             });
 
-            await client.messageFlagsAdd(uid, ["\\Seen"]);
+            await client.messageFlagsAdd(uid, ["\\Seen"], { uid: true });
+            hoejesteUid = Math.max(hoejesteUid, uid);
             console.log("Behandlet mail fra", fraEmail);
           } catch (indreFejl) {
             console.log("Fejl ved behandling af mail (uid " + uid + "):", indreFejl);
+            if (status.fejl_uid === uid) {
+              // Fejlede også sidste gang — spring den over, så den ikke blokerer de næste mails
+              hoejesteUid = Math.max(hoejesteUid, uid);
+              continue;
+            }
+            // Stop her, så mailen prøves igen ved næste tjek
+            fejlUid = uid;
+            break;
           }
         }
+
+        // Første gang: start fra den nyeste mail i postkassen, så gamle mails ikke hentes ind
+        if (!kendtPostkasse && !fejlUid && client.mailbox.uidNext) {
+          hoejesteUid = Math.max(hoejesteUid, Number(client.mailbox.uidNext) - 1);
+        }
+        await statusRef.set({
+          uid_validity: uidValidity,
+          sidste_uid: hoejesteUid,
+          fejl_uid: fejlUid,
+          opdateret: FieldValue.serverTimestamp()
+        });
       } finally {
         lock.release();
       }
