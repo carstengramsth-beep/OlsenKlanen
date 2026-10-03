@@ -48,6 +48,7 @@ Sidst opdateret: 2026-10-03
 4. Sannes stamtræ-input integreret
 5. Beskeder mellem familiemedlemmer
 6. Forbedret mobilvisning
+7. Egne @olsenklanen.dk-adresser til medlemmer (fx carsten@olsenklanen.dk). Tilbydes som en mulighed, når der er styr på medlemmerne. Oprettes hos Simply, enten som videresendelse til medlemmets egen mail eller som rigtig postkasse. Simplys priser skal undersøges, og så skal det prissættes for medlemmerne. Har intet med EmailJS-loftet at gøre.
 
 ---
 
