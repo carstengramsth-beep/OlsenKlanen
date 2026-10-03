@@ -62,6 +62,8 @@ textarea { min-height: 70px; resize: vertical; }
 .aar-tabel tbody tr:hover { background: #faf6ea; }
 .aar-tabel tbody tr.valgt { background: #f7f2e3; }
 .aar-tabel .aar-ref { text-align: center; width: 70px; }
+.aar-tabel .aar-komite { font-size: 13px; color: #555; }
+.aar-tabel .aar-komite-mobil { display: none; font-size: 12px; color: #777; margin-top: 3px; }
 .aar-link { background: none; border: none; padding: 0; font: inherit; font-weight: bold; color: #2d5016; text-decoration: underline; cursor: pointer; }
 
 @media (max-width: 700px) {
@@ -71,6 +73,8 @@ textarea { min-height: 70px; resize: vertical; }
   .hist-row { flex-direction: column; gap: 2px; }
   .det-label { min-width: 0; }
   .aar-tabel th, .aar-tabel td { padding: 8px 4px; }
+  .aar-tabel .aar-komite { display: none; }
+  .aar-tabel .aar-komite-mobil { display: block; }
 }
 </style>
 <script>
@@ -215,6 +219,8 @@ try {
         </div>
         <label>Referat fra generalforsamlingen — sæt hele teksten ind her</label>
         <textarea id="d-referat" rows="14" placeholder="Indsæt referatet her…" style="min-height:160px"></textarea>
+        <label>Arrangementskomitéens beretning fra skovturen — sæt hele teksten ind her</label>
+        <textarea id="d-beretning" rows="10" placeholder="Indsæt komitéens beretning her…" style="min-height:120px"></textarea>
         <div class="form-knapper">
           <button class="knap" id="d-gem" onclick="gemDet()">Gem oplysninger</button>
           <button class="knap knap-graa" onclick="skjulDetForm()">Annullér</button>
@@ -380,12 +386,21 @@ const FELTER = {
   "d-kontakt-navn":"kontaktNavn", "d-kontakt-tlf":"kontaktTlf",
   "d-medbring":"medbring", "d-program":"program", "d-note":"note",
   "d-billeder":"billeder_link", "d-gf-dato":"gf_dato", "d-gf-sted":"gf_sted", "d-referat":"referat",
-  "d-komite-tekst":"komite_tekst"
+  "d-beretning":"beretning", "d-komite-tekst":"komite_tekst"
 };
 function harIndhold(d){ return !!d && Object.values(FELTER).some(f => d[f]); }
 
 // Indbygget historisk data (ligger under det, der er gemt i databasen for året)
 const INDBYGGET = {
+  2024: {
+    sted: "Bisseruplejren, Rude (Sjælland)",
+    dato_fra: "2024-05-24", dato_til: "2024-05-26",
+    datoer: "24.–26. maj 2024",
+    gf_dato: "2024-05-25", gf_sted: "Bisseruplejren, Rude",
+    komite_tekst: "Kasper, Iben, Katja og Kim, Rikke og Ben, Kristine",
+    referat: "Referat af generalforsamling i OlsenKlanen lørdag den 25. maj 2024\nBisseruplejren, Rude\n\nOldermanden åbnede mødet med sædvanlig charme ved at ringe med klokken. Carsten blev valgt som dirigent. Han takkede for valget, selv om der ikke var modkandidater.\nVi begyndte med at synge skovturssangen med den indlagte skålepause.\n\nBeretning\nFormanden bør fremlægge sin beretning, men eftersom alle nu sidder med programmet i hånden, kunne man læse sig gennem herligheden.\nDa vi er blevet enige om ikke at sende programmet ud for at spare porto, har vi fået det udleveret her. Carsten opfordrede alle til at lægge ekstra mærke til, hvor skønt det er at holde en trykt sag i hånden og mærke kvaliteten.\n\nGodkendelse af regnskabet\nRegnskabet blev delt rundt. Tommy havde sparet på papiret og sørget for, at der blev trykt på begge sider.\nUdgifterne til bankgebyrer er steget, og generelt er der prisstigninger. Det er svært at få det til at hænge sammen økonomisk, men det ser stadig ud til at gå. Næste års sted for skovturen er booket, og depositum er betalt. Tommy fik en klapsalve, og det blev konkluderet, at vi ikke skal arbejde for at få overskud – det skal bare lige hænge sammen.\n\nIndkomne forslag\nDer var ingen.\n\nValg af bestyrelse for 2025 og arrangementskomité for 2026\nBestyrelsen – Kurt, Karin og Tommy – blev genvalgt med store og massive klapsalver, der nok kunne høres helt inde i Bisserup.\nArrangementskomité for 2026: Anja, Martin, Nicky, Janni og Gitte. Her blev der også klappet, for det hele er i trygge og gode hænder.\nArrangementskomitéen for 2025 med Steen i spidsen stod op og fortalte om de prægtige lokaler, hvor vi skal være næste år: Tonneshøj i Haderslev, hvor der er plads til 100 personer, som kan sove i firemandsværelser. Datoen er 23.–25. maj 2025.\n\nFastlæggelse af kontingent for 2025\nVi blev enige om, at kontingentet fortsat er 200 kr. pr. familie – ligesom tidligere år.\n\nEventuelt\nFacebook: En opfordring til at lægge billeder i årets album på Facebook.\nCarsten opfordrede alle til at sende billeder fra skovturen i høj opløsning (med billedtekst) til ham, så flere forskellige kommer med i det trykte program.\nNB: Lise var meget skuffet over, at hendes 60-års fødselsdag ikke var blevet fremhævet. Det betyder jo, at hun ikke kan holde sin fødselsdag, når den ikke står i OlsenKlanens kalender. Vi undskyldte alle for denne fadæse.\nCarsten opfordrede til, at vi finder steder, hvor der er plads til alle. Så gør det ikke noget, at vi kommer de samme steder. Det blev nævnt, at der er få steder på Sjælland, hvor så mange kan være, men de kommende arrangementskomitéer har blik for det. Steen fortalte, at stedet for 2025 blev booket for fire år siden, og derfor skal der være fokus på at booke i god tid.\nTil sidst sang vi de traditionelle sange: Oldermandens sang og Olsenklanens slagsang.\nDirigenten takkede for god ro og orden!",
+    beretning: "Skovturen 2024 – fra festkomitéen\nSkovtur til Bisseruplejren i Rude på Sjælland, 24.–26. maj 2024\n\nEt ungt og ikke så trænet hold stod for årets skovtur, som blev holdt i Bisseruplejren med skønne udendørs omgivelser. Der var lidt trangt indenfor, hvis der kom mange med – og det gjorde der heldigvis. Vi fik udnyttet pladsen med campingvogn, nogle sov i biler, i telte og i bederummet. Alt blev brugt, men alle havde en plads :)\n\nDen \"unge\" arrangementskomité havde holdt adskillige planlægningsmøder, hvor opgaverne blev fordelt, og hvor vi fik spist en masse dejlig kage hver gang. Vi fik alle hver vores rolle. Kristine fik heldigvis hjælp af Jan til at handle ind i Tyskland – vi skal nok efterhånden kigge lidt på indkøbslisterne, for igen i år blev der handlet lidt for meget ind.\n\nRikke, Katja og Kim stod for aftensmaden fredag, hvor vi fik en meget lækker klangryde med ris. Der var rigeligt, så flere havde med hjem til fryseren.\nKasper stod for indkøb hos den lokale købmand til morgenmad og diverse. Købmanden kunne nok lukke resten af året på grund af velstand, efter Kasper havde lagt alle klanens penge i bl.a. opvaskebørster.\n\nBen stod for underholdningen. Iben fik tjansen med at styre de store linjer for både weekenden og den fælles leg lørdag. Kristine tjekkede ind som den første i lejren. Vi havde lidt udfordringer med at komme ind, da nøgleboksen var svær at finde, men det lykkedes, inden den skønne Olsen-familie drypvis begyndte at tjekke ind.\n\nHele weekenden var vi heldige med vejret. Til gengæld havde vi besøg af utroligt mange myg, og mange havde vist over 50 myggestik med hjem.\n\nFredag aften kom alle og fik af den skønne klangryde, og Tommy og Jette kom som altid med et par lasagner – hvis nu. Alle fik tildelt deres værelse eller plads, og der blev snakket, grinet, spillet og hygget. Oldermanden gav en lille én, da han nu er ægte oldermand. Stort tillykke med titlen og olderbarnet.\n\nLørdag startede lidt tidligere end de forrige år – og på en anden måde end vi plejer, for flagstangen var i udu, så flaget kunne ikke hejses. Nye stødte til, og alle fik dejlig morgenmad fra købmanden. Inden generalforsamlingen blev flaget selvfølgelig fikset af en håndfuld mandlige klanmedlemmer. Tak for det! Så kunne generalforsamlingen starte. Bagefter blev det skønne familiefoto taget med et meget stort træ i baggrunden.\n\nÅrets fælles aktivitet var femkamp med quiz, fodbold, kongespil, bordpynt og ringspil. Det var kamp til stregen, og overdommer Iben udpegede det vindende hold, som kunne vælge mellem forskellige præmier. Tillykke til vinderne.\n\nEfter formiddagens aktiviteter var det tid til det traditionelle, fantastiske tag-selv-bord, hvor hver familie havde bidraget med en ret. Igen i år var der noget for enhver smag. Det blev stillet op i rummet ved siden af den hyggelige spisesal, hvor vi lige kunne være – men det var fint med lidt skridt til buffeten. Derefter var der fri leg og hygge. De små medlemmer badede, og Ben nåede vist en morgendukkert lørdag. Om eftermiddagen var der kaffe og te til de hjemmebagte kager til den fælles kagebuffet. Tak for det.\n\nLørdag aften blev der som vanligt grillet pølser og bagt snobrød. Kasper lavede bål i baghaven. Igen blev det en rigtig hyggelig lørdag aften med drinks, spil, øl, vin, sodavand, slik og chips. Der manglede vist ikke noget.\n\nSøndag startede som vanligt med dejlig morgenmad, og der blev sunget fødselsdagssang for Kristine, som havde fødselsdag. Herefter oprydning, salg af det overskydende, så Tommy kunne få lidt penge i kassen – og så på gensyn til alle.\n\nKærlig hilsen festkomitéen\nKasper\nIben\nKatja og Kim\nRikke og Ben\nKristine"
+  },
   2025: {
     billeder_link: "skovtur2025.html"
   },
@@ -419,14 +434,6 @@ const FORSLAG = {
     dato_fra: "2023-05-19", dato_til: "2023-05-21",
     gf_dato: "2023-05-20", gf_sted: "Hovborglejren, Langeland",
     referat: "OlsenKlanens referat af generalforsamling lørdag den 20. maj 2023\nHovborglejren, Langeland\n\n1. Valg af dirigent\nCarsten blev valgt som dirigent. Som vanligt kom det bag på Carsten, men han takkede for valget. Vi startede generalforsamlingen med ét minuts stilhed til minde om Jørgen, som vi mistede sidste år, den 13. oktober 2022, hvor han sov stille ind efter længere tids sygdom. Jørgen havde et godt liv og blev 88 år. Æret være hans minde.\n\n2. Formanden fremlagde beretning/referat 2023\nKurt henviste til infohæfte nr. 46, hvor det hele står. Beretningen blev herefter godkendt.\n\n3. Fremlæggelse af regnskab og årligt kontingent\nTommy fremlagde regnskabet, som viste et lille underskud på 149 kr. Alting er blevet dyrere, men vi har stadig lidt penge i kassen. Årets sted – her på Langeland – er et dejligt sted, men det koster også noget. Man skal måske forberede sig på, at det bliver lidt dyrere fremover. Vi blev enige om, at det er et godt regnskab for klanen, da det blot skal løbe rundt. Tommy forsikrede, at der har været en kritisk revisor inde over regnskabet, da Jette har kigget på det …\nDet blev samtidig vedtaget, at årskontingentet fortsat skal være 200 kr. pr. familie. Regnskabet blev godkendt, og der blev klappet af Tommy.\n\n4. Indkomne forslag\nIngen forslag modtaget.\n\n5. Valg af bestyrelse og arrangementskomité 2025\nBestyrelsen blev genvalgt: Oldermand Kurt V. Olsen, sekretær Karin Lund, sekretærsuppleant Lise Olsen og webmaster Iben Olsen med Simon som backup.\nSkovtur 2025: Tonneshøj i Haderslev er allerede booket den 23.–25. maj 2025. Steen har fremtidssikret os, så det har han styr på. Steen og Lise vil indfange nogle medskyldige til at arrangere.\n\n6. Foreløbig information fra arrangementskomitéen om skovturen 2024\nDer var rift om de bedste steder, men komitéen fik booket Bisserup-lejren ved Skælskør den 24.–26. maj 2024. Her er der 67 sovepladser samt shelters og mulighed for at slå telt op og have campingvogn med. Det er korte senge med tynde madrasser, så den indre spejder skal måske findes frem.\nKomitéen er: Katja, Kim, Kasper, Kristina, Rikke, Ben, Kristine, Iben og Tine. Konsulenter er: Jette og Tommy samt Jytte og Jan.\n\n7. Eventuelt\n\nGenerationsskifte\nCarsten rejste spørgsmålet om udviklingen af OlsenKlanen. Det er helt fantastisk, at vi kan samle 80 mennesker i dag under disse rammer. Vi skal tænke over, hvordan vi holder fast i denne tradition. Hvordan sikrer vi, at den fortsætter? Vores sammenhold bliver beundret, og det er noget unikt, som vi skal holde fast i.\nDet er en positiv problemstilling, og den ligger stadig ude i fremtiden, men vi skal løbende tale om, hvordan vi alle kan blive ved med at deltage.\nDer var en opfordring til de unge om at gå ind i bestyrelsen og tage en større del af arrangementskomitéen – hvilket allerede sker fra næste år. Det vil være rigtig fint at komme tilbage til de samme lidt større steder, hvor vi har været glade for at være, med god indkvartering og plads til alle.\n\nBladet – OlsenKlanens informationshæfte\nKurt rejste spørgsmålet, om det er vigtigt at få bladet sendt ud på papir, eller om man kan nøjes med en elektronisk udgave. Vi blev enige om, at det stadig er rart at få bladet, men at man godt kan vente, til man kommer på skovturen. Det sparer også penge, når det ikke skal sendes ud forinden. Fremover udkommer bladet derfor elektronisk inden skovturen, så man får information om skovturen. Hvis man ikke kan komme på skovturen og stadig gerne vil have bladet, men ikke kan få det elektronisk, kan man få det tilsendt.\n\nFacebook-gruppen\nVi drøftede, hvem der skal være med i Facebook-gruppen. Det kan være svært at få overblik over, hvem man skal godkende. Derfor en opfordring til, at flere bliver administratorer.\nDet er også nødvendigt at få fastlagt kriterierne for, hvem der kan være med i gruppen. Tine, Martin og Kurt har ansvaret for det.\n\nPraktisk på skovturen\nEt forslag gik ud på at rykke starten på morgenmaden lørdag lidt frem. Der var også en opfordring til, at der kommer lidt mere information om dagens aktiviteter på selve skovturen.\n\nGeneralforsamlingen blev herefter afsluttet i god ro og orden.\n\nRef. Karin"
-  },
-  2024: {
-    sted: "Bisseruplejren, Rude (Sjælland)",
-    dato_fra: "2024-05-24", dato_til: "2024-05-26",
-    gf_dato: "2024-05-25", gf_sted: "Bisseruplejren, Rude",
-    referat: "Referat af generalforsamling i OlsenKlanen lørdag den 25. maj 2024\nBisseruplejren, Rude\n\nOldermanden åbnede mødet med sædvanlig charme ved at ringe med klokken. Carsten blev valgt som dirigent. Han takkede for valget, selv om der ikke var modkandidater.\nVi begyndte med at synge skovturssangen med den indlagte skålepause.\n\nBeretning\nFormanden bør fremlægge sin beretning, men eftersom alle nu sidder med programmet i hånden, kunne man læse sig gennem herligheden.\nDa vi er blevet enige om ikke at sende programmet ud for at spare porto, har vi fået det udleveret her. Carsten opfordrede alle til at lægge ekstra mærke til, hvor skønt det er at holde en trykt sag i hånden og mærke kvaliteten.\n\nGodkendelse af regnskabet\nRegnskabet blev delt rundt. Tommy havde sparet på papiret og sørget for, at der blev trykt på begge sider.\nUdgifterne til bankgebyrer er steget, og generelt er der prisstigninger. Det er svært at få det til at hænge sammen økonomisk, men det ser stadig ud til at gå. Næste års sted for skovturen er booket, og depositum er betalt. Tommy fik en klapsalve, og det blev konkluderet, at vi ikke skal arbejde for at få overskud – det skal bare lige hænge sammen.\n\nIndkomne forslag\nDer var ingen.\n\nValg af bestyrelse for 2025 og arrangementskomité for 2026\nBestyrelsen – Kurt, Karin og Tommy – blev genvalgt med store og massive klapsalver, der nok kunne høres helt inde i Bisserup.\nArrangementskomité for 2026: Anja, Martin, Nicky, Janni og Gitte. Her blev der også klappet, for det hele er i trygge og gode hænder.\nArrangementskomitéen for 2025 med Steen i spidsen stod op og fortalte om de prægtige lokaler, hvor vi skal være næste år: Tonneshøj i Haderslev, hvor der er plads til 100 personer, som kan sove i firemandsværelser. Datoen er 23.–25. maj 2025.\n\nFastlæggelse af kontingent for 2025\nVi blev enige om, at kontingentet fortsat er 200 kr. pr. familie – ligesom tidligere år.\n\nEventuelt\nFacebook: En opfordring til at lægge billeder i årets album på Facebook.\nCarsten opfordrede alle til at sende billeder fra skovturen i høj opløsning (med billedtekst) til ham, så flere forskellige kommer med i det trykte program.\nNB: Lise var meget skuffet over, at hendes 60-års fødselsdag ikke var blevet fremhævet. Det betyder jo, at hun ikke kan holde sin fødselsdag, når den ikke står i OlsenKlanens kalender. Vi undskyldte alle for denne fadæse.\nCarsten opfordrede til, at vi finder steder, hvor der er plads til alle. Så gør det ikke noget, at vi kommer de samme steder. Det blev nævnt, at der er få steder på Sjælland, hvor så mange kan være, men de kommende arrangementskomitéer har blik for det. Steen fortalte, at stedet for 2025 blev booket for fire år siden, og derfor skal der være fokus på at booke i god tid.\nTil sidst sang vi de traditionelle sange: Oldermandens sang og Olsenklanens slagsang.\nDirigenten takkede for god ro og orden!\n\n\nBeretning fra skovturen 2024 – fra festkomitéen\nSkovtur til Bisseruplejren i Rude på Sjælland, 24.–26. maj 2024\n\nEt ungt og ikke så trænet hold stod for årets skovtur, som blev holdt i Bisseruplejren med skønne udendørs omgivelser. Der var lidt trangt indenfor, hvis der kom mange med – og det gjorde der heldigvis. Vi fik udnyttet pladsen med campingvogn, nogle sov i biler, i telte og i bederummet. Alt blev brugt, men alle havde en plads :)\n\nDen \"unge\" arrangementskomité havde holdt adskillige planlægningsmøder, hvor opgaverne blev fordelt, og hvor vi fik spist en masse dejlig kage hver gang. Vi fik alle hver vores rolle. Kristine fik heldigvis hjælp af Jan til at handle ind i Tyskland – vi skal nok efterhånden kigge lidt på indkøbslisterne, for igen i år blev der handlet lidt for meget ind.\n\nRikke, Katja og Kim stod for aftensmaden fredag, hvor vi fik en meget lækker klangryde med ris. Der var rigeligt, så flere havde med hjem til fryseren.\nKasper stod for indkøb hos den lokale købmand til morgenmad og diverse. Købmanden kunne nok lukke resten af året på grund af velstand, efter Kasper havde lagt alle klanens penge i bl.a. opvaskebørster.\n\nBen stod for underholdningen. Iben fik tjansen med at styre de store linjer for både weekenden og den fælles leg lørdag. Kristine tjekkede ind som den første i lejren. Vi havde lidt udfordringer med at komme ind, da nøgleboksen var svær at finde, men det lykkedes, inden den skønne Olsen-familie drypvis begyndte at tjekke ind.\n\nHele weekenden var vi heldige med vejret. Til gengæld havde vi besøg af utroligt mange myg, og mange havde vist over 50 myggestik med hjem.\n\nFredag aften kom alle og fik af den skønne klangryde, og Tommy og Jette kom som altid med et par lasagner – hvis nu. Alle fik tildelt deres værelse eller plads, og der blev snakket, grinet, spillet og hygget. Oldermanden gav en lille én, da han nu er ægte oldermand. Stort tillykke med titlen og olderbarnet.\n\nLørdag startede lidt tidligere end de forrige år – og på en anden måde end vi plejer, for flagstangen var i udu, så flaget kunne ikke hejses. Nye stødte til, og alle fik dejlig morgenmad fra købmanden. Inden generalforsamlingen blev flaget selvfølgelig fikset af en håndfuld mandlige klanmedlemmer. Tak for det! Så kunne generalforsamlingen starte. Bagefter blev det skønne familiefoto taget med et meget stort træ i baggrunden.\n\nÅrets fælles aktivitet var femkamp med quiz, fodbold, kongespil, bordpynt og ringspil. Det var kamp til stregen, og overdommer Iben udpegede det vindende hold, som kunne vælge mellem forskellige præmier. Tillykke til vinderne.\n\nEfter formiddagens aktiviteter var det tid til det traditionelle, fantastiske tag-selv-bord, hvor hver familie havde bidraget med en ret. Igen i år var der noget for enhver smag. Det blev stillet op i rummet ved siden af den hyggelige spisesal, hvor vi lige kunne være – men det var fint med lidt skridt til buffeten. Derefter var der fri leg og hygge. De små medlemmer badede, og Ben nåede vist en morgendukkert lørdag. Om eftermiddagen var der kaffe og te til de hjemmebagte kager til den fælles kagebuffet. Tak for det.\n\nLørdag aften blev der som vanligt grillet pølser og bagt snobrød. Kasper lavede bål i baghaven. Igen blev det en rigtig hyggelig lørdag aften med drinks, spil, øl, vin, sodavand, slik og chips. Der manglede vist ikke noget.\n\nSøndag startede som vanligt med dejlig morgenmad, og der blev sunget fødselsdagssang for Kristine, som havde fødselsdag. Herefter oprydning, salg af det overskydende, så Tommy kunne få lidt penge i kassen – og så på gensyn til alle.\n\nKærlig hilsen festkomitéen\nKasper, Iben, Katja og Kim, Rikke og Ben, Kristine",
-    komite_tekst: "Kasper, Iben, Katja og Kim, Rikke og Ben, Kristine og Tine. Konsulenter: Jette og Tommy, Jytte og Jan",
-    erstat: ["Bisserup-lejren ved Skælskør"]
   },
   2025: {
     sted: "Tonneshøj, Haderslev",
@@ -618,9 +625,8 @@ function detRaekkeHtml(label, html){
 }
 
 // Lang tekst som foldbar blok (klik på titlen for at åbne/lukke)
-function detFold(titel, vaerdi){
-  const aaben = AABN_ALT ? " open" : "";
-  AABN_ALT = false;
+function detFold(titel, vaerdi, aabn){
+  const aaben = aabn ? " open" : "";
   if(!vaerdi) return "";
   return `<details${aaben} style="margin-top:8px;border:1px solid #e5ddc7;border-radius:6px;overflow:hidden;">
     <summary style="cursor:pointer;padding:10px 14px;background:#f7f2e3;font-weight:bold;color:#2d5016;">${titel}</summary>
@@ -717,7 +723,9 @@ async function visAar(){
     return;
   }
   const kontakt = [d.kontaktNavn, d.kontaktTlf].filter(Boolean).join(" · ");
-  let referat = detFold("📄 Referat fra generalforsamlingen " + aar + ' <span style="font-weight:normal;color:#888;font-size:13px;">— klik for at læse</span>', d.referat);
+  const aabnAlt = AABN_ALT; AABN_ALT = false;
+  const klik = ' <span style="font-weight:normal;color:#888;font-size:13px;">— klik for at læse</span>';
+  let referat = detFold("📄 Referat fra generalforsamlingen " + aar + klik, d.referat, aabnAlt);
   if (!referat && aar <= new Date().getFullYear())
     referat = detRaekkeHtml("📄 Referat", '<span style="color:#aaa;font-style:italic;">ikke lagt ind endnu</span>');
   let html = fejl +
@@ -735,6 +743,7 @@ async function visAar(){
     detRaekke("Program / info", d.program) +
     detRaekke("Generalforsamling", [datoTekst(d.gf_dato), d.gf_sted].filter(Boolean).join(" · ")) +
     referat +
+    detFold("🏕️ Arrangementskomitéens beretning fra skovturen " + aar + klik, d.beretning, aabnAlt) +
     billederLink(aar, d.billeder_link) +
     vedtaegtLink();
   if(d.opdateret_af){
@@ -745,6 +754,11 @@ async function visAar(){
 }
 
 // ---- Samlet oversigt: alle år, nyeste øverst ----
+// Gemt tekst vinder - også tom; ellers bruges forslaget (som på årets side)
+function komiteTekstFor(aar){
+  const d = AAR_DATA[aar] || {};
+  return d.komite_tekst !== undefined ? d.komite_tekst : ((FORSLAG[aar] || {}).komite_tekst || "");
+}
 function visOversigt(){
   const el = document.getElementById("aar-oversigt");
   const aarListe = Object.keys(AAR_DATA).map(Number).filter(a => harIndhold(AAR_DATA[a])).sort((a,b) => b - a);
@@ -754,12 +768,13 @@ function visOversigt(){
   }
   const mangler = '<span style="color:#aaa;font-style:italic;">ikke registreret</span>';
   el.innerHTML = `<table class="aar-tabel">
-    <thead><tr><th>År</th><th>Sted</th><th>Datoer</th><th class="aar-ref">Referat</th></tr></thead>
+    <thead><tr><th>År</th><th>Sted</th><th>Datoer</th><th class="aar-komite">Komité</th><th class="aar-ref">Referat</th></tr></thead>
     <tbody>${aarListe.map(a => { const d = AAR_DATA[a]; return `
       <tr class="${a === DET_AKTUELT_AAR ? "valgt" : ""}" onclick="vaelgAar(${a})" title="Klik for at se ${a}">
         <td><button class="aar-link" onclick="event.stopPropagation();vaelgAar(${a})">${a}</button></td>
-        <td>${visSted(d) ? escHtml(visSted(d)) : mangler}</td>
+        <td>${visSted(d) ? escHtml(visSted(d)) : mangler}${komiteTekstFor(a) ? `<div class="aar-komite-mobil">Komité: ${escHtml(komiteTekstFor(a))}</div>` : ""}</td>
         <td>${visDatoer(d) ? escHtml(visDatoer(d)) : mangler}</td>
+        <td class="aar-komite">${komiteTekstFor(a) ? escHtml(komiteTekstFor(a)) : mangler}</td>
         <td class="aar-ref">${d.referat ? '<span style="color:#2d5016;font-weight:bold;" title="Referat er lagt ind">✓</span>' : '<span style="color:#ccc;" title="Intet referat endnu">–</span>'}</td>
       </tr>`; }).join("")}
     </tbody></table>`;
