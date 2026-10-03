@@ -105,7 +105,7 @@ textarea:focus { outline: none; border-color: #2d5016; }
 
 /* Arkivering */
 .mail-handlinger { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
-.arkiv-knap { background: #e8f0d8; border: 1px solid #b9c99a; color: #2d5016; border-radius: 16px; font-family: inherit; font-size: 13px; padding: 6px 13px; cursor: pointer; }
+.arkiv-knap { background: #f1ede2; border: 1px dashed #9a9a8a; color: #5a5a4a; border-radius: 16px; font-family: inherit; font-size: 13px; padding: 6px 13px; cursor: pointer; margin-left: auto; }
 .arkiv-knap:hover { background: #d9e6c2; }
 .arkiv-knap:disabled { opacity: 0.6; cursor: default; }
 .mail-kort.arkiveret { border-left-color: #9a9a8a; background: #faf9f4; }
@@ -282,7 +282,7 @@ try {
   <div id="omr-arkiv" style="display:none">
     <div class="info-boks">
       <strong>🗄️ Arkiverede mails</strong>
-      Mails, som en af jer 5 har markeret "Læst, forstået og arkiveret". Arkivet er fælles for alle 5.
+      Mails, som en af jer 5 har arkiveret med "🗄️ Arkivér – sagen er færdig". Arkivet er fælles for alle 5.
       Ved hvert kvartalsskift slettes arkiverede mails, der blev arkiveret før starten af det forrige kvartal.
     </div>
     <div id="arkiv-liste"><div class="indlaeser">Henter arkiv …</div></div>
@@ -406,9 +406,9 @@ try {
     </div>
 
     <div class="kort">
-      <h2>✓ Læst, forstået og arkiveret</h2>
+      <h2>🗄️ Arkivér – sagen er færdig</h2>
       <p class="hint">
-        Tryk "✓ Læst, forstået og arkiveret" på en mail, når sagen er færdig. Så forsvinder den fra oversigten for alle 5 og ligger i fanen "Arkiv". Der kan du se, hvem der arkiverede den, og trykke "Fortryd arkivering".<br><br>
+        Tryk "🗄️ Arkivér – sagen er færdig" på en mail, når sagen er færdig. Så forsvinder den fra oversigten for alle 5 og ligger i fanen "Arkiv". Der kan du se, hvem der arkiverede den, og trykke "Fortryd arkivering".<br><br>
         Ved hvert kvartalsskift (1. jan., 1. apr., 1. jul. og 1. okt.) bliver du spurgt, om gamle arkiverede mails må slettes. Det er mails, der blev arkiveret før starten af det forrige kvartal. Mails, der ikke er arkiveret, slettes aldrig.
       </p>
     </div>
@@ -1179,7 +1179,7 @@ window.fortrydArkivering = async function(samling, id, knap){
 
 function arkivKnap(samling, id){
   if (!ER_POSTANSVARLIG) return "";
-  return `<button class="arkiv-knap" onclick="arkiverMail('${samling}','${id}',this)">✓ Læst, forstået og arkiveret</button>`;
+  return `<button class="arkiv-knap" onclick="arkiverMail('${samling}','${id}',this)">🗄️ Arkivér – sagen er færdig</button>`;
 }
 
 // fx "Arkiveret af Kurt 3. okt."
