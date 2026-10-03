@@ -88,6 +88,18 @@ textarea:focus { outline: none; border-color: #2d5016; }
 .svar-visning { white-space: pre-wrap; font-size: 13px; color: #555; background: #fdfbf5; border: 1px solid #e0d8bd; border-radius: 6px; padding: 10px; margin-top: 6px; max-height: 320px; overflow-y: auto; }
 .svar-visning-boks summary { cursor: pointer; font-size: 13px; color: #555; margin-top: 10px; }
 
+/* Grupper i Indkomne mails */
+.gruppe-titel { font-size: 17px; color: #2d5016; margin: 22px 0 10px; display: flex; align-items: center; gap: 8px; }
+.gruppe-titel:first-child { margin-top: 0; }
+.gruppe-antal { background: #8a8a7a; color: #fff; border-radius: 12px; font-size: 13px; padding: 1px 10px; }
+.gruppe-antal.roed { background: #c0392b; }
+.lille-tom { padding: 14px 20px; }
+.laest-status { color: #555; }
+
+/* Varsel om ulæste mails */
+.ulaest-varsel { display: none; align-items: center; gap: 14px; flex-wrap: wrap; background: #fff8e1; border: 2px solid #c89e3c; border-left: 8px solid #c0392b; border-radius: 8px; padding: 14px 18px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+.ulaest-varsel .tekst { flex: 1; font-size: 16px; font-weight: bold; color: #5a4a1f; min-width: 200px; }
+
 /* Arkivering */
 .mail-handlinger { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
 .arkiv-knap { background: #e8f0d8; border: 1px solid #b9c99a; color: #2d5016; border-radius: 16px; font-family: inherit; font-size: 13px; padding: 6px 13px; cursor: pointer; }
@@ -157,6 +169,12 @@ try {
     <input type="password" id="pin-bekraeft-felt" class="felt" autocomplete="off">
     <button class="knap" id="pin-bekraeft-knap" onclick="bekraeftPin()">🔓 Bekræft</button>
     <div class="status" id="pin-bekraeft-status"></div>
+  </div>
+
+  <div class="ulaest-varsel" id="ulaest-varsel">
+    <span style="font-size:28px;">📥</span>
+    <span class="tekst" id="ulaest-varsel-tekst"></span>
+    <button class="knap lille" onclick="visFane('indbakke')">Vis de nye mails</button>
   </div>
 
   <div class="faner">
@@ -358,7 +376,11 @@ try {
 
     <div class="kort">
       <h2>📥 Indkomne mails</h2>
-      <p class="hint">Svar og andre mails til post@olsenklanen.dk hentes automatisk ind her (der tjekkes hvert 5. minut). Alle 5 ser de samme mails. Den der svarer, sætter sit navn på svaret. Derudover videresender Simply.com mails til post@olsenklanen.dk til de postansvarliges private mailadresser.</p>
+      <p class="hint">Svar og andre mails til post@olsenklanen.dk hentes automatisk ind her (der tjekkes hvert 5. minut). Alle 5 ser de samme mails.<br><br>
+        <b>🆕 Nye mails — ikke læst:</b> Her ligger mails, som ingen af jer har læst endnu. Det røde tal viser hvor mange. Tryk "📖 Åbn og læs" — så flytter mailen ned i "Åbnet og læst" med dit navn og tidspunktet.<br>
+        <b>👁 Åbnet og læst:</b> Her kan I se, hvem der har læst mailen, og svare på den.<br>
+        Når du logger ind, viser forsiden en rød-gul besked, hvis der er ulæste mails.<br><br>
+        Derudover videresender Simply.com mails til post@olsenklanen.dk til de postansvarliges private mailadresser.</p>
     </div>
 
     <div class="kort">
@@ -1068,7 +1090,8 @@ window.sendSvarMail = async function(id) {
       besvaret_af: MIT_NAVN,
       besvaret_af_nr: MIT_NR,
       besvaret_tid: serverTimestamp(),
-      svar_tekst: tekst
+      svar_tekst: tekst,
+      ...(m.laest ? {} : laestFelter())
     });
 
     // Gem svaret med hele tråden under "Sendte mails"
@@ -1107,7 +1130,9 @@ window.arkiverMail = async function(samling, id, knap){
   if (!ARKIV_SAMLINGER.includes(samling) || !kanSkrivePost()) return;
   if (knap) knap.disabled = true;
   try {
+    const m = samling === "olsenpost_indkomne" ? indbakkeData.find(x => x.id === id) : null;
     await updateDoc(doc(db, samling, id), {
+      ...(m && !m.laest ? laestFelter() : {}),
       arkiveret: true,
       arkiveret_af: MIT_NAVN,
       arkiveret_af_nr: MIT_NR,
@@ -1153,45 +1178,95 @@ function arkivTekst(m){
   return `Arkiveret af ${escHtml(fornavn)} ${d.toLocaleDateString("da-DK", opts)}`;
 }
 
-/* ════════ INDKOMNE MAILS (fra Firestore) ════════ */
+/* ════════ INDKOMNE MAILS (fra Firestore) ════════
+   To grupper: "Nye — ikke læst" og "Åbnet og læst".
+   En mail er læst, når en af de 5 har trykket "Åbn og læs" (eller har
+   svaret på den / arkiveret den). Det gemmes, hvem der læste og hvornår. */
 let indbakkeData = [];
+
+function erLaest(m){ return !!(m.laest || m.besvaret); }
+function ulaesteIndkomne(){ return indbakkeData.filter(m => !m.arkiveret && !erLaest(m)); }
+
+function laestFelter(){
+  return { laest: true, laest_af: MIT_NAVN, laest_af_nr: MIT_NR, laest_tid: serverTimestamp(), laest_lokal: Date.now() };
+}
+
+// fx "Læst af Kurt 3. okt. kl. 14.05"
+function laestTekst(m){
+  if (!m.laest) return m.besvaret ? `Besvaret af ${escHtml(m.besvaret_af || 'ukendt')} ${tidTekst(m.besvaret_tid)}` : "";
+  const fornavn = String(m.laest_af || "").trim().split(/\s+/)[0] || "ukendt";
+  return `Læst af ${escHtml(fornavn)} ${tidTekst(m.laest_tid || m.laest_lokal)}`;
+}
+
+window.aabnOgLaes = async function(id, knap){
+  if (!kanSkrivePost()) return;
+  if (knap) knap.disabled = true;
+  try {
+    await updateDoc(doc(db, "olsenpost_indkomne", id), laestFelter());
+  } catch(e) {
+    console.log("Læst-fejl:", e);
+    alert("Kunne ikke markere mailen som læst. Prøv igen.");
+    if (knap) knap.disabled = false;
+  }
+};
+
+function opdaterUlaestVarsel(){
+  const antal = ulaesteIndkomne().length;
+  const badge = document.getElementById("badge-ny");
+  if (antal > 0) { badge.style.display = "inline-block"; badge.textContent = antal; }
+  else badge.style.display = "none";
+
+  const varsel = document.getElementById("ulaest-varsel");
+  if (!varsel) return;
+  if (ER_POSTANSVARLIG && antal > 0) {
+    document.getElementById("ulaest-varsel-tekst").textContent = antal === 1
+      ? "Der er 1 ny mail til post@olsenklanen.dk, som ingen af jer har læst endnu."
+      : `Der er ${antal} nye mails til post@olsenklanen.dk, som ingen af jer har læst endnu.`;
+    varsel.style.display = "flex";
+  } else {
+    varsel.style.display = "none";
+  }
+}
+
 function lytIndbakke(){
   onSnapshot(collection(db, "olsenpost_indkomne"), snap => {
     indbakkeData = snap.docs.map(d => ({ id:d.id, ...d.data() }));
     indbakkeData.sort((a,b) => tidMs(b.modtaget, b.modtaget_lokal) - tidMs(a.modtaget, a.modtaget_lokal));
-    const nye = indbakkeData.filter(m => !m.besvaret && !m.arkiveret).length;
-    const badge = document.getElementById("badge-ny");
-    if (nye > 0) { badge.style.display = "inline-block"; badge.textContent = nye; }
-    else badge.style.display = "none";
+    opdaterUlaestVarsel();
     if (document.getElementById("omr-indbakke").style.display !== "none") tegnIndbakke();
     if (document.getElementById("omr-arkiv").style.display !== "none") tegnArkiv();
   }, e => console.log("Indbakke-fejl:", e));
 }
 
-function tegnIndbakke(){
-  const el = document.getElementById("indbakke-liste");
-  const synlige = indbakkeData.filter(m => !m.arkiveret);
-  if (!synlige.length) {
-    el.innerHTML = '<div class="tom">Ingen indkomne mails lige nu.<br><br>Mails sendt til post@olsenklanen.dk vises her.</div>';
-    return;
-  }
-
-  // Gem åbne svar-felter og det, der er skrevet, så intet går tabt, når listen tegnes igen
-  const gemt = {};
-  el.querySelectorAll(".svar-omr").forEach(omr => {
-    const id = omr.id.replace("svar-omr-", "");
-    const t = document.getElementById("svar-tekst-" + id);
-    gemt[id] = { aaben: omr.style.display !== "none", tekst: t ? t.value : "" };
-  });
-
-  el.innerHTML = synlige.map(m => `
-    <div class="mail-kort ${m.besvaret ? 'besvaret' : 'ulaest'}">
+function mailHoved(m){
+  return `
       <div class="mail-top">
         <span class="mail-fra">Fra: ${escHtml(m.fra_navn || m.fra_email || 'Ukendt')}${m.fra_email && m.fra_email !== m.fra_navn ? ` <span class="modtager-email">${escHtml(m.fra_email)}</span>` : ''}</span>
         <span class="mail-tid">${tidTekst(m.modtaget || m.modtaget_lokal)}</span>
       </div>
-      <div class="mail-emne">Emne: ${escHtml(m.emne || '(intet emne)')}</div>
+      <div class="mail-emne">Emne: ${escHtml(m.emne || '(intet emne)')}</div>`;
+}
+
+// En ny, ulæst mail: kun afsender og emne — teksten vises, når man trykker "Åbn og læs"
+function tegnUlaestKort(m){
+  if (!ER_POSTANSVARLIG) return `
+    <div class="mail-kort ulaest">${mailHoved(m)}
       <div class="mail-tekst">${escHtml(m.tekst || '')}</div>
+    </div>`;
+  return `
+    <div class="mail-kort ulaest">${mailHoved(m)}
+      <div class="mail-status ikke-besvaret">🔴 Ikke læst endnu</div>
+      <div class="mail-handlinger">
+        <button class="knap lille" onclick="aabnOgLaes('${m.id}',this)">📖 Åbn og læs</button>
+      </div>
+    </div>`;
+}
+
+function tegnLaestKort(m){
+  return `
+    <div class="mail-kort ${m.besvaret ? 'besvaret' : ''}">${mailHoved(m)}
+      <div class="mail-tekst">${escHtml(m.tekst || '')}</div>
+      ${m.laest ? `<div class="mail-status laest-status">👁 ${laestTekst(m)}</div>` : ''}
       ${m.besvaret
         ? `<div class="mail-status">✅ Besvaret af ${escHtml(m.besvaret_af || '')} — ${tidTekst(m.besvaret_tid)}</div>`
         : `<div class="mail-status ikke-besvaret">⏳ Ikke besvaret endnu</div>`
@@ -1212,7 +1287,28 @@ function tegnIndbakke(){
         ${ER_POSTANSVARLIG ? `<button class="knap lille grå" onclick="visReplySvar('${m.id}')">↩ Svar på denne mail</button>` : ''}
         ${arkivKnap("olsenpost_indkomne", m.id)}
       </div>
-    </div>`).join("");
+    </div>`;
+}
+
+function tegnIndbakke(){
+  const el = document.getElementById("indbakke-liste");
+  const synlige = indbakkeData.filter(m => !m.arkiveret);
+  const nye = synlige.filter(m => !erLaest(m));
+  const laeste = synlige.filter(m => erLaest(m));
+
+  // Gem åbne svar-felter og det, der er skrevet, så intet går tabt, når listen tegnes igen
+  const gemt = {};
+  el.querySelectorAll(".svar-omr").forEach(omr => {
+    const id = omr.id.replace("svar-omr-", "");
+    const t = document.getElementById("svar-tekst-" + id);
+    gemt[id] = { aaben: omr.style.display !== "none", tekst: t ? t.value : "" };
+  });
+
+  el.innerHTML = `
+    <h3 class="gruppe-titel">🆕 Nye mails — ikke læst <span class="gruppe-antal ${nye.length ? 'roed' : ''}">${nye.length}</span></h3>
+    ${nye.length ? nye.map(tegnUlaestKort).join("") : '<div class="tom lille-tom">✅ Ingen ulæste mails. Godt gået!</div>'}
+    <h3 class="gruppe-titel">👁 Åbnet og læst <span class="gruppe-antal">${laeste.length}</span></h3>
+    ${laeste.length ? laeste.map(tegnLaestKort).join("") : '<div class="tom lille-tom">Ingen læste mails endnu.</div>'}`;
 
   Object.entries(gemt).forEach(([id, g]) => {
     const omr = document.getElementById("svar-omr-" + id);
@@ -1529,6 +1625,7 @@ lytIndbakke();
 lytSendt();
 if (ER_POSTANSVARLIG) lytArkivSendt();
 lytIntern();
+if (ER_POSTANSVARLIG && new URLSearchParams(window.location.search).get("fane") === "indbakke") visFane("indbakke");
 if (!ER_POSTANSVARLIG) {
   document.getElementById("fane-send").style.display = "none";
   document.getElementById("omr-send").style.display = "none";

@@ -140,6 +140,17 @@ try {
   </div>
 </a>
  
+<!-- POST-VARSEL FOR DE 5 POSTANSVARLIGE — ulæste mails til post@olsenklanen.dk -->
+<a href="meddelelser.html?fane=indbakke" id="indkomne-varsel" style="display:none; text-decoration:none;">
+  <div style="max-width:1400px; margin:14px auto 0; padding:0 20px;">
+    <div style="background:#fff8e1; border:2px solid #c89e3c; border-left:8px solid #c0392b; border-radius:8px; padding:14px 18px; display:flex; align-items:center; gap:14px; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+      <span style="font-size:30px;">📥</span>
+      <span id="indkomne-varsel-tekst" style="font-size:17px; color:#5a4a1f; font-weight:bold;"></span>
+      <span style="margin-left:auto; font-size:14px; color:#8a7a3f; font-style:italic;">Klik for at læse →</span>
+    </div>
+  </div>
+</a>
+
 <div class="layout">
  
   <aside>
@@ -640,6 +651,27 @@ let foedselsdagsTekst = "";
       boks.style.display = "none";
     }
   }, e => console.log("Post-varsel-fejl:", e));
+})();
+
+/* ════════ OLSENPOST — ulæste indkomne mails (kun de 5 postansvarlige) ════════
+   En mail er ulæst, indtil en af de 5 har trykket "Åbn og læs" i OlsenPost
+   (eller har svaret på den / arkiveret den). */
+(function(){
+  const POSTANSVARLIGE = ["8-B", "19-A", "22-B", "23-B", "48-B"];
+  const MIT_NR = sessionStorage.getItem("ok_nr") || localStorage.getItem("ok_nr") || "";
+  if (!POSTANSVARLIGE.includes(MIT_NR)) return;
+  onSnapshot(collection(db, "olsenpost_indkomne"), snap => {
+    const antal = snap.docs.map(d => d.data()).filter(m => !m.arkiveret && !m.laest && !m.besvaret).length;
+    const boks = document.getElementById("indkomne-varsel");
+    if (antal > 0) {
+      document.getElementById("indkomne-varsel-tekst").textContent = antal === 1
+        ? "Der er 1 ny mail til post@olsenklanen.dk, som ingen af jer har læst endnu"
+        : "Der er " + antal + " nye mails til post@olsenklanen.dk, som ingen af jer har læst endnu";
+      boks.style.display = "block";
+    } else {
+      boks.style.display = "none";
+    }
+  }, e => console.log("Indkomne-varsel-fejl:", e));
 })();
 </script>
  
