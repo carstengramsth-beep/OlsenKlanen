@@ -27,6 +27,10 @@ Sidst opdateret: 2026-10-03
 - **Gamle build-filer i Google Cloud:** Ved deploy af Cloud Functions 3. okt. kunne Firebase ikke rydde gamle build-filer op. Det kan koste få øre om måneden. Slettes her: https://console.cloud.google.com/gcr/images/olsenklanen-familieside/eu/gcf
 - **Bred tilladelse til GitHub:** Servicekontoen `firebase-adminsdk-fbsvc@…` fik 3. okt. rollerne **Redaktør** og **Bruger af servicekonto**, så GitHub kan deploye Cloud Functions. Redaktør er en bred rolle. Overvej at skifte den til smallere roller.
 - **Cloud Billing API** blev slået til 3. okt. (krævet af Firebase ved deploy af functions). Koster intet.
+- **EmailJS-stempel i mails:** Alle mails fra OlsenPost får teksten "Email sent via EmailJS.com" nederst. To muligheder:
+  1. EmailJS **Personal**: 9 USD/md. (ca. 56–60 kr.), eller ca. 45 kr./md. ved årlig betaling (20 % rabat). Fjerner stemplet ("Completely white label") og giver 2.000 mails/md.
+  2. Send mails via Simply (post@olsenklanen.dk) fra en Cloud Function i stedet for EmailJS. Gratis, men en større opgave, der skal testes grundigt. **Anbefalet.**
+- **EmailJS' gratis loft:** Gratis-pakken giver kun 200 mails om måneden, og hver modtager tæller som én. En mail til alle med "Vælg alle" kan ramme loftet, og så bliver resten ikke sendt. Følg forbruget, og løs det sammen med punktet ovenfor.
 - **Gamle filer i repoet:** Der ligger flere kopier og gamle udgaver (fx `admin (1).html`, `admin (2).html`, `forside (6).html`, `forside (10).html`, `forside (11).html`, `blad-2022 (1).html`, `index (22).html`, `medlemskartotek.html.html`, `olsenbanden (2).html`, `olsenbanden (5).html`). Gennemgå og fjern dem, der ikke bruges.
 
 ## Afventer
