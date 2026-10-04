@@ -357,6 +357,13 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
         <span class="nav-admin-tag" id="datastatus-tæller" style="display:none">0</span>
       </div>
     </div>
+    <div class="nav-gruppe">
+      <span class="nav-gruppe-label">Datakontrol</span>
+      <div class="nav-item" data-panel="datakontrol" onclick="visPanel('datakontrol',this);aabnDatakontrol();">
+        <span class="nav-ikon">🔍</span>Data der skal tjekkes
+        <span class="nav-admin-tag" id="datakontrol-tæller" style="display:none">0</span>
+      </div>
+    </div>
     <div class="nav-separator"></div>
     <div class="nav-gruppe" id="admin-nav" style="display:none">
       <span class="nav-gruppe-label">Admin</span>
@@ -569,6 +576,11 @@ body{font-family:'Jost',sans-serif;background:var(--creme-mork);color:var(--teks
         </div>
       </div>
  
+      <div class="panel" id="panel-datakontrol">
+        <div class="side-overskrift"><div class="side-titel">Data der skal tjekkes</div><div class="side-sub">Oplysninger der måske er forkerte · afklarede punkter forsvinder fra listen</div></div>
+        <iframe id="datakontrol-ramme" title="Data der skal tjekkes" style="width:100%;height:80vh;border:0;background:transparent"></iframe>
+      </div>
+
       <div class="panel" id="panel-online">
         <div class="side-overskrift"><div class="side-titel">Online nu</div><div class="side-sub">Hvem er logget ind på admin-panelet lige nu</div></div>
         <div class="kort"><div class="kort-body" style="padding:0"><div class="online-liste" id="online-liste"></div></div></div>
@@ -746,7 +758,7 @@ window.fb={
 <script>
 let aktivBruger=null;let aktivRolle=null;
 window.haandterAuth=async function(user){if(!user){visLoginSide();return;}const email=user.email.toLowerCase();try{const snap=await window.fb.hentBruger(email);if(!snap.exists()){await window.fb.logUd();visLoginBesked('fejl','Du har ikke adgang til admin-panelet. Kontakt Carsten.');return;}const rolle=snap.data().rolle;if(rolle==='administrator')aktivRolle='admin';else if(rolle==='redaktør')aktivRolle='redaktor';else{await window.fb.logUd();visLoginBesked('fejl','Du har ikke adgang.');return;}}catch(e){await window.fb.logUd();visLoginBesked('fejl','Fejl ved adgangskontrol. Prøv igen.');return;}aktivBruger=user;opsætAdminPanel(user);};
-function opsætAdminPanel(user){const email=user.email.toLowerCase();const initia=user.displayName?user.displayName[0].toUpperCase():email[0].toUpperCase();const navn=user.displayName||email;const rolleT=aktivRolle==='admin'?'Administrator':'Redaktør';document.getElementById('bruger-navn').textContent=navn;document.getElementById('bruger-rolle-tekst').textContent=rolleT;document.getElementById('bruger-avatar').textContent=initia;document.getElementById('topbar-rolle-badge').textContent=rolleT;document.getElementById('admin-nav').style.display=aktivRolle==='admin'?'block':'none';document.getElementById('login-side').style.display='none';document.getElementById('admin-side').style.display='block';document.getElementById('overblik-dato').textContent='OlsenKlanen · '+new Date().toLocaleDateString('da-DK',{weekday:'long',year:'numeric',month:'long',day:'numeric'});document.getElementById('nyhed-dato').valueAsDate=new Date();startPresence(email,user.displayName||email);startDndLytter();startPostkasseLytter();startChatLytter();const egetKort=document.querySelector(`.bruger-kort[data-email="${email}"]`);if(egetKort)egetKort.querySelector('.online-prik')?.classList.add('aktiv');indlaesAltData();}
+function opsætAdminPanel(user){setTimeout(()=>window.aabnDatakontrol&&window.aabnDatakontrol(),500);const email=user.email.toLowerCase();const initia=user.displayName?user.displayName[0].toUpperCase():email[0].toUpperCase();const navn=user.displayName||email;const rolleT=aktivRolle==='admin'?'Administrator':'Redaktør';document.getElementById('bruger-navn').textContent=navn;document.getElementById('bruger-rolle-tekst').textContent=rolleT;document.getElementById('bruger-avatar').textContent=initia;document.getElementById('topbar-rolle-badge').textContent=rolleT;document.getElementById('admin-nav').style.display=aktivRolle==='admin'?'block':'none';document.getElementById('login-side').style.display='none';document.getElementById('admin-side').style.display='block';document.getElementById('overblik-dato').textContent='OlsenKlanen · '+new Date().toLocaleDateString('da-DK',{weekday:'long',year:'numeric',month:'long',day:'numeric'});document.getElementById('nyhed-dato').valueAsDate=new Date();startPresence(email,user.displayName||email);startDndLytter();startPostkasseLytter();startChatLytter();const egetKort=document.querySelector(`.bruger-kort[data-email="${email}"]`);if(egetKort)egetKort.querySelector('.online-prik')?.classList.add('aktiv');indlaesAltData();}
 async function indlaesAltData(){await Promise.allSettled([indlaesNyheder(),indlaesBegivenheder(),indlaesGodkendelser(),hentDatastatus(),indlaesBilleder(),indlaesUdviklingslog(),tegnVagtplanAdmin(),aktivRolle==='admin'?hentLog():Promise.resolve()]);}
 
 /* ── Vagtplan (postansvarlige for OlsenPost) ── */
@@ -813,6 +825,9 @@ function renderChat(beskeder){const container=document.getElementById('chat-besk
 async function sendChatBesked(){const input=document.getElementById('chat-input');const tekst=input.value.trim();if(!tekst||!aktivBruger)return;input.value='';input.style.height='auto';try{await window.fb.sendChatBesked({tekst,afsender:aktivBruger.displayName||aktivBruger.email,afsenderEmail:aktivBruger.email});}catch(e){visToast('Fejl ved afsendelse: '+e.message,true);}}
 async function toggleStjerneBesked(id,erStjernt){await window.fb.stjerneChatBesked(id,!erStjernt).catch(()=>{});hentGemteChatBeskeder();}
 async function hentGemteChatBeskeder(){try{const gemte=await window.fb.hentGemteChatBeskeder();const el=document.getElementById('gemte-beskeder-liste');if(!gemte.length){el.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--tekst-lys);font-size:13px">Ingen gemte beskeder endnu — klik ⭐ på en besked for at gemme den</div>';return;}el.innerHTML=gemte.map(b=>{const tid=b.tidspunkt?.toDate?formaterTid(b.tidspunkt.toDate()):'—';return`<div style="padding:.9rem 1.5rem;border-bottom:1px solid var(--guld-pale);display:flex;gap:.75rem;align-items:flex-start"><div style="font-size:13px;flex:1"><span style="font-weight:600;color:var(--mos-mork)">${escHtml(b.afsender||'?')}</span><span style="color:var(--tekst-lys);font-size:11px;margin-left:.5rem">${tid}</span><div style="color:var(--tekst);margin-top:3px">${escHtml(b.tekst||'')}</div></div><button class="btn btn-lys btn-sm" onclick="toggleStjerneBesked('${b.id}',true)">Fjern ⭐</button></div>`;}).join('');}catch(e){console.warn('Gemte beskeder fejl:',e);}}
+// Datakontrol: listen ligger i datakontrol.html og vises her i en ramme
+window.aabnDatakontrol=function(){const r=document.getElementById('datakontrol-ramme');if(!r||r.src)return;const navn=(aktivBruger&&(aktivBruger.displayName||aktivBruger.email))||'Admin';r.src='datakontrol.html?indlejret=1&admin=1&navn='+encodeURIComponent(navn);};
+window.addEventListener('message',e=>{if(e.origin!==location.origin||!e.data||!e.data.datakontrol)return;const t=document.getElementById('datakontrol-tæller');if(t){t.textContent=e.data.aabne;t.style.display=e.data.aabne?'':'none';}const r=document.getElementById('datakontrol-ramme');if(r&&e.data.hoejde)r.style.height=(e.data.hoejde+20)+'px';});
 function visPanel(id,navEl){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('aktiv'));document.getElementById('panel-'+id)?.classList.add('aktiv');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('aktiv'));if(navEl)navEl.classList.add('aktiv');if(id==='chat'){erIChat=true;ulaestChat=0;document.getElementById('chat-nav-tæller').style.display='none';hentGemteChatBeskeder();setTimeout(()=>{const c=document.getElementById('chat-beskeder');if(c)c.scrollTop=c.scrollHeight;},100);}else{erIChat=false;}}
 let nyhederCache=[];
 async function indlaesNyheder(){try{nyhederCache=await window.fb.hentNyheder();renderNyheder(nyhederCache);document.getElementById('stat-nyheder').textContent=nyhederCache.length;renderOverblikLog();}catch(e){document.getElementById('stat-nyheder').textContent='—';}}

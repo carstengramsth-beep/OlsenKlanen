@@ -41,6 +41,11 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .felt { margin-top: 8px; font-size: 14px; }
 .felt b { color: #555; }
 .nu { background: #f7f2e3; border-radius: 5px; padding: 8px 10px; margin-top: 4px; white-space: pre-wrap; }
+.fejl { background: #fff6d6; border-left: 3px solid #e0c56a; border-radius: 4px; padding: 7px 10px; margin-top: 8px; font-size: 14px; }
+.afklarede summary { cursor: pointer; font-weight: bold; color: #2d5016; padding: 4px 0; }
+.alt-klart { text-align: center; font-size: 17px; color: #155724; padding: 18px; }
+body.indlejret .topbar { display: none; }
+body.indlejret .wrap { padding: 0; max-width: none; }
 .kilde { font-size: 13px; color: #777; font-style: italic; margin-top: 6px; }
 .svar-liste { margin-top: 10px; font-size: 14px; }
 .svar-liste div { padding: 4px 0; border-top: 1px dashed #eee; }
@@ -58,7 +63,13 @@ textarea { min-height: 50px; resize: vertical; }
 // Login-tjek (samme princip som arrangementer.html)
 try {
   function hent(navn){ return sessionStorage.getItem(navn) || localStorage.getItem(navn) || ""; }
-  const niveau = hent("ok_niveau"), navn = hent("ok_navn"), nr = hent("ok_nr");
+  // Indlejret i admin.html: administrationen har selv tjekket login og giver navn og rolle med
+  const u = new URLSearchParams(location.search);
+  if (u.get("indlejret") === "1" && window.parent !== window && window.parent.location.pathname.indexOf("admin") !== -1) {
+    sessionStorage.setItem("dk_navn", u.get("navn") || "");
+    sessionStorage.setItem("dk_admin", u.get("admin") === "1" ? "1" : "");
+  }
+  const niveau = hent("ok_niveau"), navn = hent("ok_navn") || sessionStorage.getItem("dk_navn"), nr = hent("ok_nr");
   if (!!(niveau || navn || nr)) {
     if (niveau) sessionStorage.setItem("ok_niveau", niveau);
     if (navn)   sessionStorage.setItem("ok_navn", navn);
@@ -70,12 +81,13 @@ try {
 </script>
 </head>
 <body>
+<script>if (new URLSearchParams(location.search).get("indlejret") === "1") document.body.classList.add("indlejret");</script>
 
 <div class="topbar">
   <h1><a href="forside.html" style="color:inherit;text-decoration:none" title="Til forsiden">OlsenKlanen · Data der skal tjekkes</a></h1>
   <div class="user">
     <span id="bruger-navn"></span>
-    <a class="hjem" href="arrangementer.html">← Arrangementer</a>
+    <a class="hjem" href="admin.html">← Administration</a>
     <a class="hjem" href="forside.html">← Forsiden</a>
   </div>
 </div>
@@ -85,9 +97,9 @@ try {
   <div class="boks intro">
     <div class="boks-header">🔍 HJÆLP OS MED AT TJEKKE DATA</div>
     <div class="boks-body">
-      <p>Her står de oplysninger, vi ikke er helt sikre på.</p>
-      <p>Læs punktet. Tryk <b>✓ Det passer</b> eller <b>✗ Det passer ikke</b>. Skriv gerne, hvad der er rigtigt.</p>
-      <p>Jo flere der svarer, jo mere sikre bliver vi. Alle kan se svarene.</p>
+      <p>Her står de oplysninger, som måske er forkerte. Under hvert punkt står, hvad fejlen kan være.</p>
+      <p>Tjek punktet. Tryk <b>✓ Det passer</b> eller <b>✗ Det passer ikke</b>, og skriv gerne, hvad der er rigtigt.</p>
+      <p>Når et punkt er afklaret og rettet på hjemmesiden, trykker en admin <b>✔ Afklaret</b>. Så forsvinder det fra listen. Målet er en tom liste.</p>
       <div class="taeller" id="taeller"></div>
     </div>
   </div>
@@ -98,11 +110,16 @@ try {
     <div class="boks-header">➕ TILFØJ ET PUNKT</div>
     <div class="boks-body">
       <p style="font-size:14px">Har du set noget, der måske er forkert? Skriv det her, så andre kan hjælpe med at tjekke det.</p>
+      <label for="ny-gruppe">Hvilken liste hører det til?</label>
+      <input id="ny-gruppe" list="grupper" placeholder="f.eks. Skovture — eller skriv navnet på en ny liste">
+      <datalist id="grupper"></datalist>
       <label for="ny-titel">Hvad drejer det sig om?</label>
       <input id="ny-titel" placeholder="f.eks. Skovtur 2019 – sted">
       <label for="ny-nu">Hvad står der nu? (valgfrit)</label>
       <textarea id="ny-nu"></textarea>
-      <label for="ny-kilde">Hvorfor er du i tvivl? (valgfrit)</label>
+      <label for="ny-fejl">Hvad kan være forkert? (valgfrit)</label>
+      <textarea id="ny-fejl"></textarea>
+      <label for="ny-kilde">Hvor kommer oplysningen fra? (valgfrit)</label>
       <textarea id="ny-kilde"></textarea>
       <div style="margin-top:12px"><button class="knap" id="ny-knap" onclick="tilfoejPunkt()">Tilføj punkt</button></div>
       <div class="besked" id="ny-besked"></div>
@@ -129,46 +146,61 @@ const REF = doc(db, "skovtur_detaljer", "datakontrol");
 
 function hent(n){ return sessionStorage.getItem(n) || localStorage.getItem(n) || ""; }
 const MIT_NR    = hent("ok_nr");
-const MIT_NAVN  = hent("ok_navn") || "Et medlem";
+const MIT_NAVN  = hent("ok_navn") || sessionStorage.getItem("dk_navn") || "Et medlem";
 const MIT_NIVEAU= hent("ok_niveau");
-const ER_ADMIN  = (MIT_NIVEAU === "admin" || MIT_NIVEAU === "olsenbanden");
+const ER_ADMIN  = (MIT_NIVEAU === "admin" || MIT_NIVEAU === "olsenbanden" || sessionStorage.getItem("dk_admin") === "1");
 document.getElementById("bruger-navn").textContent = MIT_NAVN + (ER_ADMIN ? " (admin)" : "");
 
 // De faste punkter. Nye punkter fra medlemmerne kommer fra databasen.
 const PUNKTER = [
   { id: "a2024-komite", gruppe: "Skovture", titel: "Arrangementskomité 2024",
     nu: "Kasper, Iben, Katja og Kim, Rikke og Ben, Kristine og Tine.\nKonsulenter: Jette og Tommy, Jytte og Jan",
-    kilde: "Festkomitéens hilsen 2024 nævner kun Kasper, Iben, Katja og Kim, Rikke og Ben, Kristine. Tine og konsulenterne står i referatet fra 2023. Var de med?" },
+    fejl: "Tine og de fire konsulenter er måske ikke med. Festkomitéen skrev under som Kasper, Iben, Katja og Kim, Rikke og Ben og Kristine. Måske var Kristina også med.",
+    kilde: "Festkomitéens beretning 2024 og referatet fra 2023." },
   { id: "a2024-sted", gruppe: "Skovture", titel: "Skovtur 2024 – sted og dato",
-    nu: "Bisseruplejren, Rude (Sjælland) · 24.–26. maj 2024 · Generalforsamling 25. maj",
-    kilde: "Festkomitéens beretning. I referatet fra 2023 står der \"Bisserup-lejren ved Skælskør\"." },
+    nu: "Bisseruplejren, Rude (Sjælland) · 24.–26. maj 2024 · Generalforsamling lørdag 25. maj",
+    fejl: "Stedets navn er måske forkert. Referatet fra 2023 kalder det \"Bisserup-lejren ved Skælskør\", og beretningen siger \"Rude\".",
+    kilde: "Festkomitéens beretning 2024 og referatet fra 2023." },
   { id: "a2023-komite", gruppe: "Skovture", titel: "Arrangementskomité 2023",
     nu: "Karin og Richard, Ria og Kenneth",
-    kilde: "Vi ved ikke, hvor oplysningen kommer fra." },
+    fejl: "Det er ikke sikkert, at navnene er rigtige. Der kan også mangle nogen.",
+    kilde: "Ukendt. Står ikke i referatet fra 2023." },
   { id: "a2022", gruppe: "Skovture", titel: "Skovtur 2022 – sted, dato og komité",
     nu: "Eriksminde, Rørvig · 27.–29. maj 2022 · Komité: Jette og Tommy",
-    kilde: "Vi ved ikke, hvor oplysningen kommer fra." },
-  { id: "a2021", gruppe: "Skovture", titel: "Skovtur 2021 – sted og dato",
-    nu: "Holmsborg ved Søndervig · 4.–6. juni 2021",
-    kilde: "Står på hjemmesiden. Ingen komité registreret." },
+    fejl: "Datoen kan være forkert. Komitéen kan have haft flere medlemmer.",
+    kilde: "Ukendt. Der er intet referat fra 2022 på hjemmesiden." },
+  { id: "a2021", gruppe: "Skovture", titel: "Skovtur 2021 – sted, dato og komité",
+    nu: "Holmsborg ved Søndervig · 4.–6. juni 2021 · Komité: ikke registreret",
+    fejl: "Komitéen mangler. Datoen er sen (juni), måske på grund af corona. Tjek, at den er rigtig.",
+    kilde: "Hjemmesiden (årets side for 2021)." },
   { id: "a2025-komite", gruppe: "Skovture", titel: "Arrangementskomité 2025",
     nu: "Steen (formand) og Lise",
-    kilde: "Referatet fra 2023: \"Steen og Lise vil indfange nogle medskyldige\". Hvem var de andre?" },
+    fejl: "Der mangler sikkert nogen. I 2023 sagde Steen og Lise, at de ville \"indfange nogle medskyldige\".",
+    kilde: "Referaterne fra 2023 og 2024." },
+  { id: "a2025-sted", gruppe: "Skovture", titel: "Skovtur 2025 – sted",
+    nu: "Hjemmesiden siger: \"Jylland: Tonneshøj, Haderslev\"",
+    fejl: "Ordet \"Jylland:\" står foran stedet. Det står ikke ved de andre år. Bør det fjernes?",
+    kilde: "Hjemmesiden (årets side for 2025)." },
   { id: "a2026-komite", gruppe: "Skovture", titel: "Arrangementskomité 2026",
     nu: "Anja, Martin, Nicky, Janni og Gitte",
+    fejl: "Stavningen kan være forkert (Nicky eller Nicki? Janni eller Jannie?). I medlemslisten står der \"Jannie V. Rumenapp & Nicki Buch\".",
     kilde: "Referatet fra generalforsamlingen 2024." },
   { id: "a2027-komite", gruppe: "Skovture", titel: "Arrangementskomité 2027",
     nu: "Simon, Tine, Iben, Kristine og Henrik, Tommy og Jette",
-    kilde: "Vi ved ikke helt, hvor oplysningen kommer fra." },
+    fejl: "Vi ved ikke sikkert, hvor navnene kommer fra. Tjek dem med referatet fra 2026.",
+    kilde: "Hjemmesiden (forslag)." },
   { id: "aar-foer-2021", gruppe: "Skovture", titel: "Skovturene før 2021",
-    nu: "Mangler. Vi ved kun, at vi har været på Eriksminde i 2014 og 2020.",
-    kilde: "Kender du sted og datoer for tidligere år? Skriv dem gerne." },
+    nu: "Mangler helt.",
+    fejl: "Vi ved kun, at vi har været på Eriksminde i 2014 og 2020. Var der skovtur i 2020 (corona)? Sted og datoer for de andre år mangler.",
+    kilde: "Programmet for 2026 nævner Eriksminde 2014, 2020 og 2022." },
   { id: "bestyrelse", gruppe: "Bestyrelsen", titel: "Hvem sidder i bestyrelsen?",
     nu: "Oldermand Kurt V. Olsen, sekretær Karin Lund, kasserer Tommy V. Olsen.\nSekretærsuppleant Lise Olsen. Webmaster Iben Olsen (Simon som backup).",
-    kilde: "Referaterne fra 2023 og 2024. Er titlerne rigtige?" },
+    fejl: "Referatet fra 2024 nævner kun Kurt, Karin og Tommy. Er Lise og Iben stadig med? Er titlerne rigtige?",
+    kilde: "Referaterne fra 2023 og 2024." },
   { id: "m35-mail", gruppe: "Medlemmer", titel: "Nr. 35 – mailadresser",
     nu: "Vibeke: gramaarup@gmail.com\nCharles: ingen mail\nJens: ingen mail",
-    kilde: "Er gramaarup@gmail.com fælles for Vibeke og Charles? Har Jens en mail?" }
+    fejl: "Charles og Jens får ingen mails fra klanen. Måske er gramaarup@gmail.com fælles for Vibeke og Charles.",
+    kilde: "Medlemskartoteket." }
 ];
 
 let DATA = { svar: {}, punkter: [], faerdig: {} };
@@ -180,13 +212,14 @@ function kortDato(ms){
 }
 function fornavn(n){ return String(n || "").trim().split(/\s+/)[0] || "Et medlem"; }
 
+function erAfklaret(p){ return !!(DATA.faerdig && DATA.faerdig[p.id]); }
 function allePunkter(){
-  const ekstra = (DATA.punkter || []).map(p => ({ ...p, gruppe: "Punkter fra medlemmerne" }));
+  const ekstra = (DATA.punkter || []).map(p => ({ ...p, gruppe: p.gruppe || "Punkter fra medlemmerne" }));
   return [...PUNKTER, ...ekstra];
 }
 
 function status(p){
-  if (DATA.faerdig && DATA.faerdig[p.id]) return { kl: "st-faerdig", tekst: "✔ Færdig – rettet" };
+  if (erAfklaret(p)) return { kl: "st-faerdig", tekst: "✔ Afklaret" };
   const svar = (DATA.svar && DATA.svar[p.id]) || [];
   if (!svar.length) return { kl: "st-ikke", tekst: "Ikke tjekket endnu" };
   const nej = svar.filter(s => s.svar === "nej").length;
@@ -200,27 +233,38 @@ function tegn(){
   const skrevet = {};
   document.querySelectorAll("textarea[id^='kom-']").forEach(t => { if (t.value) skrevet[t.id] = t.value; });
   const punkter = allePunkter();
+  const aabne = punkter.filter(p => !erAfklaret(p));
+  const afklarede = punkter.filter(erAfklaret);
   const grupper = [];
   punkter.forEach(p => { if (!grupper.includes(p.gruppe)) grupper.push(p.gruppe); });
-  document.getElementById("liste").innerHTML = grupper.map(g => `
+  document.getElementById("grupper").innerHTML = grupper.map(g => `<option value="${esc(g)}">`).join("");
+  const aabneGrupper = grupper.filter(g => aabne.some(p => p.gruppe === g));
+  document.getElementById("liste").innerHTML =
+    (aabne.length ? "" : '<div class="boks"><div class="alt-klart">🎉 Alle spørgsmål er afklaret. Listen er tom.</div></div>') +
+    aabneGrupper.map(g => `
     <div class="boks"><div class="boks-body">
-      <h2 class="gruppe-titel">${esc(g)}</h2>
-      ${punkter.filter(p => p.gruppe === g).map(tegnPunkt).join("")}
-    </div></div>`).join("");
+      <h2 class="gruppe-titel">${esc(g)} <span style="font-size:14px;color:#888">(${aabne.filter(p => p.gruppe === g).length} åbne)</span></h2>
+      ${aabne.filter(p => p.gruppe === g).map(tegnPunkt).join("")}
+    </div></div>`).join("") +
+    (afklarede.length ? `<div class="boks"><div class="boks-body"><details class="afklarede">
+      <summary>✔ Afklarede punkter (${afklarede.length}) – klik for at se dem</summary>
+      ${afklarede.map(tegnPunkt).join("")}
+    </details></div></div>` : "");
 
   const st = punkter.map(status);
   const antal = k => st.filter(s => s.kl === k).length;
   document.getElementById("taeller").innerHTML =
-    `<span>${punkter.length} punkter</span><span>✓ ${antal("st-ok")} bekræftet</span>` +
+    `<span>${aabne.length} åbne punkter</span><span>✓ ${antal("st-ok")} bekræftet</span>` +
     `<span>⚠ ${antal("st-uenig")} med tvivl</span><span>${antal("st-ikke")} ikke tjekket</span>` +
-    (antal("st-faerdig") ? `<span>✔ ${antal("st-faerdig")} færdige</span>` : "");
+    `<span>✔ ${antal("st-faerdig")} afklaret</span>`;
+  meldTilAdmin(aabne.length);
   Object.keys(skrevet).forEach(id => { const t = document.getElementById(id); if (t) t.value = skrevet[id]; });
 }
 
 function tegnPunkt(p){
   const s = status(p);
   const svar = (DATA.svar && DATA.svar[p.id]) || [];
-  const faerdig = DATA.faerdig && DATA.faerdig[p.id];
+  const faerdig = erAfklaret(p) ? DATA.faerdig[p.id] : null;
   return `
   <div class="punkt${faerdig ? " faerdig" : ""}">
     <div class="punkt-top">
@@ -228,18 +272,20 @@ function tegnPunkt(p){
       <span class="status ${s.kl}">${s.tekst}</span>
     </div>
     ${p.nu ? `<div class="felt"><b>Det står der nu:</b><div class="nu">${esc(p.nu)}</div></div>` : ""}
-    ${p.kilde ? `<div class="kilde">${esc(p.kilde)}</div>` : ""}
+    ${p.fejl ? `<div class="fejl"><b>Mulig fejl:</b> ${esc(p.fejl)}</div>` : ""}
+    ${p.kilde ? `<div class="kilde">Kilde: ${esc(p.kilde)}</div>` : ""}
     ${p.af ? `<div class="kilde">Tilføjet af ${esc(fornavn(p.af))} ${kortDato(p.tid)}</div>` : ""}
     ${svar.length ? `<div class="svar-liste">${svar.map(v => `
       <div>${v.svar === "nej" ? "✗" : "✓"} <b>${esc(fornavn(v.navn))}</b>
         <span style="color:#999;font-size:12px">${kortDato(v.tid)}</span>${v.kommentar ? ` — ${esc(v.kommentar)}` : ""}</div>`).join("")}</div>` : ""}
-    ${faerdig ? `<div class="kilde">Markeret som færdig af ${esc(fornavn(faerdig.navn))} ${kortDato(faerdig.tid)}</div>` : `
+    ${faerdig ? `<div class="kilde">Afklaret af ${esc(fornavn(faerdig.navn))} ${kortDato(faerdig.tid)}${faerdig.note ? ": " + esc(faerdig.note) : ""}</div>
+      ${ER_ADMIN ? `<button class="knap knap-lille knap-graa" style="margin-top:8px" onclick="fortrydAfklaret('${esc(p.id)}',this)">↩ Sæt tilbage på listen</button>` : ""}` : `
     <div class="svar-form">
       <textarea id="kom-${esc(p.id)}" placeholder="Hvad er det rigtige? (valgfrit)"></textarea>
       <div class="svar-knapper">
         <button class="knap knap-lille" onclick="svar('${esc(p.id)}','ja',this)">✓ Det passer</button>
         <button class="knap knap-lille knap-roed" onclick="svar('${esc(p.id)}','nej',this)">✗ Det passer ikke</button>
-        ${ER_ADMIN ? `<button class="knap knap-lille knap-graa" onclick="markerFaerdig('${esc(p.id)}',this)">✔ Markér som færdig</button>` : ""}
+        ${ER_ADMIN ? `<button class="knap knap-lille knap-graa" onclick="markerFaerdig('${esc(p.id)}',this)">✔ Afklaret – fjern fra listen</button>` : ""}
       </div>
     </div>`}
   </div>`;
@@ -261,15 +307,32 @@ window.svar = async function(id, hvad, knap){
 
 window.markerFaerdig = async function(id, knap){
   if (!ER_ADMIN) return;
-  if (!confirm("Er oplysningen rettet på hjemmesiden? Så markeres punktet som færdigt.")) return;
+  const note = prompt("Er punktet afklaret og rettet på hjemmesiden?\n\nSkriv kort, hvad der blev besluttet (valgfrit), og tryk OK.", "");
+  if (note === null) return;
   knap.disabled = true;
   try {
-    await setDoc(REF, { faerdig: { [id]: { navn: MIT_NAVN, tid: Date.now() } } }, { merge: true });
+    await setDoc(REF, { faerdig: { [id]: { navn: MIT_NAVN, tid: Date.now(), note: note.trim() } } }, { merge: true });
   } catch(e){ alert("Kunne ikke gemme. Prøv igen."); knap.disabled = false; }
 };
 
+window.fortrydAfklaret = async function(id, knap){
+  if (!ER_ADMIN) return;
+  knap.disabled = true;
+  try { await setDoc(REF, { faerdig: { [id]: null } }, { merge: true }); }
+  catch(e){ alert("Kunne ikke gemme. Prøv igen."); knap.disabled = false; }
+};
+
+// Indlejret i administrationen: fortæl antal åbne punkter og sidens højde
+function meldTilAdmin(aabne){
+  if (window.parent === window) return;
+  try { window.parent.postMessage({ datakontrol: true, aabne, hoejde: document.documentElement.scrollHeight }, location.origin); } catch(e){}
+}
+new ResizeObserver(() => meldTilAdmin(allePunkter().filter(p => !erAfklaret(p)).length)).observe(document.body);
+
 window.tilfoejPunkt = async function(){
+  const gruppe = document.getElementById("ny-gruppe").value.trim() || "Punkter fra medlemmerne";
   const titel = document.getElementById("ny-titel").value.trim();
+  const fejl = document.getElementById("ny-fejl").value.trim();
   const nu = document.getElementById("ny-nu").value.trim();
   const kilde = document.getElementById("ny-kilde").value.trim();
   const besked = document.getElementById("ny-besked");
@@ -278,8 +341,8 @@ window.tilfoejPunkt = async function(){
   knap.disabled = true;
   try {
     const tid = Date.now();
-    await setDoc(REF, { punkter: arrayUnion({ id: "m" + tid, titel, nu, kilde, af: MIT_NAVN, tid }) }, { merge: true });
-    ["ny-titel","ny-nu","ny-kilde"].forEach(i => document.getElementById(i).value = "");
+    await setDoc(REF, { punkter: arrayUnion({ id: "m" + tid, gruppe, titel, nu, fejl, kilde, af: MIT_NAVN, tid }) }, { merge: true });
+    ["ny-titel","ny-nu","ny-fejl","ny-kilde"].forEach(i => document.getElementById(i).value = "");
     besked.textContent = "✅ Punktet er tilføjet.";
   } catch(e){
     console.log("Tilføj-fejl:", e);
