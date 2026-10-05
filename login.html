@@ -248,7 +248,7 @@
   // ============================================================
  
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getStorage, ref, listAll, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
  
   const firebaseConfig = {
@@ -686,6 +686,18 @@
       ? ("Velkommen medlem " + fuldtNr + " " + fornavn)
       : ("Velkommen medlem " + fuldtNr);
     besked.className = "besked ok";
+
+    // ---- LYKØNSKNINGER: har personen haft fødselsdag og fået hilsner? ----
+    lykoenskningerPromise = hentLykoenskninger(valgtPerson).then(antal => {
+      if (antal > 0) {
+        const linje = document.createElement("div");
+        linje.style.cssText = "margin-top:10px;color:#f5d76e;font-size:1.05rem;line-height:1.4";
+        linje.textContent = "🎉 Du har " + antal + (antal === 1 ? " lykønskning" : " lykønskninger") +
+          " stående på \"Fremhævede begivenheder og lykønskninger\", som du bør se!";
+        besked.appendChild(linje);
+      }
+      return antal;
+    }).catch(() => 0);
  
     const boks = document.getElementById("hvem-er-du");
     if (boks) boks.remove();
@@ -746,9 +758,30 @@
     } catch(e) {}
   }
  
+  // Antal fødselsdagshilsner til personen — på fødselsdagen og 14 dage frem
+  // (samme nøgle som på forsiden: år|fornavn|fødselsdato)
+  let lykoenskningerPromise = Promise.resolve(0);
+  async function hentLykoenskninger(p) {
+    if (!p || !p.foedselsdato) return 0;
+    const fornavn = (p.fornavn || (p.navn || "").trim().split(/\s+/)[0] || "").trim();
+    const dele = p.foedselsdato.split("-");
+    if (!fornavn || dele.length !== 3) return 0;
+    const idag = new Date(); idag.setHours(0, 0, 0, 0);
+    const dag = new Date(idag.getFullYear(), parseInt(dele[1]) - 1, parseInt(dele[2]));
+    const dageEfter = Math.round((idag - dag) / 86400000);
+    if (dageEfter < 0 || dageEfter > 14) return 0;
+    const noegle = idag.getFullYear() + "|" + fornavn + "|" + p.foedselsdato;
+    const snap = await getDocs(query(collection(db, "hilsener"), where("tilNoegle", "==", noegle)));
+    return snap.size;
+  }
+
   function videreTil(side) {
-    // Vent 2,5 sek. saa haandtryk-beskeden kan naa at blive laest
-    setTimeout(function() { window.location.href = side; }, 2500);
+    // Vent 2,5 sek. saa haandtryk-beskeden kan naa at blive laest.
+    // Har personen fået lykønskninger, ventes 6 sek., så den linje også kan nå at blive læst.
+    const venteFoerst = new Promise(r => setTimeout(() => r(0), 1500));
+    Promise.race([lykoenskningerPromise, venteFoerst]).then(antal => {
+      setTimeout(function() { window.location.href = side; }, antal > 0 ? 6000 : 2500);
+    });
   }
  
   // ---- Enter-tast ----
