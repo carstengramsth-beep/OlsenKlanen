@@ -645,24 +645,30 @@ function renderFremhaevede(kommende) {
         <button class="hilsen-knap" onclick="aabnHilsen(${i})">✍️ Skriv hilsen</button>
       </div>`;
   }
-  // De seneste 14 dages fødselarer, der har fået hilsner, bliver stående, så alle kan følge med
+  // De seneste 10 fødselarer, der har fået hilsner, bliver stående (nyeste øverst).
+  // Når nr. 11 kommer til, forsvinder den ældste.
   const idag0 = new Date(); idag0.setHours(0, 0, 0, 0);
-  allePersonerHilsen.forEach(p => {
-    const dag = new Date(idag0.getFullYear(), p.maaned - 1, p.dag);
-    const dageSiden = Math.round((idag0 - dag) / 86400000);
-    if (dageSiden < 1 || dageSiden > 14) return;
-    const k = { navn: p.navn, foedselsdato: p.foedselsdato };
-    const info = hilsenInfo(k);
-    if (!info.antal) return;
-    const noegle = encodeURIComponent(hilsenTilNoegle(k));
-    html += `
+  Object.keys(hilsenTal)
+    .map(noegle => {
+      const [aar, navn, fd] = noegle.split("|");
+      const dele = (fd || "").split("-");
+      if (dele.length !== 3) return null;
+      const dag = new Date(parseInt(aar), parseInt(dele[1]) - 1, parseInt(dele[2]));
+      return { noegle, navn, dag, alder: parseInt(aar) - parseInt(dele[0]), antal: hilsenTal[noegle].antal };
+    })
+    .filter(x => x && x.antal && x.dag < idag0)
+    .sort((a, b) => b.dag - a.dag)
+    .slice(0, 10)
+    .forEach(x => {
+      const noegle = encodeURIComponent(x.noegle);
+      html += `
       <div class="fremh-row">
-        <div class="fremh-dato">${dag.getDate()}. ${MAANEDER[dag.getMonth()]}</div>
-        <div class="fremh-tekst">${escHtmlF(p.navn)} fyldte ${idag0.getFullYear() - p.aar} år<span class="hilsen-antal klik" title="Klik og se fødselsdagskortet" onclick="visKort('${noegle}')">⭐ ${info.antal}</span></div>
+        <div class="fremh-dato">${x.dag.getDate()}. ${MAANEDER[x.dag.getMonth()]}</div>
+        <div class="fremh-tekst">${escHtmlF(x.navn)} fyldte ${x.alder} år<span class="hilsen-antal klik" title="Klik og se fødselsdagskortet" onclick="visKort('${noegle}')">⭐ ${x.antal}</span></div>
         <button class="kort-knap" onclick="visKort('${noegle}')">🎉 Se fødselsdagskort</button>
         <div class="fremh-tag tag-maerk">Mærkedag</div>
       </div>`;
-  });
+    });
   kommende.forEach(k => {
     const datoTekst = k.dato.getDate() + '. ' + MAANEDER[k.dato.getMonth()];
     const info = hilsenInfo(k);
@@ -732,7 +738,6 @@ const HILSEN_MAX = 100;   // højst 100 hilsner pr. fødselsdag
 let hilsenModtagere = [];
 let hilsenValgt = -1;
 let sidsteKommende = null;
-let allePersonerHilsen = [];   // alle med fødselsdato (til "fyldte X år" de seneste 14 dage)
 const HILSEN_TEST = new URLSearchParams(location.search).get("testhilsen") === "1";
 
 // Hilsner gemmes i "hilsener" — én pr. sendt hilsen. Nøglen er år + fornavn + fødselsdato,
@@ -744,7 +749,7 @@ function hilsenInfo(k){
   const t = hilsenTal[hilsenTilNoegle(k)];
   return { antal: t ? t.antal : 0, fraMig: !!(t && MIT_NR_HILSEN && t.fraNr.has(MIT_NR_HILSEN)) };
 }
-onSnapshot(query(collection(db, "hilsener"), where("aar", "==", new Date().getFullYear())), snap => {
+onSnapshot(collection(db, "hilsener"), snap => {
   const tal = {};
   snap.forEach(d => {
     const h = d.data();
@@ -1005,7 +1010,6 @@ let foedselsdagsTekst = "";
   try {
     const idag = new Date();
     const personer = await hentAllePersoner();
-    allePersonerHilsen = personer;
     findMigSelv(personer);
  
     // 1) Fødselsdag i dag → tekst til nyhedsbåndet
