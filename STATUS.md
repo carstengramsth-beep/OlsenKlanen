@@ -45,6 +45,12 @@ Sidst opdateret: 2026-10-06
   - Kortet kan gemmes som PDF eller printes på A4 og lægges på julebordet. Nederst står olsenklanen.dk.
   - Husk EmailJS' gratis loft på 200 mails om måneden (se huskelisten ovenfor). Julehilsner kan hurtigt ramme det.
 
+- **Lykønskning ved alle mærkedage (Carstens idé, 6. okt. 2026) — afventer fodslag i familien:** Følg først, om fødselsdagshilsnerne bliver taget godt imod, eller om der kommer indsigelser. Bliv enige, før det bygges.
+  - Kartoteket har allerede "➕ Begivenhed" (konfirmation, bryllupsdag, sølv-, guld- og diamantbryllup, jubilæum, andet). Tilføj **Student** og **Svendeprøve / uddannelse**.
+  - Vis begivenhederne under "Fremhævede begivenheder" på forsiden, ligesom fødselsdagene.
+  - Giv dem samme "Skriv hilsen", ⭐ og kort, som fødselsdagene har. Hver type får sin egen pynt (fx studenterhue, diamanter).
+  - Eksempel: Carsten og Elisabeths diamantbryllup om 5–6 år.
+
 ## Afventer
 
 - **Firebase Console:** Indsæt regler fra `firestore.rules` (Firestore → Regler) og `database.rules.json` (Realtime Database → Regler)
