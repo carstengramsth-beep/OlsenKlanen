@@ -644,6 +644,25 @@ const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
  
+// ── FØDSELSDAGSHILSNER ────────────────────────────────────────
+// Hilsner sendt fra forsiden i år. Samme nøgle som på forsiden: år|fornavn|fødselsdato
+let hilsenTal = {};
+function hilsenAntal(p) {
+  if (!p.foedselsdato) return 0;
+  const fornavn = (p.fornavn || (p.navn || '').trim().split(/\s+/)[0] || '').trim();
+  return hilsenTal[new Date().getFullYear() + '|' + fornavn + '|' + p.foedselsdato] || 0;
+}
+(async () => {
+  try {
+    const aar = new Date().getFullYear();
+    const snap = await getDocs(collection(db, 'hilsener'));
+    const tal = {};
+    snap.forEach(d => { const h = d.data(); if (h.aar === aar && h.tilNoegle) tal[h.tilNoegle] = (tal[h.tilNoegle] || 0) + 1; });
+    hilsenTal = tal;
+    if (data.length) renderGrid();
+  } catch (e) { console.log('Kunne ikke hente hilsner:', e); }
+})();
+
 // ── STATE ─────────────────────────────────────────────────────
 let data = [];
 let soegeTekst = '';
@@ -1137,6 +1156,7 @@ function byggPersonGruppe(personer, label, husstandsNr, boernStart, voksenBogsta
           </div>
           <div class="person-detaljer">
             ${p.foedselsdato ? `<span class="person-detalje">🎂 ${formatDato(p.foedselsdato)}</span>` : `<span class="person-detalje" style="color:#aaa;font-style:italic">🎂 —</span>`}
+            ${hilsenAntal(p) ? `<span class="person-detalje" style="color:#b8860b;font-weight:600" title="Fødselsdagshilsner sendt via forsiden i år">⭐ ${hilsenAntal(p)} hilsner i år</span>` : ''}
             ${p.mobil ? `<span class="person-detalje">📱 ${p.mobil}</span>` : `<span class="person-detalje" style="color:#aaa;font-style:italic">📱 ingen mobil</span>`}
             ${p.email ? `<span class="person-detalje">✉️ <a href="mailto:${p.email}">${p.email}</a></span>` : `<span class="person-detalje" style="color:#aaa;font-style:italic">✉️ ingen email</span>`}
           </div>

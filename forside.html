@@ -49,6 +49,8 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .hilsen-knap { background: #2d5016; color: #fff; border: none; border-radius: 14px; font-family: inherit; font-size: 13px; padding: 4px 12px; margin-right: 8px; cursor: pointer; white-space: nowrap; }
 .hilsen-knap:hover { background: #3d6b1f; }
 .hilsen-knap.sendt { background: #d4edda; color: #155724; cursor: default; }
+.hilsen-antal { color: #b8860b; font-weight: bold; margin-left: 6px; white-space: nowrap; }
+.hilsen-max { font-size: 12px; color: #888; font-style: italic; margin-right: 8px; white-space: nowrap; }
 #hilsen-dialog { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 16px; }
 #hilsen-dialog .boks { background: #fff; border-radius: 10px; max-width: 520px; width: 100%; padding: 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
 #hilsen-dialog h2 { margin: 0 0 6px; color: #2d5016; font-size: 20px; }
@@ -361,7 +363,7 @@ try {
     <h2 id="hilsen-titel">🎂 Skriv hilsen</h2>
     <p class="hint">Hilsenen sendes som mail med dit navn på. Modtageren kan svare direkte til dig.</p>
     <p class="hint" style="color:#2d5016;"><b>Fra:</b> <span id="hilsen-fra"></span></p>
-    <textarea id="hilsen-tekst" maxlength="1000" placeholder="Skriv hilsen …"></textarea>
+    <textarea id="hilsen-tekst" maxlength="500" placeholder="Skriv hilsen …"></textarea>
     <div class="knapper">
       <button class="fortryd" onclick="lukHilsen()">Fortryd</button>
       <button class="send" id="hilsen-send" onclick="sendHilsen()">🎉 Send hilsen</button>
@@ -375,7 +377,7 @@ try {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, updateDoc, arrayUnion, query, onSnapshot, getDocs, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, addDoc, updateDoc, arrayUnion, query, onSnapshot, getDocs, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
  
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -517,7 +519,7 @@ async function hentAllePersoner() {
           const aktiv = p.status !== "afdød" && p.status !== "udmeldt";
           const email = aktiv ? (p.email || (p.rolle !== "barn" ? fam.email : "") || "").trim() : "";
           personer.push({
-            navn, email,
+            navn, email, foedselsdato: p.foedselsdato,
             aar: parseInt(dele[0]),
             maaned: parseInt(dele[1]),
             dag: parseInt(dele[2])
@@ -547,6 +549,7 @@ function kommendeFoedselsdage(personer, idag, antal) {
       return {
         navn: p.navn,
         email: p.email,
+        foedselsdato: p.foedselsdato,
         dato: naeste,
         alder: alderPaa(p.aar, naeste.getFullYear())
       };
@@ -562,20 +565,27 @@ function renderFremhaevede(kommende) {
   let html = '';
   const idag = new Date();
   hilsenModtagere = [];
+  sidsteKommende = kommende;
   kommende.forEach(k => {
     const datoTekst = k.dato.getDate() + '. ' + MAANEDER[k.dato.getMonth()];
+    const info = hilsenInfo(k);
+    // ⭐ og antal hilsner, når der er sendt mindst én
+    const stjerne = info.antal ? `<span class="hilsen-antal" title="Antal fødselsdagshilsner">⭐ ${info.antal}</span>` : '';
     // På selve dagen kan man sende en hilsen — men kun hvis personen har en mail
     let knap = '';
     if (k.email && k.dato.toDateString() === idag.toDateString()) {
       const i = hilsenModtagere.push(k) - 1;
-      knap = hilsenSendtIdag(k)
-        ? `<button class="hilsen-knap sendt" disabled>✓ Hilsen sendt</button>`
-        : `<button class="hilsen-knap" id="hilsen-knap-${i}" onclick="aabnHilsen(${i})">✍️ Skriv hilsen</button>`;
+      if (info.fraMig || hilsenSendtIdag(k))
+        knap = `<button class="hilsen-knap sendt" disabled>✓ Hilsen sendt</button>`;
+      else if (info.antal >= HILSEN_MAX)
+        knap = `<span class="hilsen-max">${HILSEN_MAX} hilsner nået</span>`;
+      else
+        knap = `<button class="hilsen-knap" id="hilsen-knap-${i}" onclick="aabnHilsen(${i})">✍️ Skriv hilsen</button>`;
     }
     html += `
       <div class="fremh-row">
         <div class="fremh-dato">${datoTekst}</div>
-        <div class="fremh-tekst">${escHtmlF(k.navn)} fylder ${k.alder} år</div>
+        <div class="fremh-tekst">${escHtmlF(k.navn)} fylder ${k.alder} år${stjerne}</div>
         ${knap}
         <div class="fremh-tag tag-maerk">Mærkedag</div>
       </div>`;
@@ -618,8 +628,32 @@ const EMAILJS_PUBLIC_KEY  = "76jQOeDv73Qw2zgmU";
 const EMAILJS_SERVICE_ID  = "service_oo888vl";
 const EMAILJS_TEMPLATE_ID = "template_543ms2z";
 const MIT_NAVN_HILSEN = sessionStorage.getItem("ok_navn") || localStorage.getItem("ok_navn") || "Et medlem";
+const MIT_NR_HILSEN = sessionStorage.getItem("ok_nr") || localStorage.getItem("ok_nr") || "";
+const HILSEN_MAX = 100;   // højst 100 hilsner pr. fødselsdag
 let hilsenModtagere = [];
 let hilsenValgt = -1;
+let sidsteKommende = null;
+
+// Hilsner gemmes i "hilsener" — én pr. sendt hilsen. Nøglen er år + fornavn + fødselsdato,
+// så den samme person findes både her og i medlemskartoteket.
+function hilsenTilNoegle(k){ return new Date().getFullYear() + "|" + k.navn + "|" + k.foedselsdato; }
+let hilsenTal = {};   // tilNoegle → { antal, fraNr:Set }
+function hilsenInfo(k){
+  const t = hilsenTal[hilsenTilNoegle(k)];
+  return { antal: t ? t.antal : 0, fraMig: !!(t && MIT_NR_HILSEN && t.fraNr.has(MIT_NR_HILSEN)) };
+}
+onSnapshot(query(collection(db, "hilsener"), where("aar", "==", new Date().getFullYear())), snap => {
+  const tal = {};
+  snap.forEach(d => {
+    const h = d.data();
+    if (!h.tilNoegle) return;
+    const t = tal[h.tilNoegle] || (tal[h.tilNoegle] = { antal: 0, fraNr: new Set() });
+    t.antal++;
+    if (h.fra_nr) t.fraNr.add(h.fra_nr);
+  });
+  hilsenTal = tal;
+  if (sidsteKommende) renderFremhaevede(sidsteKommende);
+}, e => console.log("Hilsen-tæller-fejl:", e));
 
 function escHtmlF(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 function hilsenNoegle(k){ return "ok_hilsen_" + new Date().toDateString() + "_" + k.email.toLowerCase() + "_" + k.navn; }
@@ -651,6 +685,7 @@ window.sendHilsen = async function(){
   const st = document.getElementById("hilsen-status");
   const knap = document.getElementById("hilsen-send");
   if (!tekst) { st.style.color = "#c0392b"; st.textContent = "Skriv en hilsen først."; return; }
+  if (hilsenInfo(k).antal >= HILSEN_MAX) { st.style.color = "#c0392b"; st.textContent = k.navn + " har allerede fået " + HILSEN_MAX + " hilsner."; return; }
   knap.disabled = true;
   st.style.color = "#555"; st.textContent = "⏳ Sender …";
   try {
@@ -667,6 +702,14 @@ window.sendHilsen = async function(){
       name: MIT_NAVN_HILSEN
     });
     try { localStorage.setItem(hilsenNoegle(k), "1"); } catch(e) {}
+    // Tæl hilsenen (giver ⭐ og antal ved navnet — også i medlemskartoteket)
+    try {
+      await addDoc(collection(db, "hilsener"), {
+        til: k.navn, tilNoegle: hilsenTilNoegle(k), aar: new Date().getFullYear(),
+        fra: MIT_NAVN_HILSEN.slice(0, 60), fra_nr: MIT_NR_HILSEN,
+        besked: tekst.slice(0, 500), sendt: Date.now()
+      });
+    } catch(e) { console.log("Kunne ikke tælle hilsenen:", e); }
     st.style.color = "#155724"; st.textContent = "✅ Din hilsen er sendt til " + k.navn + ".";
     const rkKnap = document.getElementById("hilsen-knap-" + hilsenValgt);
     if (rkKnap) { rkKnap.textContent = "✓ Hilsen sendt"; rkKnap.classList.add("sendt"); rkKnap.disabled = true; }
