@@ -46,6 +46,20 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .fremh-tag { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; }
 .tag-maerk { background: #fff3cd; color: #856404; }
 .tag-arr { background: #d4edda; color: #155724; }
+.hilsen-knap { background: #2d5016; color: #fff; border: none; border-radius: 14px; font-family: inherit; font-size: 13px; padding: 4px 12px; margin-right: 8px; cursor: pointer; white-space: nowrap; }
+.hilsen-knap:hover { background: #3d6b1f; }
+.hilsen-knap.sendt { background: #d4edda; color: #155724; cursor: default; }
+#hilsen-dialog { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 16px; }
+#hilsen-dialog .boks { background: #fff; border-radius: 10px; max-width: 520px; width: 100%; padding: 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+#hilsen-dialog h2 { margin: 0 0 6px; color: #2d5016; font-size: 20px; }
+#hilsen-dialog .hint { color: #777; font-size: 14px; margin: 0 0 12px; }
+#hilsen-dialog textarea { width: 100%; box-sizing: border-box; min-height: 140px; font-family: inherit; font-size: 15px; padding: 10px; border: 1px solid #d8cfae; border-radius: 6px; }
+#hilsen-dialog .knapper { display: flex; gap: 10px; margin-top: 12px; justify-content: flex-end; }
+#hilsen-dialog button { font-family: inherit; font-size: 15px; border: none; border-radius: 6px; padding: 9px 18px; cursor: pointer; }
+#hilsen-dialog .send { background: #2d5016; color: #fff; }
+#hilsen-dialog .send:disabled { opacity: 0.6; cursor: default; }
+#hilsen-dialog .fortryd { background: #eee; color: #444; }
+#hilsen-dialog .status { margin-top: 10px; font-size: 14px; }
 .tag-jub { background: #fce4ec; color: #880e4f; }
 .kalender-boks { background: #fff; border-radius: 8px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
 .kalender-boks h3 { font-size: 15px; color: #2d5016; margin-bottom: 10px; }
@@ -341,6 +355,24 @@ try {
   <span class="nyhedsbaand-tekst" id="baand-tekst">Henter nyheder og vejr...</span>
 </div>
  
+<!-- FØDSELSDAGSHILSEN — vindue til at skrive en hilsen (åbnes fra "Fremhævede begivenheder") -->
+<div id="hilsen-dialog">
+  <div class="boks">
+    <h2 id="hilsen-titel">🎂 Skriv hilsen</h2>
+    <p class="hint">Hilsenen sendes som mail med dit navn på. Modtageren kan svare direkte til dig.</p>
+    <p class="hint" style="color:#2d5016;"><b>Fra:</b> <span id="hilsen-fra"></span></p>
+    <textarea id="hilsen-tekst" maxlength="1000" placeholder="Skriv hilsen …"></textarea>
+    <div class="knapper">
+      <button class="fortryd" onclick="lukHilsen()">Fortryd</button>
+      <button class="send" id="hilsen-send" onclick="sendHilsen()">🎉 Send hilsen</button>
+    </div>
+    <div class="status" id="hilsen-status"></div>
+  </div>
+</div>
+
+<!-- EmailJS — bruges til fødselsdagshilsner (samme opsætning som OlsenPost) -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, updateDoc, arrayUnion, query, onSnapshot, getDocs, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -481,8 +513,11 @@ async function hentAllePersoner() {
       if (p.foedselsdato && navn) {
         const dele = p.foedselsdato.split('-'); // "ÅÅÅÅ-MM-DD"
         if (dele.length === 3) {
+          // Mail til fødselsdagshilsen: personens egen mail (voksne må bruge husstandens mail)
+          const aktiv = p.status !== "afdød" && p.status !== "udmeldt";
+          const email = aktiv ? (p.email || (p.rolle !== "barn" ? fam.email : "") || "").trim() : "";
           personer.push({
-            navn,
+            navn, email,
             aar: parseInt(dele[0]),
             maaned: parseInt(dele[1]),
             dag: parseInt(dele[2])
@@ -511,6 +546,7 @@ function kommendeFoedselsdage(personer, idag, antal) {
       const naeste = naesteForekomst(p.maaned, p.dag, idag);
       return {
         navn: p.navn,
+        email: p.email,
         dato: naeste,
         alder: alderPaa(p.aar, naeste.getFullYear())
       };
@@ -524,12 +560,23 @@ function renderFremhaevede(kommende) {
   const el = document.getElementById('fremh-liste');
   if (!el) return;
   let html = '';
+  const idag = new Date();
+  hilsenModtagere = [];
   kommende.forEach(k => {
     const datoTekst = k.dato.getDate() + '. ' + MAANEDER[k.dato.getMonth()];
+    // På selve dagen kan man sende en hilsen — men kun hvis personen har en mail
+    let knap = '';
+    if (k.email && k.dato.toDateString() === idag.toDateString()) {
+      const i = hilsenModtagere.push(k) - 1;
+      knap = hilsenSendtIdag(k)
+        ? `<button class="hilsen-knap sendt" disabled>✓ Hilsen sendt</button>`
+        : `<button class="hilsen-knap" id="hilsen-knap-${i}" onclick="aabnHilsen(${i})">✍️ Skriv hilsen</button>`;
+    }
     html += `
       <div class="fremh-row">
         <div class="fremh-dato">${datoTekst}</div>
-        <div class="fremh-tekst">${k.navn} fylder ${k.alder} år</div>
+        <div class="fremh-tekst">${escHtmlF(k.navn)} fylder ${k.alder} år</div>
+        ${knap}
         <div class="fremh-tag tag-maerk">Mærkedag</div>
       </div>`;
   });
@@ -564,6 +611,73 @@ function renderFremhaevede(kommende) {
   }
 }
  
+/* ════════ FØDSELSDAGSHILSEN ════════
+   På dagen vises "🎂 Send hilsen" ved dem, der har en mail i kartoteket.
+   Hilsenen sendes som mail via EmailJS (samme opsætning som OlsenPost). */
+const EMAILJS_PUBLIC_KEY  = "76jQOeDv73Qw2zgmU";
+const EMAILJS_SERVICE_ID  = "service_oo888vl";
+const EMAILJS_TEMPLATE_ID = "template_543ms2z";
+const MIT_NAVN_HILSEN = sessionStorage.getItem("ok_navn") || localStorage.getItem("ok_navn") || "Et medlem";
+let hilsenModtagere = [];
+let hilsenValgt = -1;
+
+function escHtmlF(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function hilsenNoegle(k){ return "ok_hilsen_" + new Date().toDateString() + "_" + k.email.toLowerCase() + "_" + k.navn; }
+function hilsenSendtIdag(k){ try { return localStorage.getItem(hilsenNoegle(k)) === "1"; } catch(e) { return false; } }
+
+window.aabnHilsen = function(i){
+  const k = hilsenModtagere[i];
+  if (!k) return;
+  hilsenValgt = i;
+  document.getElementById("hilsen-titel").textContent = "🎂 Skriv hilsen til " + k.navn + " (" + k.alder + " år i dag)";
+  document.getElementById("hilsen-tekst").value = "";
+  document.getElementById("hilsen-fra").textContent = MIT_NAVN_HILSEN;
+  const st = document.getElementById("hilsen-status");
+  st.textContent = ""; st.style.color = "";
+  document.getElementById("hilsen-send").disabled = false;
+  document.getElementById("hilsen-dialog").style.display = "flex";
+  document.getElementById("hilsen-tekst").focus();
+};
+
+window.lukHilsen = function(){
+  document.getElementById("hilsen-dialog").style.display = "none";
+  hilsenValgt = -1;
+};
+
+window.sendHilsen = async function(){
+  const k = hilsenModtagere[hilsenValgt];
+  if (!k) return;
+  const tekst = document.getElementById("hilsen-tekst").value.trim();
+  const st = document.getElementById("hilsen-status");
+  const knap = document.getElementById("hilsen-send");
+  if (!tekst) { st.style.color = "#c0392b"; st.textContent = "Skriv en hilsen først."; return; }
+  knap.disabled = true;
+  st.style.color = "#555"; st.textContent = "⏳ Sender …";
+  try {
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+    const afsenderEmail = sessionStorage.getItem("ok_email") || localStorage.getItem("ok_email") || "post@olsenklanen.dk";
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email: k.email,
+      to_name: k.navn,
+      from_name: MIT_NAVN_HILSEN + " – Olsenklanen",
+      reply_to: afsenderEmail,
+      subject: "🎂 Tillykke med fødselsdagen, " + k.navn + "!",
+      message: tekst + "\n\nKærlig hilsen\n" + MIT_NAVN_HILSEN + "\n\n---\nSendt fra OlsenKlanens familieside · olsenklanen.dk",
+      afsender_navn: MIT_NAVN_HILSEN,
+      name: MIT_NAVN_HILSEN
+    });
+    try { localStorage.setItem(hilsenNoegle(k), "1"); } catch(e) {}
+    st.style.color = "#155724"; st.textContent = "✅ Din hilsen er sendt til " + k.navn + ".";
+    const rkKnap = document.getElementById("hilsen-knap-" + hilsenValgt);
+    if (rkKnap) { rkKnap.textContent = "✓ Hilsen sendt"; rkKnap.classList.add("sendt"); rkKnap.disabled = true; }
+    setTimeout(lukHilsen, 1800);
+  } catch(e) {
+    console.log("Hilsen-fejl:", e);
+    st.style.color = "#c0392b"; st.textContent = "Hilsenen kunne ikke sendes. Prøv igen.";
+    knap.disabled = false;
+  }
+};
+
 // Global så nyhedsbåndet kan bruge den
 let foedselsdagsTekst = "";
  
