@@ -64,7 +64,7 @@ function start(){
   const wrap = document.createElement("div");
   wrap.id = "ok-postvarsel";
   wrap.innerHTML = `
-    <a class="indhold" href="meddelelser.html">
+    <a class="indhold" id="ok-pv-link" href="meddelelser.html?fane=intern">
       <span class="ikon">📬</span>
       <span class="tekst" id="ok-pv-tekst"></span>
       <span class="laes">Klik for at læse →</span>
@@ -80,13 +80,21 @@ function start(){
 
   const qy = query(collection(db, "olsenpost"), where("til", "array-contains", MIT_NR));
   onSnapshot(qy, snap => {
-    const beskeder = snap.docs.map(d => d.data());
+    const beskeder = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     const ulaeste = beskeder.filter(m => !(m.set_af||[]).includes(MIT_NR));
     antalUlaeste = ulaeste.length;
+    // Linket åbner OlsenPost direkte på fanen "Intern besked" med den nyeste ulæste besked fremhævet
+    document.getElementById("ok-pv-link").href = internLink(ulaeste);
     afsendere = [...new Set(ulaeste.map(m => m.fra_navn).filter(Boolean))];
     if (antalUlaeste > 0) startCyklus();
     else stopCyklus();
   }, e => console.log("Postvarsel-fejl:", e));
+
+  function internLink(ulaeste){
+    const tid = m => (m.sendt && m.sendt.seconds ? m.sendt.seconds*1000 : 0) || m.sendt_lokal || 0;
+    const nyeste = [...ulaeste].sort((a,b) => tid(b) - tid(a))[0];
+    return "meddelelser.html?fane=intern" + (nyeste ? "&ny=" + encodeURIComponent(nyeste.id) : "");
+  }
 
   function byggTekst(){
     if (antalUlaeste === 1)

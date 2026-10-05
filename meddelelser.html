@@ -90,6 +90,7 @@ textarea:focus { outline: none; border-color: #2d5016; }
 
 /* Grupper i Indkomne mails */
 .fane .badge.graa { background: #8a8a7a; }
+.mail-kort .ny-maerke { background: #c0392b; color: #fff; border-radius: 10px; font-size: 12px; padding: 1px 8px; margin-right: 8px; font-weight: bold; }
 .mail-kort.fremhaev { box-shadow: 0 0 0 3px #c89e3c, 0 1px 4px rgba(0,0,0,0.08); transition: box-shadow 0.4s; }
 .gruppe-titel { font-size: 17px; color: #2d5016; margin: 22px 0 10px; display: flex; align-items: center; gap: 8px; }
 .gruppe-titel:first-child { margin-top: 0; }
@@ -294,6 +295,7 @@ try {
       <strong>💬 Interne beskeder mellem klanmedlemmer</strong>
       Disse beskeder sendes kun inde i hjemmesiden — ikke til medlemmernes private mail.
     </div>
+    <div id="intern-indbakke-liste"><div class="indlaeser">Henter interne beskeder …</div></div>
     <div class="kort">
       <h2>Skriv intern besked</h2>
       <p class="hint">Bruges til korte beskeder direkte på siden — modtageren ser dem når de logger ind.</p>
@@ -319,7 +321,6 @@ try {
       <div class="status" id="send-intern-status"></div>
     </div>
 
-    <div id="intern-indbakke-liste"><div class="indlaeser">Henter interne beskeder …</div></div>
   </div>
 
   <!-- ════════ POSTVAGT (kun postansvarlige) ════════ -->
@@ -448,6 +449,11 @@ function hent(n){ return sessionStorage.getItem(n) || localStorage.getItem(n) ||
 const MIT_NR   = hent("ok_nr");
 const MIT_NAVN = hent("ok_navn") || ("Medlem " + MIT_NR);
 const ER_POSTANSVARLIG = POSTANSVARLIGE.includes(MIT_NR);
+
+// Fane og besked fra linket, fx fra den gule post-linje: meddelelser.html?fane=intern&ny=<id>
+const START_PARAM = new URLSearchParams(window.location.search);
+const START_FANE  = START_PARAM.get("fane") || "";
+const FREMHAEV_ID = START_PARAM.get("ny") || "";
 
 document.getElementById("mit-navn").textContent = MIT_NAVN + " (nr. " + MIT_NR + ")";
 if (ER_POSTANSVARLIG) {
@@ -1310,7 +1316,7 @@ function lytIndbakke(){
       startFaneValgt = true;
       // De 5 lander direkte på de nye mails, hvis der er nogen, og man ikke kom via et link
       const p = new URLSearchParams(window.location.search);
-      if (ER_POSTANSVARLIG && ulaesteIndkomne().length && !p.get("brev") && !p.get("husstand") && !p.get("emne")
+      if (ER_POSTANSVARLIG && ulaesteIndkomne().length && !START_FANE && !p.get("brev") && !p.get("husstand") && !p.get("emne")
           && document.getElementById("omr-send").style.display !== "none") visFane("indbakke");
     }
     if (document.getElementById("omr-indbakke").style.display !== "none"
@@ -1647,11 +1653,19 @@ onAuthStateChanged(auth, async user => {
 
 /* ════════ INTERN BESKED (eksisterende system) ════════ */
 let internData = [];
+// Beskeder, der var ulæste under dette besøg. De bliver stående øverst som "Ny",
+// også efter at de er markeret som set (så den gule post-linje forsvinder).
+const internNye = new Set();
+let internScrollet = false;
+function erSetIntern(m){ return (m.set_af || []).includes(MIT_NR); }
 function lytIntern(){
   const qy = query(collection(db, "olsenpost"), where("til", "array-contains", MIT_NR));
   onSnapshot(qy, snap => {
     internData = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    internData.forEach(m => { if (!erSetIntern(m)) internNye.add(m.id); });
     internData.sort((a,b) => {
+      const na = internNye.has(a.id) ? 1 : 0, nb = internNye.has(b.id) ? 1 : 0;
+      if (na !== nb) return nb - na;
       const ta = (a.sendt?.seconds ? a.sendt.seconds*1000 : 0) || a.sendt_lokal || 0;
       const tb = (b.sendt?.seconds ? b.sendt.seconds*1000 : 0) || b.sendt_lokal || 0;
       return tb - ta;
@@ -1664,13 +1678,26 @@ function tegnIntern(){
   const el = document.getElementById("intern-indbakke-liste");
   if (!internData.length) { el.innerHTML = '<div class="tom">Ingen interne beskeder endnu.</div>'; return; }
   el.innerHTML = '<div class="kort"><h2>Dine interne beskeder</h2></div>' + internData.map(m => `
-    <div class="mail-kort">
+    <div class="mail-kort${internNye.has(m.id) ? ' ulaest' : ''}${m.id === FREMHAEV_ID ? ' fremhaev' : ''}" id="intern-${enc(m.id)}">
       <div class="mail-top">
-        <span class="mail-fra">${escHtml(m.fra_navn)}</span>
+        <span class="mail-fra">${internNye.has(m.id) ? '<span class="ny-maerke">🆕 Ny</span>' : ''}${escHtml(m.fra_navn)}</span>
         <span class="mail-tid">${tidTekst(m.sendt)}</span>
       </div>
       <div class="mail-tekst">${escHtml(m.tekst)}</div>
     </div>`).join("");
+
+  // Første gang: rul til den besked, linket pegede på
+  if (!internScrollet && START_FANE === "intern") {
+    internScrollet = true;
+    const kort = FREMHAEV_ID && document.getElementById("intern-" + FREMHAEV_ID);
+    (kort || el).scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // Nu er beskederne vist — markér dem som set, så den gule post-linje forsvinder
+  internData.filter(m => !erSetIntern(m)).forEach(m => {
+    updateDoc(doc(db, "olsenpost", m.id), { set_af: arrayUnion(MIT_NR) })
+      .catch(e => console.log("Kunne ikke markere besked som set:", e));
+  });
 }
 
 window.sendIntern = async function(){
@@ -1784,12 +1811,12 @@ lytIndbakke();
 lytSendt();
 if (ER_POSTANSVARLIG) lytArkivSendt();
 lytIntern();
-if (ER_POSTANSVARLIG && new URLSearchParams(window.location.search).get("fane") === "indbakke") visFane("indbakke");
 if (!ER_POSTANSVARLIG) {
   document.getElementById("fane-send").style.display = "none";
   document.getElementById("omr-send").style.display = "none";
-  visFane("indbakke");
 }
+if (START_FANE === "intern") visFane("intern");
+else if (START_FANE === "indbakke" || !ER_POSTANSVARLIG) visFane("indbakke");
 </script>
 
 </body>
