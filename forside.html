@@ -130,7 +130,7 @@ try {
 </div>
  
 <!-- POST-VARSEL — vises kun når der er ulæst OlsenPost -->
-<a href="meddelelser.html" id="post-varsel" style="display:none; text-decoration:none;">
+<a href="meddelelser.html?fane=intern" id="post-varsel" style="display:none; text-decoration:none;">
   <div style="max-width:1400px; margin:14px auto 0; padding:0 20px;">
     <div style="background:#fff8e1; border:2px solid #c89e3c; border-left:8px solid #c89e3c; border-radius:8px; padding:14px 18px; display:flex; align-items:center; gap:14px; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
       <span style="font-size:30px;">📬</span>
@@ -635,9 +635,13 @@ let foedselsdagsTekst = "";
   let harSpillet = false;
   const qy = query(collection(db, "olsenpost"), where("til", "array-contains", MIT_NR));
   onSnapshot(qy, snap => {
-    const beskeder = snap.docs.map(d => d.data());
+    const beskeder = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     const ulaeste = beskeder.filter(m => !(m.set_af||[]).includes(MIT_NR));
     const boks = document.getElementById("post-varsel");
+    // Linket åbner OlsenPost direkte på fanen "Intern besked" med den nyeste ulæste besked fremhævet
+    const tid = m => (m.sendt && m.sendt.seconds ? m.sendt.seconds*1000 : 0) || m.sendt_lokal || 0;
+    const nyeste = [...ulaeste].sort((a,b) => tid(b) - tid(a))[0];
+    boks.href = "meddelelser.html?fane=intern" + (nyeste ? "&ny=" + encodeURIComponent(nyeste.id) : "");
     const tekst = document.getElementById("post-varsel-tekst");
     if (ulaeste.length > 0) {
       const afsendere = [...new Set(ulaeste.map(m => m.fra_navn).filter(Boolean))];
