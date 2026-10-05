@@ -56,6 +56,8 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 #hilsen-dialog h2 { margin: 0 0 6px; color: #2d5016; font-size: 20px; }
 #hilsen-dialog .hint { color: #777; font-size: 14px; margin: 0 0 12px; }
 #hilsen-dialog textarea { width: 100%; box-sizing: border-box; min-height: 140px; font-family: inherit; font-size: 15px; padding: 10px; border: 1px solid #d8cfae; border-radius: 6px; }
+#hilsen-dialog .slut-felt { width: 100%; box-sizing: border-box; font-family: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid #d8cfae; border-radius: 6px; margin-top: 4px; }
+#hilsen-dialog .slut-label { display: block; margin-top: 12px; font-size: 14px; color: #555; }
 #hilsen-dialog .knapper { display: flex; gap: 10px; margin-top: 12px; justify-content: flex-end; }
 #hilsen-dialog button { font-family: inherit; font-size: 15px; border: none; border-radius: 6px; padding: 9px 18px; cursor: pointer; }
 #hilsen-dialog .send { background: #2d5016; color: #fff; }
@@ -364,6 +366,8 @@ try {
     <p class="hint">Hilsenen sendes som mail med dit navn på. Modtageren kan svare direkte til dig.</p>
     <p class="hint" style="color:#2d5016;"><b>Fra:</b> <span id="hilsen-fra"></span></p>
     <textarea id="hilsen-tekst" maxlength="500" placeholder="Skriv hilsen …"></textarea>
+    <label class="slut-label" for="hilsen-slut">Slut hilsenen med (du kan selv rette teksten — dit navn kommer under):</label>
+    <input type="text" id="hilsen-slut" class="slut-felt" maxlength="80">
     <div class="knapper">
       <button class="fortryd" onclick="lukHilsen()">Fortryd</button>
       <button class="send" id="hilsen-send" onclick="sendHilsen()">🎉 Send hilsen</button>
@@ -676,6 +680,7 @@ window.aabnHilsen = function(i){
   hilsenValgt = i;
   document.getElementById("hilsen-titel").textContent = "🎂 Skriv hilsen til " + k.navn + " (" + k.alder + " år i dag)";
   document.getElementById("hilsen-tekst").value = "";
+  document.getElementById("hilsen-slut").value = "Mange fødselsdagshilsner fra";
   document.getElementById("hilsen-fra").textContent = MIT_NAVN_HILSEN;
   const st = document.getElementById("hilsen-status");
   st.textContent = ""; st.style.color = "";
@@ -693,6 +698,7 @@ window.sendHilsen = async function(){
   const k = hilsenModtagere[hilsenValgt];
   if (!k) return;
   const tekst = document.getElementById("hilsen-tekst").value.trim();
+  const slut  = document.getElementById("hilsen-slut").value.trim();
   const st = document.getElementById("hilsen-status");
   const knap = document.getElementById("hilsen-send");
   if (!tekst) { st.style.color = "#c0392b"; st.textContent = "Skriv en hilsen først."; return; }
@@ -714,7 +720,7 @@ window.sendHilsen = async function(){
       from_name: MIT_NAVN_HILSEN + " – Olsenklanen",
       reply_to: afsenderEmail,
       subject: "🎂 Tillykke med fødselsdagen, " + k.navn + "!",
-      message: tekst + "\n\nKærlig hilsen\n" + MIT_NAVN_HILSEN + "\n\n---\nSendt fra OlsenKlanens familieside · olsenklanen.dk",
+      message: tekst + "\n\n" + (slut ? slut + "\n" : "") + MIT_NAVN_HILSEN + "\n\n---\nSendt fra OlsenKlanens familieside · olsenklanen.dk",
       afsender_navn: MIT_NAVN_HILSEN,
       name: MIT_NAVN_HILSEN
     });
