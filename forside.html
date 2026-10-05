@@ -209,6 +209,20 @@ try {
   </div>
 </a>
 
+<!-- FØDSELAREN — besked om antal hilsner, når man selv har haft fødselsdag (vises i 14 dage) -->
+<div id="egne-hilsner-varsel" style="display:none;">
+  <div style="max-width:1400px; margin:14px auto 0; padding:0 20px;">
+    <div style="background:#fff8e1; border:2px solid #c89e3c; border-left:8px solid #2d5016; border-radius:8px; padding:14px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+      <span style="font-size:30px;">🎂</span>
+      <span style="flex:1; min-width:220px;">
+        <span id="egne-hilsner-tekst" style="font-size:17px; color:#5a4a1f; font-weight:bold;"></span><br>
+        <span style="font-size:14px; color:#8a7a3f; font-style:italic;">Hilsnerne er også sendt til din mail.</span>
+      </span>
+      <button id="egne-hilsner-knap" class="kort-knap" style="font-size:15px; padding:7px 16px;">🎉 Se dit fødselsdagskort</button>
+    </div>
+  </div>
+</div>
+
 <div class="layout">
  
   <aside>
@@ -564,6 +578,7 @@ async function hentAllePersoner() {
   const snap = await getDocs(collection(db, "membres"));
   snap.forEach(docu => {
     const fam = docu.data();
+    const hus = docu.id;
     (fam.familiemedlemmer || []).forEach(p => {
       const navn = (p.fornavn || (p.navn || '').trim().split(/\s+/)[0] || '').trim();
       if (p.foedselsdato && navn) {
@@ -573,7 +588,7 @@ async function hentAllePersoner() {
           const aktiv = p.status !== "afdød" && p.status !== "udmeldt";
           const email = aktiv ? (p.email || (p.rolle !== "barn" ? fam.email : "") || "").trim() : "";
           personer.push({
-            navn, email, foedselsdato: p.foedselsdato,
+            navn, email, foedselsdato: p.foedselsdato, hus,
             aar: parseInt(dele[0]),
             maaned: parseInt(dele[1]),
             dag: parseInt(dele[2])
@@ -720,6 +735,7 @@ onSnapshot(query(collection(db, "hilsener"), where("aar", "==", new Date().getFu
     if (h.fra && !t.navne.includes(h.fra)) t.navne.push(h.fra);
   });
   hilsenTal = tal;
+  visEgneHilsner();
   // Link fra medlemskartoteket: forside.html?kort=<nøgle> åbner kortet direkte
   const kortParam = new URLSearchParams(location.search).get("kort");
   if (kortParam && !kortAabnetFraLink) { kortAabnetFraLink = true; visKort(kortParam); }
@@ -767,6 +783,32 @@ function kortKage(cls){
     <rect x="4" y="64" width="96" height="26" rx="4" fill="#c98b5a"/>
     <path d="M4,70 q8,8 16,0 q8,8 16,0 q8,8 16,0 q8,8 16,0 q8,8 16,0 q8,8 16,0 v-6 h-96z" fill="#fff4e0"/>
     <ellipse cx="52" cy="93" rx="52" ry="5" fill="#d8cfae"/></svg>`;
+}
+
+// Besked til fødselaren selv: "Du har fået X hilsner" (fra fødselsdagen og 14 dage frem)
+let minFoedselsdag = null;   // { navn, foedselsdato } for den, der er logget ind
+function findMigSelv(personer){
+  const mitNr = MIT_NR_HILSEN;
+  const mitFornavn = (MIT_NAVN_HILSEN || "").trim().split(/\s+/)[0].toLowerCase();
+  if (!mitNr || !mitFornavn) return;
+  const hus = mitNr.split("-")[0].trim();
+  const mig = personer.find(p => String(p.hus) === hus && p.navn.toLowerCase() === mitFornavn);
+  if (mig) { minFoedselsdag = mig; visEgneHilsner(); }
+}
+function visEgneHilsner(){
+  const boks = document.getElementById("egne-hilsner-varsel");
+  if (!boks || !minFoedselsdag) return;
+  const idag = new Date(); idag.setHours(0, 0, 0, 0);
+  const dag = new Date(idag.getFullYear(), minFoedselsdag.maaned - 1, minFoedselsdag.dag);
+  const dageEfter = Math.round((idag - dag) / 86400000);
+  const noegle = hilsenTilNoegle(minFoedselsdag);
+  const t = hilsenTal[noegle];
+  if (dageEfter < 0 || dageEfter > 14 || !t || !t.antal) { boks.style.display = "none"; return; }
+  const tid = dageEfter === 0 ? "i dagens anledning" : "i anledning af din fødselsdag";
+  document.getElementById("egne-hilsner-tekst").textContent =
+    "Tillykke, " + minFoedselsdag.navn + "! Du har fået " + t.antal + (t.antal === 1 ? " hilsen " : " hilsner ") + tid + " 🎉";
+  document.getElementById("egne-hilsner-knap").onclick = () => visKort(encodeURIComponent(noegle));
+  boks.style.display = "block";
 }
 
 // Lidt konfetti i kanterne
@@ -941,6 +983,7 @@ let foedselsdagsTekst = "";
   try {
     const idag = new Date();
     const personer = await hentAllePersoner();
+    findMigSelv(personer);
  
     // 1) Fødselsdag i dag → tekst til nyhedsbåndet
     const idagsFoedselsdage = foedselsdageIdag(personer, idag);
