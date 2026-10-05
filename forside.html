@@ -216,7 +216,7 @@ try {
       <span style="font-size:30px;">🎂</span>
       <span style="flex:1; min-width:220px;">
         <span id="egne-hilsner-tekst" style="font-size:17px; color:#5a4a1f; font-weight:bold;"></span><br>
-        <span style="font-size:14px; color:#8a7a3f; font-style:italic;">Hilsnerne ligger klar til dig på din lykønskningsside.</span>
+        <span style="font-size:14px; color:#8a7a3f; font-style:italic;">De er også sendt til din mail.</span>
       </span>
       <a href="lykoenskninger.html" class="hilsen-knap" style="font-size:15px; padding:7px 16px; text-decoration:none;">💌 Læs dine hilsner</a>
       <button id="egne-hilsner-knap" class="kort-knap" style="font-size:15px; padding:7px 16px;">🎉 Se dit fødselsdagskort</button>
@@ -806,8 +806,10 @@ function visEgneHilsner(){
   const t = hilsenTal[noegle];
   if (dageEfter < 0 || dageEfter > 14 || !t || !t.antal) { boks.style.display = "none"; return; }
   const tid = dageEfter === 0 ? "i dagens anledning" : "i anledning af din fødselsdag";
-  document.getElementById("egne-hilsner-tekst").textContent =
-    "Tillykke, " + minFoedselsdag.navn + "! Der ligger " + t.antal + (t.antal === 1 ? " hilsen " : " hilsner ") + "til dig " + tid + " 🎉";
+  document.getElementById("egne-hilsner-tekst").innerHTML =
+    "Velkommen, " + escHtmlF(minFoedselsdag.navn) + " — og stort tillykke! 🎉<br>" +
+    "Der ligger " + t.antal + (t.antal === 1 ? " lykønskning" : " lykønskninger") + " " + tid +
+    " på din lykønskningsside, som venter på, at du ser " + (t.antal === 1 ? "den" : "dem") + "!";
   document.getElementById("egne-hilsner-knap").onclick = () => visKort(encodeURIComponent(noegle));
   boks.style.display = "block";
 }
