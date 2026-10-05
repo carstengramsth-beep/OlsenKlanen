@@ -58,6 +58,44 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 #hilsen-dialog textarea { width: 100%; box-sizing: border-box; min-height: 140px; font-family: inherit; font-size: 15px; padding: 10px; border: 1px solid #d8cfae; border-radius: 6px; }
 #hilsen-dialog .slut-felt { width: 100%; box-sizing: border-box; font-family: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid #d8cfae; border-radius: 6px; margin-top: 4px; }
 #hilsen-dialog .slut-label { display: block; margin-top: 12px; font-size: 14px; color: #555; }
+/* ── Fødselsdagskort (klik på ⭐) ── */
+.kort-knap { background: #fff3cd; color: #856404; border: 1px solid #e6c65c; border-radius: 14px; font-family: inherit; font-size: 13px; padding: 4px 12px; margin-right: 8px; cursor: pointer; white-space: nowrap; }
+.kort-knap:hover { background: #ffe9a8; }
+.hilsen-antal.klik { cursor: pointer; border-bottom: 1px dotted #b8860b; }
+.hilsen-antal.klik:hover { color: #8a6508; }
+#kort-dialog { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; flex-direction: column; align-items: center; z-index: 10000; padding: 16px; overflow-y: auto; }
+#kort-dialog .kort-knapper { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; justify-content: center; }
+#kort-dialog .kort-knapper button { font-family: inherit; font-size: 15px; border: none; border-radius: 6px; padding: 9px 18px; cursor: pointer; }
+#kort-dialog .kort-knapper .print { background: #2d5016; color: #fff; }
+#kort-dialog .kort-knapper .luk { background: #eee; color: #444; }
+#kort-dialog .kort-hint { color: #fff; font-size: 13px; margin: 0 0 10px; text-align: center; }
+#foedselsdagskort { position: relative; width: min(92vw, 640px, calc((100vh - 120px) * 210 / 297)); aspect-ratio: 210 / 297; background: #fffdf5; border-radius: 6px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); overflow: hidden; container-type: inline-size; flex-shrink: 0; }
+#foedselsdagskort .ramme { position: absolute; inset: 2.5cqw; border: 0.5cqw solid #c89e3c; border-radius: 2cqw; pointer-events: none; }
+#foedselsdagskort .ramme::after { content: ""; position: absolute; inset: 1cqw; border: 0.2cqw solid #c89e3c; border-radius: 1.4cqw; }
+#foedselsdagskort .guirlande { position: absolute; top: 3.2cqw; left: 6cqw; width: 88cqw; height: 13cqw; }
+#foedselsdagskort .ballon { position: absolute; top: 14cqw; width: 12cqw; }
+#foedselsdagskort .ballon.v { left: 5cqw; }
+#foedselsdagskort .ballon.h { right: 5cqw; transform: scaleX(-1); }
+#foedselsdagskort .kage { position: absolute; bottom: 4.5cqw; width: 17cqw; }
+#foedselsdagskort .kage.v { left: 5cqw; }
+#foedselsdagskort .kage.h { right: 5cqw; }
+#foedselsdagskort .konfetti { position: absolute; border-radius: 0.3cqw; opacity: 0.85; }
+#foedselsdagskort .top { position: absolute; top: 15cqw; left: 18cqw; right: 18cqw; text-align: center; color: #2d5016; }
+#foedselsdagskort .top .tillykke { font-family: 'Pacifico', cursive; font-size: 10cqw; line-height: 1.3; color: #b8860b; }
+#foedselsdagskort .top .hvem { font-family: 'Dancing Script', cursive; line-height: 1.2; }
+#foedselsdagskort .navne { position: absolute; left: 8cqw; right: 8cqw; top: 44cqw; bottom: 27cqw; }
+#foedselsdagskort .navn { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; line-height: 1; }
+#foedselsdagskort .bund { position: absolute; bottom: 7cqw; left: 22cqw; right: 22cqw; text-align: center; color: #2d5016; }
+#foedselsdagskort .bund .fra { font-family: 'Dancing Script', cursive; font-size: 4cqw; line-height: 1.15; }
+#foedselsdagskort .bund .web { font-family: Georgia, serif; font-size: 3.6cqw; font-weight: bold; letter-spacing: 0.3cqw; color: #b8860b; margin-top: 0.8cqw; }
+@media print {
+  @page { size: A4 portrait; margin: 0; }
+  body.udskriv-kort > *:not(#kort-dialog) { display: none !important; }
+  body.udskriv-kort { background: #fff !important; margin: 0 !important; padding: 0 !important; height: 296mm; overflow: hidden; }
+  body.udskriv-kort #kort-dialog { position: static; display: block !important; background: none; padding: 0; overflow: visible; }
+  body.udskriv-kort #kort-dialog .kort-knapper, body.udskriv-kort #kort-dialog .kort-hint { display: none !important; }
+  body.udskriv-kort #foedselsdagskort { width: 210mm; height: 296mm; aspect-ratio: auto; border-radius: 0; box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
 #hilsen-dialog .knapper { display: flex; gap: 10px; margin-top: 12px; justify-content: flex-end; }
 #hilsen-dialog button { font-family: inherit; font-size: 15px; border: none; border-radius: 6px; padding: 9px 18px; cursor: pointer; }
 #hilsen-dialog .send { background: #2d5016; color: #fff; }
@@ -136,6 +174,8 @@ try {
   // Ved fejl: send IKKE automatisk til login (det smed folk ud). Lad siden indlæse.
 }
 </script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Dancing+Script:wght@600&family=Kalam:wght@400&family=Pacifico&family=Satisfy&display=swap" rel="stylesheet">
 </head>
 <body>
  
@@ -360,6 +400,16 @@ try {
 </div>
  
 <!-- FØDSELSDAGSHILSEN — vindue til at skrive en hilsen (åbnes fra "Fremhævede begivenheder") -->
+<!-- FØDSELSDAGSKORT — åbnes ved klik på ⭐ ved fødselaren. Kan gemmes som PDF / printes på A4 -->
+<div id="kort-dialog">
+  <div class="kort-knapper">
+    <button class="print" onclick="printKort()">🖨️ Gem som PDF / Print</button>
+    <button class="luk" onclick="lukKort()">Luk</button>
+  </div>
+  <p class="kort-hint">Vælg "Gem som PDF" i printvinduet for at gemme kortet — eller vælg din printer for at printe det på A4.</p>
+  <div id="foedselsdagskort"></div>
+</div>
+
 <div id="hilsen-dialog">
   <div class="boks">
     <h2 id="hilsen-titel">🎂 Skriv hilsen</h2>
@@ -584,7 +634,9 @@ function renderFremhaevede(kommende) {
     const datoTekst = k.dato.getDate() + '. ' + MAANEDER[k.dato.getMonth()];
     const info = hilsenInfo(k);
     // ⭐ og antal hilsner, når der er sendt mindst én
-    const stjerne = info.antal ? `<span class="hilsen-antal" title="Antal fødselsdagshilsner">⭐ ${info.antal}</span>` : '';
+    const stjerne = info.antal ? `<span class="hilsen-antal klik" title="Klik og se fødselsdagskortet" onclick="visKort('${encodeURIComponent(hilsenTilNoegle(k))}')">⭐ ${info.antal}</span>` : '';
+    // Knap til fødselsdagskortet, så alle kan se, hvem der har sendt en hilsen
+    const kortKnap = info.antal ? `<button class="kort-knap" onclick="visKort('${encodeURIComponent(hilsenTilNoegle(k))}')">🎉 Se fødselsdagskort</button>` : '';
     // På selve dagen kan man sende en hilsen — men kun hvis personen har en mail
     let knap = '';
     if (k.email && k.dato.toDateString() === idag.toDateString()) {
@@ -600,7 +652,7 @@ function renderFremhaevede(kommende) {
       <div class="fremh-row">
         <div class="fremh-dato">${datoTekst}</div>
         <div class="fremh-tekst">${escHtmlF(k.navn)} fylder ${k.alder} år${stjerne}</div>
-        ${knap}
+        ${kortKnap}${knap}
         <div class="fremh-tag tag-maerk">Mærkedag</div>
       </div>`;
   });
@@ -662,13 +714,146 @@ onSnapshot(query(collection(db, "hilsener"), where("aar", "==", new Date().getFu
   snap.forEach(d => {
     const h = d.data();
     if (!h.tilNoegle) return;
-    const t = tal[h.tilNoegle] || (tal[h.tilNoegle] = { antal: 0, fraNr: new Set() });
+    const t = tal[h.tilNoegle] || (tal[h.tilNoegle] = { antal: 0, fraNr: new Set(), navne: [] });
     t.antal++;
     if (h.fra_nr) t.fraNr.add(h.fra_nr);
+    if (h.fra && !t.navne.includes(h.fra)) t.navne.push(h.fra);
   });
   hilsenTal = tal;
+  // Link fra medlemskartoteket: forside.html?kort=<nøgle> åbner kortet direkte
+  const kortParam = new URLSearchParams(location.search).get("kort");
+  if (kortParam && !kortAabnetFraLink) { kortAabnetFraLink = true; visKort(kortParam); }
   if (sidsteKommende) renderFremhaevede(sidsteKommende);
 }, e => console.log("Hilsen-tæller-fejl:", e));
+
+/* ════════ FØDSELSDAGSKORT ════════
+   Alle, der har sendt en hilsen, står som navne i flæng på et kort.
+   Kortet kan gemmes som PDF eller printes på A4 (via browserens printvindue). */
+let kortAabnetFraLink = false;
+
+// Guirlande med dannebrogsflag og vimpler hen over toppen
+function kortGuirlande(){
+  let flag = "";
+  const antal = 11;
+  for (let i = 0; i < antal; i++) {
+    const x = 20 + i * (900 / (antal - 1)) - 20;
+    const t = (x + 20) / 940;
+    const y = 18 + 70 * 4 * t * (1 - t) * 0.5;   // følger snorens bue
+    if (i % 2 === 0) {
+      flag += `<g transform="translate(${x},${y})"><rect x="0" y="0" width="44" height="32" fill="#c8102e"/><rect x="14" y="0" width="7" height="32" fill="#fff"/><rect x="0" y="12.5" width="44" height="7" fill="#fff"/></g>`;
+    } else {
+      const f = i % 4 === 1 ? "#c89e3c" : "#2d5016";
+      flag += `<polygon transform="translate(${x},${y})" points="0,0 40,0 20,40" fill="${f}"/>`;
+    }
+  }
+  return `<svg class="guirlande" viewBox="0 0 940 130" preserveAspectRatio="none"><path d="M0,18 Q470,88 940,18" stroke="#8a6d2b" stroke-width="2.5" fill="none"/>${flag}</svg>`;
+}
+
+// Ballon med snor
+function kortBallon(cls, farve){
+  return `<svg class="ballon ${cls}" viewBox="0 0 60 130"><path d="M30,74 C26,90 36,100 28,128" stroke="#999" stroke-width="1.5" fill="none"/><ellipse cx="30" cy="36" rx="25" ry="32" fill="${farve}"/><ellipse cx="21" cy="24" rx="6" ry="10" fill="#fff" opacity="0.35"/><polygon points="26,67 34,67 30,75" fill="${farve}"/></svg>`;
+}
+
+// Lagkage med lys og flammer
+function kortKage(cls){
+  let lys = "";
+  [22, 40, 58, 76].forEach((x, i) => {
+    const f = ["#e74c3c", "#3498db", "#f1c40f", "#9b59b6"][i];
+    lys += `<rect x="${x}" y="18" width="6" height="22" rx="1.5" fill="${f}"/><path d="M${x+3},4 C${x+8},11 ${x+6},16 ${x+3},17 C${x},16 ${x-2},11 ${x+3},4Z" fill="#ff9f1a"/><path d="M${x+3},9 C${x+5},12 ${x+4},15 ${x+3},15.5 C${x+2},15 ${x+1},12 ${x+3},9Z" fill="#ffe066"/>`;
+  });
+  return `<svg class="kage ${cls}" viewBox="0 0 104 100">${lys}
+    <rect x="8" y="40" width="88" height="24" rx="4" fill="#f7c6d0"/>
+    <path d="M8,46 q7,8 14,0 q7,8 14,0 q7,8 14,0 q7,8 14,0 q7,8 14,0 q7,8 14,0 v-6 h-88z" fill="#fff"/>
+    <rect x="4" y="64" width="96" height="26" rx="4" fill="#c98b5a"/>
+    <path d="M4,70 q8,8 16,0 q8,8 16,0 q8,8 16,0 q8,8 16,0 q8,8 16,0 q8,8 16,0 v-6 h-96z" fill="#fff4e0"/>
+    <ellipse cx="52" cy="93" rx="52" ry="5" fill="#d8cfae"/></svg>`;
+}
+
+// Lidt konfetti i kanterne
+function kortKonfetti(r){
+  const farver = ["#c8102e", "#c89e3c", "#2d5016", "#3498db", "#9b59b6", "#f1c40f"];
+  let html = "";
+  for (let i = 0; i < 26; i++) {
+    const side = r() < 0.5;
+    const left = side ? 3.8 + r() * 3 : 92.5 + r() * 3;
+    const top = 30 + r() * 95;
+    const w = 1 + r() * 1.4, h = 0.6 + r() * 2;
+    html += `<div class="konfetti" style="left:${left.toFixed(1)}cqw;top:${top.toFixed(1)}cqw;width:${w.toFixed(1)}cqw;height:${h.toFixed(1)}cqw;background:${farver[i % farver.length]};transform:rotate(${Math.round(r()*180)}deg)"></div>`;
+  }
+  return html;
+}
+const KORT_SKRIFTER = ["'Caveat', cursive", "'Dancing Script', cursive", "'Kalam', cursive", "'Satisfy', cursive", "Georgia, serif"];
+const KORT_FARVER   = ["#2d5016", "#b8860b", "#8b2c2c", "#2c4a8b", "#6b3d8b", "#a0522d", "#1f6b5c"];
+
+// Fast "tilfældighed" ud fra fødselarens nøgle, så kortet ser ens ud hver gang det åbnes
+function kortTilfaeldig(froe){
+  let h = 2166136261;
+  for (let i = 0; i < froe.length; i++) { h ^= froe.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 100000) / 100000; };
+}
+
+window.visKort = function(noegleKodet){
+  const noegle = decodeURIComponent(noegleKodet);
+  const t = hilsenTal[noegle];
+  if (!t || !t.navne.length) return;
+  const [aar, navn, fd] = noegle.split("|");
+  const alder = parseInt(aar) - parseInt((fd || "").slice(0, 4));
+  const r = kortTilfaeldig(noegle);
+
+  // Navnene bland­es og fordeles i et gitter med lidt rystelse, så de står i flæng uden at ramme hinanden
+  const navne = [...t.navne];
+  for (let i = navne.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [navne[i], navne[j]] = [navne[j], navne[i]]; }
+  const n = navne.length;
+  const kol = Math.max(1, Math.round(Math.sqrt(n * 0.55)));
+  const rk  = Math.ceil(n / kol);
+  const celler = [];
+  for (let y = 0; y < rk; y++) for (let x = 0; x < kol; x++) celler.push([x, y]);
+  for (let i = celler.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [celler[i], celler[j]] = [celler[j], celler[i]]; }
+  const bredCelle = 86 / kol;   // cqw bredde pr. kolonne
+  const basis = Math.min(7, Math.max(2.4, bredCelle / 6.5));   // skriftstørrelse i cqw
+
+  const navneHtml = navne.map((nv, i) => {
+    const [x, y] = celler[i];
+    const venstre = ((x + 0.5 + (r() - 0.5) * 0.2) / kol) * 100;
+    const top     = ((y + 0.5 + (r() - 0.5) * 0.4) / rk) * 100;
+    const drej    = Math.round((r() - 0.5) * 24);
+    // Lange navne gøres mindre, så de holder sig inden for deres egen plads
+    const maksStr = (bredCelle * 0.85) / (nv.length * 0.52);
+    const str     = Math.min(basis * (0.85 + r() * 0.4), maksStr).toFixed(2);
+    const skrift  = KORT_SKRIFTER[Math.floor(r() * KORT_SKRIFTER.length)];
+    const farve   = KORT_FARVER[Math.floor(r() * KORT_FARVER.length)];
+    return `<div class="navn" style="left:${venstre.toFixed(1)}%;top:${top.toFixed(1)}%;transform:translate(-50%,-50%) rotate(${drej}deg);font-size:${str}cqw;font-family:${skrift};color:${farve}">${escHtmlF(nv)}</div>`;
+  }).join("");
+
+  document.getElementById("foedselsdagskort").innerHTML = `
+    <div class="ramme"></div>
+    ${kortGuirlande()}
+    ${kortBallon("v", "#c8102e")}
+    ${kortBallon("h", "#c89e3c")}
+    ${kortKonfetti(r)}
+    ${kortKage("v")}
+    ${kortKage("h")}
+    <div class="top">
+      <div class="tillykke">Tillykke!</div>
+      <div class="hvem" style="font-size:${Math.min(6, 60 / ((navn.length + 20) * 0.42)).toFixed(2)}cqw">med de ${alder} år, kære ${escHtmlF(navn)}</div>
+    </div>
+    <div class="navne">${navneHtml}</div>
+    <div class="bund">
+      <div class="fra">De kærligste hilsner fra hele familien</div>
+      <div class="web">olsenklanen.dk</div>
+    </div>`;
+  document.getElementById("kort-dialog").style.display = "flex";
+};
+
+window.lukKort = function(){ document.getElementById("kort-dialog").style.display = "none"; };
+
+window.printKort = function(){
+  document.body.classList.add("udskriv-kort");
+  const ryd = () => { document.body.classList.remove("udskriv-kort"); window.removeEventListener("afterprint", ryd); };
+  window.addEventListener("afterprint", ryd);
+  // Vent på de håndskrevne skrifttyper, før printvinduet åbnes
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => window.print());
+};
 
 function escHtmlF(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 function hilsenNoegle(k){ return "ok_hilsen_" + new Date().toDateString() + "_" + k.email.toLowerCase() + "_" + k.navn; }
