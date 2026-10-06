@@ -86,6 +86,8 @@ exports.logInPostansvarlig = onCall(async (request) => {
 exports.tjekIndkommendeMail = onSchedule(
   { schedule: "every 5 minutes", secrets: [imapAdgangskode], timeoutSeconds: 120 },
   async () => {
+    // Fødselsdagshilsner skrevet dagen før sendes på selve dagen (fejl her stopper ikke mail-tjekket)
+    try { await sendPlanlagteHilsner(); } catch (e) { console.log("Planlagte hilsner fejlede:", e && e.message); }
     const db = getFirestore();
     const client = new ImapFlow({
       host: "imap.simply.com",
@@ -216,11 +218,11 @@ exports.tjekIndkommendeMail = onSchedule(
  * funktion sender dem på selve dagen (fra kl. 7 dansk tid) via Simply med
  * post@olsenklanen.dk som afsender og afsenderens egen mail som svar-adresse.
  * Modtagerens mail slås op i kartoteket (fornavn + fødselsdato), så den ikke
- * skal gemmes i hilsenen. Kører hver time, så en fejl prøves igen.
+ * skal gemmes i hilsenen. Kaldes fra tjekIndkommendeMail (hvert 5. minut),
+ * så en fejl prøves igen. (Ikke en selvstændig funktion: en ny planlagt
+ * funktion kræver en IAM-rolle, som deploy-kontoen ikke har.)
  */
-exports.sendPlanlagteHilsner = onSchedule(
-  { schedule: "every 60 minutes", timeZone: "Europe/Copenhagen", secrets: [imapAdgangskode], timeoutSeconds: 120 },
-  async () => {
+async function sendPlanlagteHilsner() {
     const db = getFirestore();
     const nu = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Copenhagen" }));
     if (nu.getHours() < 7) return;
@@ -274,5 +276,4 @@ exports.sendPlanlagteHilsner = onSchedule(
         await d.ref.update({ mail_fejl: String(e && e.message || e).slice(0, 300) });
       }
     }
-  }
-);
+}
