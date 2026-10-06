@@ -170,6 +170,7 @@ async function hentData() {
  
       // Tilføj alle familiemedlemmer
       (h.familiemedlemmer || []).forEach((p, i) => {
+        if (p.status === 'afdød' || p.status === 'udmeldt') return;   // afdøde og udmeldte står ikke på fødselsdagslisten
         const erBarn = p.rolle === 'barn';
         const personNr = erBarn ? `${h.nr}-${(h.familiemedlemmer.filter(x => x.rolle === 'barn').indexOf(p)) + 1}` : h.nr;
         alleMedlemmer.push({

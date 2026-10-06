@@ -7,6 +7,7 @@ const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getAuth } = require("firebase-admin/auth");
 const { ImapFlow } = require("imapflow");
 const { simpleParser } = require("mailparser");
+const nodemailer = require("nodemailer");
 
 initializeApp();
 setGlobalOptions({ region: "europe-west1" });
@@ -205,6 +206,73 @@ exports.tjekIndkommendeMail = onSchedule(
       }
     } finally {
       await client.logout().catch(() => {});
+    }
+  }
+);
+
+/**
+ * Fødselsdagshilsner, der er skrevet DAGEN FØR fødselsdagen, gemmes i
+ * "hilsener" med planlagt_til (ÅÅÅÅ-MM-DD) og mail_sendt:false. Denne
+ * funktion sender dem på selve dagen (fra kl. 7 dansk tid) via Simply med
+ * post@olsenklanen.dk som afsender og afsenderens egen mail som svar-adresse.
+ * Modtagerens mail slås op i kartoteket (fornavn + fødselsdato), så den ikke
+ * skal gemmes i hilsenen. Kører hver time, så en fejl prøves igen.
+ */
+exports.sendPlanlagteHilsner = onSchedule(
+  { schedule: "every 60 minutes", timeZone: "Europe/Copenhagen", secrets: [imapAdgangskode], timeoutSeconds: 120 },
+  async () => {
+    const db = getFirestore();
+    const nu = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Copenhagen" }));
+    if (nu.getHours() < 7) return;
+    const idag = nu.getFullYear() + "-" + String(nu.getMonth() + 1).padStart(2, "0") + "-" + String(nu.getDate()).padStart(2, "0");
+
+    const snap = await db.collection("hilsener").where("mail_sendt", "==", false).get();
+    const klar = snap.docs.filter(d => (d.data().planlagt_til || "9999") <= idag);
+    if (!klar.length) return;
+
+    // Find modtagerens mail i kartoteket: fornavn + fødselsdato (afdøde/udmeldte springes over)
+    const membres = await db.collection("membres").get();
+    function findMail(fornavn, foedselsdato) {
+      let mail = "";
+      membres.forEach(d => {
+        const fam = d.data();
+        (fam.familiemedlemmer || []).forEach(p => {
+          if (mail || p.status === "afdød" || p.status === "udmeldt") return;
+          const fn = (p.fornavn || String(p.navn || "").trim().split(/\s+/)[0] || "").trim();
+          if (fn === fornavn && p.foedselsdato === foedselsdato) {
+            mail = String(p.email || (p.rolle !== "barn" ? fam.email : "") || "").trim();
+          }
+        });
+      });
+      return mail;
+    }
+
+    const transport = nodemailer.createTransport({
+      host: "smtp.simply.com", port: 587, secure: false,
+      auth: { user: "post@olsenklanen.dk", pass: imapAdgangskode.value() }
+    });
+
+    for (const d of klar) {
+      const h = d.data();
+      const [, fornavn, foedselsdato] = String(h.tilNoegle || "").split("|");
+      const til = findMail(fornavn, foedselsdato);
+      if (!til) {
+        await d.ref.update({ mail_fejl: "Ingen mail i kartoteket" });
+        continue;
+      }
+      try {
+        await transport.sendMail({
+          from: { name: (h.mail_fra_navn || "Et medlem") + " – Olsenklanen", address: "post@olsenklanen.dk" },
+          to: til,
+          replyTo: h.mail_svar_til || "post@olsenklanen.dk",
+          subject: h.mail_emne || ("🎂 Tillykke med fødselsdagen, " + fornavn + "!"),
+          text: h.mail_tekst || h.besked || ""
+        });
+        await d.ref.update({ mail_sendt: true, mail_sendt_tid: FieldValue.serverTimestamp(), mail_fejl: FieldValue.delete() });
+      } catch (e) {
+        console.log("Kunne ikke sende planlagt hilsen", d.id, e && e.message);
+        await d.ref.update({ mail_fejl: String(e && e.message || e).slice(0, 300) });
+      }
     }
   }
 );
