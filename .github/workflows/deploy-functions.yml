@@ -25,7 +25,11 @@ jobs:
       - name: Ryd op efter den fejlede funktion sendPlanlagteHilsner
         # Blev oprettet 6. okt. 2026, men kunne ikke få tilladelse til at blive startet.
         # Opgaven ligger nu i tjekIndkommendeMail. Gør intet, hvis funktionen allerede er væk.
-        run: npx --yes firebase-tools@13 functions:delete sendPlanlagteHilsner --region europe-west1 --project olsenklanen-familieside --force || true
+        # firebase functions:delete stopper, fordi tidsplanen aldrig blev oprettet (404),
+        # så funktionen slettes direkte med gcloud.
+        run: |
+          gcloud auth activate-service-account --key-file="$RUNNER_TEMP/sa.json" || true
+          gcloud functions delete sendPlanlagteHilsner --gen2 --region europe-west1 --project olsenklanen-familieside --quiet || true
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
 
