@@ -85,6 +85,9 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 #foedselsdagskort .top .hvem { font-family: 'Dancing Script', cursive; line-height: 1.2; }
 #foedselsdagskort .navne { position: absolute; left: 8cqw; right: 8cqw; top: 44cqw; bottom: 27cqw; }
 #foedselsdagskort .navn { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; line-height: 1; }
+#foedselsdagskort .navn.med-tekst { text-decoration: underline dotted; text-underline-offset: 0.25em; cursor: pointer; }
+#kort-tekst-boble { position: fixed; display: none; max-width: 320px; background: #fffdf5; color: #2c3e1f; border: 2px solid #c89e3c; border-radius: 8px; padding: 10px 14px; font-size: 15px; line-height: 1.4; white-space: pre-wrap; box-shadow: 0 6px 20px rgba(0,0,0,0.3); z-index: 10001; pointer-events: none; }
+#kort-tekst-boble .fra { font-weight: bold; color: #2d5016; margin-bottom: 4px; }
 #foedselsdagskort .bund { position: absolute; bottom: 7cqw; left: 22cqw; right: 22cqw; text-align: center; color: #2d5016; }
 #foedselsdagskort .bund .fra { font-family: 'Dancing Script', cursive; font-size: 4cqw; line-height: 1.15; }
 #foedselsdagskort .bund .web { font-family: Georgia, serif; font-size: 3.6cqw; font-weight: bold; letter-spacing: 0.3cqw; color: #b8860b; margin-top: 0.8cqw; }
@@ -93,7 +96,8 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
   body.udskriv-kort > *:not(#kort-dialog) { display: none !important; }
   body.udskriv-kort { background: #fff !important; margin: 0 !important; padding: 0 !important; height: 296mm; overflow: hidden; }
   body.udskriv-kort #kort-dialog { position: static; display: block !important; background: none; padding: 0; overflow: visible; }
-  body.udskriv-kort #kort-dialog .kort-knapper, body.udskriv-kort #kort-dialog .kort-hint { display: none !important; }
+  body.udskriv-kort #kort-dialog .kort-knapper, body.udskriv-kort #kort-dialog .kort-hint, body.udskriv-kort #kort-tekst-boble { display: none !important; }
+  body.udskriv-kort #foedselsdagskort .navn.med-tekst { text-decoration: none; }
   body.udskriv-kort #foedselsdagskort { width: 210mm; height: 296mm; aspect-ratio: auto; border-radius: 0; box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 #hilsen-dialog .knapper { display: flex; gap: 10px; margin-top: 12px; justify-content: flex-end; }
@@ -420,8 +424,9 @@ try {
     <button class="print" onclick="printKort()">🖨️ Gem som PDF / Print</button>
     <button class="luk" onclick="lukKort()">Luk</button>
   </div>
-  <p class="kort-hint">Vælg "Gem som PDF" i printvinduet for at gemme kortet — eller vælg din printer for at printe det på A4.</p>
+  <p class="kort-hint">Hold musen over et understreget navn (eller tryk på det) for at læse hilsenen. Vælg "Gem som PDF" i printvinduet for at gemme kortet — eller vælg din printer for at printe det på A4.</p>
   <div id="foedselsdagskort"></div>
+  <div id="kort-tekst-boble"></div>
 </div>
 
 <div id="hilsen-dialog">
@@ -429,6 +434,7 @@ try {
     <h2 id="hilsen-titel">🎂 Skriv hilsen</h2>
     <p class="hint">Hilsenen sendes som mail med dit navn på. Modtageren kan svare direkte til dig.</p>
     <p class="hint" style="color:#2d5016;"><b>Fra:</b> <span id="hilsen-fra"></span></p>
+    <p class="hint" id="hilsen-hvornaar" style="color:#856404;"></p>
     <textarea id="hilsen-tekst" maxlength="500" placeholder="Skriv hilsen …"></textarea>
     <label class="slut-label" for="hilsen-slut">Slut hilsenen med (du kan selv rette teksten — dit navn kommer under):</label>
     <input type="text" id="hilsen-slut" class="slut-felt" maxlength="80">
@@ -584,11 +590,12 @@ async function hentAllePersoner() {
       if (p.foedselsdato && navn) {
         const dele = p.foedselsdato.split('-'); // "ÅÅÅÅ-MM-DD"
         if (dele.length === 3) {
+          // Afdøde og udmeldte står hverken på fødselsdagslisten, i nyhedsbåndet eller i kalenderen
+          if (p.status === "afdød" || p.status === "udmeldt") return;
           // Mail til fødselsdagshilsen: personens egen mail (voksne må bruge husstandens mail)
-          const aktiv = p.status !== "afdød" && p.status !== "udmeldt";
-          const email = aktiv ? (p.email || (p.rolle !== "barn" ? fam.email : "") || "").trim() : "";
+          const email = (p.email || (p.rolle !== "barn" ? fam.email : "") || "").trim();
           personer.push({
-            navn, email, foedselsdato: p.foedselsdato, hus,
+            navn, email, foedselsdato: p.foedselsdato, hus, rolle: p.rolle || "",
             aar: parseInt(dele[0]),
             maaned: parseInt(dele[1]),
             dag: parseInt(dele[2])
@@ -646,26 +653,38 @@ function renderFremhaevede(kommende) {
       </div>`;
   }
   // De seneste 10 fødselarer, der har fået hilsner, bliver stående (nyeste øverst).
-  // Når nr. 11 kommer til, forsvinder den ældste.
+  // Når nr. 11 kommer til, forsvinder den ældste. Dem, der havde fødselsdag for 1–2 dage siden,
+  // står der altid, så man kan nå at sende en forsinket hilsen.
   const idag0 = new Date(); idag0.setHours(0, 0, 0, 0);
-  Object.keys(hilsenTal)
-    .map(noegle => {
-      const [aar, navn, fd] = noegle.split("|");
-      const dele = (fd || "").split("-");
-      if (dele.length !== 3) return null;
-      const dag = new Date(parseInt(aar), parseInt(dele[1]) - 1, parseInt(dele[2]));
-      return { noegle, navn, dag, alder: parseInt(aar) - parseInt(dele[0]), antal: hilsenTal[noegle].antal };
-    })
-    .filter(x => x && x.antal && x.dag < idag0)
+  const tidligere = {};
+  Object.keys(hilsenTal).forEach(noegle => {
+    const [aar, navn, fd] = noegle.split("|");
+    const dele = (fd || "").split("-");
+    if (dele.length !== 3 || !hilsenTal[noegle].antal) return;
+    const dag = new Date(parseInt(aar), parseInt(dele[1]) - 1, parseInt(dele[2]));
+    if (dag < idag0) tidligere[noegle] = { noegle, navn, foedselsdato: fd, dag, alder: parseInt(aar) - parseInt(dele[0]) };
+  });
+  allePersonerHilsen.forEach(p => {
+    const dag = new Date(idag0.getFullYear(), p.maaned - 1, p.dag);
+    if (hilsenVindue(dag) !== "efter") return;
+    const noegle = hilsenTilNoegle({ navn: p.navn, foedselsdato: p.foedselsdato, dato: dag });
+    tidligere[noegle] = Object.assign(tidligere[noegle] || { noegle, navn: p.navn, foedselsdato: p.foedselsdato, dag, alder: idag0.getFullYear() - p.aar }, { email: p.email });
+  });
+  Object.values(tidligere)
     .sort((a, b) => b.dag - a.dag)
     .slice(0, 10)
     .forEach(x => {
+      const k = { navn: x.navn, foedselsdato: x.foedselsdato, dato: x.dag, alder: x.alder, email: x.email, vindue: hilsenVindue(x.dag) };
+      const info = hilsenInfo(k);
       const noegle = encodeURIComponent(x.noegle);
+      const stjerne = info.antal ? `<span class="hilsen-antal klik" title="Klik og se fødselsdagskortet" onclick="visKort('${noegle}')">⭐ ${info.antal}</span>` : '';
+      const kortKnap = info.antal ? `<button class="kort-knap" onclick="visKort('${noegle}')">🎉 Se fødselsdagskort</button>` : '';
+      const knap = (k.email && k.vindue === "efter") ? hilsenKnapHtml(k, info) : '';
       html += `
       <div class="fremh-row">
         <div class="fremh-dato">${x.dag.getDate()}. ${MAANEDER[x.dag.getMonth()]}</div>
-        <div class="fremh-tekst">${escHtmlF(x.navn)} fyldte ${x.alder} år<span class="hilsen-antal klik" title="Klik og se fødselsdagskortet" onclick="visKort('${noegle}')">⭐ ${x.antal}</span></div>
-        <button class="kort-knap" onclick="visKort('${noegle}')">🎉 Se fødselsdagskort</button>
+        <div class="fremh-tekst">${escHtmlF(x.navn)} fyldte ${x.alder} år${stjerne}</div>
+        ${kortKnap}${knap}
         <div class="fremh-tag tag-maerk">Mærkedag</div>
       </div>`;
     });
@@ -676,17 +695,10 @@ function renderFremhaevede(kommende) {
     const stjerne = info.antal ? `<span class="hilsen-antal klik" title="Klik og se fødselsdagskortet" onclick="visKort('${encodeURIComponent(hilsenTilNoegle(k))}')">⭐ ${info.antal}</span>` : '';
     // Knap til fødselsdagskortet, så alle kan se, hvem der har sendt en hilsen
     const kortKnap = info.antal ? `<button class="kort-knap" onclick="visKort('${encodeURIComponent(hilsenTilNoegle(k))}')">🎉 Se fødselsdagskort</button>` : '';
-    // På selve dagen kan man sende en hilsen — men kun hvis personen har en mail
+    // Dagen før og på dagen kan man skrive en hilsen — men kun hvis personen har en mail
     let knap = '';
-    if (k.email && k.dato.toDateString() === idag.toDateString()) {
-      const i = hilsenModtagere.push(k) - 1;
-      if (info.fraMig || hilsenSendtIdag(k))
-        knap = `<button class="hilsen-knap sendt" disabled>✓ Hilsen sendt</button>`;
-      else if (info.antal >= HILSEN_MAX)
-        knap = `<span class="hilsen-max">${HILSEN_MAX} hilsner nået</span>`;
-      else
-        knap = `<button class="hilsen-knap" id="hilsen-knap-${i}" onclick="aabnHilsen(${i})">✍️ Skriv hilsen</button>`;
-    }
+    k.vindue = hilsenVindue(k.dato);
+    if (k.email && (k.vindue === "foer" || k.vindue === "dag")) knap = hilsenKnapHtml(k, info);
     html += `
       <div class="fremh-row">
         <div class="fremh-dato">${datoTekst}</div>
@@ -738,6 +750,7 @@ const HILSEN_MAX = 100;   // højst 100 hilsner pr. fødselsdag
 let hilsenModtagere = [];
 let hilsenValgt = -1;
 let sidsteKommende = null;
+let allePersonerHilsen = [];   // alle aktive med fødselsdato (til hilsner op til 2 dage efter)
 const HILSEN_TEST = new URLSearchParams(location.search).get("testhilsen") === "1";
 
 // Hilsner gemmes i "hilsener" — én pr. sendt hilsen. Nøglen er år + fornavn + fødselsdato,
@@ -745,6 +758,27 @@ const HILSEN_TEST = new URLSearchParams(location.search).get("testhilsen") === "
 // Året er fødselsdagens år (så næste års fødselsdag ikke får dette års hilsner)
 function hilsenTilNoegle(k){ return (k.dato ? k.dato.getFullYear() : new Date().getFullYear()) + "|" + k.navn + "|" + k.foedselsdato; }
 let hilsenTal = {};   // tilNoegle → { antal, fraNr:Set }
+// Hvornår må man skrive? Dagen før (sendes på dagen), på dagen, og op til 2 dage efter (forsinket hilsen)
+function hilsenVindue(dato){
+  const idag = new Date(); idag.setHours(0, 0, 0, 0);
+  const d = new Date(dato); d.setHours(0, 0, 0, 0);
+  const forskel = Math.round((d - idag) / 86400000);
+  if (forskel === 1) return "foer";
+  if (forskel === 0) return "dag";
+  if (forskel === -1 || forskel === -2) return "efter";
+  return null;
+}
+function datoStreng(d){ return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+// Knap til at skrive hilsen (eller "sendt" / "100 nået")
+function hilsenKnapHtml(k, info){
+  const i = hilsenModtagere.push(k) - 1;
+  if (info.fraMig || hilsenSendtIdag(k)) return `<button class="hilsen-knap sendt" disabled>✓ Hilsen sendt</button>`;
+  if (info.antal >= HILSEN_MAX) return `<span class="hilsen-max">${HILSEN_MAX} hilsner nået</span>`;
+  const tekst = k.vindue === "efter" ? "✍️ Skriv forsinket hilsen" : "✍️ Skriv hilsen";
+  const titel = k.vindue === "foer" ? ' title="Hilsenen bliver sendt på selve fødselsdagen"' : '';
+  return `<button class="hilsen-knap" id="hilsen-knap-${i}"${titel} onclick="aabnHilsen(${i})">${tekst}</button>`;
+}
+
 function hilsenInfo(k){
   const t = hilsenTal[hilsenTilNoegle(k)];
   return { antal: t ? t.antal : 0, fraMig: !!(t && MIT_NR_HILSEN && t.fraNr.has(MIT_NR_HILSEN)) };
@@ -754,10 +788,11 @@ onSnapshot(collection(db, "hilsener"), snap => {
   snap.forEach(d => {
     const h = d.data();
     if (!h.tilNoegle) return;
-    const t = tal[h.tilNoegle] || (tal[h.tilNoegle] = { antal: 0, fraNr: new Set(), navne: [] });
+    const t = tal[h.tilNoegle] || (tal[h.tilNoegle] = { antal: 0, fraNr: new Set(), navne: [], tekster: {} });
     t.antal++;
     if (h.fra_nr) t.fraNr.add(h.fra_nr);
     if (h.fra && !t.navne.includes(h.fra)) t.navne.push(h.fra);
+    if (h.fra && h.besked) t.tekster[h.fra] = (t.tekster[h.fra] ? t.tekster[h.fra] + "\n\n" : "") + h.besked;
   });
   hilsenTal = tal;
   visEgneHilsner();
@@ -891,7 +926,8 @@ window.visKort = function(noegleKodet){
     const str     = Math.min(basis * (0.85 + r() * 0.4), maksStr).toFixed(2);
     const skrift  = KORT_SKRIFTER[Math.floor(r() * KORT_SKRIFTER.length)];
     const farve   = KORT_FARVER[Math.floor(r() * KORT_FARVER.length)];
-    return `<div class="navn" style="left:${venstre.toFixed(1)}%;top:${top.toFixed(1)}%;transform:translate(-50%,-50%) rotate(${drej}deg);font-size:${str}cqw;font-family:${skrift};color:${farve}">${escHtmlF(nv)}</div>`;
+    const harTekst = !!t.tekster[nv];
+    return `<div class="navn${harTekst ? " med-tekst" : ""}" data-navn="${escHtmlF(nv)}" style="left:${venstre.toFixed(1)}%;top:${top.toFixed(1)}%;transform:translate(-50%,-50%) rotate(${drej}deg);font-size:${str}cqw;font-family:${skrift};color:${farve}">${escHtmlF(nv)}</div>`;
   }).join("");
 
   document.getElementById("foedselsdagskort").innerHTML = `
@@ -911,10 +947,37 @@ window.visKort = function(noegleKodet){
       <div class="fra">De kærligste hilsner fra hele familien</div>
       <div class="web">olsenklanen.dk</div>
     </div>`;
+  // Hold musen over (eller tryk på) et understreget navn for at læse hilsenen
+  aktueltKortTekster = t.tekster;
   document.getElementById("kort-dialog").style.display = "flex";
 };
 
-window.lukKort = function(){ document.getElementById("kort-dialog").style.display = "none"; };
+let aktueltKortTekster = {};
+function visKortTekst(el, x, y){
+  const boble = document.getElementById("kort-tekst-boble");
+  const tekst = aktueltKortTekster[el.dataset.navn];
+  if (!tekst) return;
+  boble.innerHTML = `<div class="fra">💌 Fra ${escHtmlF(el.dataset.navn)}</div><div>${escHtmlF(tekst)}</div>`;
+  boble.style.display = "block";
+  const b = boble.getBoundingClientRect();
+  boble.style.left = Math.max(8, Math.min(window.innerWidth - b.width - 8, x - b.width / 2)) + "px";
+  boble.style.top  = (y + 18 + b.height > window.innerHeight ? y - b.height - 14 : y + 18) + "px";
+}
+function skjulKortTekst(){ document.getElementById("kort-tekst-boble").style.display = "none"; }
+document.addEventListener("mouseover", e => {
+  const el = e.target.closest && e.target.closest("#foedselsdagskort .navn.med-tekst");
+  if (el) visKortTekst(el, e.clientX, e.clientY);
+});
+document.addEventListener("mouseout", e => {
+  if (e.target.closest && e.target.closest("#foedselsdagskort .navn.med-tekst")) skjulKortTekst();
+});
+document.addEventListener("click", e => {
+  const el = e.target.closest && e.target.closest("#foedselsdagskort .navn.med-tekst");
+  if (el) { const r = el.getBoundingClientRect(); visKortTekst(el, r.left + r.width / 2, r.bottom); }
+  else if (!(e.target.closest && e.target.closest("#kort-tekst-boble"))) skjulKortTekst();
+});
+
+window.lukKort = function(){ skjulKortTekst(); document.getElementById("kort-dialog").style.display = "none"; };
 
 window.printKort = function(){
   document.body.classList.add("udskriv-kort");
@@ -932,7 +995,11 @@ window.aabnHilsen = function(i){
   const k = hilsenModtagere[i];
   if (!k) return;
   hilsenValgt = i;
-  document.getElementById("hilsen-titel").textContent = "🎂 Skriv hilsen til " + k.navn + " (" + k.alder + " år i dag)";
+  const hvornaar = k.vindue === "foer" ? " år i morgen" : k.vindue === "efter" ? " år for nylig" : " år i dag";
+  document.getElementById("hilsen-titel").textContent = "🎂 Skriv hilsen til " + k.navn + " (" + k.alder + hvornaar + ")";
+  document.getElementById("hilsen-hvornaar").textContent =
+    k.vindue === "foer" ? "📅 Hilsenen bliver gemt og sendt på selve fødselsdagen om morgenen." :
+    k.vindue === "efter" ? "⏰ Hilsenen bliver sendt som en forsinket fødselsdagshilsen." : "";
   document.getElementById("hilsen-tekst").value = "";
   document.getElementById("hilsen-slut").value = "Mange fødselsdagshilsner fra";
   document.getElementById("hilsen-fra").textContent = MIT_NAVN_HILSEN;
@@ -965,16 +1032,44 @@ window.sendHilsen = async function(){
   if (hilsenInfo(k).antal >= HILSEN_MAX) { st.style.color = "#c0392b"; st.textContent = k.navn + " har allerede fået " + HILSEN_MAX + " hilsner."; return; }
   knap.disabled = true;
   st.style.color = "#555"; st.textContent = "⏳ Sender …";
+  const afsenderEmail = sessionStorage.getItem("ok_email") || localStorage.getItem("ok_email") || "post@olsenklanen.dk";
+  const emne = k.vindue === "efter"
+    ? "🎂 En forsinket fødselsdagshilsen til dig, " + k.navn + "!"
+    : "🎂 Tillykke med fødselsdagen, " + k.navn + "!";
+  const mailTekst = tekst + "\n\n" + (slut ? slut + "\n" : "") + MIT_NAVN_HILSEN + "\n\n---\nSendt fra OlsenKlanens familieside · olsenklanen.dk";
+  const hilsenDok = {
+    til: k.navn, tilNoegle: hilsenTilNoegle(k), aar: new Date().getFullYear(),
+    fra: MIT_NAVN_HILSEN.slice(0, 60), fra_nr: MIT_NR_HILSEN,
+    besked: tekst.slice(0, 500), sendt: Date.now()
+  };
+  // Dagen før: hilsenen gemmes og sendes af serveren på selve dagen (sendPlanlagteHilsner)
+  if (k.vindue === "foer" && !k.test) {
+    try {
+      await addDoc(collection(db, "hilsener"), Object.assign(hilsenDok, {
+        planlagt_til: datoStreng(k.dato), mail_sendt: false,
+        mail_emne: emne, mail_tekst: mailTekst, mail_fra_navn: MIT_NAVN_HILSEN.slice(0, 60), mail_svar_til: afsenderEmail
+      }));
+      try { localStorage.setItem(hilsenNoegle(k), "1"); } catch(e) {}
+      st.style.color = "#155724"; st.textContent = "✅ Din hilsen er gemt. Den bliver sendt til " + k.navn + " på fødselsdagen.";
+      const rkKnap = document.getElementById("hilsen-knap-" + hilsenValgt);
+      if (rkKnap) { rkKnap.textContent = "✓ Hilsen sendt"; rkKnap.classList.add("sendt"); rkKnap.disabled = true; }
+      setTimeout(lukHilsen, 2500);
+    } catch(e) {
+      console.log("Hilsen-fejl:", e);
+      st.style.color = "#c0392b"; st.textContent = "Hilsenen kunne ikke gemmes. Prøv igen.";
+      knap.disabled = false;
+    }
+    return;
+  }
   try {
     emailjs.init(EMAILJS_PUBLIC_KEY);
-    const afsenderEmail = sessionStorage.getItem("ok_email") || localStorage.getItem("ok_email") || "post@olsenklanen.dk";
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
       to_email: k.email,
       to_name: k.navn,
       from_name: MIT_NAVN_HILSEN + " – Olsenklanen",
       reply_to: afsenderEmail,
-      subject: "🎂 Tillykke med fødselsdagen, " + k.navn + "!",
-      message: tekst + "\n\n" + (slut ? slut + "\n" : "") + MIT_NAVN_HILSEN + "\n\n---\nSendt fra OlsenKlanens familieside · olsenklanen.dk",
+      subject: emne,
+      message: mailTekst,
       afsender_navn: MIT_NAVN_HILSEN,
       name: MIT_NAVN_HILSEN
     });
@@ -986,11 +1081,7 @@ window.sendHilsen = async function(){
     try { localStorage.setItem(hilsenNoegle(k), "1"); } catch(e) {}
     // Tæl hilsenen (giver ⭐ og antal ved navnet — også i medlemskartoteket)
     try {
-      await addDoc(collection(db, "hilsener"), {
-        til: k.navn, tilNoegle: hilsenTilNoegle(k), aar: new Date().getFullYear(),
-        fra: MIT_NAVN_HILSEN.slice(0, 60), fra_nr: MIT_NR_HILSEN,
-        besked: tekst.slice(0, 500), sendt: Date.now()
-      });
+      await addDoc(collection(db, "hilsener"), hilsenDok);
     } catch(e) { console.log("Kunne ikke tælle hilsenen:", e); }
     st.style.color = "#155724"; st.textContent = "✅ Din hilsen er sendt til " + k.navn + ".";
     const rkKnap = document.getElementById("hilsen-knap-" + hilsenValgt);
@@ -1010,6 +1101,7 @@ let foedselsdagsTekst = "";
   try {
     const idag = new Date();
     const personer = await hentAllePersoner();
+    allePersonerHilsen = personer;
     findMigSelv(personer);
  
     // 1) Fødselsdag i dag → tekst til nyhedsbåndet
