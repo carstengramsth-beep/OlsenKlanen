@@ -22,6 +22,13 @@ jobs:
       - name: Login med servicekonto
         run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$RUNNER_TEMP/sa.json"
 
+      - name: Ryd op efter den fejlede funktion sendPlanlagteHilsner
+        # Blev oprettet 6. okt. 2026, men kunne ikke få tilladelse til at blive startet.
+        # Opgaven ligger nu i tjekIndkommendeMail. Gør intet, hvis funktionen allerede er væk.
+        run: npx --yes firebase-tools@13 functions:delete sendPlanlagteHilsner --region europe-west1 --project olsenklanen-familieside --force || true
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+
       - name: Deploy functions
         # Uden --force: findes der functions online, som ikke er i koden, stopper deploy i stedet for at slette dem
         run: npx --yes firebase-tools@13 deploy --only functions --project olsenklanen-familieside --non-interactive
