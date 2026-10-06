@@ -392,6 +392,51 @@ function harIndhold(d){ return !!d && Object.values(FELTER).some(f => d[f]); }
 
 // Indbygget historisk data (ligger under det, der er gemt i databasen for året)
 const INDBYGGET = {
+  // 2005–2014: sted og dato for generalforsamlingen fra regnskaberne; 2012–2014 desuden fra
+  // invitationer, programmer og informationsbladet 2013 (Carstens OneDrive, hentet 6. okt. 2026)
+  2005: { billeder_link: "aarenes-billeder.html?aar=2005", sted: "Henne Strand", dato_fra: "2005-06-03", dato_til: "2005-06-05", datoer: "3.–5. juni 2005", gf_dato: "2005-06-04", gf_sted: "Henne Strand" },
+  2006: { billeder_link: "aarenes-billeder.html?aar=2006", sted: "Nørrevang, Rørvig", dato_fra: "2006-06-09", dato_til: "2006-06-11", datoer: "9.–11. juni 2006", gf_dato: "2006-06-10", gf_sted: "Nørrevang, Rørvig" },
+  2007: { billeder_link: "aarenes-billeder.html?aar=2007", sted: "Klitstuen, Blokhus", dato_fra: "2007-06-01", dato_til: "2007-06-03", datoer: "1.–3. juni 2007", gf_dato: "2007-06-02", gf_sted: "Klitstuen, Blokhus" },
+  2008: { billeder_link: "aarenes-billeder.html?aar=2008", sted: "Kolonien Bjerge, Bjerge Strand", dato_fra: "2008-05-30", dato_til: "2008-06-01", datoer: "30. maj – 1. juni 2008", gf_dato: "2008-05-31", gf_sted: "Kolonien Bjerge, Bjerge Strand" },
+  2009: { billeder_link: "aarenes-billeder.html?aar=2009", sted: "Kolonien Lønsømaj, Nordborg", dato_fra: "2009-06-05", dato_til: "2009-06-07", datoer: "5.–7. juni 2009", gf_dato: "2009-06-06", gf_sted: "Kolonien Lønsømaj, Nordborg" },
+  2010: { billeder_link: "aarenes-billeder.html?aar=2010", sted: "Kolonien Eriksminde, Rørvig", dato_fra: "2010-06-04", dato_til: "2010-06-06", datoer: "4.–6. juni 2010", gf_dato: "2010-06-05", gf_sted: "Kolonien Eriksminde, Rørvig" },
+  2011: { billeder_link: "aarenes-billeder.html?aar=2011", sted: "Lejrcenter Holmsborg, Søndervig", dato_fra: "2011-05-20", dato_til: "2011-05-22", datoer: "20.–22. maj 2011", gf_dato: "2011-05-21", gf_sted: "Lejrcenter Holmsborg, Søndervig" },
+  2012: {
+    billeder_link: "aarenes-billeder.html?aar=2012",
+    sted: "Kolonien Næsbystrand, Bildsøvej 134, Kirke Stillinge, 4200 Slagelse",
+    dato_fra: "2012-06-08", dato_til: "2012-06-10",
+    datoer: "8.–10. juni 2012 — OlsenKlanens 50 års jubilæumsskovtur",
+    ankomst: "fredag fra kl. 17", afgang: "søndag kl. 12 (der er bestilt rengøring)",
+    pris: "Deltagergebyr: voksne 150 kr. · børn (3-15 år) 30 kr. — Aftensmad fredag: 40/20 kr. — Morgenmad søndag: 25/15 kr. Kontingent 2012: 150 kr. pr. husstand.",
+    frist: "13. maj 2012",
+    gf_dato: "2012-06-09", gf_sted: "Kolonien Næsbystrand",
+    komite_tekst: "Tine og Simon, Gitte, Iben og Ronnie, Jette og Tommy",
+    program: "Jubilæumsår: OlsenKlanen fylder 50 år!\n\nKolonien ligger lige ud til Storebælt med en dejlig stor strandgrund lidt nord for Korsør. Den er fra 2008 og har 54 sengepladser fordelt i 2- og 4-sengs rum; flere rum er ældrevenlige.\n\nFredag: fra kl. 17 indkvartering, kl. 18–21 aftensmad (\"dagens ret\") og social hygge.\nLørdag: kl. 8.30 flaghejsning og morgensang, morgenmad, kl. 10.10 generalforsamling, fællesfoto, aktiviteter/ud i det blå, kl. 13 fællesspisning (buffet af medbragt mad), kl. 16 kaffe og kage, ca. kl. 20 lejrbål med pølser og brød.\nSøndag: kl. 8.30 morgenmad, oprydning — vi forlader stedet kl. 12.\n\nI prisen er indregnet: leje fra fredag til søndag, rengøring søndag, morgenbord lørdag og fælles aktiviteter.",
+    medbring: "\"De små\" til morgenkaffen, hjemmebagt kage, dyne/pude/lagen eller sovepose, praktisk tøj, badetøj, kongespil, bolde, spil — og GODT HUMØR!",
+    referat: "Referat fra generalforsamlingen lørdag den 9. juni 2012 — Kolonien Næsbystrand\n\n1. Valg af dirigent\nChristian blev valgt og foreslog, at vi sang Olsenklanens slagsang.\n\n2. Formandens beretning\nEgon henviste til sin beretning i Olsenklanens information nr. 37. Beretningen blev godkendt.\n\n3. Fremlæggelse af regnskab 2011\nTommy gennemgik det omdelte årsregnskab 2011, som viste et underskud på 2.242 kr. Han varslede en stigning i deltagergebyret, da der var en jævn stigning i priserne for leje, el, varme mv. Arrangementskomitéen fastsætter deltagergebyrerne ud fra de forventede omkostninger. Årskontingentet 2013 blev godkendt til at være det samme som sidste år: 150 kr. pr. familie. Regnskabet blev godkendt.\n\n4. Indkomne forslag\nGitte foreslog, at man fra 2013 kan deltage som daggæst ved at betale et gebyr: 30 kr. for voksne og 20 kr. for børn (3-15 år). Forslaget blev vedtaget.\n\n5. Valg til bestyrelsen\nAlle i bestyrelsen blev genvalgt: formand Egon V. Olsen, kasserer Tommy V. Olsen og sekretær Karin Lund. Lise Majgaard Olsen blev valgt som ny sekretærsuppleant og afløser Jette — tak til Jette for arbejdet.\nArrangementskomité 2014: Tommy og Jette, Bent og Elsebeth, Michael og Mathilde, Morten og Paulina, Richard og Karin.\n\n6. Info om skovtur 2013\nTuren går igen til Holmsborg ved Søndervig, hvor vi var i 2011 — et kanonsted med plads til 90.\n\n7. Eventuelt\nSteen viste Oldefar på DVD, som sang \"Jeg har elsket den plet på vor jord\", optaget af Jørgen ved Birthes 60-års fødselsdag. Nina og Lene uddelte billeder fra Christian og Ingers bo til familiemedlemmerne.\n\nKl. 10.55 afsluttede Christian generalforsamlingen og takkede for god ro og orden.\n/Ref. Karin",
+    beretning: "Olsenklanens 50 års jubilæumsskovtur, 8.–10. juni 2012\n\nFra kl. 17 kunne der bydes velkommen til Næsbystrand med udsigt til Storebæltsbroen. Komitéen fik med lodder og trisser indkvarteret alle i de værelser, der var til rådighed. Der blev serveret dejlig mad, snakken gik livligt, og der blev skålet ved bordene — for nogle til de sene timer. Aftenen bød også på en \"lummer\", men uskyldig quiz, og der hang en flot jubilæumsplakat med billeder fra skovture gennem de 50 år.\n\nLørdag morgen var der flaghejsning og morgensang, et dejligt morgenbord og den årlige generalforsamling. Efter fællesfotoet gik turen langs vandet med poster og spørgsmål gennem tiden, og de dygtigste hold fik præmier. Det festlige tag-selv-bord manglede intet, og senere blev alle aldre udfordret i sjove konkurrencer. Kl. 18 så vi EM-kampen Danmark–Holland, som Danmark vandt 1-0, og aftenen sluttede med pølser og brød.\n\nSøndag blev der pakket sammen og ryddet op, og vi tog afsked efter endnu en dejlig familieskovtur.\n/Bestyrelsen"
+  },
+  2013: {
+    billeder_link: "aarenes-billeder.html?aar=2013",
+    sted: "Lejrcenter Holmsborg, Holmsborgvej 65, Søndervig, 6960 Ringkøbing",
+    dato_fra: "2013-05-31", dato_til: "2013-06-02",
+    datoer: "31. maj – 2. juni 2013",
+    ankomst: "fredag fra kl. 17", afgang: "søndag kl. 12 (der er bestilt rengøring)",
+    pris: "Deltagergebyr: voksne 175 kr. · børn (3-15 år) 50 kr. — Aftensmad fredag: 50/25 kr. — Morgenmad søndag: 25/15 kr. — Kun én dag uden overnatning: 30/20 kr. Kontingent 2013: 150 kr. pr. husstand.",
+    frist: "13. maj 2013",
+    gf_dato: "2013-06-01", gf_sted: "Lejrcenter Holmsborg, Søndervig",
+    komite_tekst: "Lene og Nina, Bent og Bibs, Anders og Mie",
+    program: "Lejren ligger 2 km syd for Søndervig på Holmsland Klit, der skiller Ringkøbing Fjord fra Vesterhavet. Der er 90 sengepladser fordelt i 20 firemandsværelser med køjesenge samt 4 lederværelser, spisesal, grupperum og pejsestue.\n\nFredag: fra kl. 17 indkvartering, kl. 18–21 aftensmad (\"dagens ret\") og social hygge.\nLørdag: kl. 8.30 flaghejsning og morgensang, morgenmad, kl. 10.10 generalforsamling, fællesfoto, aktiviteter efter vind og vejr, kl. 13 fællesspisning (buffet af medbragt mad), kl. 16 kaffe og kage, ca. kl. 20 flaget tages ned — pølser og brød.\nSøndag: kl. 8.30 morgenmad, oprydning — vi forlader stedet kl. 12.",
+    medbring: "\"De små\" til morgenkaffen, hjemmebagt kage, dyne/pude/lagen eller sovepose, praktisk tøj, badetøj, kongespil, bolde, spil — og GODT HUMØR!"
+  },
+  2014: {
+    billeder_link: "aarenes-billeder.html?aar=2014",
+    sted: "Kolonien Eriksminde, Rørvig",
+    dato_fra: "2014-05-30", dato_til: "2014-06-01",
+    datoer: "30. maj – 1. juni 2014",
+    gf_dato: "2014-05-31", gf_sted: "Kolonien Eriksminde, Rørvig",
+    komite_tekst: "Jette og Tommy, Bent og Elsebeth, Michael og Mathilde, Morten og Pauline, Karin og Richard"
+  },
   2024: {
     sted: "Bisseruplejren, Rude (Sjælland)",
     dato_fra: "2024-05-24", dato_til: "2024-05-26",

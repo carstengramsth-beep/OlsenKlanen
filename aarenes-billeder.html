@@ -230,6 +230,9 @@ function maaRedigere(b){
 }
 
 let valgtAar = AAR_LISTE[0];
+// Link fra Arrangementer: aarenes-billeder.html?aar=2012 åbner det år
+const urlAarB = new URLSearchParams(location.search).get('aar');
+if (AAR_LISTE.includes(urlAarB)) valgtAar = urlAarB;
 let valgtGruppe = 'ALLE'; // 'ALLE' = hele weekenden
 let aktuelleBilleder = []; // billeder i den viste gruppe (når enkelt gruppe)
 let alleData = {};         // { gruppeId: [billeder] } når hele weekenden
@@ -238,6 +241,7 @@ let visListe = [];         // peger på det aktuelt viste (til lightbox)
 // Udfyld år-dropdown
 const aarSel = document.getElementById('aar-vaelger');
 aarSel.innerHTML = AAR_LISTE.map(a=>`<option value="${a}">${a}</option>`).join('');
+aarSel.value = valgtAar;
 
 // Udfyld gruppe-dropdowns ('Hele weekenden' øverst i nav)
 function fyldNavDropdown(valgt){
