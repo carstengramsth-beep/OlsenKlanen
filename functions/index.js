@@ -411,7 +411,8 @@ async function sendBrevkort() {
         const til = k.kort_til || (fornavn ? "Kære " + fornavn : "");
         const html = `<div style="background:#f5f1e8;padding:20px 0;font-family:Georgia,'Times New Roman',serif;">
   <div style="max-width:600px;margin:0 auto;background:#fff;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-    ${billede ? '<div style="text-align:center;"><img src="cid:maleri" alt="" style="max-width:100%;max-height:380px;width:auto;height:auto;display:inline-block;"></div>' : ""}
+    ${billede ? `<table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td><img src="cid:maleri" alt="" style="max-width:100%;max-height:380px;width:auto;height:auto;display:block;"></td></tr>
+      <tr><td style="text-align:right;font-size:12px;color:#8a7a3f;font-style:italic;padding-top:4px;">${k.kort_maler ? "Maleri: © " + escHtml(k.kort_maler) + " · " : ""}olsenklanen.dk</td></tr></table>` : ""}
     <div style="padding:22px 10px 6px;color:#2c3e1f;">
       ${til ? `<p style="font-size:20px;margin:0 0 14px;">${escHtml(til)}</p>` : ""}
       <p style="font-size:16px;line-height:1.55;margin:0;white-space:pre-wrap;">${escHtml(k.kort_besked)}</p>
@@ -422,7 +423,7 @@ async function sendBrevkort() {
       <a href="https://olsenklanen.dk/kort.html?vis=${d.id}" style="display:inline-block;background:#2d5016;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-size:15px;">🖨️ Åbn kortet til print</a>
     </div>
     <div style="border-top:1px solid #d8cfae;margin-top:18px;padding-top:8px;font-size:12px;color:#8a7a3f;font-style:italic;">
-      ${k.kort_maler ? "Maleri: © " + escHtml(k.kort_maler) + " · " : ""}Kortet er lavet på <a href="https://olsenklanen.dk" style="color:#8a7a3f;">olsenklanen.dk</a> — Familieforeningen OlsenKlanen
+      Kortet er lavet på <a href="https://olsenklanen.dk" style="color:#8a7a3f;">olsenklanen.dk</a> — Familieforeningen OlsenKlanen
     </div>
   </div>
 </div>`;

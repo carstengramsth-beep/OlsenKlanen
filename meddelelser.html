@@ -1687,11 +1687,14 @@ function tegnIntern(){
         <span class="mail-tid">${tidTekst(m.sendt)}</span>
       </div>
       ${m.type === "kort" && /^billeder\/kort\/[\w\-]+\.jpg$/.test(m.kort_fil || "") ? `
-        <img src="${enc(m.kort_fil)}?v=2" alt="" style="width:100%; max-width:520px; display:block; margin:10px 0; border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+        <figure style="display:inline-flex; flex-direction:column; align-items:flex-end; margin:10px 0; max-width:520px;">
+          <img src="${enc(m.kort_fil)}?v=2" alt="" style="max-width:100%; max-height:420px; display:block; border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+          <figcaption style="font-size:12px; color:#8a7a3f; font-style:italic; margin-top:4px;">${m.kort_maler ? "Maleri: © " + escHtml(m.kort_maler) + " · " : ""}olsenklanen.dk</figcaption>
+        </figure>
         ${m.kort_til ? `<div style="font-size:18px; margin-bottom:6px;">${escHtml(m.kort_til)}</div>` : ""}
         <div class="mail-tekst">${escHtml(m.kort_besked || "")}</div>
         ${m.kort_slut || m.kort_fra ? `<div style="margin-top:10px;">${escHtml(m.kort_slut || "")}<br><b>${escHtml(m.kort_fra || "")}</b></div>` : ""}
-        ${m.kort_maler ? `<div style="font-size:12px; color:#8a7a3f; font-style:italic; margin-top:8px;">Maleri: © ${escHtml(m.kort_maler)} · Kortet er lavet på olsenklanen.dk</div>` : ""}`
+`
       : `<div class="mail-tekst">${escHtml(m.tekst)}</div>`}
       <div class="mail-handlinger">
         <button class="knap lille${erGemt(m) ? '' : ' grå'}" onclick="gemIntern('${enc(m.id)}', ${erGemt(m)})">${erGemt(m) ? '⭐ Gemt — fjern' : '☆ Gem'}</button>
