@@ -125,6 +125,7 @@ async function koeMedlemsKort(fraNr, fraHusstand, kort) {
     kort_maler: tekst(kort.kort_maler).slice(0, 60),
     kort_til: tekst(kort.kort_til).slice(0, 80), kort_besked: tekst(kort.kort_besked).slice(0, 900),
     kort_slut: tekst(kort.kort_slut).slice(0, 60), kort_fra: tekst(kort.kort_fra).slice(0, 80),
+    kort_skrift: Number.isInteger(kort.kort_skrift) ? kort.kort_skrift : 0,
     sendt: FieldValue.serverTimestamp(), sendt_lokal: Date.now(),
     besvaret: false, besvaret_af: null, besvaret_tid: null
   });
@@ -409,12 +410,15 @@ async function sendBrevkort() {
         const til = k.kort_til || (fornavn ? "Kære " + fornavn : "");
         const html = `<div style="background:#f5f1e8;padding:20px 0;font-family:Georgia,'Times New Roman',serif;">
   <div style="max-width:600px;margin:0 auto;background:#fff;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-    ${billede ? '<img src="cid:maleri" alt="" style="width:100%;height:auto;display:block;">' : ""}
+    ${billede ? '<div style="text-align:center;"><img src="cid:maleri" alt="" style="max-width:100%;max-height:380px;width:auto;height:auto;display:inline-block;"></div>' : ""}
     <div style="padding:22px 10px 6px;color:#2c3e1f;">
       ${til ? `<p style="font-size:20px;margin:0 0 14px;">${escHtml(til)}</p>` : ""}
       <p style="font-size:16px;line-height:1.55;margin:0;white-space:pre-wrap;">${escHtml(k.kort_besked)}</p>
       ${k.kort_slut ? `<p style="font-size:16px;margin:18px 0 0;">${escHtml(k.kort_slut)}</p>` : ""}
       ${k.kort_fra ? `<p style="font-size:18px;margin:2px 0 0;">${escHtml(k.kort_fra)}</p>` : ""}
+    </div>
+    <div style="text-align:center;margin:20px 0 6px;">
+      <a href="https://olsenklanen.dk/kort.html?vis=${d.id}" style="display:inline-block;background:#2d5016;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-size:15px;">🖨️ Åbn kortet til print</a>
     </div>
     <div style="border-top:1px solid #d8cfae;margin-top:18px;padding-top:8px;font-size:12px;color:#8a7a3f;font-style:italic;">
       ${k.kort_maler ? "Maleri: " + escHtml(k.kort_maler) + " · " : ""}<a href="https://olsenklanen.dk" style="color:#8a7a3f;">olsenklanen.dk</a>
