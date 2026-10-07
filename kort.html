@@ -27,27 +27,38 @@ textarea { min-height: 150px; resize: vertical; }
 .print-knap:hover { background: #3d6b1f; }
 .hint { font-size: 13px; color: #8a7a3f; font-style: italic; margin-top: 8px; }
 
-/* Selve kortet — A4 (210 × 297) */
+/* Selve kortet — A4 (210 × 297 mm). På skærmen er 1cqw = 2,1 mm på papiret. */
 .forhaand-titel { font-size: 15px; color: #555; margin-bottom: 8px; }
-#kort { width: 100%; max-width: 620px; aspect-ratio: 210 / 297; background: #fff; box-shadow: 0 6px 24px rgba(0,0,0,0.18); container-type: inline-size; display: flex; flex-direction: column; padding: 7cqw 8cqw 5cqw; }
-#kort .maleri { flex: 0 0 auto; height: 70cqw; display: flex; align-items: center; justify-content: center; }
-#kort .maleri img { max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 0.6cqw 2cqw rgba(0,0,0,0.25); }
-#kort .tekst { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 5cqw 2cqw 2cqw; color: #2c3e1f; overflow: hidden; }
-#kort .til { font-size: 5.2cqw; margin-bottom: 2.5cqw; }
-#kort .besked { font-size: 4cqw; line-height: 1.5; white-space: pre-wrap; }
-#kort .slut { font-size: 4cqw; margin-top: 4cqw; }
-#kort .fra { font-size: 4.6cqw; margin-top: 0.5cqw; }
+#kort { width: 100%; max-width: 620px; aspect-ratio: 210 / 297; background: #fff; box-shadow: 0 6px 24px rgba(0,0,0,0.18); container-type: inline-size; display: flex; flex-direction: column; padding: 5cqw 2.4cqw 3cqw; overflow: hidden; }
+/* Maleriet: højst 200 × 138 mm */
+#kort .maleri { flex: 0 0 auto; width: 95.2cqw; height: 65.7cqw; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+#kort .maleri img { max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 0.5cqw 1.6cqw rgba(0,0,0,0.25); }
+#kort .tekst { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 3cqw 8cqw 2cqw; color: #2c3e1f; overflow: hidden; }
+#kort .til { font-size: 3.7cqw; margin-bottom: 2cqw; }
+#kort .besked { font-size: 2.7cqw; line-height: 1.5; white-space: pre-wrap; }
+#kort .slut { font-size: 2.7cqw; margin-top: 3cqw; }
+#kort .fra { font-size: 3.2cqw; margin-top: 0.4cqw; }
 #kort.haand .til, #kort.haand .besked, #kort.haand .slut, #kort.haand .fra { font-family: 'Dancing Script', cursive; }
-#kort.haand .besked { font-size: 4.8cqw; line-height: 1.35; }
+#kort.haand .besked { font-size: 3.2cqw; line-height: 1.35; }
 #kort.paen .til, #kort.paen .besked, #kort.paen .slut, #kort.paen .fra { font-family: 'EB Garamond', Georgia, serif; }
-#kort .bund { flex: 0 0 auto; border-top: 0.2cqw solid #d8cfae; padding-top: 1.6cqw; display: flex; justify-content: space-between; font-size: 2.2cqw; color: #8a7a3f; font-style: italic; }
+#kort .bund { flex: 0 0 auto; margin: 0 5.6cqw; border-top: 0.2cqw solid #d8cfae; padding-top: 1.4cqw; display: flex; justify-content: space-between; font-size: 1.5cqw; color: #8a7a3f; font-style: italic; }
 
+/* Udskrift: faste mål i mm og pt, så kortet bliver ens på alle computere */
 @media print {
   @page { size: A4 portrait; margin: 0; }
-  body { background: #fff; }
+  html, body { background: #fff; margin: 0; padding: 0; }
   .header, .styring, .forhaand-titel { display: none !important; }
-  .wrap { display: block; padding: 0; max-width: none; }
-  #kort { width: 210mm; height: 296mm; max-width: none; aspect-ratio: auto; box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .wrap { display: block; padding: 0; margin: 0; max-width: none; }
+  #kort { width: 210mm; height: 296mm; max-width: none; aspect-ratio: auto; box-shadow: none; padding: 10mm 5mm 6mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #kort .maleri { width: 200mm; height: 138mm; }
+  #kort .maleri img { box-shadow: 0 1mm 3mm rgba(0,0,0,0.25); }
+  #kort .tekst { padding: 6mm 17mm 4mm; }
+  #kort .til { font-size: 22pt; margin-bottom: 4mm; }
+  #kort .besked { font-size: 16pt; }
+  #kort.haand .besked { font-size: 19pt; }
+  #kort .slut { font-size: 16pt; margin-top: 6mm; }
+  #kort .fra { font-size: 19pt; margin-top: 1mm; }
+  #kort .bund { margin: 0 12mm; border-top-width: 0.4mm; padding-top: 3mm; font-size: 9pt; }
 }
 </style>
 <script>
@@ -90,7 +101,7 @@ try {
     <div class="trin">
       <h2>3. Print eller gem</h2>
       <button class="print-knap" onclick="window.print()">🖨️ Print på A4 / Gem som PDF</button>
-      <p class="hint">Vælg din printer — eller "Gem som PDF" i printvinduet.</p>
+      <p class="hint">Vælg din printer — eller "Gem som PDF" i printvinduet. Sæt "Skalering" til 100 % (standard), hvis den kan vælges.</p>
     </div>
   </div>
 
