@@ -1691,7 +1691,7 @@ function tegnIntern(){
         ${m.kort_til ? `<div style="font-size:18px; margin-bottom:6px;">${escHtml(m.kort_til)}</div>` : ""}
         <div class="mail-tekst">${escHtml(m.kort_besked || "")}</div>
         ${m.kort_slut || m.kort_fra ? `<div style="margin-top:10px;">${escHtml(m.kort_slut || "")}<br><b>${escHtml(m.kort_fra || "")}</b></div>` : ""}
-        ${m.kort_maler ? `<div style="font-size:12px; color:#8a7a3f; font-style:italic; margin-top:8px;">Maleri: ${escHtml(m.kort_maler)}</div>` : ""}`
+        ${m.kort_maler ? `<div style="font-size:12px; color:#8a7a3f; font-style:italic; margin-top:8px;">Maleri: © ${escHtml(m.kort_maler)} · Kortet er lavet på olsenklanen.dk</div>` : ""}`
       : `<div class="mail-tekst">${escHtml(m.tekst)}</div>`}
       <div class="mail-handlinger">
         <button class="knap lille${erGemt(m) ? '' : ' grå'}" onclick="gemIntern('${enc(m.id)}', ${erGemt(m)})">${erGemt(m) ? '⭐ Gemt — fjern' : '☆ Gem'}</button>
