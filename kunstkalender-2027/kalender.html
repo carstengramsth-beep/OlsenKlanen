@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<title>GalleriEG kunstkalender 2027</title>
+<link rel="stylesheet" href="skrifter/skrifter.css">
+<style>
+  /* Format som modellen (kunstkalender 2023):
+     forside 30 × 40 cm · omslag og måneder 30 × 60 cm · introside 30 × 30 cm */
+  @page forside { size: 300mm 400mm; margin: 0; }
+  @page lang    { size: 300mm 600mm; margin: 0; }
+  @page kvadrat { size: 300mm 300mm; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #888; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .side { position: relative; width: 300mm; background: #fff; overflow: hidden;
+          margin: 0 auto 10mm; break-after: page; }
+  .side.forside { page: forside; height: 400mm; }
+  .side.lang    { page: lang;    height: 600mm; }
+  .side.kvadrat { page: kvadrat; height: 300mm; }
+  @media print { html, body { background: #fff; } .side { margin: 0; } }
+
+  .billede { position: absolute; left: 0; top: 0; width: 300mm; overflow: hidden; background: #ddd; }
+  .billede img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pladsholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+                 flex-direction: column; gap: 4mm; background: repeating-linear-gradient(45deg, #e6e6e6 0 6mm, #ededed 6mm 12mm);
+                 color: #999; font: 400 12mm/1.1 'Roboto Condensed', sans-serif; text-align: center; }
+  .pladsholder small { font-size: 6mm; }
+  .logo { position: absolute; width: 29mm; }
+
+  /* ── Forside ── */
+  .forside .billede { height: 400mm; }
+  .forside .tekst { position: absolute; left: 25mm; bottom: 12mm; color: #fff;
+                    font: italic 400 3.2mm 'Roboto Condensed', sans-serif; text-shadow: 0 0 2mm rgba(0,0,0,.5); }
+  .forside .logo { right: 18mm; bottom: 12mm; }
+
+  /* ── Omslag med årstal ── */
+  .omslag .billede { height: 600mm; }
+  .omslag .aarstal { position: absolute; left: 0; right: 0; bottom: 54mm; text-align: center;
+                     font: 500 128mm/1 'Poppins', sans-serif; letter-spacing: -2mm;
+                     color: rgba(240,240,255,.88); }
+
+  /* ── Introside ── */
+  .intro { padding: 25mm 35mm 0; font: 400 3.9mm/1.38 'Inter', sans-serif; color: #222; }
+  .intro h1 { font: 700 21mm/1 'Inter', sans-serif; color: #8e6fa8; letter-spacing: -.5mm; margin-bottom: 8mm; }
+  .intro .spalter { columns: 2; column-gap: 10mm; height: 64mm; column-fill: auto; }
+  .intro p { margin-bottom: 3.6mm; }
+  .intro .pladstekst { color: #8e6fa8; font-style: italic; }
+  .intro .tre { display: flex; gap: 3mm; margin: 6mm 0 0; }
+  .intro .tre div { width: 74mm; height: 74mm; background: #ddd; overflow: hidden; }
+  .intro .tre img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .intro .tre .pladsholder { font-size: 5mm; }
+  .intro h2 { font: 700 4.6mm 'Inter', sans-serif; color: #8e6fa8; margin: 7mm 0 1.5mm; }
+  .intro .om { columns: 2; column-gap: 10mm; font-size: 3.6mm; line-height: 1.32; }
+  .intro .om p { margin-bottom: 3mm; }
+  .intro .kontakt { position: absolute; left: 35mm; right: 35mm; bottom: 12mm; color: #999;
+                    font: 400 4.2mm 'Inter', sans-serif; white-space: nowrap; letter-spacing: -.1mm; }
+
+  /* ── Månedsside ── */
+  .maaned .billede { height: 399mm; }
+  .maaned .tekst { position: absolute; left: 25mm; top: 401.5mm; font: italic 400 3.1mm 'Roboto Condensed', sans-serif; color: #333; }
+  .maaned .hoved { position: absolute; left: 25mm; right: 25.5mm; top: 410mm; display: flex; justify-content: space-between;
+                   font: 700 15mm/1 'Roboto Condensed', sans-serif; color: #a3a3a3; letter-spacing: -.3mm; }
+  .maaned .kol { position: absolute; top: 434.7mm; width: 118.5mm; }
+  .maaned .kol.v { left: 25mm; }
+  .maaned .kol.h { left: 155.5mm; }
+  .dag { display: flex; align-items: center; height: 8.1mm; border-top: .35mm solid #222;
+         font: 700 4.9mm/1 'Roboto Condensed', sans-serif; color: #111; white-space: nowrap; }
+  .dag:last-child { border-bottom: .35mm solid #222; }
+  .dag .ud { width: 5.5mm; padding-left: .6mm; }
+  .dag .nr { width: 8mm; text-align: right; padding-right: 1.6mm; }
+  .dag .navn { flex: 1; overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
+  .dag .uge { width: 9mm; text-align: right; padding-right: .6mm; }
+  .dag.loer { background: #ebebeb; }
+  .dag.soen, .dag.fri { background: #d0d0d0; }
+  .maaned .logo { left: 258.5mm; top: 549mm; }
+</style>
+</head>
+<body>
+<script src="indhold.js"></script>
+<script>
+const K = window.KALENDER, AAR = K.AAR;
+const MDR = ["Januar","Februar","Marts","April","Maj","Juni","Juli","August","September","Oktober","November","December"];
+const UD = ["S","M","T","O","T","F","L"];   // søndag … lørdag
+
+// ── Datoer ──
+const d = (m, dag) => new Date(AAR, m - 1, dag);
+const plus = (dato, n) => new Date(dato.getFullYear(), dato.getMonth(), dato.getDate() + n);
+const noegle = dato => String(dato.getMonth() + 1).padStart(2, "0") + "-" + String(dato.getDate()).padStart(2, "0");
+function paaske(y){ // Gauss/Meeus
+  const a=y%19,b=Math.floor(y/100),c=y%100,dd=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),
+        h=(19*a+b-dd-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),
+        md=Math.floor((h+l-7*m+114)/31),dag=((h+l-7*m+114)%31)+1;
+  return new Date(y, md - 1, dag);
+}
+function sidsteSoendag(m){ let x = new Date(AAR, m, 0); while (x.getDay() !== 0) x = plus(x, -1); return x; }
+function isoUge(dato){
+  const t = new Date(Date.UTC(dato.getFullYear(), dato.getMonth(), dato.getDate()));
+  const dn = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - dn);
+  const aarStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return Math.ceil(((t - aarStart) / 864e5 + 1) / 7);
+}
+
+const P = paaske(AAR), jul = d(12, 25);
+const fjerdeAdvent = plus(jul, -(jul.getDay() || 7));
+const dage = {}, fri = new Set();
+function tilfoej(dato, tekst, erFri){ const n = noegle(dato); (dage[n] = dage[n] || []).push(tekst); if (erFri) fri.add(n); }
+
+tilfoej(d(1,1), "Nytårsdag", true);
+tilfoej(d(1,6), "Hellig tre konger");
+tilfoej(plus(P,-49), "Fastelavn");
+tilfoej(plus(P,-7), "Palmesøndag");
+tilfoej(plus(P,-3), "Skærtorsdag", true);
+tilfoej(plus(P,-2), "Langfredag", true);
+tilfoej(P, "Påskedag", true);
+tilfoej(plus(P,1), "2. påskedag", true);
+tilfoej(plus(P,39), "Kr. himmelfartsdag", true);
+tilfoej(plus(P,49), "Pinsedag", true);
+tilfoej(plus(P,50), "2. pinsedag", true);
+tilfoej(d(3,20), "Forårsjævndøgn");
+tilfoej(sidsteSoendag(3), "Sommertid begynder");
+tilfoej(d(4,9), "Danmarks besættelse 1940");
+tilfoej(d(5,5), "Danmarks befrielse 1945");
+tilfoej(d(6,5), "Grundlovsdag");
+tilfoej(d(6,15), "Valdemarsdag");
+tilfoej(d(6,21), "Længste dag");
+tilfoej(d(6,24), "Sankt Hans dag");
+tilfoej(d(9,5), "Danmarks udsendte");
+tilfoej(d(9,23), "Efterårsjævndøgn");
+tilfoej(sidsteSoendag(10), "Sommertid slutter");
+tilfoej(d(11,11), "Morten Bisp");
+for (let i = 3; i >= 0; i--) tilfoej(plus(fjerdeAdvent, -7 * i), (4 - i) + ". søndag i advent");
+tilfoej(d(12,24), "Juleaften");
+tilfoej(jul, "Juledag", true);
+tilfoej(d(12,26), "2. juledag", true);
+tilfoej(d(12,31), "Nytårsaften");
+// Kongehuset (titler pr. 2027)
+[[1,8,"Prins Vincent og Prinsesse Josephine"],[1,24,"Komtesse Athena"],[2,5,"Dronning Mary"],[2,6,"Prinsesse Marie"],
+ [4,16,"Dronning Margrethe"],[4,21,"Prinsesse Isabella"],[4,29,"Prinsesse Benedikte"],[5,4,"Grev Henrik"],
+ [5,26,"Kong Frederik X"],[6,7,"Prins Joachim"],[7,22,"Grev Felix"],[8,28,"Grev Nikolai"],[10,15,"Kronprins Christian"]
+].forEach(([m,dag,t]) => tilfoej(d(m,dag), t));
+Object.entries(K.egneDage || {}).forEach(([n,t]) => { const [m,dag] = n.split("-").map(Number); tilfoej(d(m,dag), t); });
+
+// ── Byg sider ──
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const billede = (fil, hvad) =>
+  `<img src="${esc(fil)}" alt="" onerror="this.outerHTML='<div class=\\'pladsholder\\'>Billede kommer<small>${esc(hvad)}</small></div>'">`;
+const logo = `<img class="logo" src="billeder/eg-galleri-logo.png" alt="EG Galleri">`;
+const afsnit = (t, kl = "") => t.split(/\n\s*\n/).map(p => `<p class="${/^\[.*\]$/.test(p.trim()) ? "pladstekst" : kl}">${esc(p.trim())}</p>`).join("");
+let html = "";
+
+html += `<section class="side forside"><div class="billede">${billede(K.forside.fil, "forside")}</div>
+  <div class="tekst">${esc(K.forside.tekst)}</div>${logo}</section>`;
+
+html += `<section class="side lang omslag"><div class="billede">${billede(K.omslag.fil, "omslag")}</div>
+  <div class="aarstal">${AAR}</div></section>`;
+
+const I = K.intro;
+html += `<section class="side kvadrat intro"><h1>${esc(I.titel)}</h1>
+  <div class="spalter">${afsnit(I.aaretsTekst)}</div>
+  <div class="tre">${I.billeder.map((f, i) => `<div>${billede(f, "intro " + (i + 1))}</div>`).join("")}</div>
+  <h2>${esc(I.omMigTitel)}</h2><div class="om">${afsnit(I.omMig)}</div>
+  <div class="kontakt">${esc(I.kontakt)}</div></section>`;
+
+K.maaneder.forEach((m, i) => {
+  const antal = new Date(AAR, i + 1, 0).getDate();
+  const raekke = dag => {
+    const dato = d(i + 1, dag), n = noegle(dato), wd = dato.getDay();
+    const kl = fri.has(n) || wd === 0 ? "soen" : wd === 6 ? "loer" : "";
+    return `<div class="dag ${kl}"><span class="ud">${UD[wd]}</span><span class="nr">${dag}</span>
+      <span class="navn">${esc((dage[n] || []).join(" / "))}</span><span class="uge">${wd === 1 ? isoUge(dato) : ""}</span></div>`;
+  };
+  let v = "", h = "";
+  for (let dag = 1; dag <= antal; dag++) (dag <= 17 ? (v += raekke(dag)) : (h += raekke(dag)));
+  html += `<section class="side lang maaned"><div class="billede">${billede(m.fil, MDR[i].toLowerCase())}</div>
+    <div class="tekst">${esc(m.tekst)}</div>
+    <div class="hoved"><span>${MDR[i].toUpperCase()}</span><span>${AAR}</span></div>
+    <div class="kol v">${v}</div><div class="kol h">${h}</div>${logo}</section>`;
+});
+document.body.insertAdjacentHTML("beforeend", html);
+</script>
+</body>
+</html>
