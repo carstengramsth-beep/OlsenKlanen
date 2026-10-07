@@ -35,6 +35,8 @@ textarea { min-height: 150px; resize: vertical; }
 /* Maleriet fylder 200 × 138 mm (kanterne skæres lidt til, hvis formatet ikke passer) */
 #kort .maleri { flex: 0 0 auto; width: 95.2cqw; height: 65.7cqw; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
 #kort .maleri img { width: 100%; height: 100%; object-fit: cover; box-shadow: 0 0.5cqw 1.6cqw rgba(0,0,0,0.25); }
+/* Malerier på højkant beskæres ikke — de vises i fuld højde (138 mm) */
+#kort .maleri img.hoejkant { width: auto; max-width: 100%; object-fit: contain; }
 #kort .tekst { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 3cqw 8cqw 2cqw; color: #2c3e1f; overflow: hidden; }
 /* Skrifttypen vælges af brugeren: --skrift og --f (størrelsesfaktor, så alle skrifter ser lige store ud) */
 #kort { --skrift: 'Dancing Script', cursive; --f: 1.15; }
@@ -192,6 +194,7 @@ $("kort-valg").querySelectorAll("button").forEach(b => b.onclick = () => { valgt
 
 function opdater(){
   const k = KORT[valgt];
+  $("kort-billede").onload = function(){ this.classList.toggle("hoejkant", this.naturalHeight > this.naturalWidth); };
   $("kort-billede").src = k.fil;
   $("kort-billede").alt = k.titel;
   $("v-maler").textContent = "Maleri: " + k.maler;
