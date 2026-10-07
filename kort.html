@@ -162,7 +162,9 @@ try {
 </div>
 
 <script>
-// Kortene — tilføj flere ved at lægge billedet i billeder/kort/ og skrive en linje her
+// Kortene — tilføj flere ved at lægge billedet i billeder/kort/ og skrive en linje her.
+// Ændres et billede, så tæl BILLED_VERSION op, så browserne henter det nye.
+const BILLED_VERSION = 2;
 const KORT = [
   { fil: "billeder/kort/hulemaleri.jpg",    titel: "Hulemaleri",      maler: "Elisabeth Gram" },
   { fil: "billeder/kort/landskab-2014.jpg", titel: "Landskab, 2014",  maler: "Elisabeth Gram" },
@@ -189,13 +191,13 @@ $("fra").value = hent("ok_navn");
 
 let valgt = 0;
 $("kort-valg").innerHTML = KORT.map((k, i) =>
-  `<button type="button" data-i="${i}" title="${k.titel}"><img src="${k.fil}" alt="${k.titel}"></button>`).join("");
+  `<button type="button" data-i="${i}" title="${k.titel}"><img src="${k.fil}?v=${BILLED_VERSION}" alt="${k.titel}"></button>`).join("");
 $("kort-valg").querySelectorAll("button").forEach(b => b.onclick = () => { valgt = +b.dataset.i; opdater(); });
 
 function opdater(){
   const k = KORT[valgt];
   $("kort-billede").onload = function(){ this.classList.toggle("hoejkant", this.naturalHeight > this.naturalWidth); };
-  $("kort-billede").src = k.fil;
+  $("kort-billede").src = k.fil + "?v=" + BILLED_VERSION;
   $("kort-billede").alt = k.titel;
   $("v-maler").textContent = "Maleri: " + k.maler;
   $("kort-valg").querySelectorAll("button").forEach((b, i) => b.classList.toggle("valgt", i === valgt));
