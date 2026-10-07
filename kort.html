@@ -20,6 +20,8 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .kort-valg button { border: 3px solid transparent; border-radius: 8px; padding: 0; background: #eee; cursor: pointer; overflow: hidden; aspect-ratio: 1; }
 .kort-valg button img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .kort-valg button.valgt { border-color: #c89e3c; box-shadow: 0 0 0 2px #c89e3c; }
+.kort-valg .valg { display: flex; flex-direction: column; gap: 2px; }
+.kort-valg .brugt { text-align: right; font-size: 12px; color: #8a7a3f; min-height: 15px; padding-right: 3px; }
 label { display: block; font-size: 14px; color: #555; margin: 10px 0 4px; }
 input[type=text], textarea, select { width: 100%; font-family: inherit; font-size: 16px; padding: 9px 11px; border: 1px solid #c8bfa0; border-radius: 6px; background: #fdfbf5; }
 textarea { min-height: 150px; resize: vertical; }
@@ -173,10 +175,12 @@ const KORT = [
   { fil: "billeder/kort/hulemaleri.jpg",    titel: "Hulemaleri",      maler: "Elisabeth Gram" },
   { fil: "billeder/kort/landskab-2014.jpg", titel: "Landskab, 2014",  maler: "Elisabeth Gram" },
   { fil: "billeder/kort/landskab-2012.jpg", titel: "Landskab, 2012",  maler: "Elisabeth Gram" },
-  { fil: "billeder/kort/portraet.jpg",         titel: "Portræt",         maler: "Elisabeth Gram" },
   { fil: "billeder/kort/balletdanser.jpg",     titel: "Balletdanser",    maler: "Elisabeth Gram" },
   { fil: "billeder/kort/frugter-abstrakt.jpg", titel: "Frugter",         maler: "Elisabeth Gram" },
   { fil: "billeder/kort/kvinde-i-farver.jpg",  titel: "Kvinde i farver", maler: "Elisabeth Gram" },
+  { fil: "billeder/kort/vinterstemning.jpg",     titel: "Vinterstemning",    maler: "Elisabeth Gram" },
+  { fil: "billeder/kort/paeoner-i-haven.jpg",    titel: "Pæoner i haven",    maler: "Elisabeth Gram" },
+  { fil: "billeder/kort/damen-med-guldhaar.jpg", titel: "Damen med guldhår", maler: "Elisabeth Gram" },
   // Børnetegninger skrives med art: "Tegning", fx { fil: "...", titel: "...", maler: "Luna", art: "Tegning" }
 ];
 
@@ -202,7 +206,14 @@ $("fra").value = hent("ok_navn");
 
 let valgt = 0;
 $("kort-valg").innerHTML = KORT.map((k, i) =>
-  `<button type="button" data-i="${i}" title="${k.titel}"><img src="${k.fil}?v=${BILLED_VERSION}" alt="${k.titel}"></button>`).join("");
+  `<div class="valg"><button type="button" data-i="${i}" title="${k.titel}"><img src="${k.fil}?v=${BILLED_VERSION}" alt="${k.titel}"></button>` +
+  `<span class="brugt" data-fil="${k.fil}"></span></div>`).join("");
+// Lille tal under hvert billede: hvor mange gange det er brugt til et kort (fyldes ud, når tallene er hentet)
+window.visBrug = tael => document.querySelectorAll("#kort-valg .brugt").forEach(el => {
+  const n = tael[el.dataset.fil] || 0;
+  el.textContent = n;
+  el.title = n === 1 ? "Brugt til 1 kort" : "Brugt til " + n + " kort";
+});
 $("kort-valg").querySelectorAll("button").forEach(b => b.onclick = () => { valgt = +b.dataset.i; opdater(); });
 
 function opdater(){
@@ -283,6 +294,26 @@ if (MIT_NR && !ER_GAEST) {
   const funcs = getFunctions(app, "europe-west1");
   const $ = id => document.getElementById(id);
   const ER_POSTANSVARLIG = POSTANSVARLIGE.includes(MIT_NR);
+
+  // ── Hvor mange gange er hvert billede brugt til et kort? (prøvekort tælles ikke med) ──
+  async function taelBrug(){
+    try {
+      const [intern, mail] = await Promise.all([
+        getDocs(query(collection(db, "olsenpost"), where("type", "==", "kort"))),
+        getDocs(query(collection(db, "olsenpost_mail"), where("type", "in", ["kort_medlem", "brevkort"])))
+      ]);
+      const tael = {};
+      [...intern.docs, ...mail.docs].forEach(d => {
+        const k = d.data();
+        if (k.prove || !k.kort_fil) return;
+        tael[k.kort_fil] = (tael[k.kort_fil] || 0) + 1;
+      });
+      window.visBrug(tael);
+    } catch(e) { console.log("Kort-tæller:", e); }
+  }
+  taelBrug();
+  window.taelBrug = taelBrug;
+
   $("send-en").style.display = "block";
   if (ER_POSTANSVARLIG) $("send-alle").style.display = "block";
   $("en-emne").value = "Et kort fra " + (window.hent("ok_navn").split(/\s+/)[0] || "OlsenKlanen");
@@ -413,7 +444,7 @@ if (MIT_NR && !ER_GAEST) {
           sendt: serverTimestamp(), sendt_lokal: Date.now(),
           set_af: [], svar: [], gemt_af: []
         });
-        enStatus("✅ Kortet er sendt til " + navn + " som intern post.", "ok");
+        enStatus("✅ Kortet er sendt til " + navn + " som intern post.", "ok"); taelBrug();
       } catch(e) {
         console.log("Intern post fejlede:", e);
         enStatus("Det lykkedes ikke. Prøv igen.", "fejl");
@@ -441,7 +472,7 @@ if (MIT_NR && !ER_GAEST) {
       });
       $("en-pin").value = "";
       const navn = $("en-modtager").selectedOptions[0].textContent;
-      enStatus("✅ Kortet til " + navn + " er sat i kø. Det bliver sendt inden for 5 minutter …", "ok");
+      enStatus("✅ Kortet til " + navn + " er sat i kø. Det bliver sendt inden for 5 minutter …", "ok"); taelBrug();
       if (res.data && res.data.kortId) onSnapshot(doc(db, "olsenpost_mail", res.data.kortId), s => {
         const d = s.data() || {};
         if (d.status === "sendt") enStatus("✅ Kortet er sendt til " + navn + ".", "ok");
@@ -504,7 +535,7 @@ if (MIT_NR && !ER_GAEST) {
         sendt: serverTimestamp(), sendt_lokal: Date.now(),
         besvaret: false, besvaret_af: null, besvaret_tid: null
       });
-      status("✅ Kortet er sat i kø. Det bliver sendt inden for 5 minutter …", "ok");
+      status("✅ Kortet er sat i kø. Det bliver sendt inden for 5 minutter …", "ok"); taelBrug();
       if (prove) knap.disabled = false;
       // Følg med, når serveren har sendt
       onSnapshot(doc(db, "olsenpost_mail", ref.id), s => {
