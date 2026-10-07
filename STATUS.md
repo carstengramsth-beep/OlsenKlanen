@@ -45,6 +45,7 @@ Sidst opdateret: 2026-10-06
   - Kortet kan gemmes som PDF eller printes på A4 og lægges på julebordet. Nederst står olsenklanen.dk.
   - Husk EmailJS' gratis loft på 200 mails om måneden (se huskelisten ovenfor). Julehilsner kan hurtigt ramme det.
 
+- **Kort med eget foto (Carstens idé, 7. okt. 2026) — laves sammen med julekortene:** Medlemmerne skal kunne lægge deres eget foto ind på kortet i stedet for et maleri, fx et julefoto af børnebørnene. Fotoet lægges op fra computer eller telefon, gøres mindre automatisk og bruges på kortet (print, intern post og mail). Overvej Firebase Storage (som Årenes billeder) og en grænse for filstørrelse.
 - **Kort: send til sig selv + send videre med note (Carstens idé, 7. okt. 2026) — laves sammen med julekortene:**
   - Alle får knappen "Send til mig selv" på siden Skriv et kort (intern post, eller mail hvis man har en godkendt mail). I dag kan kun de 5 postansvarlige sende en prøve til sig selv.
   - På et kort i OlsenPost kommer knappen "↪ Send videre": vælg modtager og skriv en lille note. Modtageren ser både kortet og noten.
