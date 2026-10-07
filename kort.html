@@ -173,6 +173,11 @@ const KORT = [
   { fil: "billeder/kort/hulemaleri.jpg",    titel: "Hulemaleri",      maler: "Elisabeth Gram" },
   { fil: "billeder/kort/landskab-2014.jpg", titel: "Landskab, 2014",  maler: "Elisabeth Gram" },
   { fil: "billeder/kort/landskab-2012.jpg", titel: "Landskab, 2012",  maler: "Elisabeth Gram" },
+  { fil: "billeder/kort/portraet.jpg",         titel: "Portræt",         maler: "Elisabeth Gram" },
+  { fil: "billeder/kort/balletdanser.jpg",     titel: "Balletdanser",    maler: "Elisabeth Gram" },
+  { fil: "billeder/kort/frugter-abstrakt.jpg", titel: "Frugter",         maler: "Elisabeth Gram" },
+  { fil: "billeder/kort/kvinde-i-farver.jpg",  titel: "Kvinde i farver", maler: "Elisabeth Gram" },
+  // Børnetegninger skrives med art: "Tegning", fx { fil: "...", titel: "...", maler: "Luna", art: "Tegning" }
 ];
 
 // Skrifttyper — f = størrelsesfaktor, så de ser nogenlunde lige store ud (1 = 14 pkt)
@@ -210,7 +215,7 @@ function opdater(){
   };
   $("kort-billede").src = k.fil + "?v=" + BILLED_VERSION;
   $("kort-billede").alt = k.titel;
-  $("v-maler").textContent = "Maleri: © " + k.maler + " · olsenklanen.dk";
+  $("v-maler").textContent = (k.art || "Maleri") + ": © " + k.maler + " · olsenklanen.dk";
   $("kort-valg").querySelectorAll("button").forEach((b, i) => b.classList.toggle("valgt", i === valgt));
   $("v-til").textContent = $("til").value.trim();
   $("v-besked").textContent = $("besked").value.trim() || "Skriv din hilsen …";
@@ -402,7 +407,7 @@ if (MIT_NR && !ER_GAEST) {
           til: [valg], til_navne: [navn],
           type: "kort",
           tekst: [$("til").value.trim(), besked, "", $("slut").value.trim(), $("fra").value.trim()].join("\n").trim(),
-          kort_fil: k.fil, kort_maler: k.maler,
+          kort_fil: k.fil, kort_maler: k.maler, kort_art: k.art || "Maleri",
           kort_til: $("til").value.trim(), kort_besked: besked, kort_slut: $("slut").value.trim(), kort_fra: $("fra").value.trim(),
           kort_skrift: window.skriftNr(),
           sendt: serverTimestamp(), sendt_lokal: Date.now(),
@@ -429,7 +434,7 @@ if (MIT_NR && !ER_GAEST) {
         kort: {
           til_hus, til_idx, til_selv: tilSelv, emne: $("en-emne").value.trim(),
           fra_fornavn: window.hent("ok_navn").trim().split(/\s+/)[0], fra_navn: window.hent("ok_navn").trim(),
-          kort_fil: k.fil, kort_maler: k.maler,
+          kort_fil: k.fil, kort_maler: k.maler, kort_art: k.art || "Maleri",
           kort_til: $("til").value.trim(), kort_besked: besked, kort_slut: $("slut").value.trim(), kort_fra: $("fra").value.trim(),
           kort_skrift: window.skriftNr()
         }
@@ -493,7 +498,7 @@ if (MIT_NR && !ER_GAEST) {
         prove: !!prove,
         emne: $("emne").value.trim() || "Et kort fra OlsenKlanen",
         tekst,
-        kort_fil: k.fil, kort_titel: k.titel, kort_maler: k.maler,
+        kort_fil: k.fil, kort_titel: k.titel, kort_maler: k.maler, kort_art: k.art || "Maleri",
         kort_til: $("til").value.trim(), kort_besked: besked, kort_slut: $("slut").value.trim(), kort_fra: $("fra").value.trim(),
         kort_skrift: window.skriftNr(),
         sendt: serverTimestamp(), sendt_lokal: Date.now(),
