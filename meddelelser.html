@@ -1695,6 +1695,7 @@ function tegnIntern(){
       : `<div class="mail-tekst">${escHtml(m.tekst)}</div>`}
       <div class="mail-handlinger">
         <button class="knap lille${erGemt(m) ? '' : ' grå'}" onclick="gemIntern('${enc(m.id)}', ${erGemt(m)})">${erGemt(m) ? '⭐ Gemt — fjern' : '☆ Gem'}</button>
+        ${m.type === "kort" ? `<a class="knap lille grå" href="kort.html?vis=intern:${enc(m.id)}" target="_blank" style="text-decoration:none;">🖨️ Print kortet</a>` : ""}
       </div>
     </div>`;
   el.innerHTML =
