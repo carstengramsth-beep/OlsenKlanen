@@ -1687,7 +1687,7 @@ function tegnIntern(){
         <span class="mail-tid">${tidTekst(m.sendt)}</span>
       </div>
       ${m.type === "kort" && /^billeder\/kort\/[\w\-]+\.jpg$/.test(m.kort_fil || "") ? `
-        <img src="${enc(m.kort_fil)}" alt="" style="width:100%; max-width:520px; display:block; margin:10px 0; border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+        <img src="${enc(m.kort_fil)}?v=2" alt="" style="width:100%; max-width:520px; display:block; margin:10px 0; border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,0.15);">
         ${m.kort_til ? `<div style="font-size:18px; margin-bottom:6px;">${escHtml(m.kort_til)}</div>` : ""}
         <div class="mail-tekst">${escHtml(m.kort_besked || "")}</div>
         ${m.kort_slut || m.kort_fra ? `<div style="margin-top:10px;">${escHtml(m.kort_slut || "")}<br><b>${escHtml(m.kort_fra || "")}</b></div>` : ""}
