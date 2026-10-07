@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen · Skriv et kort</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; }
+.header { background: #2d5016; color: #f5e6a8; padding: 18px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.header h1 { font-size: 22px; font-weight: normal; }
+.header a { color: #f5e6a8; text-decoration: none; padding: 6px 14px; border: 1px solid #f5e6a8; border-radius: 4px; font-size: 14px; }
+.wrap { max-width: 1150px; margin: 0 auto; padding: 22px 16px; display: grid; grid-template-columns: minmax(280px, 420px) 1fr; gap: 26px; align-items: start; }
+@media (max-width: 860px) { .wrap { grid-template-columns: 1fr; } }
+.trin { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 16px 18px; margin-bottom: 16px; }
+.trin h2 { font-size: 17px; color: #2d5016; margin-bottom: 10px; }
+.kort-valg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.kort-valg button { border: 3px solid transparent; border-radius: 8px; padding: 0; background: #eee; cursor: pointer; overflow: hidden; aspect-ratio: 1; }
+.kort-valg button img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.kort-valg button.valgt { border-color: #c89e3c; box-shadow: 0 0 0 2px #c89e3c; }
+label { display: block; font-size: 14px; color: #555; margin: 10px 0 4px; }
+input[type=text], textarea, select { width: 100%; font-family: inherit; font-size: 16px; padding: 9px 11px; border: 1px solid #c8bfa0; border-radius: 6px; background: #fdfbf5; }
+textarea { min-height: 150px; resize: vertical; }
+.print-knap { width: 100%; background: #2d5016; color: #fff; border: none; border-radius: 8px; padding: 13px; font-family: inherit; font-size: 17px; cursor: pointer; margin-top: 4px; }
+.print-knap:hover { background: #3d6b1f; }
+.hint { font-size: 13px; color: #8a7a3f; font-style: italic; margin-top: 8px; }
+
+/* Selve kortet — A4 (210 × 297) */
+.forhaand-titel { font-size: 15px; color: #555; margin-bottom: 8px; }
+#kort { width: 100%; max-width: 620px; aspect-ratio: 210 / 297; background: #fff; box-shadow: 0 6px 24px rgba(0,0,0,0.18); container-type: inline-size; display: flex; flex-direction: column; padding: 7cqw 8cqw 5cqw; }
+#kort .maleri { flex: 0 0 auto; height: 70cqw; display: flex; align-items: center; justify-content: center; }
+#kort .maleri img { max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 0.6cqw 2cqw rgba(0,0,0,0.25); }
+#kort .tekst { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 5cqw 2cqw 2cqw; color: #2c3e1f; overflow: hidden; }
+#kort .til { font-size: 5.2cqw; margin-bottom: 2.5cqw; }
+#kort .besked { font-size: 4cqw; line-height: 1.5; white-space: pre-wrap; }
+#kort .slut { font-size: 4cqw; margin-top: 4cqw; }
+#kort .fra { font-size: 4.6cqw; margin-top: 0.5cqw; }
+#kort.haand .til, #kort.haand .besked, #kort.haand .slut, #kort.haand .fra { font-family: 'Dancing Script', cursive; }
+#kort.haand .besked { font-size: 4.8cqw; line-height: 1.35; }
+#kort.paen .til, #kort.paen .besked, #kort.paen .slut, #kort.paen .fra { font-family: 'EB Garamond', Georgia, serif; }
+#kort .bund { flex: 0 0 auto; border-top: 0.2cqw solid #d8cfae; padding-top: 1.6cqw; display: flex; justify-content: space-between; font-size: 2.2cqw; color: #8a7a3f; font-style: italic; }
+
+@media print {
+  @page { size: A4 portrait; margin: 0; }
+  body { background: #fff; }
+  .header, .styring, .forhaand-titel { display: none !important; }
+  .wrap { display: block; padding: 0; max-width: none; }
+  #kort { width: 210mm; height: 296mm; max-width: none; aspect-ratio: auto; box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+<script>
+try {
+  function hent(n){ return sessionStorage.getItem(n) || localStorage.getItem(n) || ""; }
+  if (!(hent("ok_nr") || hent("ok_navn") || hent("ok_niveau"))) window.location.href = "login.html";
+} catch(e) {}
+</script>
+</head>
+<body>
+
+<div class="header">
+  <h1>🖼️ Skriv et kort</h1>
+  <a href="forside.html">🏠 Til forsiden</a>
+</div>
+
+<div class="wrap">
+  <div class="styring">
+    <div class="trin">
+      <h2>1. Vælg et kort</h2>
+      <div class="kort-valg" id="kort-valg"></div>
+      <p class="hint">Malerier af Elisabeth Gram.</p>
+    </div>
+    <div class="trin">
+      <h2>2. Skriv din hilsen</h2>
+      <label for="til">Til</label>
+      <input type="text" id="til" placeholder="Fx Kære Lene" maxlength="80">
+      <label for="besked">Din tekst</label>
+      <textarea id="besked" placeholder="Skriv din hilsen her …" maxlength="900"></textarea>
+      <label for="slut">Slutning</label>
+      <input type="text" id="slut" value="Kærlig hilsen" maxlength="60">
+      <label for="fra">Fra</label>
+      <input type="text" id="fra" maxlength="80">
+      <label for="skrift">Skrift</label>
+      <select id="skrift">
+        <option value="paen">Pæn skrift</option>
+        <option value="haand">Håndskrift</option>
+      </select>
+    </div>
+    <div class="trin">
+      <h2>3. Print eller gem</h2>
+      <button class="print-knap" onclick="window.print()">🖨️ Print på A4 / Gem som PDF</button>
+      <p class="hint">Vælg din printer — eller "Gem som PDF" i printvinduet.</p>
+    </div>
+  </div>
+
+  <div>
+    <div class="forhaand-titel">Sådan ser kortet ud:</div>
+    <div id="kort" class="paen">
+      <div class="maleri"><img id="kort-billede" alt=""></div>
+      <div class="tekst">
+        <div class="til" id="v-til"></div>
+        <div class="besked" id="v-besked"></div>
+        <div class="slut" id="v-slut"></div>
+        <div class="fra" id="v-fra"></div>
+      </div>
+      <div class="bund"><span id="v-maler">Maleri: Elisabeth Gram</span><span>olsenklanen.dk</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Kortene — tilføj flere ved at lægge billedet i billeder/kort/ og skrive en linje her
+const KORT = [
+  { fil: "billeder/kort/hulemaleri.jpg",    titel: "Hulemaleri",      maler: "Elisabeth Gram" },
+  { fil: "billeder/kort/landskab-2014.jpg", titel: "Landskab, 2014",  maler: "Elisabeth Gram" },
+  { fil: "billeder/kort/landskab-2012.jpg", titel: "Landskab, 2012",  maler: "Elisabeth Gram" },
+];
+
+function hent(n){ return sessionStorage.getItem(n) || localStorage.getItem(n) || ""; }
+const $ = id => document.getElementById(id);
+$("fra").value = hent("ok_navn");
+
+let valgt = 0;
+$("kort-valg").innerHTML = KORT.map((k, i) =>
+  `<button type="button" data-i="${i}" title="${k.titel}"><img src="${k.fil}" alt="${k.titel}"></button>`).join("");
+$("kort-valg").querySelectorAll("button").forEach(b => b.onclick = () => { valgt = +b.dataset.i; opdater(); });
+
+function opdater(){
+  const k = KORT[valgt];
+  $("kort-billede").src = k.fil;
+  $("kort-billede").alt = k.titel;
+  $("v-maler").textContent = "Maleri: " + k.maler;
+  $("kort-valg").querySelectorAll("button").forEach((b, i) => b.classList.toggle("valgt", i === valgt));
+  $("v-til").textContent = $("til").value.trim();
+  $("v-besked").textContent = $("besked").value.trim() || "Skriv din hilsen …";
+  $("v-besked").style.color = $("besked").value.trim() ? "" : "#bbb";
+  $("v-slut").textContent = $("slut").value.trim();
+  $("v-fra").textContent = $("fra").value.trim();
+  $("kort").className = $("skrift").value;
+}
+["til", "besked", "slut", "fra"].forEach(id => $(id).addEventListener("input", opdater));
+$("skrift").addEventListener("change", opdater);
+opdater();
+</script>
+<script type="module" src="familieopkald.js"></script>
+</body>
+</html>
