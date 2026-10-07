@@ -8,24 +8,25 @@ window.KALENDER = {
   AAR: 2027,
 
   // Forside (30 × 40 cm) og omslag med årstal (30 × 60 cm)
-  forside: { fil: "billeder/forside.jpg", tekst: "Billedtekst kommer" },
+  forside: { fil: "billeder/forside.jpg", tekst: "Akryl 60 x 60 cm" },
   omslag:  { fil: "billeder/omslag.jpg" },
 
+  // DEMO: billeder og tekster er lånt fra kalender 2023, indtil de nye kommer.
   // Ét billede pr. måned. Filnavn: billeder/01.jpg … billeder/12.jpg
   // tekst = linjen under billedet, fx: "Vinterstemning". Olie 50 x 40 cm.
   maaneder: [
-    { fil: "billeder/01.jpg", tekst: "Billedtekst kommer" },
-    { fil: "billeder/02.jpg", tekst: "Billedtekst kommer" },
-    { fil: "billeder/03.jpg", tekst: "Billedtekst kommer" },
-    { fil: "billeder/04.jpg", tekst: "Billedtekst kommer" },
-    { fil: "billeder/05.jpg", tekst: "Billedtekst kommer" },
-    { fil: "billeder/06.jpg", tekst: "Billedtekst kommer" },
-    { fil: "billeder/07.jpg", tekst: "Billedtekst kommer" },
-    { fil: "billeder/08.jpg", tekst: "Billedtekst kommer" },
-    { fil: "billeder/09.jpg", tekst: "Billedtekst kommer" },
-    { fil: "billeder/10.jpg", tekst: "Billedtekst kommer" },
-    { fil: "billeder/11.jpg", tekst: "Billedtekst kommer" },
-    { fil: "billeder/12.jpg", tekst: "Billedtekst kommer" }
+    { fil: "billeder/01.jpg", tekst: "“Vinterstemning”. Olie 50 x 40 cm." },
+    { fil: "billeder/02.jpg", tekst: "“Morgenstemning”. Olie 50 x 40 cm." },
+    { fil: "billeder/03.jpg", tekst: "Fra serien “Damer for sjov”. Akryl 40 x 50 cm." },
+    { fil: "billeder/04.jpg", tekst: "Fra serien “Pæoner i haven”. Akryl 60 x 60 cm." },
+    { fil: "billeder/05.jpg", tekst: "Fra serien “Pæoner i haven”. Akryl 60 x 60 cm." },
+    { fil: "billeder/06.jpg", tekst: "Fra serien “Pæoner i haven”. Akryl 60 x 60 cm." },
+    { fil: "billeder/07.jpg", tekst: "“Forunderlig valmue”. Akryl 60 x 60 cm." },
+    { fil: "billeder/08.jpg", tekst: "Fra serien “Valmuer”. Akryl 60 x 60 cm." },
+    { fil: "billeder/09.jpg", tekst: "Inspiration “Syrisk rose”. 60 x 60 cm." },
+    { fil: "billeder/10.jpg", tekst: "Fra serien “Damer for sjov” – “Damen med sølvhår”. Akryl 40 x 40 cm." },
+    { fil: "billeder/11.jpg", tekst: "Fra serien “Damer for sjov”. “Damen med guldhår”. Akryl 40 x 40 cm." },
+    { fil: "billeder/12.jpg", tekst: "" }
   ],
 
   // Egne mærkedage (kommer med i kalenderen). Format "MM-DD": "tekst"

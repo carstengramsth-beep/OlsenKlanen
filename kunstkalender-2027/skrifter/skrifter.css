@@ -1,6 +1,6 @@
-@font-face{font-family:'Inter';font-style:normal;font-weight:400;src:url(Inter-400.woff2) format('woff2');}
-@font-face{font-family:'Inter';font-style:normal;font-weight:700;src:url(Inter-700.woff2) format('woff2');}
+@font-face{font-family:'Inter';font-style:normal;font-weight:400;src:url(Inter-400.ttf) format('truetype');}
+@font-face{font-family:'Inter';font-style:normal;font-weight:700;src:url(Inter-700.ttf) format('truetype');}
 @font-face{font-family:'Poppins';font-style:normal;font-weight:500;src:url(Poppins-500.woff2) format('woff2');}
-@font-face{font-family:'Roboto Condensed';font-style:italic;font-weight:400;src:url(RobotoCondensed-400i.woff2) format('woff2');}
-@font-face{font-family:'Roboto Condensed';font-style:normal;font-weight:400;src:url(RobotoCondensed-400.woff2) format('woff2');}
-@font-face{font-family:'Roboto Condensed';font-style:normal;font-weight:700;src:url(RobotoCondensed-700.woff2) format('woff2');}
+@font-face{font-family:'Roboto Condensed';font-style:italic;font-weight:400;src:url(RobotoCondensed-400i.ttf) format('truetype');}
+@font-face{font-family:'Roboto Condensed';font-style:normal;font-weight:400;src:url(RobotoCondensed-400.ttf) format('truetype');}
+@font-face{font-family:'Roboto Condensed';font-style:normal;font-weight:700;src:url(RobotoCondensed-700.ttf) format('truetype');}
