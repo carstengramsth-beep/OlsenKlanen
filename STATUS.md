@@ -45,6 +45,10 @@ Sidst opdateret: 2026-10-06
   - Kortet kan gemmes som PDF eller printes på A4 og lægges på julebordet. Nederst står olsenklanen.dk.
   - Husk EmailJS' gratis loft på 200 mails om måneden (se huskelisten ovenfor). Julehilsner kan hurtigt ramme det.
 
+- **Kort: send til sig selv + send videre med note (Carstens idé, 7. okt. 2026) — laves sammen med julekortene:**
+  - Alle får knappen "Send til mig selv" på siden Skriv et kort (intern post, eller mail hvis man har en godkendt mail). I dag kan kun de 5 postansvarlige sende en prøve til sig selv.
+  - På et kort i OlsenPost kommer knappen "↪ Send videre": vælg modtager og skriv en lille note. Modtageren ser både kortet og noten.
+- **Flere kort fra Elisabeth:** Når konceptet har vist sit værd, laver Elisabeth Gram flere malerier til Skriv et kort. Nye billeder lægges i `billeder/kort/` og tilføjes med én linje i `KORT`-listen i `kort.html` (husk at tælle `BILLED_VERSION` op, hvis et billede ændres).
 - **Lykønskning ved alle mærkedage (Carstens idé, 6. okt. 2026) — afventer fodslag i familien:** Følg først, om fødselsdagshilsnerne bliver taget godt imod, eller om der kommer indsigelser. Bliv enige, før det bygges.
   - Kartoteket har allerede "➕ Begivenhed" (konfirmation, bryllupsdag, sølv-, guld- og diamantbryllup, jubilæum, andet). Tilføj **Student** og **Svendeprøve / uddannelse**.
   - Vis begivenhederne under "Fremhævede begivenheder" på forsiden, ligesom fødselsdagene.
