@@ -1,14 +1,14 @@
 /* ════════════════════════════════════════════════════════════
-   Familieopkald — ring direkte til et familiemedlem, der er på siden
+   Familiechat — skriv direkte med et familiemedlem, der er på siden
    Indsættes på en side med:
      <script type="module" src="familieopkald.js"></script>
 
    • Melder dig som "aktiv", så længe du har siden åben (vmr_opkald/online)
    • Lytter efter opkald til dig (vmr_opkald/kald/<dit nr>)
-   • Ved opkald: et lille bip og et vindue "X ringer til dig" → Tag den / Afvis
-   • Tag den → familiechat.html?rum=... åbner video + chat (Jitsi)
-   Intet gemmes: opkaldet slettes, når det er besvaret, afvist eller udløbet,
-   og samtalen (video og chat) gemmes ikke nogen steder.
+   • Når nogen vil skrive: et lille bip og et vindue "X vil skrive med dig" → Svar / Nej tak
+   • Svar → familiechat.html?rum=... åbner chatten
+   Intet gemmes: forespørgslen slettes, når den er besvaret, afvist eller udløbet,
+   og beskederne slettes, når samtalen slutter.
 
    Bruger en navngiven Firebase-app ("okOpkald"), så den ikke kolliderer
    med sidens egen app (samme læring som post-varsel.js).
@@ -78,10 +78,10 @@ if (MIT_NR && !ER_GAEST) {
       document.body.appendChild(boks);
     }
     boks.innerHTML = `<div class="boks">
-        <div class="ikon">📞</div>
+        <div class="ikon">💬</div>
         <div class="hvem"></div>
-        <div class="tekst">ringer til dig</div>
-        <button class="ja">📹 Tag den</button><button class="nej">Afvis</button>
+        <div class="tekst">vil gerne skrive med dig</div>
+        <button class="ja">💬 Svar</button><button class="nej">Nej tak</button>
       </div>`;
     boks.querySelector(".hvem").textContent = k.fraNavn || "Et familiemedlem";
     boks.querySelector(".ja").onclick = () => {
