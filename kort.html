@@ -31,14 +31,14 @@ textarea { min-height: 150px; resize: vertical; }
 
 /* Selve kortet — A4 (210 × 297 mm). På skærmen er 1cqw = 2,1 mm på papiret. */
 .forhaand-titel { font-size: 15px; color: #555; margin-bottom: 8px; }
-#kort { width: 100%; max-width: 620px; aspect-ratio: 210 / 297; background: #fff; box-shadow: 0 6px 24px rgba(0,0,0,0.18); container-type: inline-size; display: flex; flex-direction: column; padding: 5cqw 2.4cqw 3cqw; overflow: hidden; }
+#kort { width: 100%; max-width: 620px; aspect-ratio: 210 / 297; background: #fff; box-shadow: 0 6px 24px rgba(0,0,0,0.18); container-type: inline-size; display: flex; flex-direction: column; padding: 2.4cqw 2.4cqw 3cqw; overflow: hidden; }
 /* Maleriet fylder 200 × 138 mm (kanterne skæres lidt til, hvis formatet ikke passer) */
-#kort .maleri { flex: 0 0 auto; width: 95.2cqw; height: 65.7cqw; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+#kort .maleri { flex: 0 0 auto; width: 95.2cqw; height: 65.7cqw; margin: 0 auto; display: flex; align-items: flex-start; justify-content: center; }
 #kort .maleri img { width: 100%; height: 100%; object-fit: cover; box-shadow: 0 0.5cqw 1.6cqw rgba(0,0,0,0.25); }
 /* Malerier på højkant beskæres ikke — de vises i fuld højde (138 mm) */
 #kort .maleri img.hoejkant { width: auto; max-width: 100%; object-fit: contain; }
 #kort.hoejkant .maleri { height: 88cqw; }   /* ca. 185 mm høj på papiret */
-#kort .tekst { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 3cqw 8cqw 2cqw; color: #2c3e1f; overflow: hidden; }
+#kort .tekst { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; padding: 5cqw 8cqw 2cqw; color: #2c3e1f; overflow: hidden; }
 /* Skrifttypen vælges af brugeren: --skrift og --f (størrelsesfaktor, så alle skrifter ser lige store ud) */
 #kort { --skrift: 'Dancing Script', cursive; --f: 1.15; }
 #kort .til, #kort .besked, #kort .slut, #kort .fra { font-family: var(--skrift); }
@@ -54,12 +54,12 @@ textarea { min-height: 150px; resize: vertical; }
   html, body { background: #fff; margin: 0; padding: 0; }
   .header, .styring, .forhaand-titel { display: none !important; }
   .wrap { display: block; padding: 0; margin: 0; max-width: none; }
-  #kort { width: 210mm; height: 296mm; max-width: none; aspect-ratio: auto; box-shadow: none; padding: 10mm 5mm 6mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #kort { width: 210mm; height: 296mm; max-width: none; aspect-ratio: auto; box-shadow: none; padding: 5mm 5mm 6mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   #kort .maleri { width: 200mm; height: 138mm; }
   #kort.hoejkant .maleri { height: 185mm; }
   #kort.hoejkant .tekst { padding-top: 4mm; }
   #kort .maleri img { box-shadow: 0 1mm 3mm rgba(0,0,0,0.25); }
-  #kort .tekst { padding: 6mm 17mm 4mm; }
+  #kort .tekst { padding: 10mm 17mm 4mm; }
   /* 14 pkt tekst (16 pkt til navne) — ganget med skrifttypens faktor */
   #kort .til { font-size: calc(16pt * var(--f)); margin-bottom: 4mm; }
   #kort .besked { font-size: calc(14pt * var(--f)); }
