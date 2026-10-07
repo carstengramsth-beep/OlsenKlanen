@@ -61,8 +61,75 @@ exports.logInPostansvarlig = onCall(async (request) => {
     medlemsnr: fuldtNr
   });
 
+  // Kort fra medlem til medlem: PIN er tjekket ovenfor, så afsenderen er bevist.
+  // Kortet lægges i kø her (med admin-rettigheder) og sendes af tjekIndkommendeMail.
+  if (request.data && request.data.kort) {
+    const kortId = await koeMedlemsKort(fuldtNr, husstand, request.data.kort);
+    return { token, postansvarlig: erPostansvarlig, bekraeftet: erBekraeftet, kortId };
+  }
+
   return { token, postansvarlig: erPostansvarlig, bekraeftet: erBekraeftet };
 });
+
+/**
+ * Lægger et kort fra ét medlem til ét andet i kø (olsenpost_mail, type "kort_medlem").
+ * Krav: Begge husstande har bekræftet deres data i kartoteket ("godkendt"),
+ * og både afsender og modtager har en EGEN mail. Højst 20 kort pr. afsender pr. døgn.
+ */
+async function koeMedlemsKort(fraNr, fraHusstand, kort) {
+  const db = getFirestore();
+  const tekst = v => String(v == null ? "" : v).trim();
+  const aktiv = p => p && p.status !== "afdød" && p.status !== "udmeldt";
+  const fornavnAf = p => tekst(p.fornavn || tekst(p.navn).split(/\s+/)[0]);
+
+  if (!fraHusstand.medlemskab_bekraeftet) {
+    throw new HttpsError("failed-precondition", "Din husstand har ikke godkendt sine oplysninger i kartoteket endnu.");
+  }
+  // Afsenderens egen mail: personen i husstanden med samme fornavn
+  const fraFornavn = tekst(kort.fra_fornavn).toLowerCase();
+  const afsender = (fraHusstand.familiemedlemmer || []).find(p => aktiv(p) && fornavnAf(p).toLowerCase() === fraFornavn && tekst(p.email).includes("@"));
+  if (!afsender) {
+    throw new HttpsError("failed-precondition", "Du har ikke din egen mail i kartoteket.");
+  }
+
+  // Modtageren
+  const tilHus = tekst(kort.til_hus);
+  const tilIdx = parseInt(kort.til_idx, 10);
+  const tilSnap = tilHus ? await db.doc("membres/" + tilHus).get() : null;
+  const tilHusstand = tilSnap && tilSnap.exists ? tilSnap.data() : null;
+  const modtager = tilHusstand && (tilHusstand.familiemedlemmer || [])[tilIdx];
+  if (!tilHusstand || !aktiv(modtager) || !tekst(modtager.email).includes("@")) {
+    throw new HttpsError("not-found", "Modtageren har ikke en egen mail i kartoteket.");
+  }
+  if (!tilHusstand.medlemskab_bekraeftet) {
+    throw new HttpsError("failed-precondition", "Modtagerens husstand har ikke godkendt sine oplysninger endnu.");
+  }
+
+  // Højst 20 kort pr. døgn fra samme afsender
+  const siden = Date.now() - 24 * 3600 * 1000;
+  const mine = await db.collection("olsenpost_mail").where("fra_nr", "==", fraNr).get();
+  if (mine.docs.filter(d => d.data().type === "kort_medlem" && (d.data().sendt_lokal || 0) > siden).length >= 20) {
+    throw new HttpsError("resource-exhausted", "Du har sendt mange kort i dag. Prøv igen i morgen.");
+  }
+
+  const fil = tekst(kort.kort_fil);
+  const fraNavn = tekst(kort.fra_navn).slice(0, 80) || fornavnAf(afsender);
+  const tilNavn = [tekst(modtager.fornavn), tekst(modtager.efternavn)].filter(Boolean).join(" ") || tekst(modtager.navn);
+  const ref = await db.collection("olsenpost_mail").add({
+    type: "kort_medlem", status: "afventer",
+    fra_nr: fraNr, fra_navn: fraNavn, fra_email: tekst(afsender.email),
+    til_nr: tilHus, til_navn: tilNavn, til_email: tekst(modtager.email), til_fornavn: fornavnAf(modtager),
+    emne: tekst(kort.emne).slice(0, 100) || ("Et kort fra " + fraNavn),
+    tekst: [tekst(kort.kort_til), tekst(kort.kort_besked), "", tekst(kort.kort_slut), tekst(kort.kort_fra)].join("\n").slice(0, 1500),
+    kort_fil: /^billeder\/kort\/[\w\-]+\.jpg$/.test(fil) ? fil : "",
+    kort_maler: tekst(kort.kort_maler).slice(0, 60),
+    kort_til: tekst(kort.kort_til).slice(0, 80), kort_besked: tekst(kort.kort_besked).slice(0, 900),
+    kort_slut: tekst(kort.kort_slut).slice(0, 60), kort_fra: tekst(kort.kort_fra).slice(0, 80),
+    sendt: FieldValue.serverTimestamp(), sendt_lokal: Date.now(),
+    besvaret: false, besvaret_af: null, besvaret_tid: null
+  });
+  return ref.id;
+}
 
 /**
  * Tjekker løbende post@olsenklanen.dks postkasse (hos Simply.com) for nye
@@ -293,7 +360,8 @@ function escHtml(s) {
 async function sendBrevkort() {
   const db = getFirestore();
   const koe = await db.collection("olsenpost_mail").where("status", "==", "afventer").get();
-  const kort = koe.docs.filter(d => d.data().type === "brevkort" && POSTANSVARLIGE.includes(d.data().fra_nr));
+  // brevkort: til alle (kun fra postansvarlige) · kort_medlem: til ét medlem (lagt i kø af logInPostansvarlig)
+  const kort = koe.docs.filter(d => (d.data().type === "brevkort" && POSTANSVARLIGE.includes(d.data().fra_nr)) || d.data().type === "kort_medlem");
   if (!kort.length) return;
 
   for (const d of kort) {
@@ -312,7 +380,8 @@ async function sendBrevkort() {
       const membres = await db.collection("membres").get();
       const modtagere = new Map();   // mail -> fornavn
       // En prøve sendes kun til afsenderen selv
-      if (k.prove && String(k.til_email || "").includes("@")) modtagere.set("prove", { mail: k.til_email, fornavn: String(k.fra_navn || "").split(/\s+/)[0] });
+      if (k.type === "kort_medlem") modtagere.set("en", { mail: k.til_email, fornavn: k.til_fornavn || "" });
+      else if (k.prove && String(k.til_email || "").includes("@")) modtagere.set("prove", { mail: k.til_email, fornavn: String(k.fra_navn || "").split(/\s+/)[0] });
       else membres.forEach(m => (m.data().familiemedlemmer || []).forEach(p => {
         if (p.status === "afdød" || p.status === "udmeldt") return;
         const mail = String(p.email || "").trim();

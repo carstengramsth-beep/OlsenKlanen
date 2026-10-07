@@ -26,8 +26,8 @@ textarea { min-height: 150px; resize: vertical; }
 .print-knap { width: 100%; background: #2d5016; color: #fff; border: none; border-radius: 8px; padding: 13px; font-family: inherit; font-size: 17px; cursor: pointer; margin-top: 4px; }
 .print-knap:hover { background: #3d6b1f; }
 .hint { font-size: 13px; color: #8a7a3f; font-style: italic; margin-top: 8px; }
-#send-status.ok { color: #155724; font-style: normal; font-weight: bold; }
-#send-status.fejl { color: #b03030; font-style: normal; font-weight: bold; }
+#send-status.ok, #en-status.ok { color: #155724; font-style: normal; font-weight: bold; }
+#send-status.fejl, #en-status.fejl { color: #b03030; font-style: normal; font-weight: bold; }
 
 /* Selve kortet — A4 (210 × 297 mm). På skærmen er 1cqw = 2,1 mm på papiret. */
 .forhaand-titel { font-size: 15px; color: #555; margin-bottom: 8px; }
@@ -102,8 +102,20 @@ try {
       <button class="print-knap" onclick="window.print()">🖨️ Print på A4 / Gem som PDF</button>
       <p class="hint">Vælg din printer — eller "Gem som PDF" i printvinduet. Sæt "Skalering" til 100 % (standard), hvis den kan vælges.</p>
     </div>
+    <div class="trin" id="send-en" style="display:none; border:2px solid #2d7a2d;">
+      <h2>4. Send kortet til et familiemedlem</h2>
+      <p style="font-size:14px; color:#555;">Kortet sendes som mail med maleriet. Du kan sende til dem, der har godkendt deres oplysninger og har deres egen mail i kartoteket. Svar på kortet går direkte til din mail.</p>
+      <label for="en-modtager">Til hvem?</label>
+      <select id="en-modtager"><option value="">Henter …</option></select>
+      <label for="en-emne">Emne i mailen</label>
+      <input type="text" id="en-emne" maxlength="100">
+      <label for="en-pin">Din PIN-kode (så vi ved, at det er dig)</label>
+      <input type="password" id="en-pin" autocomplete="off">
+      <button class="print-knap" id="en-knap" onclick="sendTilEn()" style="background:#2d7a2d;">💌 Send kortet</button>
+      <p class="hint" id="en-status"></p>
+    </div>
     <div class="trin" id="send-alle" style="display:none; border:2px solid #c89e3c;">
-      <h2>4. Send kortet til alle medlemmer</h2>
+      <h2>5. Send kortet til alle medlemmer</h2>
       <p style="font-size:14px; color:#555;">Kortet sendes som mail fra <b>post@olsenklanen.dk</b> til alle medlemmer, der har deres <b>egen mail</b> i kartoteket. Står "Til" tomt, skrives der automatisk "Kære" og modtagerens fornavn.</p>
       <p style="font-size:15px; margin-top:8px;" id="antal-modtagere">Tæller modtagere …</p>
       <label for="emne">Emne i mailen</label>
@@ -115,6 +127,13 @@ try {
       <button class="print-knap" id="prove-knap" onclick="sendTilAlle(true)" style="background:#5a7a3a;">🧪 Send en prøve til mig selv</button>
       <button class="print-knap" id="send-knap" onclick="sendTilAlle(false)" style="background:#8b5a1a; margin-top:8px;">📨 Send kortet til alle</button>
       <p class="hint" id="send-status"></p>
+    </div>
+    <div class="trin" id="kort-arkiv" style="display:none;">
+      <h2>📊 Statistik og arkiv over sendte kort</h2>
+      <div id="kort-stat" style="font-size:15px;">Henter …</div>
+      <details style="margin-top:10px;"><summary style="cursor:pointer; color:#2d5016;">Vis arkivet</summary>
+        <div id="kort-arkiv-liste" style="margin-top:8px; max-height:420px; overflow-y:auto;"></div>
+      </details>
     </div>
   </div>
 
@@ -190,14 +209,15 @@ opdater();
    Serveren (tjekIndkommendeMail, hvert 5. minut) sender det til alle aktive
    medlemmer med egen mail i kartoteket og skriver status tilbage. */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, doc, onSnapshot, serverTimestamp }
+import { getFirestore, collection, getDocs, addDoc, doc, onSnapshot, serverTimestamp, query, where }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 
 const POSTANSVARLIGE = ["8-B", "19-A", "22-B", "23-B", "48-B"];   // samme som i meddelelser.html
 const MIT_NR = window.hent("ok_nr").trim();
-if (POSTANSVARLIGE.includes(MIT_NR)) {
+const ER_GAEST = (window.hent("ok_niveau") || "").toLowerCase() === "gaest";
+if (MIT_NR && !ER_GAEST) {
   const app = initializeApp({
     apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
     authDomain: "olsenklanen-familieside.firebaseapp.com",
@@ -210,21 +230,117 @@ if (POSTANSVARLIGE.includes(MIT_NR)) {
   const auth = getAuth(app);
   const funcs = getFunctions(app, "europe-west1");
   const $ = id => document.getElementById(id);
-  $("send-alle").style.display = "block";
+  const ER_POSTANSVARLIG = POSTANSVARLIGE.includes(MIT_NR);
+  $("send-en").style.display = "block";
+  if (ER_POSTANSVARLIG) $("send-alle").style.display = "block";
+  $("en-emne").value = "Et kort fra " + (window.hent("ok_navn").split(/\s+/)[0] || "OlsenKlanen");
 
-  // Tæl modtagere: aktive personer med EGEN mail (ikke kun husstandens), hver mail én gang
+  // Hent kartoteket: antal til "alle" og listen over mulige modtagere til ét kort
   let antal = 0;
   try {
     const snap = await getDocs(collection(db, "membres"));
     const mails = new Set();
-    snap.forEach(d => (d.data().familiemedlemmer || []).forEach(p => {
-      if (p.status === "afdød" || p.status === "udmeldt") return;
-      const m = String(p.email || "").trim().toLowerCase();
-      if (m.includes("@")) mails.add(m);
-    }));
+    const muligeModtagere = [];
+    snap.forEach(d => {
+      const fam = d.data();
+      (fam.familiemedlemmer || []).forEach((p, idx) => {
+        if (p.status === "afdød" || p.status === "udmeldt") return;
+        const m = String(p.email || "").trim().toLowerCase();
+        if (!m.includes("@")) return;
+        mails.add(m);
+        // Til ét kort: kun husstande, der har godkendt deres oplysninger
+        if (fam.medlemskab_bekraeftet) {
+          const navn = [p.fornavn, p.efternavn].filter(Boolean).join(" ") || String(p.navn || "").trim();
+          if (navn) muligeModtagere.push({ hus: d.id, idx, navn });
+        }
+      });
+    });
     antal = mails.size;
     $("antal-modtagere").innerHTML = "📬 Kortet sendes til <b>" + antal + "</b> medlemmer med egen mail.";
-  } catch(e) { $("antal-modtagere").textContent = "Kunne ikke tælle modtagerne."; }
+    const mitNavn = window.hent("ok_navn").trim().toLowerCase();
+    const liste = muligeModtagere.filter(m => m.navn.toLowerCase() !== mitNavn).sort((a, b) => a.navn.localeCompare(b.navn, "da"));
+    $("en-modtager").innerHTML = '<option value="">— Vælg modtager —</option>' +
+      liste.map(m => `<option value="${m.hus}|${m.idx}">${m.navn.replace(/</g, "&lt;")}</option>`).join("");
+  } catch(e) {
+    $("antal-modtagere").textContent = "Kunne ikke tælle modtagerne.";
+    $("en-modtager").innerHTML = '<option value="">Kunne ikke hente listen</option>';
+  }
+
+  // ── Statistik og arkiv (kun postansvarlige) ──
+  if (ER_POSTANSVARLIG) {
+    $("kort-arkiv").style.display = "block";
+    try {
+      const snap = await getDocs(query(collection(db, "olsenpost_mail"), where("type", "in", ["kort_medlem", "brevkort"])));
+      const alle = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(k => !k.prove).sort((a, b) => (b.sendt_lokal || 0) - (a.sendt_lokal || 0));
+      const enkelt = alle.filter(k => k.type === "kort_medlem");
+      const tilAlle = alle.filter(k => k.type === "brevkort");
+      const afsendere = new Set(alle.map(k => k.fra_nr));
+      const mailsIAlt = enkelt.filter(k => k.status === "sendt").length + tilAlle.reduce((n, k) => n + (k.antal_sendt || 0), 0);
+      const dette = new Date().getFullYear();
+      const iAar = alle.filter(k => new Date(k.sendt_lokal || 0).getFullYear() === dette).length;
+      const tael = {};
+      alle.forEach(k => { tael[k.fra_navn || k.fra_nr] = (tael[k.fra_navn || k.fra_nr] || 0) + 1; });
+      const top = Object.entries(tael).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      $("kort-stat").innerHTML = `
+        <div>💌 Kort fra medlem til medlem: <b>${enkelt.length}</b></div>
+        <div>📨 Kort til alle medlemmer: <b>${tilAlle.length}</b></div>
+        <div>✉️ Mails sendt i alt: <b>${mailsIAlt}</b></div>
+        <div>👥 Forskellige afsendere: <b>${afsendere.size}</b></div>
+        <div>📅 Kort sendt i ${dette}: <b>${iAar}</b></div>
+        ${top.length ? `<div style="margin-top:6px;">🏆 Flest kort: ${top.map(([n, c]) => n.replace(/</g, "&lt;") + " (" + c + ")").join(", ")}</div>` : ""}`;
+      const dato = ms => ms ? new Date(ms).toLocaleDateString("da-DK", { day: "numeric", month: "short", year: "numeric" }) : "";
+      const esc = t => String(t || "").replace(/&/g, "&amp;").replace(/</g, "&lt;");
+      $("kort-arkiv-liste").innerHTML = alle.length ? alle.map(k => `
+        <div style="border-bottom:1px solid #eee; padding:8px 0; font-size:14px;">
+          <div><b>${esc(dato(k.sendt_lokal))}</b> · ${esc(k.fra_navn)} → ${esc(k.type === "brevkort" ? "alle (" + (k.antal_sendt || 0) + ")" : k.til_navn)}</div>
+          <div style="color:#666;">${esc(k.emne)} · <i>${esc(k.status === "sendt" ? "sendt" : k.status)}</i></div>
+          <details><summary style="cursor:pointer; font-size:13px; color:#8a7a3f;">Se teksten</summary><div style="white-space:pre-wrap; font-size:13px; background:#fdfbf5; padding:6px 8px; border-radius:4px;">${esc(k.tekst)}</div></details>
+        </div>`).join("") : '<div class="hint">Der er ikke sendt nogen kort endnu.</div>';
+    } catch(e) {
+      console.log("Kort-statistik:", e);
+      $("kort-stat").textContent = "Kunne ikke hente statistikken.";
+    }
+  }
+
+  // ── Send til ét medlem (PIN tjekkes af serveren, som også tjekker godkendte mails) ──
+  function enStatus(tekst, klasse){ const el = $("en-status"); el.textContent = tekst; el.className = "hint " + (klasse || ""); }
+  window.sendTilEn = async function(){
+    const valg = $("en-modtager").value;
+    const besked = $("besked").value.trim();
+    const pin = $("en-pin").value.trim();
+    if (!valg) { enStatus("Vælg hvem kortet skal til.", "fejl"); return; }
+    if (!besked) { enStatus("Skriv en tekst på kortet først.", "fejl"); return; }
+    if (!pin) { enStatus("Skriv din PIN-kode.", "fejl"); return; }
+    const [til_hus, til_idx] = valg.split("|");
+    const k = window.valgtKort();
+    const knap = $("en-knap");
+    knap.disabled = true;
+    enStatus("⏳ Sender …");
+    try {
+      const res = await httpsCallable(funcs, "logInPostansvarlig")({
+        nr: MIT_NR, pin,
+        kort: {
+          til_hus, til_idx, emne: $("en-emne").value.trim(),
+          fra_fornavn: window.hent("ok_navn").trim().split(/\s+/)[0], fra_navn: window.hent("ok_navn").trim(),
+          kort_fil: k.fil, kort_maler: k.maler,
+          kort_til: $("til").value.trim(), kort_besked: besked, kort_slut: $("slut").value.trim(), kort_fra: $("fra").value.trim()
+        }
+      });
+      $("en-pin").value = "";
+      const navn = $("en-modtager").selectedOptions[0].textContent;
+      enStatus("✅ Kortet til " + navn + " er sat i kø. Det bliver sendt inden for 5 minutter …", "ok");
+      if (res.data && res.data.kortId) onSnapshot(doc(db, "olsenpost_mail", res.data.kortId), s => {
+        const d = s.data() || {};
+        if (d.status === "sendt") enStatus("✅ Kortet er sendt til " + navn + ".", "ok");
+        if (d.status === "fejl") enStatus("Kortet kunne ikke sendes: " + (d.mail_fejl || "ukendt fejl"), "fejl");
+      });
+    } catch(e) {
+      console.log("Kort til medlem fejlede:", e);
+      const msg = String(e && e.message || "");
+      enStatus(msg.includes("PIN") ? "Forkert PIN-kode." : (msg && !msg.includes("internal") ? msg : "Det lykkedes ikke. Prøv igen."), "fejl");
+    }
+    knap.disabled = false;
+  };
 
   // Er man allerede bekræftet med PIN i denne browser, skal PIN ikke tastes igen
   let bekraeftet = false;
@@ -237,6 +353,7 @@ if (POSTANSVARLIGE.includes(MIT_NR)) {
   function status(tekst, klasse){ const el = $("send-status"); el.textContent = tekst; el.className = "hint " + (klasse || ""); }
 
   window.sendTilAlle = async function(prove){
+    if (!ER_POSTANSVARLIG) return;
     const besked = $("besked").value.trim();
     if (!besked) { status("Skriv en tekst på kortet først.", "fejl"); return; }
     if (!antal && !prove) { status("Der er ingen modtagere.", "fejl"); return; }
