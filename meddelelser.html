@@ -422,7 +422,7 @@ try {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc, deleteDoc,
-         query, where, orderBy, onSnapshot, serverTimestamp, arrayUnion, increment }
+         query, where, orderBy, onSnapshot, serverTimestamp, arrayUnion, arrayRemove, increment }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
@@ -1677,14 +1677,30 @@ function lytIntern(){
 function tegnIntern(){
   const el = document.getElementById("intern-indbakke-liste");
   if (!internData.length) { el.innerHTML = '<div class="tom">Ingen interne beskeder endnu.</div>'; return; }
-  el.innerHTML = '<div class="kort"><h2>Dine interne beskeder</h2></div>' + internData.map(m => `
+  // ⭐ Gemte beskeder står for sig selv øverst; resten nedenunder
+  const erGemt = m => (m.gemt_af || []).includes(MIT_NR);
+  const gemte = internData.filter(erGemt), andre = internData.filter(m => !erGemt(m));
+  const beskedHtml = m => `
     <div class="mail-kort${internNye.has(m.id) ? ' ulaest' : ''}${m.id === FREMHAEV_ID ? ' fremhaev' : ''}" id="intern-${enc(m.id)}">
       <div class="mail-top">
-        <span class="mail-fra">${internNye.has(m.id) ? '<span class="ny-maerke">🆕 Ny</span>' : ''}${escHtml(m.fra_navn)}</span>
+        <span class="mail-fra">${internNye.has(m.id) ? '<span class="ny-maerke">🆕 Ny</span>' : ''}${m.type === "kort" ? "🖼️ Kort fra " : ""}${escHtml(m.fra_navn)}</span>
         <span class="mail-tid">${tidTekst(m.sendt)}</span>
       </div>
-      <div class="mail-tekst">${escHtml(m.tekst)}</div>
-    </div>`).join("");
+      ${m.type === "kort" && /^billeder\/kort\/[\w\-]+\.jpg$/.test(m.kort_fil || "") ? `
+        <img src="${enc(m.kort_fil)}" alt="" style="width:100%; max-width:520px; display:block; margin:10px 0; border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+        ${m.kort_til ? `<div style="font-size:18px; margin-bottom:6px;">${escHtml(m.kort_til)}</div>` : ""}
+        <div class="mail-tekst">${escHtml(m.kort_besked || "")}</div>
+        ${m.kort_slut || m.kort_fra ? `<div style="margin-top:10px;">${escHtml(m.kort_slut || "")}<br><b>${escHtml(m.kort_fra || "")}</b></div>` : ""}
+        ${m.kort_maler ? `<div style="font-size:12px; color:#8a7a3f; font-style:italic; margin-top:8px;">Maleri: ${escHtml(m.kort_maler)}</div>` : ""}`
+      : `<div class="mail-tekst">${escHtml(m.tekst)}</div>`}
+      <div class="mail-handlinger">
+        <button class="knap lille${erGemt(m) ? '' : ' grå'}" onclick="gemIntern('${enc(m.id)}', ${erGemt(m)})">${erGemt(m) ? '⭐ Gemt — fjern' : '☆ Gem'}</button>
+      </div>
+    </div>`;
+  el.innerHTML =
+    (gemte.length ? '<div class="kort"><h2>⭐ Gemte beskeder</h2></div>' + gemte.map(beskedHtml).join("") : "") +
+    '<div class="kort"><h2>Dine interne beskeder</h2></div>' +
+    (andre.length ? andre.map(beskedHtml).join("") : '<div class="tom">Ingen andre beskeder.</div>');
 
   // Første gang: rul til den besked, linket pegede på
   if (!internScrollet && START_FANE === "intern") {
@@ -1699,6 +1715,13 @@ function tegnIntern(){
       .catch(e => console.log("Kunne ikke markere besked som set:", e));
   });
 }
+
+// ⭐ Gem / fjern en intern besked i "Gemte beskeder"
+window.gemIntern = async function(id, erGemt){
+  try {
+    await updateDoc(doc(db, "olsenpost", id), { gemt_af: erGemt ? arrayRemove(MIT_NR) : arrayUnion(MIT_NR) });
+  } catch(e) { console.log("Kunne ikke gemme beskeden:", e); alert("Det lykkedes ikke. Prøv igen."); }
+};
 
 window.sendIntern = async function(){
   const tekst = document.getElementById("tekst-intern").value.trim();
