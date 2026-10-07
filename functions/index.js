@@ -92,12 +92,13 @@ async function koeMedlemsKort(fraNr, fraHusstand, kort) {
     throw new HttpsError("failed-precondition", "Du har ikke din egen mail i kartoteket.");
   }
 
-  // Modtageren
-  const tilHus = tekst(kort.til_hus);
+  // Modtageren — "til mig selv" sendes til afsenderens egen mail
+  const tilSelv = kort.til_selv === true;
+  const tilHus = tilSelv ? fraNr.split("-")[0] : tekst(kort.til_hus);
   const tilIdx = parseInt(kort.til_idx, 10);
   const tilSnap = tilHus ? await db.doc("membres/" + tilHus).get() : null;
   const tilHusstand = tilSnap && tilSnap.exists ? tilSnap.data() : null;
-  const modtager = tilHusstand && (tilHusstand.familiemedlemmer || [])[tilIdx];
+  const modtager = tilSelv ? afsender : (tilHusstand && (tilHusstand.familiemedlemmer || [])[tilIdx]);
   if (!tilHusstand || !aktiv(modtager) || !tekst(modtager.email).includes("@")) {
     throw new HttpsError("not-found", "Modtageren har ikke en egen mail i kartoteket.");
   }
@@ -421,7 +422,7 @@ async function sendBrevkort() {
       <a href="https://olsenklanen.dk/kort.html?vis=${d.id}" style="display:inline-block;background:#2d5016;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-size:15px;">🖨️ Åbn kortet til print</a>
     </div>
     <div style="border-top:1px solid #d8cfae;margin-top:18px;padding-top:8px;font-size:12px;color:#8a7a3f;font-style:italic;">
-      ${k.kort_maler ? "Maleri: " + escHtml(k.kort_maler) + " · " : ""}<a href="https://olsenklanen.dk" style="color:#8a7a3f;">olsenklanen.dk</a>
+      ${k.kort_maler ? "Maleri: © " + escHtml(k.kort_maler) + " · " : ""}Kortet er lavet på <a href="https://olsenklanen.dk" style="color:#8a7a3f;">olsenklanen.dk</a> — Familieforeningen OlsenKlanen
     </div>
   </div>
 </div>`;

@@ -113,6 +113,7 @@ try {
         <label style="margin:0; color:#2c3e1f;"><input type="radio" name="en-maade" value="mail"> ✉️ <b>Rigtig mail</b> — kræver at I begge har en godkendt mail</label>
       </div>
       <p style="font-size:13px; color:#777; margin-top:6px;" id="en-forklaring"></p>
+      <p style="font-size:13px; color:#2d5016; margin-top:4px;">🧪 Vælg <b>"Mig selv"</b> for at sende et prøvekort til dig selv. Derefter må du gerne sende kortet videre til hvem du vil — også uden for klanen. Maleriets ophav (© Elisabeth Gram) og olsenklanen.dk står altid på kortet.</p>
       <label for="en-modtager">Til hvem?</label>
       <select id="en-modtager"><option value="">Henter …</option></select>
       <div id="en-mail-felter">
@@ -158,7 +159,7 @@ try {
         <div class="slut" id="v-slut"></div>
         <div class="fra" id="v-fra"></div>
       </div>
-      <div class="bund"><span id="v-maler">Maleri: Elisabeth Gram</span><span>olsenklanen.dk</span></div>
+      <div class="bund"><span id="v-maler">Maleri: © Elisabeth Gram</span><span>Kortet er lavet på olsenklanen.dk</span></div>
     </div></div>
   </div>
 </div>
@@ -208,7 +209,7 @@ function opdater(){
   };
   $("kort-billede").src = k.fil + "?v=" + BILLED_VERSION;
   $("kort-billede").alt = k.titel;
-  $("v-maler").textContent = "Maleri: " + k.maler;
+  $("v-maler").textContent = "Maleri: © " + k.maler;
   $("kort-valg").querySelectorAll("button").forEach((b, i) => b.classList.toggle("valgt", i === valgt));
   $("v-til").textContent = $("til").value.trim();
   $("v-besked").textContent = $("besked").value.trim() || "Skriv din hilsen …";
@@ -292,6 +293,7 @@ if (MIT_NR && !ER_GAEST) {
       .filter(m => m.navn.toLowerCase() !== mitNavn && m.nr !== MIT_NR)
       .sort((a, b) => a.navn.localeCompare(b.navn, "da"));
     $("en-modtager").innerHTML = '<option value="">— Vælg modtager —</option>' +
+      `<option value="${erMail ? "selv" : MIT_NR}">🧪 Mig selv (prøvekort)</option>` +
       liste.map(m => `<option value="${erMail ? m.hus + "|" + m.idx : m.nr}">${m.navn.replace(/</g, "&lt;")}</option>`).join("");
     $("en-mail-felter").style.display = erMail ? "block" : "none";
     $("en-forklaring").textContent = erMail
@@ -414,7 +416,8 @@ if (MIT_NR && !ER_GAEST) {
       return;
     }
     if (!pin) { enStatus("Skriv din PIN-kode.", "fejl"); return; }
-    const [til_hus, til_idx] = valg.split("|");
+    const tilSelv = valg === "selv";
+    const [til_hus, til_idx] = tilSelv ? ["", ""] : valg.split("|");
     const k = window.valgtKort();
     const knap = $("en-knap");
     knap.disabled = true;
@@ -423,7 +426,7 @@ if (MIT_NR && !ER_GAEST) {
       const res = await httpsCallable(funcs, "logInPostansvarlig")({
         nr: MIT_NR, pin,
         kort: {
-          til_hus, til_idx, emne: $("en-emne").value.trim(),
+          til_hus, til_idx, til_selv: tilSelv, emne: $("en-emne").value.trim(),
           fra_fornavn: window.hent("ok_navn").trim().split(/\s+/)[0], fra_navn: window.hent("ok_navn").trim(),
           kort_fil: k.fil, kort_maler: k.maler,
           kort_til: $("til").value.trim(), kort_besked: besked, kort_slut: $("slut").value.trim(), kort_fra: $("fra").value.trim(),
