@@ -37,11 +37,13 @@ textarea { min-height: 150px; resize: vertical; }
   width: 210mm; height: 296mm; background: #fff; display: flex; flex-direction: column; padding: 5mm 5mm 6mm; overflow: hidden;
   --skrift: 'Dancing Script', cursive; --f: 1.15; }
 /* Maleriet fylder 200 × 138 mm (kanterne skæres lidt til, hvis formatet ikke passer) */
-#kort .maleri { flex: 0 0 auto; width: 200mm; height: 138mm; margin: 0 auto; display: flex; align-items: flex-start; justify-content: center; }
-#kort .maleri img { width: 100%; height: 100%; object-fit: cover; box-shadow: 0 1mm 3mm rgba(0,0,0,0.25); }
+/* Maleriet med billedtekst (ophav) lige under maleriets højre kant */
+#kort .maleri { flex: 0 0 auto; width: 200mm; margin: 0 auto; display: flex; justify-content: center; }
+#kort .maleri figure { margin: 0; display: flex; flex-direction: column; align-items: flex-end; max-width: 200mm; }
+#kort .maleri img { width: 200mm; height: 138mm; object-fit: cover; box-shadow: 0 1mm 3mm rgba(0,0,0,0.25); display: block; }
+#kort .maleri figcaption { font-size: 9pt; color: #8a7a3f; font-style: italic; margin-top: 1.8mm; text-align: right; }
 /* Malerier på højkant beskæres ikke — de vises i fuld højde (ca. 185 mm) */
-#kort .maleri img.hoejkant { width: auto; max-width: 100%; object-fit: contain; }
-#kort.hoejkant .maleri { height: 185mm; }
+#kort .maleri img.hoejkant { width: auto; height: 180mm; max-width: 200mm; object-fit: contain; }
 #kort .tekst { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; padding: 10mm 17mm 4mm; color: #2c3e1f; overflow: hidden; }
 #kort.hoejkant .tekst { padding-top: 6mm; }
 /* Skrifttypen vælges af brugeren: --skrift og --f (størrelsesfaktor). 14 pkt tekst, 16 pkt navne */
@@ -50,7 +52,7 @@ textarea { min-height: 150px; resize: vertical; }
 #kort .besked { font-size: calc(14pt * var(--f)); line-height: 1.45; white-space: pre-wrap; }
 #kort .slut { font-size: calc(14pt * var(--f)); margin-top: 6mm; }
 #kort .fra { font-size: calc(16pt * var(--f)); margin-top: 1mm; }
-#kort .bund { flex: 0 0 auto; margin: 0 12mm; border-top: 0.4mm solid #d8cfae; padding-top: 3mm; display: flex; justify-content: space-between; font-size: 9pt; color: #8a7a3f; font-style: italic; }
+
 body.vis .wrap { display: block; max-width: 660px; }
 
 /* Udskrift: siden vises i fuld størrelse uden skalering */
@@ -152,14 +154,13 @@ try {
     <div class="forhaand-titel" id="forhaand-titel">Sådan ser kortet ud:</div>
     <button class="print-knap forhaand-titel" id="vis-print" onclick="window.print()" style="display:none; max-width:620px; margin-bottom:12px;">🖨️ Print kortet på A4 / Gem som PDF</button>
     <div id="kort-ramme"><div id="kort">
-      <div class="maleri"><img id="kort-billede" alt=""></div>
+      <div class="maleri"><figure><img id="kort-billede" alt=""><figcaption id="v-maler">Maleri: © Elisabeth Gram · olsenklanen.dk</figcaption></figure></div>
       <div class="tekst">
         <div class="til" id="v-til"></div>
         <div class="besked" id="v-besked"></div>
         <div class="slut" id="v-slut"></div>
         <div class="fra" id="v-fra"></div>
       </div>
-      <div class="bund"><span id="v-maler">Maleri: © Elisabeth Gram</span><span>Kortet er lavet på olsenklanen.dk</span></div>
     </div></div>
   </div>
 </div>
@@ -209,7 +210,7 @@ function opdater(){
   };
   $("kort-billede").src = k.fil + "?v=" + BILLED_VERSION;
   $("kort-billede").alt = k.titel;
-  $("v-maler").textContent = "Maleri: © " + k.maler;
+  $("v-maler").textContent = "Maleri: © " + k.maler + " · olsenklanen.dk";
   $("kort-valg").querySelectorAll("button").forEach((b, i) => b.classList.toggle("valgt", i === valgt));
   $("v-til").textContent = $("til").value.trim();
   $("v-besked").textContent = $("besked").value.trim() || "Skriv din hilsen …";
