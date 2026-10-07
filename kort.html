@@ -104,13 +104,20 @@ try {
     </div>
     <div class="trin" id="send-en" style="display:none; border:2px solid #2d7a2d;">
       <h2>4. Send kortet til et familiemedlem</h2>
-      <p style="font-size:14px; color:#555;">Kortet sendes som mail med maleriet. Du kan sende til dem, der har godkendt deres oplysninger og har deres egen mail i kartoteket. Svar på kortet går direkte til din mail.</p>
+      <label>Hvordan skal kortet sendes?</label>
+      <div style="display:flex; flex-direction:column; gap:6px; font-size:15px;">
+        <label style="margin:0; color:#2c3e1f;"><input type="radio" name="en-maade" value="intern" checked> 📬 <b>Intern post</b> — kortet kommer i modtagerens OlsenPost på hjemmesiden</label>
+        <label style="margin:0; color:#2c3e1f;"><input type="radio" name="en-maade" value="mail"> ✉️ <b>Rigtig mail</b> — kræver at I begge har en godkendt mail</label>
+      </div>
+      <p style="font-size:13px; color:#777; margin-top:6px;" id="en-forklaring"></p>
       <label for="en-modtager">Til hvem?</label>
       <select id="en-modtager"><option value="">Henter …</option></select>
-      <label for="en-emne">Emne i mailen</label>
-      <input type="text" id="en-emne" maxlength="100">
-      <label for="en-pin">Din PIN-kode (så vi ved, at det er dig)</label>
-      <input type="password" id="en-pin" autocomplete="off">
+      <div id="en-mail-felter">
+        <label for="en-emne">Emne i mailen</label>
+        <input type="text" id="en-emne" maxlength="100">
+        <label for="en-pin">Din PIN-kode (så vi ved, at det er dig)</label>
+        <input type="password" id="en-pin" autocomplete="off">
+      </div>
       <button class="print-knap" id="en-knap" onclick="sendTilEn()" style="background:#2d7a2d;">💌 Send kortet</button>
       <p class="hint" id="en-status"></p>
     </div>
@@ -235,12 +242,46 @@ if (MIT_NR && !ER_GAEST) {
   if (ER_POSTANSVARLIG) $("send-alle").style.display = "block";
   $("en-emne").value = "Et kort fra " + (window.hent("ok_navn").split(/\s+/)[0] || "OlsenKlanen");
 
-  // Hent kartoteket: antal til "alle" og listen over mulige modtagere til ét kort
+  // Hent kartoteket: antal til "alle" og listerne over mulige modtagere til ét kort
   let antal = 0;
+  const internModtagere = [];
+  let mailModtagere = [];
+  const maade = () => document.querySelector('input[name="en-maade"]:checked').value;
+  function visModtagere(){
+    const mitNavn = window.hent("ok_navn").trim().toLowerCase();
+    const erMail = maade() === "mail";
+    const liste = (erMail ? mailModtagere : internModtagere)
+      .filter(m => m.navn.toLowerCase() !== mitNavn && m.nr !== MIT_NR)
+      .sort((a, b) => a.navn.localeCompare(b.navn, "da"));
+    $("en-modtager").innerHTML = '<option value="">— Vælg modtager —</option>' +
+      liste.map(m => `<option value="${erMail ? m.hus + "|" + m.idx : m.nr}">${m.navn.replace(/</g, "&lt;")}</option>`).join("");
+    $("en-mail-felter").style.display = erMail ? "block" : "none";
+    $("en-forklaring").textContent = erMail
+      ? "Kortet sendes som mail med maleriet. Listen viser dem, der har godkendt deres oplysninger og har egen mail. Svar går direkte til din mail."
+      : "Kortet kommer i modtagerens OlsenPost under \"Intern besked\". Er modtageren på hjemmesiden, ser hun/han det med det samme. Virker også for dem uden mail.";
+    $("en-knap").textContent = erMail ? "✉️ Send kortet som mail" : "📬 Send kortet som intern post";
+  }
+  document.querySelectorAll('input[name="en-maade"]').forEach(r => r.addEventListener("change", visModtagere));
   try {
     const snap = await getDocs(collection(db, "membres"));
     const mails = new Set();
     const muligeModtagere = [];
+    // Intern post: alle aktive medlemmer med medlemsnummer (samme nummer som ved login)
+    const foedselsTal = p => { const m = String(p.foedselsdato || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? Number(m[1] + m[2] + m[3]) : 99999999; };
+    snap.forEach(d => {
+      const fam = d.data(), hus = d.id, alle = fam.familiemedlemmer || [];
+      const voksne = alle.filter(p => p.rolle !== "barn" && p.status !== "afdød" && p.status !== "udmeldt").sort((a, b) => foedselsTal(a) - foedselsTal(b));
+      const boern = alle.filter(p => p.rolle === "barn");
+      alle.forEach(p => {
+        if (p.status === "afdød" || p.status === "udmeldt") return;
+        const navn = [p.fornavn, p.efternavn].filter(Boolean).join(" ") || String(p.navn || "").trim();
+        if (!navn) return;
+        let nr = p.fastNr ? String(p.fastNr) : "";
+        if (!nr && p.rolle === "barn") nr = String(p.medlemsnummer || p.nr || "").trim() || (hus + "-" + (boern.indexOf(p) + 1));
+        if (!nr) nr = hus + "-" + (p.bogstav || String.fromCharCode(65 + voksne.indexOf(p)));
+        internModtagere.push({ nr, navn });
+      });
+    });
     snap.forEach(d => {
       const fam = d.data();
       (fam.familiemedlemmer || []).forEach((p, idx) => {
@@ -257,10 +298,8 @@ if (MIT_NR && !ER_GAEST) {
     });
     antal = mails.size;
     $("antal-modtagere").innerHTML = "📬 Kortet sendes til <b>" + antal + "</b> medlemmer med egen mail.";
-    const mitNavn = window.hent("ok_navn").trim().toLowerCase();
-    const liste = muligeModtagere.filter(m => m.navn.toLowerCase() !== mitNavn).sort((a, b) => a.navn.localeCompare(b.navn, "da"));
-    $("en-modtager").innerHTML = '<option value="">— Vælg modtager —</option>' +
-      liste.map(m => `<option value="${m.hus}|${m.idx}">${m.navn.replace(/</g, "&lt;")}</option>`).join("");
+    mailModtagere = muligeModtagere;
+    visModtagere();
   } catch(e) {
     $("antal-modtagere").textContent = "Kunne ikke tælle modtagerne.";
     $("en-modtager").innerHTML = '<option value="">Kunne ikke hente listen</option>';
@@ -310,6 +349,31 @@ if (MIT_NR && !ER_GAEST) {
     const pin = $("en-pin").value.trim();
     if (!valg) { enStatus("Vælg hvem kortet skal til.", "fejl"); return; }
     if (!besked) { enStatus("Skriv en tekst på kortet først.", "fejl"); return; }
+    if (maade() === "intern") {
+      // Intern post: lægges i olsenpost (samme sted som interne beskeder) — vises i OlsenPost
+      const k = window.valgtKort();
+      const navn = $("en-modtager").selectedOptions[0].textContent;
+      const knap = $("en-knap");
+      knap.disabled = true;
+      try {
+        await addDoc(collection(db, "olsenpost"), {
+          fra_nr: MIT_NR, fra_navn: window.hent("ok_navn").trim() || ("Medlem " + MIT_NR),
+          til: [valg], til_navne: [navn],
+          type: "kort",
+          tekst: [$("til").value.trim(), besked, "", $("slut").value.trim(), $("fra").value.trim()].join("\n").trim(),
+          kort_fil: k.fil, kort_maler: k.maler,
+          kort_til: $("til").value.trim(), kort_besked: besked, kort_slut: $("slut").value.trim(), kort_fra: $("fra").value.trim(),
+          sendt: serverTimestamp(), sendt_lokal: Date.now(),
+          set_af: [], svar: [], gemt_af: []
+        });
+        enStatus("✅ Kortet er sendt til " + navn + " som intern post.", "ok");
+      } catch(e) {
+        console.log("Intern post fejlede:", e);
+        enStatus("Det lykkedes ikke. Prøv igen.", "fejl");
+      }
+      knap.disabled = false;
+      return;
+    }
     if (!pin) { enStatus("Skriv din PIN-kode.", "fejl"); return; }
     const [til_hus, til_idx] = valg.split("|");
     const k = window.valgtKort();
