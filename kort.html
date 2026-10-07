@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OlsenKlanen · Skriv et kort</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=EB+Garamond:ital@0;1&family=Caveat:wght@500&family=Great+Vibes&family=Kalam&family=Lora&family=Open+Sans&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; }
@@ -30,17 +30,17 @@ textarea { min-height: 150px; resize: vertical; }
 /* Selve kortet — A4 (210 × 297 mm). På skærmen er 1cqw = 2,1 mm på papiret. */
 .forhaand-titel { font-size: 15px; color: #555; margin-bottom: 8px; }
 #kort { width: 100%; max-width: 620px; aspect-ratio: 210 / 297; background: #fff; box-shadow: 0 6px 24px rgba(0,0,0,0.18); container-type: inline-size; display: flex; flex-direction: column; padding: 5cqw 2.4cqw 3cqw; overflow: hidden; }
-/* Maleriet: højst 200 × 138 mm */
+/* Maleriet fylder 200 × 138 mm (kanterne skæres lidt til, hvis formatet ikke passer) */
 #kort .maleri { flex: 0 0 auto; width: 95.2cqw; height: 65.7cqw; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
-#kort .maleri img { max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 0.5cqw 1.6cqw rgba(0,0,0,0.25); }
+#kort .maleri img { width: 100%; height: 100%; object-fit: cover; box-shadow: 0 0.5cqw 1.6cqw rgba(0,0,0,0.25); }
 #kort .tekst { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 3cqw 8cqw 2cqw; color: #2c3e1f; overflow: hidden; }
-#kort .til { font-size: 3.7cqw; margin-bottom: 2cqw; }
-#kort .besked { font-size: 2.7cqw; line-height: 1.5; white-space: pre-wrap; }
-#kort .slut { font-size: 2.7cqw; margin-top: 3cqw; }
-#kort .fra { font-size: 3.2cqw; margin-top: 0.4cqw; }
-#kort.haand .til, #kort.haand .besked, #kort.haand .slut, #kort.haand .fra { font-family: 'Dancing Script', cursive; }
-#kort.haand .besked { font-size: 3.2cqw; line-height: 1.35; }
-#kort.paen .til, #kort.paen .besked, #kort.paen .slut, #kort.paen .fra { font-family: 'EB Garamond', Georgia, serif; }
+/* Skrifttypen vælges af brugeren: --skrift og --f (størrelsesfaktor, så alle skrifter ser lige store ud) */
+#kort { --skrift: 'Dancing Script', cursive; --f: 1.15; }
+#kort .til, #kort .besked, #kort .slut, #kort .fra { font-family: var(--skrift); }
+#kort .til { font-size: calc(2.7cqw * var(--f)); margin-bottom: 2cqw; }
+#kort .besked { font-size: calc(2.35cqw * var(--f)); line-height: 1.45; white-space: pre-wrap; }
+#kort .slut { font-size: calc(2.35cqw * var(--f)); margin-top: 3cqw; }
+#kort .fra { font-size: calc(2.7cqw * var(--f)); margin-top: 0.4cqw; }
 #kort .bund { flex: 0 0 auto; margin: 0 5.6cqw; border-top: 0.2cqw solid #d8cfae; padding-top: 1.4cqw; display: flex; justify-content: space-between; font-size: 1.5cqw; color: #8a7a3f; font-style: italic; }
 
 /* Udskrift: faste mål i mm og pt, så kortet bliver ens på alle computere */
@@ -53,11 +53,11 @@ textarea { min-height: 150px; resize: vertical; }
   #kort .maleri { width: 200mm; height: 138mm; }
   #kort .maleri img { box-shadow: 0 1mm 3mm rgba(0,0,0,0.25); }
   #kort .tekst { padding: 6mm 17mm 4mm; }
-  #kort .til { font-size: 22pt; margin-bottom: 4mm; }
-  #kort .besked { font-size: 16pt; }
-  #kort.haand .besked { font-size: 19pt; }
-  #kort .slut { font-size: 16pt; margin-top: 6mm; }
-  #kort .fra { font-size: 19pt; margin-top: 1mm; }
+  /* 14 pkt tekst (16 pkt til navne) — ganget med skrifttypens faktor */
+  #kort .til { font-size: calc(16pt * var(--f)); margin-bottom: 4mm; }
+  #kort .besked { font-size: calc(14pt * var(--f)); }
+  #kort .slut { font-size: calc(14pt * var(--f)); margin-top: 6mm; }
+  #kort .fra { font-size: calc(16pt * var(--f)); margin-top: 1mm; }
   #kort .bund { margin: 0 12mm; border-top-width: 0.4mm; padding-top: 3mm; font-size: 9pt; }
 }
 </style>
@@ -92,11 +92,8 @@ try {
       <input type="text" id="slut" value="Kærlig hilsen" maxlength="60">
       <label for="fra">Fra</label>
       <input type="text" id="fra" maxlength="80">
-      <label for="skrift">Skrift</label>
-      <select id="skrift">
-        <option value="paen">Pæn skrift</option>
-        <option value="haand">Håndskrift</option>
-      </select>
+      <label for="skrift">Skrifttype</label>
+      <select id="skrift"></select>
     </div>
     <div class="trin">
       <h2>3. Print eller gem</h2>
@@ -107,7 +104,7 @@ try {
 
   <div>
     <div class="forhaand-titel">Sådan ser kortet ud:</div>
-    <div id="kort" class="paen">
+    <div id="kort">
       <div class="maleri"><img id="kort-billede" alt=""></div>
       <div class="tekst">
         <div class="til" id="v-til"></div>
@@ -128,8 +125,20 @@ const KORT = [
   { fil: "billeder/kort/landskab-2012.jpg", titel: "Landskab, 2012",  maler: "Elisabeth Gram" },
 ];
 
+// Skrifttyper — f = størrelsesfaktor, så de ser nogenlunde lige store ud (1 = 14 pkt)
+const SKRIFTER = [
+  { navn: "Skriveskrift",          familie: "'Dancing Script', cursive",   f: 1.15 },
+  { navn: "Fin skriveskrift",      familie: "'Great Vibes', cursive",      f: 1.35 },
+  { navn: "Håndskrift",            familie: "'Caveat', cursive",           f: 1.3 },
+  { navn: "Rund håndskrift",       familie: "'Kalam', cursive",            f: 1.0 },
+  { navn: "Pæn skrift",            familie: "'EB Garamond', Georgia, serif", f: 1.05 },
+  { navn: "Klassisk",              familie: "'Lora', Georgia, serif",      f: 1.0 },
+  { navn: "Moderne",               familie: "'Open Sans', Arial, sans-serif", f: 0.95 },
+];
+
 function hent(n){ return sessionStorage.getItem(n) || localStorage.getItem(n) || ""; }
 const $ = id => document.getElementById(id);
+$("skrift").innerHTML = SKRIFTER.map((k, i) => `<option value="${i}" style="font-family:${k.familie.replace(/"/g, "")}">${k.navn}</option>`).join("");
 $("fra").value = hent("ok_navn");
 
 let valgt = 0;
@@ -148,7 +157,9 @@ function opdater(){
   $("v-besked").style.color = $("besked").value.trim() ? "" : "#bbb";
   $("v-slut").textContent = $("slut").value.trim();
   $("v-fra").textContent = $("fra").value.trim();
-  $("kort").className = $("skrift").value;
+  const sk = SKRIFTER[+$("skrift").value];
+  $("kort").style.setProperty("--skrift", sk.familie);
+  $("kort").style.setProperty("--f", sk.f);
 }
 ["til", "besked", "slut", "fra"].forEach(id => $(id).addEventListener("input", opdater));
 $("skrift").addEventListener("change", opdater);
