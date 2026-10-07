@@ -26,6 +26,8 @@ textarea { min-height: 150px; resize: vertical; }
 .print-knap { width: 100%; background: #2d5016; color: #fff; border: none; border-radius: 8px; padding: 13px; font-family: inherit; font-size: 17px; cursor: pointer; margin-top: 4px; }
 .print-knap:hover { background: #3d6b1f; }
 .hint { font-size: 13px; color: #8a7a3f; font-style: italic; margin-top: 8px; }
+#send-status.ok { color: #155724; font-style: normal; font-weight: bold; }
+#send-status.fejl { color: #b03030; font-style: normal; font-weight: bold; }
 
 /* Selve kortet — A4 (210 × 297 mm). På skærmen er 1cqw = 2,1 mm på papiret. */
 .forhaand-titel { font-size: 15px; color: #555; margin-bottom: 8px; }
@@ -100,6 +102,20 @@ try {
       <button class="print-knap" onclick="window.print()">🖨️ Print på A4 / Gem som PDF</button>
       <p class="hint">Vælg din printer — eller "Gem som PDF" i printvinduet. Sæt "Skalering" til 100 % (standard), hvis den kan vælges.</p>
     </div>
+    <div class="trin" id="send-alle" style="display:none; border:2px solid #c89e3c;">
+      <h2>4. Send kortet til alle medlemmer</h2>
+      <p style="font-size:14px; color:#555;">Kortet sendes som mail fra <b>post@olsenklanen.dk</b> til alle medlemmer, der har deres <b>egen mail</b> i kartoteket. Står "Til" tomt, skrives der automatisk "Kære" og modtagerens fornavn.</p>
+      <p style="font-size:15px; margin-top:8px;" id="antal-modtagere">Tæller modtagere …</p>
+      <label for="emne">Emne i mailen</label>
+      <input type="text" id="emne" value="Et kort fra OlsenKlanen" maxlength="100">
+      <div id="pin-del">
+        <label for="pin">Din PIN-kode (sikkerhed — kun de 5 postansvarlige kan sende til alle)</label>
+        <input type="password" id="pin" autocomplete="off">
+      </div>
+      <button class="print-knap" id="prove-knap" onclick="sendTilAlle(true)" style="background:#5a7a3a;">🧪 Send en prøve til mig selv</button>
+      <button class="print-knap" id="send-knap" onclick="sendTilAlle(false)" style="background:#8b5a1a; margin-top:8px;">📨 Send kortet til alle</button>
+      <p class="hint" id="send-status"></p>
+    </div>
   </div>
 
   <div>
@@ -137,6 +153,8 @@ const SKRIFTER = [
 ];
 
 function hent(n){ return sessionStorage.getItem(n) || localStorage.getItem(n) || ""; }
+window.hent = hent;
+window.valgtKort = () => KORT[valgt];
 const $ = id => document.getElementById(id);
 $("skrift").innerHTML = SKRIFTER.map((k, i) => `<option value="${i}" style="font-family:${k.familie.replace(/"/g, "")}">${k.navn}</option>`).join("");
 $("fra").value = hent("ok_navn");
@@ -164,6 +182,113 @@ function opdater(){
 ["til", "besked", "slut", "fra"].forEach(id => $(id).addEventListener("input", opdater));
 $("skrift").addEventListener("change", opdater);
 opdater();
+</script>
+<script type="module">
+/* ════════ SEND KORTET TIL ALLE MEDLEMMER (kun de 5 postansvarlige) ════════
+   Kortet lægges i olsenpost_mail som type "brevkort" med status "afventer".
+   Kun postansvarlige med PIN-bekræftelse må skrive dér (firestore.rules).
+   Serveren (tjekIndkommendeMail, hvert 5. minut) sender det til alle aktive
+   medlemmer med egen mail i kartoteket og skriver status tilbage. */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, doc, onSnapshot, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
+
+const POSTANSVARLIGE = ["8-B", "19-A", "22-B", "23-B", "48-B"];   // samme som i meddelelser.html
+const MIT_NR = window.hent("ok_nr").trim();
+if (POSTANSVARLIGE.includes(MIT_NR)) {
+  const app = initializeApp({
+    apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+    authDomain: "olsenklanen-familieside.firebaseapp.com",
+    projectId: "olsenklanen-familieside",
+    storageBucket: "olsenklanen-familieside.firebasestorage.app",
+    messagingSenderId: "640843662410",
+    appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+  });
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+  const funcs = getFunctions(app, "europe-west1");
+  const $ = id => document.getElementById(id);
+  $("send-alle").style.display = "block";
+
+  // Tæl modtagere: aktive personer med EGEN mail (ikke kun husstandens), hver mail én gang
+  let antal = 0;
+  try {
+    const snap = await getDocs(collection(db, "membres"));
+    const mails = new Set();
+    snap.forEach(d => (d.data().familiemedlemmer || []).forEach(p => {
+      if (p.status === "afdød" || p.status === "udmeldt") return;
+      const m = String(p.email || "").trim().toLowerCase();
+      if (m.includes("@")) mails.add(m);
+    }));
+    antal = mails.size;
+    $("antal-modtagere").innerHTML = "📬 Kortet sendes til <b>" + antal + "</b> medlemmer med egen mail.";
+  } catch(e) { $("antal-modtagere").textContent = "Kunne ikke tælle modtagerne."; }
+
+  // Er man allerede bekræftet med PIN i denne browser, skal PIN ikke tastes igen
+  let bekraeftet = false;
+  onAuthStateChanged(auth, async u => {
+    if (!u) return;
+    try { const r = await u.getIdTokenResult(); bekraeftet = !!(r.claims.postansvarlig && r.claims.medlemsnr === MIT_NR); } catch(e) {}
+    if (bekraeftet) $("pin-del").style.display = "none";
+  });
+
+  function status(tekst, klasse){ const el = $("send-status"); el.textContent = tekst; el.className = "hint " + (klasse || ""); }
+
+  window.sendTilAlle = async function(prove){
+    const besked = $("besked").value.trim();
+    if (!besked) { status("Skriv en tekst på kortet først.", "fejl"); return; }
+    if (!antal && !prove) { status("Der er ingen modtagere.", "fejl"); return; }
+    let proveMail = "";
+    if (prove) {
+      proveMail = (window.hent("ok_email") || prompt("Hvilken mail skal prøven sendes til?") || "").trim();
+      if (!proveMail.includes("@")) { status("Der mangler en mail til prøven.", "fejl"); return; }
+    }
+    const knap = $(prove ? "prove-knap" : "send-knap");
+    knap.disabled = true;
+    try {
+      if (!bekraeftet) {
+        const pin = $("pin").value.trim();
+        if (!pin) { status("Skriv din PIN-kode.", "fejl"); knap.disabled = false; return; }
+        status("⏳ Bekræfter PIN …");
+        const res = await httpsCallable(funcs, "logInPostansvarlig")({ nr: MIT_NR, pin });
+        await signInWithCustomToken(auth, res.data.token);
+        bekraeftet = true;
+        $("pin").value = "";
+        $("pin-del").style.display = "none";
+      }
+      if (!prove && !confirm("Vil du sende kortet til " + antal + " medlemmer nu?")) { status(""); knap.disabled = false; return; }
+      const k = window.valgtKort();
+      const tekst = [$("til").value.trim(), besked, "", $("slut").value.trim(), $("fra").value.trim()].filter((x, i) => x || i === 2).join("\n");
+      const ref = await addDoc(collection(db, "olsenpost_mail"), {
+        type: "brevkort", status: "afventer",
+        fra_nr: MIT_NR, fra_navn: window.hent("ok_navn"), fra_email: window.hent("ok_email") || "post@olsenklanen.dk",
+        til_nr: "", til_navn: prove ? "Prøve til " + proveMail : "Alle medlemmer med egen mail (" + antal + ")", til_email: prove ? proveMail : "",
+        prove: !!prove,
+        emne: $("emne").value.trim() || "Et kort fra OlsenKlanen",
+        tekst,
+        kort_fil: k.fil, kort_titel: k.titel, kort_maler: k.maler,
+        kort_til: $("til").value.trim(), kort_besked: besked, kort_slut: $("slut").value.trim(), kort_fra: $("fra").value.trim(),
+        sendt: serverTimestamp(), sendt_lokal: Date.now(),
+        besvaret: false, besvaret_af: null, besvaret_tid: null
+      });
+      status("✅ Kortet er sat i kø. Det bliver sendt inden for 5 minutter …", "ok");
+      if (prove) knap.disabled = false;
+      // Følg med, når serveren har sendt
+      onSnapshot(doc(db, "olsenpost_mail", ref.id), s => {
+        const d = s.data() || {};
+        if (d.status === "sender") status("📨 Kortet bliver sendt nu …", "ok");
+        if (d.status === "sendt") status("✅ Kortet er sendt til " + (d.antal_sendt || 0) + " medlemmer." + (d.antal_fejl ? " " + d.antal_fejl + " kunne ikke sendes." : ""), "ok");
+        if (d.status === "fejl") status("Kortet kunne ikke sendes: " + (d.mail_fejl || "ukendt fejl"), "fejl");
+      });
+    } catch(e) {
+      console.log("Send til alle fejlede:", e);
+      status(e && e.message && e.message.includes("PIN") ? "Forkert PIN-kode." : "Det lykkedes ikke. Prøv igen.", "fejl");
+      knap.disabled = false;
+    }
+  };
+}
 </script>
 <script type="module" src="familieopkald.js"></script>
 </body>

@@ -1440,14 +1440,14 @@ function tegnSendt(){
   el.innerHTML = synlige.map(m => `
     <div class="mail-kort">
       <div class="mail-top">
-        <span class="mail-fra">Til: ${escHtml(m.til_navn || '')} — ${escHtml(m.til_email||'')}</span>
+        <span class="mail-fra">${m.type === "brevkort" ? "🖼️ Kort til " + escHtml(m.til_navn || "") + (m.status === "sendt" ? " — sendt til " + (m.antal_sendt || 0) : " — " + escHtml(m.status || "")) : "Til: " + escHtml(m.til_navn || "") + " — " + escHtml(m.til_email || "")}</span>
         <span class="mail-tid">${tidTekst(m.sendt || m.sendt_lokal)}</span>
       </div>
       <div class="mail-emne">Emne: ${escHtml(m.emne||'')}</div>
       <div class="mail-tekst">${escHtml(m.tekst||'')}</div>
       ${m.gensendt_antal ? `<div class="arkiv-info">🔁 ${gensendtTekst(m)}</div>` : ''}
       <div class="mail-handlinger">
-        ${ER_POSTANSVARLIG ? `<button class="knap lille grå" id="gensend-${m.id}" onclick="sendIgen('${m.id}')">🔁 Send igen</button>` : ''}
+        ${ER_POSTANSVARLIG && m.type !== "brevkort" ? `<button class="knap lille grå" id="gensend-${m.id}" onclick="sendIgen('${m.id}')">🔁 Send igen</button>` : ''}
         ${arkivKnap("olsenpost_mail", m.id)}
       </div>
       <div class="status" id="gensend-status-${m.id}" style="display:none"></div>

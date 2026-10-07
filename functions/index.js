@@ -84,10 +84,12 @@ exports.logInPostansvarlig = onCall(async (request) => {
  * Mailen markeres også som læst i selve postkassen bagefter.
  */
 exports.tjekIndkommendeMail = onSchedule(
-  { schedule: "every 5 minutes", secrets: [imapAdgangskode], timeoutSeconds: 120 },
+  { schedule: "every 5 minutes", secrets: [imapAdgangskode], timeoutSeconds: 540 },
   async () => {
     // Fødselsdagshilsner skrevet dagen før sendes på selve dagen (fejl her stopper ikke mail-tjekket)
     try { await sendPlanlagteHilsner(); } catch (e) { console.log("Planlagte hilsner fejlede:", e && e.message); }
+    // Brevkort til alle medlemmer (sat i kø fra kort.html af en postansvarlig)
+    try { await sendBrevkort(); } catch (e) { console.log("Brevkort fejlede:", e && e.message); }
     const db = getFirestore();
     const client = new ImapFlow({
       host: "imap.simply.com",
@@ -276,4 +278,105 @@ async function sendPlanlagteHilsner() {
         await d.ref.update({ mail_fejl: String(e && e.message || e).slice(0, 300) });
       }
     }
+}
+
+/**
+ * Brevkort til alle medlemmer. En postansvarlig (PIN-bekræftet) lægger kortet
+ * i olsenpost_mail med type "brevkort" og status "afventer" fra kort.html.
+ * Her sendes det fra post@olsenklanen.dk til alle aktive medlemmer med EGEN
+ * mail i kartoteket (hver mail én gang), med maleriet i mailen. Status og
+ * antal skrives tilbage på dokumentet.
+ */
+function escHtml(s) {
+  return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+async function sendBrevkort() {
+  const db = getFirestore();
+  const koe = await db.collection("olsenpost_mail").where("status", "==", "afventer").get();
+  const kort = koe.docs.filter(d => d.data().type === "brevkort" && POSTANSVARLIGE.includes(d.data().fra_nr));
+  if (!kort.length) return;
+
+  for (const d of kort) {
+    // Tag kortet (så det ikke sendes to gange, hvis funktionen kører igen imens)
+    const taget = await db.runTransaction(async t => {
+      const frisk = await t.get(d.ref);
+      if (frisk.data().status !== "afventer") return false;
+      t.update(d.ref, { status: "sender", sender_start: FieldValue.serverTimestamp() });
+      return true;
+    });
+    if (!taget) continue;
+    const k = d.data();
+
+    try {
+      // Modtagere: aktive personer med egen mail
+      const membres = await db.collection("membres").get();
+      const modtagere = new Map();   // mail -> fornavn
+      // En prøve sendes kun til afsenderen selv
+      if (k.prove && String(k.til_email || "").includes("@")) modtagere.set("prove", { mail: k.til_email, fornavn: String(k.fra_navn || "").split(/\s+/)[0] });
+      else membres.forEach(m => (m.data().familiemedlemmer || []).forEach(p => {
+        if (p.status === "afdød" || p.status === "udmeldt") return;
+        const mail = String(p.email || "").trim();
+        if (!mail.includes("@") || modtagere.has(mail.toLowerCase())) return;
+        const fornavn = (p.fornavn || String(p.navn || "").trim().split(/\s+/)[0] || "").trim();
+        modtagere.set(mail.toLowerCase(), { mail, fornavn });
+      }));
+
+      // Maleriet hentes én gang fra hjemmesiden og lægges ind i mailen
+      const fil = String(k.kort_fil || "");
+      let billede = null;
+      if (/^billeder\/kort\/[\w\-]+\.jpg$/.test(fil)) {
+        const svar = await fetch("https://olsenklanen.dk/" + fil);
+        if (svar.ok) billede = Buffer.from(await svar.arrayBuffer());
+      }
+
+      const transport = nodemailer.createTransport({
+        host: "smtp.simply.com", port: 587, secure: false, pool: true, maxConnections: 1,
+        auth: { user: "post@olsenklanen.dk", pass: imapAdgangskode.value() }
+      });
+
+      let sendt = 0;
+      const fejl = [];
+      for (const { mail, fornavn } of modtagere.values()) {
+        const til = k.kort_til || (fornavn ? "Kære " + fornavn : "");
+        const html = `<div style="background:#f5f1e8;padding:20px 0;font-family:Georgia,'Times New Roman',serif;">
+  <div style="max-width:600px;margin:0 auto;background:#fff;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+    ${billede ? '<img src="cid:maleri" alt="" style="width:100%;height:auto;display:block;">' : ""}
+    <div style="padding:22px 10px 6px;color:#2c3e1f;">
+      ${til ? `<p style="font-size:20px;margin:0 0 14px;">${escHtml(til)}</p>` : ""}
+      <p style="font-size:16px;line-height:1.55;margin:0;white-space:pre-wrap;">${escHtml(k.kort_besked)}</p>
+      ${k.kort_slut ? `<p style="font-size:16px;margin:18px 0 0;">${escHtml(k.kort_slut)}</p>` : ""}
+      ${k.kort_fra ? `<p style="font-size:18px;margin:2px 0 0;">${escHtml(k.kort_fra)}</p>` : ""}
+    </div>
+    <div style="border-top:1px solid #d8cfae;margin-top:18px;padding-top:8px;font-size:12px;color:#8a7a3f;font-style:italic;">
+      ${k.kort_maler ? "Maleri: " + escHtml(k.kort_maler) + " · " : ""}<a href="https://olsenklanen.dk" style="color:#8a7a3f;">olsenklanen.dk</a>
+    </div>
+  </div>
+</div>`;
+        const tekst = [til, k.kort_besked, "", k.kort_slut, k.kort_fra, "", "— olsenklanen.dk"].filter((x, i) => x || i === 2 || i === 5).join("\n");
+        try {
+          await transport.sendMail({
+            from: { name: (k.fra_navn || "OlsenKlanen") + " – Olsenklanen", address: "post@olsenklanen.dk" },
+            to: mail,
+            replyTo: k.fra_email || "post@olsenklanen.dk",
+            subject: (k.prove ? "[PRØVE] " : "") + (k.emne || "Et kort fra OlsenKlanen"),
+            text: tekst,
+            html,
+            attachments: billede ? [{ filename: "maleri.jpg", content: billede, cid: "maleri" }] : []
+          });
+          sendt++;
+        } catch (e) {
+          fejl.push(mail + ": " + String(e && e.message || e).slice(0, 120));
+        }
+        await new Promise(r => setTimeout(r, 300));   // lidt luft mellem mails
+      }
+      transport.close();
+      await d.ref.update({
+        status: "sendt", antal_sendt: sendt, antal_fejl: fejl.length,
+        fejl_liste: fejl.slice(0, 20), sendt_faerdig: FieldValue.serverTimestamp()
+      });
+    } catch (e) {
+      console.log("Brevkort", d.id, "fejlede:", e && e.message);
+      await d.ref.update({ status: "fejl", mail_fejl: String(e && e.message || e).slice(0, 300) });
+    }
+  }
 }
