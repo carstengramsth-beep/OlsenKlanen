@@ -419,6 +419,7 @@ try {
 
 <div class="bund">OlsenPost · post@olsenklanen.dk · klanens fælles postkasse</div>
 
+<script src="olsenbanden.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc, deleteDoc,
@@ -1768,15 +1769,11 @@ window.visFane = function(navn){
 };
 
 /* ════════ POSTVAGT ════════ */
-// Samme liste og samme Firestore-dokument (olsenpost/vagtplan) bruges også i admin.html,
-// nøglet på e-mail, så begge steder altid viser den samme vagtplan.
-const POSTVAGT_GRUPPE = [
-  { email: 'cg@gallerieg.dk',  navn: 'Carsten Gram' },
-  { email: 'kurt@vormslev.dk', navn: 'Kurt Vormslev Olsen' },
-  { email: 'safi@dr.dk',       navn: 'Sanne Gram Fadel' },
-  { email: 'tvo@ishoejby.dk',  navn: 'Tommy Vormslev Olsen' },
-  { email: 'kld@inmobia.com',  navn: 'Karin Lund' },
-];
+// Listen over de 5 kommer fra olsenbanden.js (mails hentes fra medlemskartoteket).
+// Samme Firestore-dokument (olsenpost/vagtplan) bruges også i admin.html.
+// Vagtplanen gemmes under medlemsnummer; gamle data under en (tidligere) mail læses stadig.
+const vagtFor = (data, b) => data[b.nr] || b.tidligere.map(m => data[m]).find(Boolean) || { aktiv:false, dato:"" };
+function vagtSaet(data, b, info){ b.tidligere.forEach(m => delete data[m]); data[b.nr] = info; }
 
 async function tegnVagtplan(){
   const el = document.getElementById("vagt-tabel");
@@ -1787,9 +1784,10 @@ async function tegnVagtplan(){
     if (snap.exists()) vagtData = snap.data();
   } catch(e) { console.log("Vagtplan-fejl:", e); }
 
-  const rows = POSTVAGT_GRUPPE.map(p => {
-    const info = vagtData[p.email] || { aktiv:false, dato:"" };
-    return { email: p.email, navn: p.navn, aktiv: !!info.aktiv, dato: info.dato || "" };
+  const banden = await window.hentOlsenbanden();
+  const rows = banden.map(p => {
+    const info = vagtFor(vagtData, p);
+    return { email: p.nr, navn: p.navn, aktiv: !!info.aktiv, dato: info.dato || "" };
   });
 
   el.innerHTML = `
@@ -1812,22 +1810,24 @@ async function tegnVagtplan(){
     </table>`;
 }
 
-window.skiftVagt = async function(email){
+window.skiftVagt = async function(nr){
+  const b = window.OLSENBANDEN.find(x => x.nr === nr); if (!b) return;
   const snap = await getDoc(doc(db, "olsenpost", "vagtplan"));
   const data = snap.exists() ? snap.data() : {};
-  const nu = data[email] || { aktiv:false, dato:"" };
-  data[email] = { ...nu, aktiv: !nu.aktiv };
+  const nu = vagtFor(data, b);
+  vagtSaet(data, b, { ...nu, aktiv: !nu.aktiv });
   await setDoc(doc(db, "olsenpost", "vagtplan"), data);
   tegnVagtplan();
 };
 
-window.gemVagtDato = async function(email){
-  const rad = document.querySelector(`#vagt-tabel tr[data-email="${email}"]`);
+window.gemVagtDato = async function(nr){
+  const b = window.OLSENBANDEN.find(x => x.nr === nr); if (!b) return;
+  const rad = document.querySelector(`#vagt-tabel tr[data-email="${nr}"]`);
   const dato = rad ? rad.querySelector(".vagt-dato").value : "";
   const snap = await getDoc(doc(db, "olsenpost", "vagtplan"));
   const data = snap.exists() ? snap.data() : {};
-  const nu = data[email] || { aktiv:false, dato:"" };
-  data[email] = { ...nu, dato };
+  const nu = vagtFor(data, b);
+  vagtSaet(data, b, { ...nu, dato });
   await setDoc(doc(db, "olsenpost", "vagtplan"), data);
   tegnVagtplan();
 };

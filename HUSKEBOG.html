@@ -187,6 +187,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 </div>
 </div>
 
+<script src="olsenbanden.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, set, onValue, push, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -202,14 +203,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Krydsreference: email til navn
-window.banditter = {
-  Carsten: {navn: 'Carsten Gram', init: 'CG', email: 'cg@gallerieg.dk'},
-  Tommy:   {navn: 'Tommy Vormslev Olsen', init: 'TVO', email: 'tvo@ishoejby.dk'},
-  Kurt:    {navn: 'Kurt Olsen', init: 'KO', email: 'kurt@vormslev.dk'},
-  Sanne:   {navn: 'Sanne Gram Fadel', init: 'SGF', email: 'safi@dr.dk'},
-  Karin:   {navn: 'Karin Lund', init: 'KL', email: 'kld@inmobia.com'}
-};
+// Krydsreference: mail til navn. Listen og mails kommer fra olsenbanden.js
+// (mails hentes fra medlemskartoteket, og gamle mails genkendes også).
+window.banditter = {};
+window.OLSENBANDEN.forEach(b => { window.banditter[b.fornavn] = b; });
+// Hvem i banden hører login-mailen til (ny eller gammel mail)?
+const banditForMail = mail => { const b = window.findIOlsenbanden(mail); return b ? window.banditter[b.fornavn] : null; };
+window.hentOlsenbanden().then(() => { try { visVaelgBesked(); } catch(e) {} });
 window.mig = null;
 window.alleOpgaver = {};
 window.kommentarOpgave = null;
@@ -230,7 +230,7 @@ function visVaelgBesked() {
   const tekst = document.getElementById('vaelg-tekst');
   const besked = document.getElementById('vaelg-besked');
   if(loginEmail) {
-    const bandit = Object.values(window.banditter).find(b => b.email.toLowerCase() === loginEmail);
+    const bandit = banditForMail(loginEmail);
     if(bandit) {
       tekst.textContent = 'Du er logget ind som ' + bandit.navn + '. Klik på dit navn for at fortsætte.';
       besked.className = 'vaelg-besked info';
@@ -254,9 +254,9 @@ window.vaelgMig = function(id) {
 
   // Hvis bruger er logget ind: tjek at email passer med valgt navn
   if(loginEmail) {
-    if(bandit.email.toLowerCase() !== loginEmail) {
+    if(banditForMail(loginEmail) !== bandit) {
       // Find hvem der ER logget ind
-      const rigtigBandit = Object.values(window.banditter).find(b => b.email.toLowerCase() === loginEmail);
+      const rigtigBandit = banditForMail(loginEmail);
       const rigtigNavn = rigtigBandit ? rigtigBandit.navn : loginEmail;
       besked.className = 'vaelg-besked fejl';
       besked.textContent = '❌ Du er logget ind som ' + rigtigNavn + '. Klik på dit eget navn.';
