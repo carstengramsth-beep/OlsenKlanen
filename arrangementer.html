@@ -477,7 +477,8 @@ const INDBYGGET = {
 // Forslag, der sættes ind i "Ret året", når feltet er tomt eller blot en pladsholder
 // ("data rettes") eller et ældre forslag (erstat). De gemmes først, når en admin trykker "Gem oplysninger".
 // Steder, hvor oplysningerne måske ikke passer — vises med "?" i oversigten og som orange boks på året.
-// Fjern punktet her, når det er tjekket og rettet.
+// Fjern punktet her, når det er tjekket og rettet. De samme spørgsmål står i datakontrol.html
+// (administrationen → "Data der skal tjekkes"), hvor OlsenBanden kan svare og markere dem som afklaret.
 const TJEK = {
   2020: ["Skovturen 2020 blev aflyst (corona). Tjek om der er andre oplysninger fra 2020, fx hvor turen skulle have været."],
   2021: [
@@ -496,7 +497,8 @@ function tjekMaerke(aar){
 function tjekBoks(aar){
   const t = TJEK[aar];
   if (!t) return "";
-  return `<div class="tjek-boks"><b>⚠️ Tjek disse oplysninger for ${aar}:</b><ul>${t.map(x => "<li>" + escHtml(x) + "</li>").join("")}</ul></div>`;
+  return `<div class="tjek-boks"><b>⚠️ Tjek disse oplysninger for ${aar}:</b><ul>${t.map(x => "<li>" + escHtml(x) + "</li>").join("")}</ul>
+    <div style="margin-top:6px;font-size:13px;">Alle spørgsmål er samlet i administrationen under „🔍 Data der skal tjekkes“.</div></div>`;
 }
 
 const FORSLAG = {
