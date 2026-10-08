@@ -247,6 +247,15 @@ body.kan-redigere .brev-knap{display:inline-block}
 .edit-gem-knap{background:var(--gron);color:var(--hvid);border:none;padding:11px 28px;font-size:14px;letter-spacing:.5px;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:background .2s;box-shadow:0 2px 6px rgba(45,80,22,.3)}
 .edit-gem-knap:hover{background:var(--gron-lys)}
 .edit-gem-knap:disabled{opacity:.6;cursor:default}
+.edit-godkend-knap{background:#f5d76e;color:#1B4332;border:none;padding:11px 22px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;box-shadow:0 2px 6px rgba(154,125,10,.3)}
+.edit-godkend-knap:hover{background:#f0cb4d}
+.edit-godkend-knap:disabled{opacity:.6;cursor:default}
+.edit-godkend-knap.husk{animation:fremhaevPuls 1.4s ease-in-out 3}
+.godkend-status{border-radius:6px;padding:.65rem 1rem;margin-bottom:1rem;font-size:14px;line-height:1.45}
+.godkend-status.ok{background:var(--ok-pale);border:1.5px solid var(--ok);color:var(--ok)}
+.godkend-status.mangler{background:#fdecea;border:1.5px solid #c0392b;color:#8e2b20}
+.godkend-status b{font-weight:800}
+.mangler-boks.blink{animation:fremhaevPuls 1.4s ease-in-out 3}
 .edit-annuller{background:none;border:1px solid var(--border);color:var(--tekst-lys);padding:9px 18px;font-size:13px;cursor:pointer;font-family:'Source Sans 3',sans-serif;border-radius:4px;transition:all .2s}
 .edit-annuller:hover{border-color:var(--tekst);color:var(--tekst)}
  
@@ -420,6 +429,9 @@ body.kan-redigere .historisk-btn-wrapper{display:none}
     </div>
     <div class="edit-krop">
  
+      <!-- GODKENDT ELLER EJ (hele husstanden) -->
+      <div class="godkend-status" id="godkend-status" style="display:none"></div>
+
       <!-- MANGLER-LISTE ÆVERST -->
       <div class="mangler-boks" id="mangler-boks">
         <div class="mangler-titel" id="mangler-titel">⚠️ Disse oplysninger mangler:</div>
@@ -493,6 +505,7 @@ body.kan-redigere .historisk-btn-wrapper{display:none}
     </div>
     <div class="edit-fod">
       <button class="edit-gem-knap" id="edit-gem-knap">💾 Gem rettelse</button>
+      <button class="edit-godkend-knap" id="edit-godkend-knap" style="display:none">✓ Godkend medlemsdata</button>
       <button class="edit-annuller" id="edit-annuller">Annullér</button>
       <span class="edit-status-stor" id="edit-status"></span>
       <button class="edit-fjern" id="fjern-knap">🗑 Fjern medlem</button>
@@ -1075,37 +1088,56 @@ function byggBekraeftBoks(m, erEgen, visRed) {
       </div>`;
   }
  
-  // Ikke bekræftet endnu. Kun på husstandens EGET kort vises den interaktive boks.
-  if (!erEgen) return '';
+  // Ikke godkendt endnu
+  const _mangler = manglerForHusstand(m);
+  const _manglerHtml = _mangler.length
+    ? `<div class="bekraeft-medlemmer" style="color:#8e2b20"><strong>Det mangler:</strong><br>${_mangler.map(escM).join('<br>')}</div>` : '';
+  const _overskrift = m.godkendelse_nulstillet ? '⚠️ Data er ændret og skal godkendes igen' : '⚠️ Medlemsdata er ikke godkendt endnu';
+  // Admin ser status på andres kort; kun husstanden selv får den interaktive boks.
+  if (!erEgen) return `
+    <div class="bekraeft-boks bekraeft-spoerg">
+      <div class="bekraeft-titel" style="color:#8e2b20">${_overskrift}</div>
+      ${_manglerHtml}
+    </div>`;
   const navne = (m.familiemedlemmer || [])
     .map(p => visPersonNavn(p)).filter(Boolean).join(', ');
   const gemtEmail = (m.email || '').split('/')[0].trim();
  
   return `
     <div class="bekraeft-boks bekraeft-spoerg" data-nr="${m.nr}">
-      <div class="bekraeft-titel">🤝 Er I med i klanen?</div>
-      <div class="bekraeft-under">Bekræft jeres medlemskab på familiens vegne.</div>
+      <div class="bekraeft-titel">🤝 ${m.godkendelse_nulstillet ? 'Jeres data er ændret — godkend dem igen' : 'Er I med i klanen?'}</div>
+      <div class="bekraeft-under">Tjek jeres oplysninger og godkend dem på familiens vegne.</div>
+      ${_manglerHtml}
       <div class="bekraeft-medlemmer"><strong>Husstand nr. ${m.nr}:</strong> ${navne || 'ingen registreret'}</div>
       <label class="bekraeft-email-label">Jeres e-mail (bekræft eller ret):</label>
       <input type="email" class="bekraeft-email-input" id="bekraeft-email-${m.nr}" value="${gemtEmail}" placeholder="navn@mail.dk">
-      <button class="bekraeft-knap" data-nr="${m.nr}">✓ Bekræft data og medlemskab</button>
+      <button class="bekraeft-knap" data-nr="${m.nr}">✓ Godkend medlemsdata</button>
     </div>`;
 }
  
 // ── Gem bekræftelsen ──
-async function bekraeftMedlemskab(nr) {
+async function bekraeftMedlemskab(nr, opts = {}) {
   const m = data.find(x => sammeNr(x.nr, nr));
-  if (!m) return;
+  if (!m) return false;
   const input = document.getElementById('bekraeft-email-' + nr);
-  const email = (input ? input.value : '').trim();
-  if (!email || email.indexOf('@') === -1) {
-    alert('Skriv venligst en gyldig e-mail, før du bekræfter.');
-    return;
+  const email = (input ? input.value : (m.email || '').split('/')[0]).trim();
+  if (input && (!email || email.indexOf('@') === -1)) {
+    alert('Skriv venligst en gyldig e-mail, før du godkender.');
+    return false;
+  }
+  // Mangler der noget? Så får man det at vide — og kan rette først eller godkende alligevel.
+  const mangler = manglerForHusstand(m);
+  if (mangler.length && !confirm('Der mangler noget i jeres data:\n\n• ' + mangler.join('\n• ') +
+      '\n\nTryk "Annuller" for at rette det først.\nTryk "OK" for at godkende alligevel.')) {
+    if (opts.vedAfvis) opts.vedAfvis();
+    return false;
   }
   const idag = new Date().toISOString().slice(0,10);
   const medlemmer = (m.familiemedlemmer || []).map(p => visPersonNavn(p)).filter(Boolean);
+  const _foerBekr = m.medlemskab_bekraeftet || null, _foerNulst = m.godkendelse_nulstillet || false;
  
-  m.medlemskab_bekraeftet = { dato: idag, tid: new Date().toTimeString().slice(0,5), email: email, medlemmer: medlemmer, nr: nr, kilde: 'bekraeft-knap' };
+  m.medlemskab_bekraeftet = { dato: idag, tid: new Date().toTimeString().slice(0,5), email: email, medlemmer: medlemmer, nr: nr, kilde: opts.kilde || 'bekraeft-knap', mangler: mangler };
+  m.godkendelse_nulstillet = false;
   // Lås medlemsnumrene
   const _foer = nummerOversigt(nr, JSON.parse(JSON.stringify(m.familiemedlemmer || [])));
   const _foersteGang = !m.numre_laast;
@@ -1118,12 +1150,15 @@ async function bekraeftMedlemskab(nr) {
   }
   try {
     await setDoc(doc(db, 'membres', nr), m);
-    alert('Tak! Jeres medlemskab er bekræftet. ✓');
+    alert('Tak! Medlemsdata er godkendt. ✓');
     renderGrid();
     await visNummerKvittering(nr, m, _nummerInfo);
+    return true;
   } catch(e) {
-    alert('Kunne ikke gemme bekræftelsen. Prøv igen.');
-    m.medlemskab_bekraeftet = null;
+    alert('Kunne ikke gemme godkendelsen. Prøv igen.');
+    m.medlemskab_bekraeftet = _foerBekr;
+    m.godkendelse_nulstillet = _foerNulst;
+    return false;
   }
 }
  
@@ -1850,26 +1885,69 @@ function markDirty() {
 }
  
 // ── MANGLER-LISTE ─────────────────────────────────────────────
-function opdaterManglerListe() {
+// Hvad mangler der i en husstands data? Skrives pr. person, fx "Richard mangler mail".
+function manglerForHusstand(h) {
   const mangler = [];
- 
-  // Mindst ét medlem skal være registreret
-  if (!personListe.length) mangler.push('Mindst ét medlem i husstanden');
- 
-  // Tjek adresse og kontakt
-  if (!document.getElementById('ef-vej').value.trim())        mangler.push('Vej og husnummer');
-  if (!document.getElementById('ef-postnummer').value.trim()) mangler.push('Postnummer');
-  if (!document.getElementById('ef-by').value.trim())         mangler.push('By');
-  if (!document.getElementById('ef-tlf').value.trim())        mangler.push('Telefon / mobil');
-  if (!document.getElementById('ef-email').value.trim())      mangler.push('Email');
- 
-  // Tjek hvert medlem
-  personListe.forEach((p, i) => {
-    const navn = visPersonNavn(p).trim();
-    const visNr = navn || `medlem nr. ${i+1}`;
-    if (!(p.fornavn || '').trim()) mangler.push(`Fornavn på ${visNr}`);
-    if (!p.foedselsdato)           mangler.push(`Fødselsdato for ${visNr}`);
+  const personer = (h.familiemedlemmer || []).filter(p => p.status !== 'afdød' && p.status !== 'udmeldt');
+  if (!personer.length) mangler.push('Der er ingen medlemmer i husstanden');
+  if (!String(h.vej || '').trim())        mangler.push('Husstanden mangler vej og husnummer');
+  if (!String(h.postnummer || '').trim()) mangler.push('Husstanden mangler postnummer');
+  if (!String(h.by || '').trim())         mangler.push('Husstanden mangler by');
+  personer.forEach((p, i) => {
+    const navn = (String(p.fornavn || '').trim() || visPersonNavn(p).trim()) || `Medlem nr. ${i+1}`;
+    const ting = [];
+    if (!String(p.fornavn || '').trim())   ting.push('fornavn');
+    if (!String(p.efternavn || '').trim()) ting.push('efternavn');
+    if (!p.foedselsdato)                   ting.push('fødselsdato');
+    if (p.rolle !== 'barn') {
+      if (!String(p.email || '').includes('@')) ting.push('mail');
+      if (!String(p.mobil || '').trim())        ting.push('telefon');
+    }
+    if (ting.length) mangler.push(`${navn} mangler ${ting.length > 1 ? ting.slice(0, -1).join(', ') + ' og ' + ting[ting.length - 1] : ting[0]}`);
   });
+  return mangler;
+}
+// De data, der skal godkendes. Ændres de, skal husstanden godkende igen.
+function godkendNoegle(h) {
+  const t = v => String(v || '').trim();
+  return JSON.stringify({
+    vej: t(h.vej), postnummer: t(h.postnummer), by: t(h.by), tlf: t(h.tlf), email: t(h.email),
+    p: (h.familiemedlemmer || []).map(p => [t(p.fornavn), t(p.mellemnavn), t(p.efternavn), t(p.foedselsdato), t(p.email), t(p.mobil), t(p.rolle), t(p.status)])
+  });
+}
+function formularHusstand() {
+  return {
+    vej: document.getElementById('ef-vej').value, postnummer: document.getElementById('ef-postnummer').value,
+    by: document.getElementById('ef-by').value, tlf: document.getElementById('ef-tlf').value,
+    email: document.getElementById('ef-email').value, familiemedlemmer: personListe
+  };
+}
+function escM(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+// Vis i redigeringsvinduet, om husstandens data er godkendt — og knappen til at godkende
+function visGodkendStatus(nr) {
+  const m = data.find(x => sammeNr(x.nr, nr)) || {};
+  const boks = document.getElementById('godkend-status');
+  const knap = document.getElementById('edit-godkend-knap');
+  const erAdmin = document.body.classList.contains('kan-redigere');
+  const egetKort = !!(egetNr && sammeHusstand(egetNr, nr));
+  const b = m.medlemskab_bekraeftet;
+  boks.style.display = 'block';
+  if (b) {
+    boks.className = 'godkend-status ok';
+    boks.innerHTML = `✓ <b>Medlemsdata er godkendt</b> ${escM(b.dato ? formatDato(b.dato) : '')}${b.tid ? ' kl. ' + escM(b.tid) : ''}${b.kilde === 'admin' ? ' (af administrator)' : ''}.`;
+  } else {
+    boks.className = 'godkend-status mangler';
+    boks.innerHTML = m.godkendelse_nulstillet
+      ? '⚠️ <b>Data er ændret og skal godkendes igen.</b> Tryk på „✓ Godkend medlemsdata“ nederst.'
+      : '⚠️ <b>Medlemsdata er ikke godkendt endnu.</b> Tjek oplysningerne og tryk på „✓ Godkend medlemsdata“ nederst.';
+  }
+  knap.style.display = (egetKort || erAdmin) ? '' : 'none';
+  knap.textContent = b ? '✓ Godkend medlemsdata igen' : '✓ Godkend medlemsdata';
+}
+
+function opdaterManglerListe() {
+  const mangler = manglerForHusstand(formularHusstand());
  
   const boks = document.getElementById('mangler-boks');
   const liste = document.getElementById('mangler-liste');
@@ -1917,19 +1995,9 @@ function aabneEditModal(nr) {
   editStatusEl.textContent = '';
   editStatusEl.className = 'edit-status-stor';
   editGemKnap.disabled = false;
-  // Eget kort? Så er "gem" også en bekræftelse — samme gule farve og tekst som bekræft-knappen.
-  try {
-    const _egetKort = egetNr && sammeHusstand(egetNr, nr);
-    if (_egetKort) {
-      editGemKnap.textContent = '✓ Bekræft data og medlemskab';
-      editGemKnap.style.background = '#f5d76e';
-      editGemKnap.style.color = '#1B4332';
-    } else {
-      editGemKnap.textContent = '💾 Gem rettelse';
-      editGemKnap.style.background = '';
-      editGemKnap.style.color = '';
-    }
-  } catch(e) {}
+  // Gem er kun gem. Godkendelse sker aktivt med knappen "✓ Godkend medlemsdata".
+  editGemKnap.textContent = '💾 Gem rettelse';
+  visGodkendStatus(nr);
   nulstilFeltFarver();
   PAAKREEVET_IDS.forEach(opdaterEtFelt);
  
@@ -2028,14 +2096,12 @@ async function gemData() {
     .map(p => ({ ...p, navn: visPersonNavn(p) }))
     .filter(p => p.navn.trim());
  
-  // FORENING: gemmer man SIT EGET kort, taeller det som bekraeftelse (dato + klokkeslaet).
-  // Redigerer en admin en ANDEN husstand, bevares husstandens eksisterende bekraeftelse (slettes ikke).
-  const _naa = new Date();
-  const _erEget = egetNr && sammeHusstand(egetNr, gammelNr);
-  const _bekrEmail = document.getElementById('ef-email').value.trim().split('/')[0].trim();
-  const _bekraeftelse = _erEget
-    ? { dato: _naa.toISOString().slice(0,10), tid: _naa.toTimeString().slice(0,5), email: _bekrEmail, medlemmer: reneMedlemmer.map(p => (p.navn || '').trim()).filter(Boolean), nr: gammelNr, kilde: 'gem-rettelse' }
-    : (tidl.medlemskab_bekraeftet || null);
+  // GODKENDELSE: at gemme er IKKE en godkendelse. Er data ændret, skal husstanden godkende igen
+  // (knappen "✓ Godkend medlemsdata"). Er intet ændret, bevares en eksisterende godkendelse.
+  const _nyNoegle = godkendNoegle({ vej, postnummer, by, tlf: document.getElementById('ef-tlf').value, email: document.getElementById('ef-email').value, familiemedlemmer: reneMedlemmer });
+  const _dataAendret = _nyNoegle !== godkendNoegle(tidl);
+  const _bekraeftelse = _dataAendret ? null : (tidl.medlemskab_bekraeftet || null);
+  const _nulstillet = !!(tidl.medlemskab_bekraeftet && _dataAendret) || (!_bekraeftelse && !!tidl.godkendelse_nulstillet);
  
   const opdateret = {
     nr: nytNr,
@@ -2049,14 +2115,11 @@ async function gemData() {
     begivenheder:     begiListe.filter(b => b.dato || b.beskrivelse || b.besked),
     sidstRedigeret:   new Date().toISOString(),
     medlemskab_bekraeftet: _bekraeftelse,
+    godkendelse_nulstillet: _nulstillet,
     numre_laast: _numreLaast,
     sidstRedigeretAf: auth.currentUser?.email || (familieSession ? `Medlem nr. ${familieSession.nr}` : 'ukendt')
   };
  
-  // Bevar medlemskabs-bekræftelsen hvis den allerede findes (må ikke slettes ved redigering)
-  if (tidl.medlemskab_bekraeftet) {
-    opdateret.medlemskab_bekraeftet = tidl.medlemskab_bekraeftet;
-  }
  
   editGemKnap.disabled = true;
   visStatus('gemmer', '⏳ Gemmer i database…');
@@ -2098,7 +2161,9 @@ async function gemData() {
     editDirty = false;
  
     saetGroenneEfterGem();
-    visStatus('ok', '✓ Gemt og bekræftet i database!');
+    visStatus('ok', _bekraeftelse ? '✓ Gemt og bekræftet i database!' : '✓ Gemt. Husk at godkende medlemsdata.');
+    visGodkendStatus(nytNr);
+    if (!_bekraeftelse) document.getElementById('edit-godkend-knap').classList.add('husk');
     editGemKnap.disabled = false;
     renderGrid();
     if (_nummerInfo) { renderPersonEdit(); await visNummerKvittering(nytNr, opdateret, _nummerInfo); }
@@ -2114,6 +2179,32 @@ function visStatus(type, tekst) {
 }
  
 editGemKnap.addEventListener('click', () => gemData());
+
+// "✓ Godkend medlemsdata": gem først evt. rettelser, vis hvad der mangler, og godkend så aktivt.
+document.getElementById('edit-godkend-knap').addEventListener('click', async () => {
+  const knap = document.getElementById('edit-godkend-knap');
+  knap.classList.remove('husk');
+  knap.disabled = true;
+  try {
+    if (editDirty) {
+      await gemData();
+      if (editDirty) return;   // gem lykkedes ikke — fejlen står ved gem-knappen
+    }
+    const nr = aktivtNr;
+    const egetKort = !!(egetNr && sammeHusstand(egetNr, nr));
+    const ok = await bekraeftMedlemskab(nr, {
+      kilde: egetKort ? 'godkend-knap' : 'admin',
+      vedAfvis: () => {
+        const mb = document.getElementById('mangler-boks');
+        mb.classList.remove('blink'); void mb.offsetWidth; mb.classList.add('blink');
+        mb.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+    if (ok) visGodkendStatus(nr);
+  } finally {
+    knap.disabled = false;
+  }
+});
  
 // Lyttere på alle tekstfelter — opdaterer kun mangler-listen og felt-farver
 ['ef-nr','ef-vej','ef-postnummer','ef-by','ef-tlf','ef-email','ef-kode'].forEach(id => {
@@ -2264,6 +2355,17 @@ document.getElementById('historisk-gem-knap').addEventListener('click', async ()
  
 function lukEditModal() {
   if (editDirty && !confirm('Du har ugemte ændringer. Vil du lukke uden at gemme?')) return;
+  // Eget kort, der ikke er godkendt: mind om at godkende, før man lukker
+  try {
+    const m = data.find(x => sammeNr(x.nr, aktivtNr));
+    if (!editDirty && m && !m.medlemskab_bekraeftet && egetNr && sammeHusstand(egetNr, aktivtNr) &&
+        !confirm('Husk at godkende jeres medlemsdata!\n\nTryk "Annuller" for at gå tilbage og trykke på „✓ Godkend medlemsdata“.\nTryk "OK" for at lukke uden at godkende.')) {
+      const k = document.getElementById('edit-godkend-knap');
+      k.classList.remove('husk'); void k.offsetWidth; k.classList.add('husk');
+      k.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+  } catch(e) {}
   nulstilFeltFarver();
   editModal.classList.remove('vis');
   aktivtNr = null;
