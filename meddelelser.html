@@ -1072,6 +1072,9 @@ window.opdaterSvarVisning = function(id){
   visEl.textContent = "Emne: " + svEmne(m.emne) + "\n\n" + byggSvarBesked(tekst, m);
 };
 
+// Svar sendt i dette besøg: id → { til, tid, tekst }. Bruges til en tydelig kvittering på mailen,
+// og til at det sendte svar ikke lægges tilbage i tekstfeltet, når listen tegnes igen.
+const svarSendtNu = {};
 window.sendSvarMail = async function(id) {
   if (!kanSkrivePost()) return;
   const m = indbakkeData.find(x => x.id === id);
@@ -1082,6 +1085,8 @@ window.sendSvarMail = async function(id) {
 
   if (!m) { visStatus("fejl", "Mailen kunne ikke findes. Genindlæs siden og prøv igen."); return; }
   if (!tekst) { visStatus("fejl", "Skriv et svar først."); return; }
+  if (!emailJSKlar || typeof emailjs === "undefined") { visStatus("fejl", "Mail-tjenesten er ikke klar. Genindlæs siden (Ctrl + F5) og prøv igen."); return; }
+  if (svarSendtNu[id] && svarSendtNu[id].tekst === tekst) { visStatus("fejl", "Dette svar er allerede sendt."); return; }
 
   const emne = svEmne(m.emne);
   const besked = byggSvarBesked(tekst, m);
@@ -1091,7 +1096,7 @@ window.sendSvarMail = async function(id) {
 
   try {
     // Send først — så mailen ikke markeres som besvaret, hvis afsendelsen fejler
-    if (emailJSKlar && EMAILJS_PUBLIC_KEY !== "INDSÆT_PUBLIC_KEY_HER") {
+    {
       await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
         to_email: m.fra_email,
         to_name: m.fra_navn || m.fra_email,
@@ -1111,8 +1116,12 @@ window.sendSvarMail = async function(id) {
       besvaret_af_nr: MIT_NR,
       besvaret_tid: serverTimestamp(),
       svar_tekst: tekst,
+      svar_sendt_til: String(m.fra_email || "").toLowerCase(),
+      svar_antal: (m.svar_antal || (m.besvaret ? 1 : 0)) + 1,
       ...laestOpdatering(m)
     });
+    // Kvittering: huskes, så den vises tydeligt — også når listen tegnes igen
+    svarSendtNu[id] = { til: String(m.fra_email || "").toLowerCase(), tid: Date.now(), tekst };
 
     // Gem svaret med hele tråden under "Sendte mails"
     await addDoc(collection(db, "olsenpost_mail"), {
@@ -1133,15 +1142,37 @@ window.sendSvarMail = async function(id) {
       besvaret_tid: null
     });
 
-    visStatus("ok", "✅ Svar sendt fra post@olsenklanen.dk");
-    if (tekstEl) tekstEl.value = "";
+    // Listen kan være tegnet igen undervejs — find derfor felterne på ny
+    const nyTekst = document.getElementById("svar-tekst-" + id);
+    if (nyTekst) nyTekst.value = "";
+    const nyOmr = document.getElementById("svar-omr-" + id);
+    if (nyOmr) nyOmr.style.display = "none";
+    visSvarKvittering(id);
   } catch(e) {
     console.log("Svar-fejl:", e);
-    visStatus("fejl", "Kunne ikke sende svar. Prøv igen.");
+    if (svarSendtNu[id]) { visSvarKvittering(id); return; }   // mailen ER sendt — kun registreringen fejlede
+    const st = document.getElementById("svar-status-" + id);
+    if (st) { st.className = "status fejl"; st.textContent = "❌ Svaret blev IKKE sendt. Prøv igen."; st.style.display = "block"; }
+    else visStatus("fejl", "❌ Svaret blev IKKE sendt. Prøv igen.");
   } finally {
+    const k = document.getElementById("svar-send-" + id);
+    if (k) k.disabled = false;
     if (knap) knap.disabled = false;
   }
 };
+function svarKvitteringHtml(id){
+  const k = svarSendtNu[id];
+  if (!k) return "";
+  const kl = new Date(k.tid).toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
+  return `<div class="svar-kvittering" style="background:#e6f4e6;border:2px solid #2d7a2d;color:#1e5a1e;border-radius:8px;padding:12px 14px;margin:10px 0;font-size:16px;line-height:1.4">✅ <b>Dit svar er sendt</b> til ${escHtml(k.til)} kl. ${kl}.<br><span style="font-size:14px">Det ligger også under „Sendte mails“.</span></div>`;
+}
+function visSvarKvittering(id){
+  const kort = document.getElementById("mail-" + id);
+  if (!kort) return;
+  const gl = kort.querySelector(".svar-kvittering");
+  if (gl) gl.remove();
+  kort.querySelector(".mail-handlinger")?.insertAdjacentHTML("beforebegin", svarKvitteringHtml(id));
+}
 
 /* ════════ LÆST, FORSTÅET OG ARKIVERET ════════ */
 const ARKIV_SAMLINGER = ["olsenpost_indkomne", "olsenpost_mail"];
@@ -1352,9 +1383,9 @@ function tegnUlaestKort(m){
 
 function tegnLaestKort(m){
   const laestLinje = `<div class="mail-status laest-status">👁 ${laestTekst(m)}</div>`;
-  const besvaretLinje = m.besvaret
-    ? `<div class="mail-status">✅ Besvaret af ${escHtml(m.besvaret_af || '')} — ${tidTekst(m.besvaret_tid)}</div>`
-    : `<div class="mail-status ikke-besvaret">⏳ Ikke besvaret endnu</div>`;
+  const besvaretLinje = (m.besvaret
+    ? `<div class="mail-status">✅ Svar sendt${m.svar_sendt_til ? ' til ' + escHtml(m.svar_sendt_til) : ''} af ${escHtml(m.besvaret_af || '')} — ${tidTekst(m.besvaret_tid)}${(m.svar_antal || 0) > 1 ? ' (' + m.svar_antal + ' svar i alt)' : ''}</div>`
+    : `<div class="mail-status ikke-besvaret">⏳ Ikke besvaret endnu</div>`) + svarKvitteringHtml(m.id);
   const svarAaben = (() => { const o = document.getElementById("svar-omr-" + m.id); return o && o.style.display !== "none"; })();
   if (!aabneLaeste.has(m.id) && !svarAaben) return `
     <div class="mail-kort lukket ${m.besvaret ? 'besvaret' : ''}" id="mail-${m.id}">${mailHoved(m)}
@@ -1369,7 +1400,7 @@ function tegnLaestKort(m){
       <div class="mail-tekst">${escHtml(m.tekst || '')}</div>
       ${laestLinje}
       ${m.besvaret
-        ? `<div class="mail-status">✅ Besvaret af ${escHtml(m.besvaret_af || '')} — ${tidTekst(m.besvaret_tid)}</div>`
+        ? `<div class="mail-status">✅ Svar sendt${m.svar_sendt_til ? ' til ' + escHtml(m.svar_sendt_til) : ''} af ${escHtml(m.besvaret_af || '')} — ${tidTekst(m.besvaret_tid)}${(m.svar_antal || 0) > 1 ? ' (' + m.svar_antal + ' svar i alt)' : ''}</div>`
         : `<div class="mail-status ikke-besvaret">⏳ Ikke besvaret endnu</div>`
       }
       ${ER_POSTANSVARLIG ? `
@@ -1384,6 +1415,7 @@ function tegnLaestKort(m){
           <div class="status" id="svar-status-${m.id}"></div>
         </div>
       ` : ''}
+      ${svarKvitteringHtml(m.id)}
       <div class="mail-handlinger">
         <button class="knap lille" onclick="laestOgLuk('${m.id}',this)">✓ Læst – luk</button>
         ${ER_POSTANSVARLIG ? `<button class="knap lille grå" onclick="visReplySvar('${m.id}')">↩ Svar på denne mail</button>` : ''}
@@ -1418,6 +1450,8 @@ function tegnIndbakke(){
     const omr = document.getElementById("svar-omr-" + id);
     const t = document.getElementById("svar-tekst-" + id);
     if (!omr) return;
+    // Er teksten netop sendt, skal den ikke tilbage i feltet, og feltet lukkes
+    if (svarSendtNu[id] && svarSendtNu[id].tekst === g.tekst.trim()) return;
     if (t) t.value = g.tekst;
     if (g.aaben) { omr.style.display = "block"; opdaterSvarVisning(id); }
   });
