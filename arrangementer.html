@@ -62,6 +62,9 @@ textarea { min-height: 70px; resize: vertical; }
 .aar-tabel tbody tr:hover { background: #faf6ea; }
 .aar-tabel tbody tr.valgt { background: #f7f2e3; }
 .aar-tabel .aar-ref { text-align: center; width: 70px; }
+.tjek-maerke { background:none; border:none; cursor:pointer; color:#c26a00; font-weight:bold; font-size:17px; padding:0 2px; font-family:inherit; }
+.tjek-boks { background:#fff4e0; border:1.5px solid #e0a040; border-radius:6px; padding:10px 14px; margin:8px 0 12px; color:#6b4300; line-height:1.5; }
+.tjek-boks ul { margin:4px 0 0 18px; padding:0; }
 .aar-tabel .aar-komite { font-size: 13px; color: #555; }
 .aar-tabel .aar-komite-mobil { display: none; font-size: 12px; color: #777; margin-top: 3px; }
 .aar-link { background: none; border: none; padding: 0; font: inherit; font-weight: bold; color: #2d5016; text-decoration: underline; cursor: pointer; }
@@ -473,6 +476,29 @@ const INDBYGGET = {
 
 // Forslag, der sættes ind i "Ret året", når feltet er tomt eller blot en pladsholder
 // ("data rettes") eller et ældre forslag (erstat). De gemmes først, når en admin trykker "Gem oplysninger".
+// Steder, hvor oplysningerne måske ikke passer — vises med "?" i oversigten og som orange boks på året.
+// Fjern punktet her, når det er tjekket og rettet.
+const TJEK = {
+  2020: ["Skovturen 2020 blev aflyst (corona). Tjek om der er andre oplysninger fra 2020, fx hvor turen skulle have været."],
+  2021: [
+    "Referatet punkt 2 nævner godkendelse af \"beretning/referat 2020\" — men der var ingen skovtur i 2020. Var det referatet fra 2019?",
+    "Referatet punkt 6 nævner Langeland 19.–21. maj 2023. Det ser ud til at være skrevet ind senere end 2021.",
+    "Komitéens beretning siger, at skovturen 2022 går til \"Bjerre Strand igen\" — referatet siger Eriksminde ved Rørvig."
+  ],
+  2022: ["Ingen oplysninger lagt ind. Ifølge referatet 2021: Eriksminde ved Rørvig, 27.–29. maj 2022, komité Jette og Tommy. Blev skovturen gennemført fuldt ud?"],
+  2026: ["Invitationen siger, at vi har været på Eriksminde i \"2014, 2020 og 2022\" — 2020 blev aflyst, og vi var der i 2010. Skal det være 2010, 2014 og 2022?"]
+};
+function tjekMaerke(aar){
+  const t = TJEK[aar];
+  if (!t) return "";
+  return `<button class="tjek-maerke" title="Tjek: ${escAttr(t.join("  •  "))}" onclick="event.stopPropagation();vaelgAar(${aar})">?</button>`;
+}
+function tjekBoks(aar){
+  const t = TJEK[aar];
+  if (!t) return "";
+  return `<div class="tjek-boks"><b>⚠️ Tjek disse oplysninger for ${aar}:</b><ul>${t.map(x => "<li>" + escHtml(x) + "</li>").join("")}</ul></div>`;
+}
+
 const FORSLAG = {
   // 2021: databasen har tomme felter her, så de indbyggede vises ikke — de sættes ind, når "Ret året" gemmes
   2021: {
@@ -784,7 +810,7 @@ async function visAar(){
                : detRaekke("Arrangementskomité " + aar, komiteTekst);
   const fejl = DATA_OK ? "" : '<div class="tom-besked">Kunne ikke hente alle oplysninger. Prøv at genindlæse siden.</div>';
   if (!harIndhold(d)){
-    el.innerHTML = fejl + komite +
+    el.innerHTML = fejl + tjekBoks(aar) + komite +
       (DATA_OK ? '<div class="tom-besked">Ingen oplysninger for ' + aar + ' endnu.' + (maa ? ' Tryk “✎ Ret året” for at udfylde.' : '') + '</div>' : "") +
       vedtaegtLink();
     return;
@@ -795,7 +821,7 @@ async function visAar(){
   let referat = detFold("📄 Referat fra generalforsamlingen " + aar + klik, d.referat, aabnAlt).replace("<details", '<details id="aar-referat"');
   if (!referat && aar <= new Date().getFullYear())
     referat = detRaekkeHtml("📄 Referat", '<span style="color:#aaa;font-style:italic;">ikke lagt ind endnu</span>');
-  let html = fejl +
+  let html = fejl + tjekBoks(aar) +
     detRaekke("Sted / lejr", visSted(d)) +
     detRaekke("Datoer", visDatoer(d)) +
     detRaekke("Bemærkning", d.note) +
@@ -828,7 +854,7 @@ function komiteTekstFor(aar){
 }
 function visOversigt(){
   const el = document.getElementById("aar-oversigt");
-  const aarListe = Object.keys(AAR_DATA).map(Number).filter(a => harIndhold(AAR_DATA[a])).sort((a,b) => b - a);
+  const aarListe = [...new Set([...Object.keys(AAR_DATA).map(Number).filter(a => harIndhold(AAR_DATA[a])), ...Object.keys(TJEK).map(Number)])].sort((a,b) => b - a);
   if (!aarListe.length){
     el.innerHTML = '<div class="tom-besked">' + (DATA_OK ? "Ingen år lagt ind endnu." : "Kunne ikke hente oversigten. Prøv at genindlæse siden.") + '</div>';
     return;
@@ -836,13 +862,13 @@ function visOversigt(){
   const mangler = '<span style="color:#aaa;font-style:italic;">ikke registreret</span>';
   el.innerHTML = `<table class="aar-tabel">
     <thead><tr><th>År</th><th>Sted</th><th>Datoer</th><th class="aar-komite">Komité</th><th class="aar-ref">Referat</th></tr></thead>
-    <tbody>${aarListe.map(a => { const d = AAR_DATA[a]; return `
+    <tbody>${aarListe.map(a => { const d = AAR_DATA[a] || {}; return `
       <tr class="${a === DET_AKTUELT_AAR ? "valgt" : ""}" onclick="vaelgAar(${a})" title="Klik for at se ${a}">
         <td><button class="aar-link" onclick="event.stopPropagation();vaelgAar(${a})">${a}</button></td>
         <td>${visSted(d) ? escHtml(visSted(d)) : mangler}${komiteTekstFor(a) ? `<div class="aar-komite-mobil">Komité: ${escHtml(komiteTekstFor(a))}</div>` : ""}</td>
         <td>${visDatoer(d) ? escHtml(visDatoer(d)) : mangler}</td>
         <td class="aar-komite">${komiteTekstFor(a) ? escHtml(komiteTekstFor(a)) : mangler}</td>
-        <td class="aar-ref">${d.referat ? `<button class="aar-link" style="color:#2d5016;font-weight:bold;font-size:18px;text-decoration:none;" title="Åbn referatet fra ${a}" onclick="event.stopPropagation();visReferat(${a})">✓</button>` : '<span style="color:#ccc;" title="Intet referat endnu">–</span>'}</td>
+        <td class="aar-ref">${d.referat ? `<button class="aar-link" style="color:#2d5016;font-weight:bold;font-size:18px;text-decoration:none;" title="Åbn referatet fra ${a}" onclick="event.stopPropagation();visReferat(${a})">✓</button>` : '<span style="color:#ccc;" title="Intet referat endnu">–</span>'}${tjekMaerke(a)}</td>
       </tr>`; }).join("")}
     </tbody></table>`;
 }
