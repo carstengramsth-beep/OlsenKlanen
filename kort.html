@@ -323,7 +323,15 @@ if (MIT_NR && !ER_GAEST) {
   const internModtagere = [];
   let mailModtagere = [];
   const maade = () => document.querySelector('input[name="en-maade"]:checked').value;
+  let husketModtager = "";
+  $("en-modtager").addEventListener("change", e => {
+    const o = e.target.selectedOptions[0];
+    husketModtager = o && o.value ? o.textContent : "";
+    enStatus("");
+  });
   function visModtagere(){
+    // Husk hvem der var valgt, så valget bliver stående, når man skifter mellem intern post og mail
+    const foerNavn = husketModtager;
     const mitNavn = window.hent("ok_navn").trim().toLowerCase();
     const erMail = maade() === "mail";
     const liste = (erMail ? mailModtagere : internModtagere)
@@ -337,6 +345,11 @@ if (MIT_NR && !ER_GAEST) {
       ? "Kortet sendes som mail med maleriet. Listen viser dem, der har godkendt deres oplysninger og har egen mail. Svar går direkte til din mail."
       : "Kortet kommer i modtagerens OlsenPost under \"Intern besked\". Er modtageren på hjemmesiden, ser hun/han det med det samme. Virker også for dem uden mail.";
     $("en-knap").textContent = erMail ? "✉️ Send kortet som mail" : "📬 Send kortet som intern post";
+    if (foerNavn) {
+      const igen = [...$("en-modtager").options].find(o => o.value && o.textContent === foerNavn);
+      if (igen) { igen.selected = true; enStatus(""); }
+      else if (erMail) enStatus(foerNavn + " kan ikke få kortet som mail endnu. Det kræver, at husstanden har godkendt sine oplysninger og har egen mail. Send kortet som intern post i stedet.", "fejl");
+    }
   }
   document.querySelectorAll('input[name="en-maade"]').forEach(r => r.addEventListener("change", visModtagere));
   try {
