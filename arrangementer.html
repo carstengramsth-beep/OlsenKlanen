@@ -551,6 +551,17 @@ window.aarTilbage = function(){ skiftAar(DET_AKTUELT_AAR - 1); };
 window.aarFrem    = function(){ skiftAar(DET_AKTUELT_AAR + 1); };
 // Klik på et år i oversigten: årets side skifter til det år
 window.vaelgAar   = function(aar){ AABN_ALT = true; skiftAar(parseInt(aar, 10), true); };
+// Klik på ✓ i oversigtens Referat-kolonne: åbn året og hop direkte til referatet
+window.visReferat = async function(aar){
+  AABN_ALT = true;
+  await skiftAar(parseInt(aar, 10), false);
+  const ref = document.getElementById("aar-referat");
+  if (!ref) { document.getElementById("aarets-side").scrollIntoView({behavior:"smooth"}); return; }
+  ref.open = true;
+  ref.scrollIntoView({behavior:"smooth", block:"start"});
+  ref.style.boxShadow = "0 0 0 3px #c9a227";
+  setTimeout(() => { ref.style.boxShadow = ""; }, 2500);
+};
 
 window.nytAar = async function(){
   if (!DATA_OK){ alert("Oplysningerne kunne ikke hentes. Genindlæs siden, og prøv igen."); return; }
@@ -781,7 +792,7 @@ async function visAar(){
   const kontakt = [d.kontaktNavn, d.kontaktTlf].filter(Boolean).join(" · ");
   const aabnAlt = AABN_ALT; AABN_ALT = false;
   const klik = ' <span style="font-weight:normal;color:#888;font-size:13px;">— klik for at læse</span>';
-  let referat = detFold("📄 Referat fra generalforsamlingen " + aar + klik, d.referat, aabnAlt);
+  let referat = detFold("📄 Referat fra generalforsamlingen " + aar + klik, d.referat, aabnAlt).replace("<details", '<details id="aar-referat"');
   if (!referat && aar <= new Date().getFullYear())
     referat = detRaekkeHtml("📄 Referat", '<span style="color:#aaa;font-style:italic;">ikke lagt ind endnu</span>');
   let html = fejl +
@@ -831,7 +842,7 @@ function visOversigt(){
         <td>${visSted(d) ? escHtml(visSted(d)) : mangler}${komiteTekstFor(a) ? `<div class="aar-komite-mobil">Komité: ${escHtml(komiteTekstFor(a))}</div>` : ""}</td>
         <td>${visDatoer(d) ? escHtml(visDatoer(d)) : mangler}</td>
         <td class="aar-komite">${komiteTekstFor(a) ? escHtml(komiteTekstFor(a)) : mangler}</td>
-        <td class="aar-ref">${d.referat ? '<span style="color:#2d5016;font-weight:bold;" title="Referat er lagt ind">✓</span>' : '<span style="color:#ccc;" title="Intet referat endnu">–</span>'}</td>
+        <td class="aar-ref">${d.referat ? `<button class="aar-link" style="color:#2d5016;font-weight:bold;font-size:18px;text-decoration:none;" title="Åbn referatet fra ${a}" onclick="event.stopPropagation();visReferat(${a})">✓</button>` : '<span style="color:#ccc;" title="Intet referat endnu">–</span>'}</td>
       </tr>`; }).join("")}
     </tbody></table>`;
 }
