@@ -2160,6 +2160,25 @@ async function gemData() {
     aktivtNr = nytNr;
     editDirty = false;
  
+    // Har en af de 5 postansvarlige (OlsenBanden) fået ny mail? Mailen bruges så automatisk alle steder
+    // på siden (olsenbanden.js henter den her fra kartoteket), og admin-login prøver også den tidligere
+    // mail med samme kode. Carsten (8-B) får en besked i OlsenPost, så han ved det.
+    try {
+      const _mail = x => String((x && x.email) || '').split('/')[0].trim().toLowerCase();
+      for (const p of reneMedlemmer) {
+        const pNr = beregnPersonNr(nytNr, reneMedlemmer, p);
+        if (!NR_POSTANSVARLIGE.includes(pNr)) continue;
+        const foer = (_husFoer || []).find(x => (x.fastNr && x.fastNr === p.fastNr) || String(x.fornavn || '').trim() === String(p.fornavn || '').trim());
+        if (!foer || _mail(foer) === _mail(p) || !_mail(p)) continue;
+        await addDoc(collection(db, 'olsenpost'), {
+          fra_nr: String(pNr), fra_navn: 'Medlemskartoteket (automatisk)',
+          til: ['8-B'], til_navne: ['Carsten Gram'],
+          tekst: `✉️ ${visPersonNavn(p)} (${pNr}) fra OlsenBanden har fået ny mail.\n\nFør: ${_mail(foer) || '(ingen)'}\nNu: ${_mail(p)}\n\nDen nye mail bruges nu automatisk alle steder på hjemmesiden (postvagt, admin-siden og huskebogen). Login til admin-siden virker med den nye mail og samme kode som før.`,
+          type: 'besked', sendt: new Date(), sendt_lokal: Date.now(), set_af: [], svar: []
+        });
+      }
+    } catch (e) { console.log('Besked om ny mail fejlede:', e); }
+
     saetGroenneEfterGem();
     visStatus('ok', _bekraeftelse ? '✓ Gemt og bekræftet i database!' : '✓ Gemt. Husk at godkende medlemsdata.');
     visGodkendStatus(nytNr);
