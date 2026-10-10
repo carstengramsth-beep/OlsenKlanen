@@ -2259,6 +2259,21 @@ async function gemData() {
     aktivtNr = nytNr;
     editDirty = false;
  
+    // Ny hjælper? Så får hjælperen automatisk en besked i OlsenPost (Intern besked) med vejledning.
+    try {
+      const foerHj = new Set((tidl.hjaelpere || []).map(h => String(h.nr || '').toUpperCase()));
+      for (const h of (opdateret.hjaelpere || [])) {
+        if (foerHj.has(String(h.nr || '').toUpperCase())) continue;
+        const husNavn = visKortNavn(opdateret);
+        await addDoc(collection(db, 'olsenpost'), {
+          fra_nr: '8-B', fra_navn: 'Medlemskartoteket (automatisk)',
+          til: [String(h.nr)], til_navne: [h.navn || String(h.nr)],
+          tekst: `🤝 Kære ${String(h.navn || '').split(/\s+/)[0] || 'medlem'}\n\nDu har fået hjælpeadgang til medlem nr. ${nytNr} (${husNavn}).\nDet betyder, at du kan rette og godkende deres oplysninger med dit eget login.\n\nSådan gør du:\n1. Gå ind på olsenklanen.dk som du plejer (med dit eget nummer og din pinkode).\n2. Åbn "👥 Medlemskartotek" i menuen.\n3. Find nr. ${nytNr} og tryk "✏️ Rediger".\n4. Ret det, der skal rettes, og tryk "💾 Gem rettelse".\n5. Tryk til sidst "✓ Godkend medlemsdata".\n\nPå medlemskortet står der nu, at du er hjælper.\n\nVenlig hilsen\nOlsenKlanen`,
+          type: 'besked', sendt: new Date(), sendt_lokal: Date.now(), set_af: [], svar: []
+        });
+      }
+    } catch (e) { console.log('Besked til ny hjælper fejlede:', e); }
+
     // Har en af de 5 postansvarlige (OlsenBanden) fået ny mail? Mailen bruges så automatisk alle steder
     // på siden (olsenbanden.js henter den her fra kartoteket), og admin-login prøver også den tidligere
     // mail med samme kode. Carsten (8-B) får en besked i OlsenPost, så han ved det.
