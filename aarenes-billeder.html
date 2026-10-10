@@ -173,6 +173,8 @@ header p{margin-top:.5rem;color:var(--gron-pale);font-size:.95rem}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, listAll, getMetadata, deleteObject, getBlob, updateMetadata }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { INDBYGGET } from "./skovtur-indbygget.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -184,6 +186,7 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
+const db = getFirestore(app);
 
 // Tilgængelige år i dropdown (nyeste først). Tilføj nye år her.
 const AAR_LISTE = ['2026','2025','2024','2023','2022','2021','2020','2019','2018','2017','2016','2015','2014','2013','2012','2011','2010','2009','2008','2007','2006','2005','2004','2003','2002','2001','2000'];
@@ -229,6 +232,49 @@ function maaRedigere(b){
   return mit && ejer && (mit === ejer);
 }
 
+// === Sted ud for årstal ("2025 · Tonneshøj, Haderslev") ===
+// Samme kilder og rækkefølge som Arrangementer: databasen (skovtur_detaljer) vinder
+// over de indbyggede data; den gamle skovtur_historik udfylder kun manglende steder.
+const STEDER = {};
+const ANTAL = {};
+function kortSted(d){
+  const kandidater = [d.gf_sted, d.sted].filter(x => x && String(x).trim());
+  if (!kandidater.length) return '';
+  let s = kandidater.sort((a,b)=>a.length-b.length)[0].trim();
+  if (s.length > 32) s = s.split(',')[0].trim();
+  return s;
+}
+function aarEtiket(a, medAntal){
+  const sted = STEDER[a];
+  let t = sted ? `${a} · ${sted}` : `${a}`;
+  if (medAntal && ANTAL[a] !== undefined) t += ` — ${ANTAL[a]}`;
+  return t;
+}
+function aarOptions(valgt, medAntal){
+  return AAR_LISTE.map(a=>`<option value="${a}" ${a===valgt?'selected':''}>${aarEtiket(a, medAntal)}</option>`).join('');
+}
+async function hentSteder(){
+  const alle = {};
+  const flet = (aar, d) => { aar = parseInt(aar,10); if (aar) alle[aar] = { ...(alle[aar]||{}), ...d }; };
+  Object.keys(INDBYGGET).forEach(a => flet(a, INDBYGGET[a]));
+  try {
+    const snap = await getDocs(collection(db,'skovtur_detaljer'));
+    snap.forEach(ds => { if (ds.id === 'datakontrol') return; const d = ds.data(); flet(parseInt(String(ds.id).replace('skovtur',''),10) || d.aar, d); });
+  } catch(e){ console.log('Steder:', e); }
+  try {
+    const snap = await getDocs(collection(db,'skovtur_historik'));
+    snap.forEach(ds => { const h = ds.data(), aar = parseInt(h.aar,10); if (aar && (alle[aar]||{}).sted === undefined && h.sted) flet(aar, { sted: h.sted }); });
+  } catch(e){ console.log('Steder (historik):', e); }
+  Object.keys(alle).forEach(a => { const s = kortSted(alle[a]); if (s) STEDER[String(a)] = s; });
+  // Opdatér de dropdowns, der allerede står på siden
+  const nav = document.getElementById('aar-vaelger');
+  if (nav) { const v = nav.value; nav.innerHTML = aarOptions(v, true); nav.value = v; }
+  ['aar-vaelger-modal','lb-flyt-aar'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.options.length) { const v = el.value; el.innerHTML = aarOptions(v, false); el.value = v; }
+  });
+}
+
 let valgtAar = AAR_LISTE[0];
 // Link fra Arrangementer: aarenes-billeder.html?aar=2012 åbner det år
 const urlAarB = new URLSearchParams(location.search).get('aar');
@@ -240,7 +286,7 @@ let visListe = [];         // peger på det aktuelt viste (til lightbox)
 
 // Udfyld år-dropdown
 const aarSel = document.getElementById('aar-vaelger');
-aarSel.innerHTML = AAR_LISTE.map(a=>`<option value="${a}">${a}</option>`).join('');
+aarSel.innerHTML = aarOptions(valgtAar, true);
 aarSel.value = valgtAar;
 
 // Udfyld gruppe-dropdowns ('Hele weekenden' øverst i nav)
@@ -378,7 +424,7 @@ window.aabnModal = function(){
   fyldGruppeDropdown(document.getElementById('gruppe-vaelger-modal'), startGruppe);
   // År-dropdown med nuværende år forvalgt
   document.getElementById('aar-vaelger-modal').innerHTML =
-    AAR_LISTE.map(a=>`<option value="${a}" ${a===valgtAar?'selected':''}>${a}</option>`).join('');
+    aarOptions(valgtAar, false);
   document.getElementById('fil').value='';
   document.getElementById('navn').value='';
   document.getElementById('tekst').value='';
@@ -521,7 +567,7 @@ window.visFlytValg = function(e){
   if(vis){
     const naaGid = aabentBillede ? aabentBillede.b.gruppe : '';
     document.getElementById('lb-flyt-aar').innerHTML =
-      AAR_LISTE.map(a=>`<option value="${a}" ${a===valgtAar?'selected':''}>${a}</option>`).join('');
+      aarOptions(valgtAar, false);
     document.getElementById('lb-flyt-vaelger').innerHTML =
       GRUPPER.filter(g=>g.id!==naaGid).map(g=>`<option value="${g.id}">${g.titel}</option>`).join('');
     boks.style.display = 'block';
@@ -619,13 +665,15 @@ async function opdaterAarsAntal(){
     const opt = sel.querySelector(`option[value="${aar}"]`);
     if(opt){
       // Et tal ud for hvert år: 0 hvis ingen billeder, ellers det faktiske antal
-      opt.textContent = `${aar} — ${antal}`;
+      ANTAL[aar] = antal;
+      opt.textContent = aarEtiket(aar, true);
     }
   }
 }
 
 // Start
 visValg();
+hentSteder();
 opdaterAarsAntal();
 </script>
 <script type="module" src="post-varsel.js"></script>
