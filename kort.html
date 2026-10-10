@@ -222,8 +222,8 @@ $("skrift").innerHTML = SKRIFTER.map((k, i) => `<option value="${i}" style="font
 $("fra").value = hent("ok_navn");
 
 let valgt = 0;
-// Titlen vises (under billedet og på kortet) for de nye motiver — foreløbig ikke for Elisabeths malerier
-const visTitel = k => (k.gruppe || "malerier") !== "malerier";
+// Titlen vises under billedet og på kortet for alle motiver — også Elisabeths malerier
+const visTitel = k => !!(k.titel && String(k.titel).trim());
 const escK = t => String(t == null ? "" : t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 $("kort-valg").innerHTML = GRUPPER.map(g => {
   const kort = KORT.map((k, i) => ({ k, i })).filter(x => (x.k.gruppe || "malerier") === g.id);
