@@ -125,6 +125,7 @@ async function koeMedlemsKort(fraNr, fraHusstand, kort) {
     kort_fil: /^billeder\/kort\/[\w\-]+\.jpg$/.test(fil) ? fil : "",
     kort_maler: tekst(kort.kort_maler).slice(0, 60),
     kort_art: tekst(kort.kort_art).slice(0, 20) || "Maleri",
+    kort_nr: Number.isInteger(kort.kort_nr) ? kort.kort_nr : null,
     kort_til: tekst(kort.kort_til).slice(0, 80), kort_besked: tekst(kort.kort_besked).slice(0, 900),
     kort_slut: tekst(kort.kort_slut).slice(0, 60), kort_fra: tekst(kort.kort_fra).slice(0, 80),
     kort_skrift: Number.isInteger(kort.kort_skrift) ? kort.kort_skrift : 0,
@@ -413,7 +414,7 @@ async function sendBrevkort() {
         const html = `<div style="background:#f5f1e8;padding:20px 0;font-family:Georgia,'Times New Roman',serif;">
   <div style="max-width:600px;margin:0 auto;background:#fff;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
     ${billede ? `<table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td><img src="cid:maleri" alt="" style="max-width:100%;max-height:380px;width:auto;height:auto;display:block;"></td></tr>
-      <tr><td style="text-align:right;font-size:12px;color:#8a7a3f;font-style:italic;padding-top:4px;">${k.kort_maler ? escHtml(k.kort_art || "Maleri") + ": © " + escHtml(k.kort_maler) + " · " : ""}olsenklanen.dk</td></tr></table>` : ""}
+      <tr><td style="text-align:right;font-size:12px;color:#8a7a3f;font-style:italic;padding-top:4px;">${k.kort_maler ? escHtml(k.kort_art || "Maleri") + (k.kort_nr ? " nr. " + escHtml(k.kort_nr) : "") + ": © " + escHtml(k.kort_maler) + " · " : ""}olsenklanen.dk</td></tr></table>` : ""}
     <div style="padding:22px 10px 6px;color:#2c3e1f;">
       ${til ? `<p style="font-size:20px;margin:0 0 14px;">${escHtml(til)}</p>` : ""}
       <p style="font-size:16px;line-height:1.55;margin:0;white-space:pre-wrap;">${escHtml(k.kort_besked)}</p>

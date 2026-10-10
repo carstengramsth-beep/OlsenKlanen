@@ -21,7 +21,13 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .kort-valg button img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .kort-valg button.valgt { border-color: #c89e3c; box-shadow: 0 0 0 2px #c89e3c; }
 .kort-valg .valg { display: flex; flex-direction: column; gap: 2px; }
-.kort-valg .brugt { text-align: right; font-size: 12px; color: #8a7a3f; min-height: 15px; padding-right: 3px; }
+.kort-valg .brugt { font-size: 12px; color: #8a7a3f; }
+.kort-valg .under { display: flex; justify-content: space-between; align-items: baseline; padding: 0 3px; min-height: 15px; }
+.kort-valg .nr { font-size: 12px; color: #2d5016; font-weight: bold; }
+.kort-valg .kunstner { text-align: center; font-size: 13px; color: #2d5016; font-style: italic; line-height: 1.2; }
+.kort-gruppe { margin-bottom: 14px; }
+.kort-gruppe h3 { font-size: 14px; color: #2d5016; margin: 6px 0 6px; font-weight: bold; }
+.kort-gruppe .tom { font-size: 13px; color: #8a7a3f; font-style: italic; background: #fdfbf5; border: 1px dashed #d8c99a; border-radius: 8px; padding: 10px 12px; }
 label { display: block; font-size: 14px; color: #555; margin: 10px 0 4px; }
 input[type=text], textarea, select { width: 100%; font-family: inherit; font-size: 16px; padding: 9px 11px; border: 1px solid #c8bfa0; border-radius: 6px; background: #fdfbf5; }
 textarea { min-height: 150px; resize: vertical; }
@@ -87,8 +93,8 @@ try {
   <div class="styring">
     <div class="trin">
       <h2>1. Vælg et kort</h2>
-      <div class="kort-valg" id="kort-valg"></div>
-      <p class="hint">Malerier af Elisabeth Gram.</p>
+      <div id="kort-valg"></div>
+      <p class="hint">Hvert motiv har et fast nummer (Nr.), så det er nemt at tale om et bestemt kort. Nummeret står også på kortet.</p>
     </div>
     <div class="trin">
       <h2>2. Skriv din hilsen</h2>
@@ -170,18 +176,28 @@ try {
 <script>
 // Kortene — tilføj flere ved at lægge billedet i billeder/kort/ og skrive en linje her.
 // Ændres et billede, så tæl BILLED_VERSION op, så browserne henter det nye.
+// nr = fast motiv-nummer. Det må ALDRIG ændres eller genbruges — giv nye motiver næste ledige nummer.
+// gruppe: "malerier" (Elisabeth), "boern" (børnetegninger) eller "voksne" (medlemmernes egne værker).
 const BILLED_VERSION = 2;
 const KORT = [
-  { fil: "billeder/kort/hulemaleri.jpg",    titel: "Hulemaleri",      maler: "Elisabeth Gram" },
-  { fil: "billeder/kort/landskab-2014.jpg", titel: "Landskab, 2014",  maler: "Elisabeth Gram" },
-  { fil: "billeder/kort/landskab-2012.jpg", titel: "Landskab, 2012",  maler: "Elisabeth Gram" },
-  { fil: "billeder/kort/balletdanser.jpg",     titel: "Balletdanser",    maler: "Elisabeth Gram" },
-  { fil: "billeder/kort/frugter-abstrakt.jpg", titel: "Frugter",         maler: "Elisabeth Gram" },
-  { fil: "billeder/kort/kvinde-i-farver.jpg",  titel: "Kvinde i farver", maler: "Elisabeth Gram" },
-  { fil: "billeder/kort/vinterstemning.jpg",     titel: "Vinterstemning",    maler: "Elisabeth Gram" },
-  { fil: "billeder/kort/paeoner-i-haven.jpg",    titel: "Pæoner i haven",    maler: "Elisabeth Gram" },
-  { fil: "billeder/kort/damen-med-guldhaar.jpg", titel: "Damen med guldhår", maler: "Elisabeth Gram" },
-  // Børnetegninger skrives med art: "Tegning", fx { fil: "...", titel: "...", maler: "Luna", art: "Tegning" }
+  { nr: 1, gruppe: "malerier", fil: "billeder/kort/hulemaleri.jpg",         titel: "Hulemaleri",        maler: "Elisabeth Gram" },
+  { nr: 2, gruppe: "malerier", fil: "billeder/kort/landskab-2014.jpg",      titel: "Landskab, 2014",    maler: "Elisabeth Gram" },
+  { nr: 3, gruppe: "malerier", fil: "billeder/kort/landskab-2012.jpg",      titel: "Landskab, 2012",    maler: "Elisabeth Gram" },
+  { nr: 4, gruppe: "malerier", fil: "billeder/kort/balletdanser.jpg",       titel: "Balletdanser",      maler: "Elisabeth Gram" },
+  { nr: 5, gruppe: "malerier", fil: "billeder/kort/frugter-abstrakt.jpg",   titel: "Frugter",           maler: "Elisabeth Gram" },
+  { nr: 6, gruppe: "malerier", fil: "billeder/kort/kvinde-i-farver.jpg",    titel: "Kvinde i farver",   maler: "Elisabeth Gram" },
+  { nr: 7, gruppe: "malerier", fil: "billeder/kort/vinterstemning.jpg",     titel: "Vinterstemning",    maler: "Elisabeth Gram" },
+  { nr: 8, gruppe: "malerier", fil: "billeder/kort/paeoner-i-haven.jpg",    titel: "Pæoner i haven",    maler: "Elisabeth Gram" },
+  { nr: 9, gruppe: "malerier", fil: "billeder/kort/damen-med-guldhaar.jpg", titel: "Damen med guldhår", maler: "Elisabeth Gram" },
+  // Børnetegninger, fx: { nr: 10, gruppe: "boern", fil: "billeder/kort/ester-1.jpg", titel: "…", maler: "Ester", art: "Tegning" },
+  // Medlemmernes egne værker, fx: { nr: 11, gruppe: "voksne", fil: "…", titel: "…", maler: "Navn", art: "Maleri" },
+];
+// Overskrifterne i "Vælg et kort". vis_tom: gruppen vises, også før der er billeder i den.
+const GRUPPER = [
+  { id: "malerier", titel: "Malerier af Elisabeth Gram" },
+  { id: "boern",    titel: "Børnetegninger", vis_tom: true,
+    tom: "Her kommer børnenes tegninger — kunstnerens navn står under hver tegning. Den første er på vej!" },
+  { id: "voksne",   titel: "Medlemmernes egne værker" }
 ];
 
 // Skrifttyper — f = størrelsesfaktor, så de ser nogenlunde lige store ud (1 = 14 pkt)
@@ -205,9 +221,17 @@ $("skrift").innerHTML = SKRIFTER.map((k, i) => `<option value="${i}" style="font
 $("fra").value = hent("ok_navn");
 
 let valgt = 0;
-$("kort-valg").innerHTML = KORT.map((k, i) =>
-  `<div class="valg"><button type="button" data-i="${i}" title="${k.titel}"><img src="${k.fil}?v=${BILLED_VERSION}" alt="${k.titel}"></button>` +
-  `<span class="brugt" data-fil="${k.fil}"></span></div>`).join("");
+const escK = t => String(t == null ? "" : t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+$("kort-valg").innerHTML = GRUPPER.map(g => {
+  const kort = KORT.map((k, i) => ({ k, i })).filter(x => (x.k.gruppe || "malerier") === g.id);
+  if (!kort.length && !g.vis_tom) return "";
+  return `<div class="kort-gruppe"><h3>${escK(g.titel)}</h3>` + (kort.length
+    ? `<div class="kort-valg">` + kort.map(({ k, i }) =>
+        `<div class="valg"><button type="button" data-i="${i}" title="Nr. ${k.nr} · ${escK(k.titel)} · ${escK(k.maler)}"><img src="${escK(k.fil)}?v=${BILLED_VERSION}" alt="${escK(k.titel)}"></button>` +
+        (g.id !== "malerier" ? `<div class="kunstner">${escK(k.maler)}</div>` : "") +
+        `<div class="under"><span class="nr">Nr. ${k.nr}</span><span class="brugt" data-fil="${escK(k.fil)}"></span></div></div>`).join("") + `</div>`
+    : `<div class="tom">${escK(g.tom || "Kommer snart.")}</div>`) + `</div>`;
+}).join("");
 // Lille tal under hvert billede: hvor mange gange det er brugt til et kort (fyldes ud, når tallene er hentet)
 window.visBrug = tael => document.querySelectorAll("#kort-valg .brugt").forEach(el => {
   const n = tael[el.dataset.fil] || 0;
@@ -226,8 +250,8 @@ function opdater(){
   };
   $("kort-billede").src = k.fil + "?v=" + BILLED_VERSION;
   $("kort-billede").alt = k.titel;
-  $("v-maler").textContent = (k.art || "Maleri") + ": © " + k.maler + " · olsenklanen.dk";
-  $("kort-valg").querySelectorAll("button").forEach((b, i) => b.classList.toggle("valgt", i === valgt));
+  $("v-maler").textContent = (k.art || "Maleri") + " nr. " + k.nr + ": © " + k.maler + " · olsenklanen.dk";
+  $("kort-valg").querySelectorAll("button").forEach(b => b.classList.toggle("valgt", +b.dataset.i === valgt));
   $("v-til").textContent = $("til").value.trim();
   $("v-besked").textContent = $("besked").value.trim() || "Skriv din hilsen …";
   $("v-besked").style.color = $("besked").value.trim() ? "" : "#bbb";
@@ -451,7 +475,7 @@ if (MIT_NR && !ER_GAEST) {
           til: [valg], til_navne: [navn],
           type: "kort",
           tekst: [$("til").value.trim(), besked, "", $("slut").value.trim(), $("fra").value.trim()].join("\n").trim(),
-          kort_fil: k.fil, kort_maler: k.maler, kort_art: k.art || "Maleri",
+          kort_fil: k.fil, kort_maler: k.maler, kort_art: k.art || "Maleri", kort_nr: k.nr,
           kort_til: $("til").value.trim(), kort_besked: besked, kort_slut: $("slut").value.trim(), kort_fra: $("fra").value.trim(),
           kort_skrift: window.skriftNr(),
           sendt: serverTimestamp(), sendt_lokal: Date.now(),
@@ -478,7 +502,7 @@ if (MIT_NR && !ER_GAEST) {
         kort: {
           til_hus, til_idx, til_selv: tilSelv, emne: $("en-emne").value.trim(),
           fra_fornavn: window.hent("ok_navn").trim().split(/\s+/)[0], fra_navn: window.hent("ok_navn").trim(),
-          kort_fil: k.fil, kort_maler: k.maler, kort_art: k.art || "Maleri",
+          kort_fil: k.fil, kort_maler: k.maler, kort_art: k.art || "Maleri", kort_nr: k.nr,
           kort_til: $("til").value.trim(), kort_besked: besked, kort_slut: $("slut").value.trim(), kort_fra: $("fra").value.trim(),
           kort_skrift: window.skriftNr()
         }
@@ -542,7 +566,7 @@ if (MIT_NR && !ER_GAEST) {
         prove: !!prove,
         emne: $("emne").value.trim() || "Et kort fra OlsenKlanen",
         tekst,
-        kort_fil: k.fil, kort_titel: k.titel, kort_maler: k.maler, kort_art: k.art || "Maleri",
+        kort_fil: k.fil, kort_titel: k.titel, kort_maler: k.maler, kort_art: k.art || "Maleri", kort_nr: k.nr,
         kort_til: $("til").value.trim(), kort_besked: besked, kort_slut: $("slut").value.trim(), kort_fra: $("fra").value.trim(),
         kort_skrift: window.skriftNr(),
         sendt: serverTimestamp(), sendt_lokal: Date.now(),
