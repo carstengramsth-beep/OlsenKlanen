@@ -25,6 +25,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .kort-valg .under { display: flex; justify-content: space-between; align-items: baseline; padding: 0 3px; min-height: 15px; }
 .kort-valg .nr { font-size: 12px; color: #2d5016; font-weight: bold; }
 .kort-valg .kunstner { text-align: center; font-size: 13px; color: #2d5016; font-style: italic; line-height: 1.2; }
+.kort-valg .titel { text-align: center; font-size: 11.5px; color: #555; line-height: 1.25; padding: 1px 2px 0; }
 .kort-gruppe { margin-bottom: 14px; }
 .kort-gruppe h3 { font-size: 14px; color: #2d5016; margin: 6px 0 6px; font-weight: bold; }
 .kort-gruppe .tom { font-size: 13px; color: #8a7a3f; font-style: italic; background: #fdfbf5; border: 1px dashed #d8c99a; border-radius: 8px; padding: 10px 12px; }
@@ -221,6 +222,8 @@ $("skrift").innerHTML = SKRIFTER.map((k, i) => `<option value="${i}" style="font
 $("fra").value = hent("ok_navn");
 
 let valgt = 0;
+// Titlen vises (under billedet og på kortet) for de nye motiver — foreløbig ikke for Elisabeths malerier
+const visTitel = k => (k.gruppe || "malerier") !== "malerier";
 const escK = t => String(t == null ? "" : t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 $("kort-valg").innerHTML = GRUPPER.map(g => {
   const kort = KORT.map((k, i) => ({ k, i })).filter(x => (x.k.gruppe || "malerier") === g.id);
@@ -228,6 +231,7 @@ $("kort-valg").innerHTML = GRUPPER.map(g => {
   return `<div class="kort-gruppe"><h3>${escK(g.titel)}</h3>` + (kort.length
     ? `<div class="kort-valg">` + kort.map(({ k, i }) =>
         `<div class="valg"><button type="button" data-i="${i}" title="Nr. ${k.nr} · ${escK(k.titel)} · ${escK(k.maler)}"><img src="${escK(k.fil)}?v=${BILLED_VERSION}" alt="${escK(k.titel)}"></button>` +
+        (visTitel(k) ? `<div class="titel">"${escK(k.titel)}"</div>` : "") +
         (g.id !== "malerier" ? `<div class="kunstner">${escK(k.maler)}</div>` : "") +
         `<div class="under"><span class="nr">Nr. ${k.nr}</span><span class="brugt" data-fil="${escK(k.fil)}"></span></div></div>`).join("") + `</div>`
     : `<div class="tom">${escK(g.tom || "Kommer snart.")}</div>`) + `</div>`;
@@ -250,7 +254,7 @@ function opdater(){
   };
   $("kort-billede").src = k.fil + "?v=" + BILLED_VERSION;
   $("kort-billede").alt = k.titel;
-  $("v-maler").textContent = (k.art || "Maleri") + " nr. " + k.nr + ": © " + k.maler + " · olsenklanen.dk";
+  $("v-maler").textContent = (k.art || "Maleri") + " nr. " + k.nr + (visTitel(k) ? " · \u201c" + k.titel + "\u201d ·" : ":") + " © " + k.maler + " · olsenklanen.dk";
   $("kort-valg").querySelectorAll("button").forEach(b => b.classList.toggle("valgt", +b.dataset.i === valgt));
   $("v-til").textContent = $("til").value.trim();
   $("v-besked").textContent = $("besked").value.trim() || "Skriv din hilsen …";
@@ -475,7 +479,7 @@ if (MIT_NR && !ER_GAEST) {
           til: [valg], til_navne: [navn],
           type: "kort",
           tekst: [$("til").value.trim(), besked, "", $("slut").value.trim(), $("fra").value.trim()].join("\n").trim(),
-          kort_fil: k.fil, kort_maler: k.maler, kort_art: k.art || "Maleri", kort_nr: k.nr,
+          kort_fil: k.fil, kort_maler: k.maler, kort_art: k.art || "Maleri", kort_nr: k.nr, kort_titel: k.titel, kort_titel_vis: visTitel(k) ? k.titel : "",
           kort_til: $("til").value.trim(), kort_besked: besked, kort_slut: $("slut").value.trim(), kort_fra: $("fra").value.trim(),
           kort_skrift: window.skriftNr(),
           sendt: serverTimestamp(), sendt_lokal: Date.now(),
@@ -502,7 +506,7 @@ if (MIT_NR && !ER_GAEST) {
         kort: {
           til_hus, til_idx, til_selv: tilSelv, emne: $("en-emne").value.trim(),
           fra_fornavn: window.hent("ok_navn").trim().split(/\s+/)[0], fra_navn: window.hent("ok_navn").trim(),
-          kort_fil: k.fil, kort_maler: k.maler, kort_art: k.art || "Maleri", kort_nr: k.nr,
+          kort_fil: k.fil, kort_maler: k.maler, kort_art: k.art || "Maleri", kort_nr: k.nr, kort_titel: k.titel, kort_titel_vis: visTitel(k) ? k.titel : "",
           kort_til: $("til").value.trim(), kort_besked: besked, kort_slut: $("slut").value.trim(), kort_fra: $("fra").value.trim(),
           kort_skrift: window.skriftNr()
         }
@@ -566,7 +570,7 @@ if (MIT_NR && !ER_GAEST) {
         prove: !!prove,
         emne: $("emne").value.trim() || "Et kort fra OlsenKlanen",
         tekst,
-        kort_fil: k.fil, kort_titel: k.titel, kort_maler: k.maler, kort_art: k.art || "Maleri", kort_nr: k.nr,
+        kort_fil: k.fil, kort_titel: k.titel, kort_maler: k.maler, kort_art: k.art || "Maleri", kort_nr: k.nr, kort_titel_vis: visTitel(k) ? k.titel : "",
         kort_til: $("til").value.trim(), kort_besked: besked, kort_slut: $("slut").value.trim(), kort_fra: $("fra").value.trim(),
         kort_skrift: window.skriftNr(),
         sendt: serverTimestamp(), sendt_lokal: Date.now(),
