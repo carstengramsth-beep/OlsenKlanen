@@ -24,6 +24,8 @@ Sidst opdateret: 2026-10-06
 | OlsenPost: gul post-linje åbner fanen "Intern besked" med den nye besked øverst | Deployed (5. okt. 2026) |
 | Fødselsdagshilsen: "Skriv hilsen" på dagen + ⭐ og antal (højst 100) + prøve-hilsen (`forside.html?testhilsen=1`) | Deployed (5. okt. 2026) |
 | Fødselsdagskort: navnene på alle afsendere i flæng, kan gemmes som PDF / printes på A4 | Deployed (6. okt. 2026) |
+| Opslagstavlen: post-it op til 2.000 tegn (før 500) + bredere sedler. Kræver ny regel i Firebase Console (se Afventer) | Klar (11. okt. 2026) |
+| Opslagstavlen: sedler vises i 10 dage, ældre under "Tidligere post-it beskeder". Forsiden viser sedlerne fra de sidste 10 dage | Klar (11. okt. 2026) |
 
 ## Huskeliste — oprydning (aftalt 3. okt. 2026, tages en anden dag)
 
@@ -58,6 +60,7 @@ Sidst opdateret: 2026-10-06
 
 ## Afventer
 
+- **Firebase Console (opslagstavlen):** Reglen for `opslagstavle` skal tillade 2.000 tegn (`tekst.size() <= 2000`). Indtil da kan opslag over 500 tegn ikke gemmes, og siden beder om et kortere opslag.
 - **Firebase Console:** Indsæt regler fra `firestore.rules` (Firestore → Regler) og `database.rules.json` (Realtime Database → Regler)
 - **Sannes stamtræ-input:** Indhold modtages fra Sanne Gram Fadel (safi@dr.dk)
 

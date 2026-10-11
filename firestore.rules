@@ -82,7 +82,7 @@ service cloud.firestore {
       allow create: if request.resource.data.keys().hasAll(['tekst','forfatter'])
         && request.resource.data.tekst is string
         && request.resource.data.tekst.size() > 0
-        && request.resource.data.tekst.size() <= 500
+        && request.resource.data.tekst.size() <= 2000
         && request.resource.data.forfatter is string
         && request.resource.data.forfatter.size() > 0;
       allow update: if true;

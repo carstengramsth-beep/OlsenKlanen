@@ -152,6 +152,25 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
   100% { transform: translateX(-100%); }
 }
  
+/* Opslagstavlen på forsiden — de nyeste post-it sedler */
+.forside-tavle { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.forside-tavle-header { background: #2d5016; color: #c89e3c; padding: 10px 16px; font-weight: bold; font-size: 14px; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.forside-tavle-header a { color: #f5e6a8; font-size: 13px; font-weight: normal; letter-spacing: 0; text-decoration: none; }
+.forside-tavle-header a:hover { text-decoration: underline; }
+.forside-sedler { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 14px; padding: 16px; background: #c9a66b; background-image: radial-gradient(rgba(0,0,0,0.06) 1px, transparent 1px); background-size: 6px 6px; }
+.forside-seddel { position: relative; display: block; background: #fff8c4; padding: 14px 14px 12px; border-radius: 3px; box-shadow: 2px 3px 8px rgba(0,0,0,0.2); transform: rotate(-0.6deg); color: #2c3e1f; text-decoration: none; transition: transform 0.2s; }
+.forside-seddel:nth-child(2n) { background: #fff3a8; transform: rotate(0.6deg); }
+.forside-seddel:nth-child(3n) { background: #ffec88; transform: rotate(-0.3deg); }
+.forside-seddel:hover { transform: rotate(0deg) scale(1.02); z-index: 2; }
+.forside-seddel.privat { background: #ffe8e8; border-left: 4px solid #c0392b; }
+.forside-seddel::before { content: "📌"; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 18px; }
+.forside-seddel.ny::after { content: "NYT"; position: absolute; top: -8px; right: -8px; background: #c0392b; color: #fff; font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 4px; transform: rotate(8deg); box-shadow: 1px 2px 4px rgba(0,0,0,0.2); }
+.forside-seddel-top { display: flex; justify-content: space-between; font-size: 12px; color: #6a5a1a; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed rgba(106,90,26,0.3); }
+.forside-seddel-tekst { font-size: 15px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; display: -webkit-box; -webkit-line-clamp: 10; -webkit-box-orient: vertical; overflow: hidden; }
+.forside-seddel-bund { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; padding-top: 6px; border-top: 1px dashed rgba(106,90,26,0.3); font-size: 13px; color: #5a4a1a; }
+.forside-seddel-bund em { font-style: italic; }
+.forside-seddel-mere { color: #2d5016; font-weight: bold; white-space: nowrap; }
+.forside-tavle-tom { grid-column: 1/-1; text-align: center; color: #fff8e1; font-style: italic; padding: 20px; }
 @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
 </style>
 <script>
@@ -274,6 +293,16 @@ try {
   </aside>
  
   <main class="mid">
+    <div class="forside-tavle" id="forside-tavle">
+      <div class="forside-tavle-header">
+        <span>📌 OPSLAGSTAVLEN — DE SIDSTE 10 DAGE</span>
+        <a href="opslagstavlen.html">Skriv et opslag · se alle →</a>
+      </div>
+      <div class="forside-sedler" id="forside-sedler">
+        <div class="forside-tavle-tom">Henter opslag…</div>
+      </div>
+    </div>
+
     <div class="billede-boks">
       <img src="billeder/IMG-0033-A.jpg" alt="Hele OlsenKlanen samlet — Skovtur 2026">
       <div class="billede-tekst">
@@ -554,6 +583,45 @@ onSnapshot(q, (snap) => {
   document.getElementById("tal-ukommenterede").textContent = ukommenterede;
   document.getElementById("tal-ukommenterede").className = "tavle-tal-tal" + (ukommenterede === 0 ? " nul" : "");
   document.getElementById("tal-ialt").textContent = ialt;
+});
+
+// Opslagstavlen på forsiden: sedler fra de sidste 10 dage, så alle ser dem, når de logger ind.
+// Ældre sedler findes under "Tidligere post-it beskeder" på opslagstavlen.
+// Private opslag til hjemmesidegruppen vises kun for admin og OlsenBanden.
+const FORSIDE_VIS_DAGE = 10;
+const FORSIDE_MAX_SEDLER = 12;
+const forsideNiveau = sessionStorage.getItem("ok_niveau") || "";
+const forsideErGruppe = (forsideNiveau === "admin" || forsideNiveau === "olsenbanden");
+onSnapshot(query(collection(db, "opslagstavle"), orderBy("tidspunkt", "desc")), (snap) => {
+  const boks = document.getElementById("forside-sedler");
+  if (!boks) return;
+  const synlige = snap.docs.filter(d => {
+    const data = d.data();
+    if (data.slettet) return false;
+    if (data.tidspunkt && (Date.now() - data.tidspunkt.toDate().getTime()) > FORSIDE_VIS_DAGE * 24 * 60 * 60 * 1000) return false;
+    return (data.modtager || "alle") === "alle" || forsideErGruppe;
+  }).slice(0, FORSIDE_MAX_SEDLER);
+  if (synlige.length === 0) {
+    boks.innerHTML = '<div class="forside-tavle-tom">Ingen nye opslag de sidste ' + FORSIDE_VIS_DAGE + ' dage — <a href="opslagstavlen.html" style="color:#fff8e1;">hæng et opslag op 📌</a></div>';
+    return;
+  }
+  boks.innerHTML = synlige.map(d => {
+    const data = d.data();
+    const dato = data.tidspunkt ? data.tidspunkt.toDate().toLocaleDateString("da-DK", {day:"numeric", month:"short", year:"numeric"}) : "Lige nu";
+    const erNyt = !(data.set_af || []).includes(minEmail);
+    const erPrivat = (data.modtager === "hjemmesidegruppen");
+    const antalKom = (data.kommentarer || []).length;
+    const kom = antalKom === 0 ? "" : (antalKom === 1 ? "💬 1 kommentar · " : "💬 " + antalKom + " kommentarer · ");
+    return '<a class="forside-seddel' + (erNyt ? ' ny' : '') + (erPrivat ? ' privat' : '') + '" href="opslagstavlen.html' + (erPrivat ? '?filter=gruppe' : '') + '">'
+      + '<div class="forside-seddel-top"><span>' + (erPrivat ? '🔒 Gruppe' : '') + '</span><span>' + dato + '</span></div>'
+      + '<div class="forside-seddel-tekst">' + escHtmlF(data.tekst || "") + '</div>'
+      + '<div class="forside-seddel-bund"><em>— ' + escHtmlF(data.forfatter || "") + '</em><span class="forside-seddel-mere">' + kom + 'Læs mere →</span></div>'
+      + '</a>';
+  }).join("");
+}, (e) => {
+  console.error(e);
+  const boks = document.getElementById("forside-sedler");
+  if (boks) boks.innerHTML = '<div class="forside-tavle-tom">Kunne ikke hente opslagstavlen.</div>';
 });
  
 // ════════════════════════════════════════════════════════════════
