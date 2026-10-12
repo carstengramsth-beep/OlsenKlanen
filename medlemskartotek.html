@@ -66,6 +66,9 @@ body.kan-redigere #admin-bjaelke{display:flex}
  
 /* ── SØGEBAR ── */
 .soegebar{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap}
+.opret-knap{display:none;background:var(--gron);color:#fff;border:none;padding:10px 18px;border-radius:4px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;box-shadow:0 2px 6px rgba(45,80,22,.3)}
+.opret-knap:hover{background:var(--gron-lys)}
+body.kan-redigere .opret-knap{display:inline-block}
 .soege-input{flex:1;min-width:220px;border:1px solid var(--border);background:var(--hvid);padding:.6rem 1rem;font-size:14px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);outline:none;border-radius:4px;transition:border-color .2s}
 .soege-input:focus{border-color:var(--gron)}
 .antal-linje{font-size:12px;color:var(--tekst-lys);white-space:nowrap}
@@ -631,6 +634,7 @@ body.kan-redigere .historisk-btn-wrapper{display:none}
 <div class="wrapper">
   <div class="soegebar">
     <input type="search" class="soege-input" id="soege" placeholder="Søg på husstandsnummer, navn, adresse, telefon…">
+    <button type="button" class="opret-knap" id="opret-medlem-knap">➕ Opret nyt medlem</button>
     <div class="antal-linje" id="antal-linje"></div>
   </div>
   <div class="grid" id="grid"></div>
@@ -2153,6 +2157,12 @@ async function gemData() {
   }
  
   const erAdmin    = document.body.classList.contains('kan-redigere');
+  // Nyt medlem: mangler der vigtige oplysninger, så spørg først
+  if (nytMedlemNr && sammeNr(gammelNr, nytMedlemNr)) {
+    const mangler = manglerForHusstand(formularHusstand());
+    if (mangler.length && !confirm('Der mangler oplysninger om det nye medlem:\n\n• ' + mangler.join('\n• ') +
+        '\n\nTryk "Annuller" for at udfylde dem først.\nTryk "OK" for at oprette medlemmet alligevel.')) return;
+  }
   // Husstandens reserve-navn bevares uændret (skjulte felter) — bruges kun som fallback
   const fornavn    = document.getElementById('ef-fornavn').value.trim();
   const mellemnavn = document.getElementById('ef-mellemnavn').value.trim();
@@ -2300,6 +2310,12 @@ async function gemData() {
     editGemKnap.disabled = false;
     renderGrid();
     if (_nummerInfo) { renderPersonEdit(); await visNummerKvittering(nytNr, opdateret, _nummerInfo); }
+    if (nytMedlemNr && sammeNr(gammelNr, nytMedlemNr)) {
+      nytMedlemNr = null;
+      editStatusEl.className = 'edit-status-stor vis ok';
+      editStatusEl.innerHTML = `✓ Medlem nr. ${escH(nytNr)} er oprettet. <button type="button" id="ny-velkomst-knap" style="margin-left:8px;background:#f5d76e;color:#1B4332;border:none;border-radius:4px;padding:6px 12px;font-weight:800;cursor:pointer">📋 Lav velkomstbrev nu</button>`;
+      document.getElementById('ny-velkomst-knap').onclick = () => lavVelkomstbrev(nytNr);
+    }
   } catch (err) {
     editGemKnap.disabled = false;
     visStatus('fejl', '✗ ' + (err.message || 'Kunne ikke gemme — prøv igen.'));
@@ -2501,6 +2517,11 @@ function lukEditModal() {
   } catch(e) {}
   nulstilFeltFarver();
   editModal.classList.remove('vis');
+  // Et nyt medlem, der aldrig blev gemt, fjernes igen
+  if (nytMedlemNr && sammeNr(aktivtNr, nytMedlemNr)) {
+    data = data.filter(x => !sammeNr(x.nr, nytMedlemNr));
+    nytMedlemNr = null;
+  }
   aktivtNr = null;
   editDirty = false;
 }
@@ -2531,6 +2552,26 @@ document.getElementById('login-knap').addEventListener('click', () => {
 });
 document.getElementById('admin-log-ud').addEventListener('click', () => signOut(auth));
  
+// ── OPRET NYT MEDLEM (OlsenBanden) ──
+// Næste ledige nummer = højeste husstandsnummer + 1 (gæstenumrene 996–999 tæller ikke med).
+// Medlemmet gemmes først, når der trykkes "Gem". Bagefter tilbydes velkomstbrevet.
+let nytMedlemNr = null;
+document.getElementById('opret-medlem-knap').addEventListener('click', () => {
+  if (!document.body.classList.contains('kan-redigere')) { alert('Kun OlsenBanden kan oprette nye medlemmer.'); return; }
+  const tal = data.map(m => parseInt(String(m.nr), 10)).filter(n => n > 0 && n < 996);
+  const nr = String((tal.length ? Math.max(...tal) : 0) + 1);
+  if (!confirm(`Det næste ledige medlemsnummer er ${nr}.\n\nHav disse oplysninger klar for alle i familien:\n• navne\n• fødselsdage\n• adresse\n• mails (og gerne telefon)\n\nVil du oprette medlem nr. ${nr}?`)) return;
+  const ny = migrerFamilie({
+    nr, kode: 'Olsen-' + nr, vej: '', postnummer: '', by: '', tlf: '', email: '',
+    familiemedlemmer: [{ navn:'', fornavn:'', mellemnavn:'', efternavn:'', rolle:'forælder', mobil:'', email:'', foedselsdato:'', status:'aktiv', status_dato:'' }],
+    begivenheder: [], oprettet: new Date().toISOString().slice(0, 10)
+  });
+  data.push(ny);
+  nytMedlemNr = nr;
+  aabneEditModal(nr);
+  document.getElementById('edit-modal-titel').textContent = `➕ Nyt medlem — nr. ${nr}`;
+});
+
 // ── LÅS NUMRE FOR ALLEREDE BEKRÆFTEDE HUSSTANDE (engangs-knap for OlsenBanden) ──
 document.getElementById('laas-numre-knap').addEventListener('click', async () => {
   if (!document.body.classList.contains('kan-redigere')) { alert('Kun OlsenBanden kan gøre dette.'); return; }
