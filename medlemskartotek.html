@@ -1256,6 +1256,7 @@ function byggPersonGruppe(personer, label, husstandsNr, boernStart, voksenBogsta
             ${p.email ? `<span class="person-detalje">✉️ <a href="mailto:${p.email}">${p.email}</a></span>` : `<span class="person-detalje" style="color:#aaa;font-style:italic">✉️ ingen email</span>`}
           </div>
           ${komiteAarListe(p.komite_aar).length ? `<div style="margin-top:3px;font-size:11.5px;color:#2d5016"><span style="font-weight:600">🏕️ Arrangementskomité:</span> ${komiteAarListe(p.komite_aar).sort((a,b)=>b-a).join(' · ')}</div>` : ''}
+          ${erAfdod && (p.gravsted || p.gravsted_note) ? `<div style="margin-top:4px;font-size:12px;color:var(--tekst)">🪦 ${escH(p.gravsted || '')}${p.gravsted && p.gravsted_note ? ' · ' : ''}<span style="color:var(--tekst-lys)">${escH(p.gravsted_note || '')}</span>${p.grav_foto ? ` <img src="${p.grav_foto}" class="person-foto-mini" style="width:22px;height:22px;border-radius:3px;object-fit:cover;vertical-align:middle;cursor:zoom-in" title="Foto af gravstedet">` : ''}</div>` : ''}
           ${erAfdod ? `<div style="margin-top:6px"><a href="mindelunden.html?vis=${encodeURIComponent(husstandsNr + '::' + visPersonNavn(p))}" style="font-size:11.5px;color:var(--lilla);text-decoration:none;font-weight:600">🕯️ Se flere data i Mindelunden →</a></div>` : ''}
         </div>`;
     }).join('')}
@@ -1578,6 +1579,23 @@ function renderPersonEdit() {
         <textarea data-pi="${i}" data-felt="mindeord" placeholder="Nogle varme ord til minde om…" style="width:100%;border:1px solid var(--border);padding:.5rem .65rem;font-size:12.5px;font-family:'Source Sans 3',sans-serif;color:var(--tekst);background:var(--hvid);outline:none;border-radius:3px;min-height:60px;resize:vertical;line-height:1.45">${p.mindeord||''}</textarea>
         ${nuvStatus==='afdød' ? `<label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--tekst)"><input type="checkbox" data-mindelund-pi="${i}" ${p.mindelund_i_brev === true ? 'checked' : ''}> 🕯️ Nævn i velkomstbrevet under "I mindelunden" <span style="color:var(--tekst-lys)">(kun hvis der er skrevet mindeord)</span></label>` : ''}
         ${nuvStatus==='afdød' ? `<div style="margin-top:6px"><a href="mindelunden.html?vis=${encodeURIComponent(aktivtNr + '::' + visPersonNavn(p))}" target="_blank" style="font-size:11.5px;color:var(--lilla);text-decoration:none;font-weight:600">🕯️ Se/åbn denne person i Mindelunden →</a></div>` : ''}
+        ${nuvStatus==='afdød' ? `
+        <div style="margin-top:.6rem;padding-top:.5rem;border-top:1px dashed var(--border)">
+          <label style="display:block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--tekst-lys);margin-bottom:3px">🪦 Gravsted / mindested</label>
+          <input data-pi="${i}" data-felt="gravsted" placeholder="Fx Brøndhøj Kirkegård" value="${escH(p.gravsted||'')}" style="width:100%;margin-bottom:.4rem;border:1px solid var(--border);padding:.4rem .6rem;font-size:12.5px;border-radius:3px;font-family:inherit">
+          <label style="display:block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--tekst-lys);margin-bottom:3px">Bemærkning om gravstedet</label>
+          <input data-pi="${i}" data-felt="gravsted_note" placeholder="Fx Gravstedet er nedlagt — gravstenen står nu i vores have" value="${escH(p.gravsted_note||'')}" style="width:100%;margin-bottom:.4rem;border:1px solid var(--border);padding:.4rem .6rem;font-size:12.5px;border-radius:3px;font-family:inherit">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:64px;height:64px;border-radius:6px;overflow:hidden;background:#eee;display:flex;align-items:center;justify-content:center;font-size:24px;color:#aaa;flex-shrink:0">
+              ${p.grav_foto ? `<img src="${p.grav_foto}" class="person-foto-mini" style="width:100%;height:100%;object-fit:cover;cursor:zoom-in">` : '🪦'}
+            </div>
+            <div style="flex:1">
+              <label style="display:block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--tekst-lys);margin-bottom:3px">📷 Foto af grav, gravsten eller mindested</label>
+              <input type="file" accept="image/*" data-gravfoto-input="${i}" style="font-size:11px;max-width:220px">
+            </div>
+            ${p.grav_foto ? `<button type="button" data-gravfoto-fjern="${i}" style="background:none;border:1px solid var(--fare);color:var(--fare);border-radius:3px;padding:5px 10px;font-size:11px;cursor:pointer;white-space:nowrap">Fjern foto</button>` : ''}
+          </div>
+        </div>` : ''}
       </div>
       <div class="person-foto-sektion" style="margin-top:.5rem;padding-top:.5rem;border-top:1px dashed var(--border);display:flex;align-items:center;gap:10px">
         <div data-foto-preview="${i}" style="width:52px;height:52px;border-radius:6px;overflow:hidden;background:#eee;display:flex;align-items:center;justify-content:center;font-size:22px;color:#aaa;flex-shrink:0">
@@ -1786,6 +1804,13 @@ document.getElementById('person-liste-edit').addEventListener('click', e => {
   const s = e.target.closest('[data-slet]');
   if (s) { personListe.splice(+s.dataset.slet, 1); renderPersonEdit(); markDirty(); return; }
  
+  const gravFjern = e.target.closest('[data-gravfoto-fjern]');
+  if (gravFjern) {
+    personListe[+gravFjern.dataset.gravfotoFjern].grav_foto = '';
+    markDirty();
+    renderPersonEdit();
+    return;
+  }
   const fotoFjern = e.target.closest('[data-foto-fjern]');
   if (fotoFjern) {
     const i = +fotoFjern.dataset.fotoFjern;
@@ -1833,6 +1858,28 @@ document.getElementById('person-liste-edit').addEventListener('change', e => {
     const file = t.files && t.files[0];
     if (file) openFotoCrop(i, file);
     t.value = '';
+    return;
+  }
+  // Foto af grav/gravsten/mindested: gøres mindre (højst 1000 px), så det kan gemmes på kortet
+  if (t.dataset.gravfotoInput !== undefined) {
+    const i = +t.dataset.gravfotoInput;
+    const file = t.files && t.files[0];
+    t.value = '';
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const maks = 1000, f = Math.min(1, maks / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * f); c.height = Math.round(img.height * f);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      personListe[i].grav_foto = c.toDataURL('image/jpeg', 0.75);
+      markDirty();
+      renderPersonEdit();
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); alert('Billedet kunne ikke læses. Prøv et andet billede (JPG eller PNG).'); };
+    img.src = url;
     return;
   }
   if (t.dataset.mindelundPi !== undefined) {

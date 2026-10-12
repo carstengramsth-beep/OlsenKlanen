@@ -143,6 +143,9 @@ body {
   margin-top: auto;
   white-space: pre-wrap;
 }
+.mindekort-grav { font-size: 13.5px; color: #3a3a2a; border-top: 1px dashed #d8cfa8; padding-top: 8px; margin-top: 10px; line-height: 1.45; }
+.mindekort-grav-note { color: #6b6b55; font-style: italic; margin-top: 2px; }
+.mindekort-grav-foto { display: block; max-width: 100%; max-height: 240px; border-radius: 6px; margin-top: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
 .mindekort-husstand {
   font-size: 11.5px;
   color: #9a9a80;
@@ -354,6 +357,11 @@ function mindekortHtml(p) {
         <div class="mindekort-datoer">${datoLinje || 'Datoer ikke registreret'}</div>
         ${alder !== null ? `<div class="mindekort-alder">Blev ${alder} år</div>` : ''}
         ${p.mindeord ? `<div class="mindekort-mindeord">${p.mindeord.replace(/</g,'&lt;')}</div>` : ''}
+        ${(p.gravsted || p.gravsted_note || p.grav_foto) ? `<div class="mindekort-grav">
+          <div><b>🪦 ${escHtmlMinde(p.gravsted || 'Gravsted / mindested')}</b></div>
+          ${p.gravsted_note ? `<div class="mindekort-grav-note">${escHtmlMinde(p.gravsted_note)}</div>` : ''}
+          ${p.grav_foto ? `<img src="${p.grav_foto}" alt="Gravsted for ${enc(navn)}" class="mindekort-grav-foto">` : ''}
+        </div>` : ''}
         ${omtalerHtml}
         ${omtaleFormHtml}
         ${p.husstandsNr ? `<div class="mindekort-husstand">Data fra husstand nr. ${p.husstandsNr}</div>` : ''}
