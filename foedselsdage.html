@@ -121,6 +121,7 @@ import { getAuth, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, getDoc }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { INDBYGGET as SKOVTUR_INDBYGGET } from "./skovtur-indbygget.js";
  
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -139,6 +140,7 @@ const db   = getFirestore(app);
 let alleMedlemmer = [];   // Flad liste af alle personer (forældre + børn)
 let alleHusstande = [];   // Husstandsdata fra Firebase
 let filterType = 'alle';
+let skovture = {};        // { 2027: { sted, dato_fra, dato_til, datoer } } — samme kilder som Arrangementer
  
 const MAANEDER = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december'];
  
@@ -308,7 +310,51 @@ function maerkedageFor(aar) {
       liste.push({ mnd: d.mnd, dag: d.dag, navn: hvem, hvad: BEGI_NAVN[b.type] || ('📅 ' + (b.type || 'Mærkedag')), nr: h.nr, besked: b.besked });
     });
   });
-  return liste.sort((a, b) => (a.mnd - b.mnd) || (a.dag - b.dag));
+  // 3) Skovturen — og markér mærkedage, der falder samme dage som skovturen
+  const st = skovturFor(aar);
+  if (st) {
+    liste.push({ mnd: st.fra.mnd, dag: st.fra.dag, navn: '🌳 Skovtur ' + aar + (st.sted ? ' · ' + st.sted : ''), hvad: st.datoer, skovtur: true });
+    const fraN = st.fra.mnd * 100 + st.fra.dag, tilN = st.til.mnd * 100 + st.til.dag;
+    liste.forEach(x => { if (!x.skovtur && x.mnd * 100 + x.dag >= fraN && x.mnd * 100 + x.dag <= tilN) x.sammenfald = true; });
+  }
+  return liste.sort((a, b) => (a.mnd - b.mnd) || (a.dag - b.dag) || ((b.skovtur ? 1 : 0) - (a.skovtur ? 1 : 0)));
+}
+
+// Skovturen for et år, hvis datoen er kendt: { fra, til, datoer, sted }
+function skovturFor(aar) {
+  const s = skovture[aar];
+  if (!s) return null;
+  const fra = parseDato(s.dato_fra), til = parseDato(s.dato_til) || fra;
+  if (!fra || fra.aar !== aar) return null;
+  return { fra, til, sted: s.sted || '', datoer: s.datoer || (fra.dag + '.–' + til.dag + '. ' + MAANEDER[til.mnd - 1] + ' ' + aar) };
+}
+
+// Én linje i listen (bruges både til de to næste år og til "Frem i tiden")
+function maerkedagRad(x) {
+  if (x.skovtur) return `<div class="event" style="background:#e8f2e0;border-left:4px solid #2d5016;">
+      <div class="event-date">${x.dag}. ${MAANEDER[x.mnd-1].substr(0, 3)}</div>
+      <div class="event-name" style="color:#2d5016;font-weight:bold;">${escN(x.navn)}</div>
+      <div class="event-extra" style="color:#2d5016;font-weight:bold;">${escN(x.hvad)}</div>
+    </div>`;
+  return `<div class="event milestone"${x.sammenfald ? ' style="border-left:4px solid #c0392b;"' : ''}>
+      <div class="event-date">${x.dag}. ${MAANEDER[x.mnd-1].substr(0, 3)}</div>
+      <div class="event-name">${escN(x.navn)} <span style="color:#999;font-size:12px;">(nr. ${escN(x.nr)})</span></div>
+      <div class="event-extra">${escN(x.hvad)}${x.besked ? ' — 💬 ' + escN(x.besked) : ''}${x.sammenfald ? ' <span style="color:#c0392b;">· ⚠️ samme dag som skovturen</span>' : ''}</div>
+    </div>`;
+}
+
+// Kort linje over hvert år: hvornår er skovturen, og falder noget sammen med den?
+function skovturLinje(aar, liste) {
+  const st = skovturFor(aar);
+  if (!st) {
+    const s = skovture[aar];
+    return `<div style="background:#f3f3f3;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:14px;color:#555;">🌳 Skovtur ${aar}${s && s.sted ? ' · ' + escN(s.sted) : ''}: datoen er ikke fastsat endnu. Når den står på <a href="arrangementer.html?aar=${aar}" style="color:#2d5016;font-weight:bold;">Arrangementer</a>, kommer den med her.</div>`;
+  }
+  const samme = liste.filter(x => x.sammenfald);
+  const tekst = samme.length
+    ? `<b style="color:#c0392b;">⚠️ ${samme.length} mærkedag${samme.length > 1 ? 'e' : ''} falder samme dage:</b> ` + samme.map(x => escN(x.navn) + ' (' + escN(x.hvad) + ', ' + x.dag + '. ' + MAANEDER[x.mnd-1] + ')').join(' · ')
+    : 'Ingen andre mærkedage falder samme dage.';
+  return `<div style="background:#e8f2e0;border-left:4px solid #2d5016;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:14px;color:#2d4a10;">🌳 <b>Skovtur ${aar}: ${escN(st.datoer)}${st.sted ? ' · ' + escN(st.sted) : ''}</b><br>${tekst}</div>`;
 }
 
 function byggNaesteAar() {
@@ -317,22 +363,19 @@ function byggNaesteAar() {
   let html = `<div style="background:#fff8e1;border-left:4px solid #b8860b;padding:10px 14px;border-radius:4px;margin-bottom:16px;color:#5a4a10;font-size:14px;line-height:1.5;">
     <b>Udvalgte mærkedage i ${aarene.join(' og ')}</b> — så alle kan nå at få dem skrevet ind og rettet.<br>
     Her står kun: runde fødselsdage (${RUNDE_ALDRE.join(', ')} år), bryllupsdage med runde år og begivenheder med en dato i ${aarene.join(' eller ')}, fx konfirmation.<br>
+    🌳 Skovturen står med i grønt. Falder en mærkedag samme dage som skovturen, er den markeret med ⚠️.<br>
     Mangler en mærkedag? Skriv den ind som "Begivenhed" på familiens kort i <a href="medlemskartotek.html" style="color:#2d5016;font-weight:bold;">Medlemskartoteket</a>. Bryllupsdage skrives ind som "Bryllupsdag" med selve bryllupsdatoen.</div>`;
   aarene.forEach(aar => {
     const liste = maerkedageFor(aar);
-    html += `<h2 style="color:#2d5016;margin:18px 0 10px;">${aar} (${liste.length} mærkedage)</h2>`;
+    const antal = liste.filter(x => !x.skovtur).length;
+    html += `<h2 style="color:#2d5016;margin:18px 0 10px;">${aar} (${antal} mærkedage)</h2>`;
+    html += skovturLinje(aar, liste);
     if (!liste.length) { html += '<div class="loading-besked">Ingen mærkedage fundet for ' + aar + ' endnu.</div>'; return; }
     for (let mnd = 1; mnd <= 12; mnd++) {
       const iMnd = liste.filter(x => x.mnd === mnd);
       if (!iMnd.length) continue;
       html += `<div class="month"><div class="month-title">${MAANEDER[mnd-1].charAt(0).toUpperCase() + MAANEDER[mnd-1].slice(1)} ${aar}</div>`;
-      iMnd.forEach(x => {
-        html += `<div class="event milestone">
-          <div class="event-date">${x.dag}. ${MAANEDER[mnd-1].substr(0, 3)}</div>
-          <div class="event-name">${escN(x.navn)} <span style="color:#999;font-size:12px;">(nr. ${escN(x.nr)})</span></div>
-          <div class="event-extra">${escN(x.hvad)}${x.besked ? ' — 💬 ' + escN(x.besked) : ''}</div>
-        </div>`;
-      });
+      iMnd.forEach(x => { html += maerkedagRad(x); });
       html += '</div>';
     }
   });
@@ -343,15 +386,9 @@ function byggNaesteAar() {
   fremAar.forEach(aar => {
     const liste = maerkedageFor(aar);
     if (!liste.length) return;
-    antalFrem += liste.length;
-    fremHtml += `<h3 style="color:#2d5016;margin:16px 0 6px;">${aar} (${liste.length})</h3><div class="month">`;
-    liste.forEach(x => {
-      fremHtml += `<div class="event milestone">
-        <div class="event-date">${x.dag}. ${MAANEDER[x.mnd-1].substr(0, 3)}</div>
-        <div class="event-name">${escN(x.navn)} <span style="color:#999;font-size:12px;">(nr. ${escN(x.nr)})</span></div>
-        <div class="event-extra">${escN(x.hvad)}${x.besked ? ' — 💬 ' + escN(x.besked) : ''}</div>
-      </div>`;
-    });
+    antalFrem += liste.filter(x => !x.skovtur).length;
+    fremHtml += `<h3 style="color:#2d5016;margin:16px 0 6px;">${aar} (${liste.filter(x => !x.skovtur).length})</h3><div class="month">`;
+    liste.forEach(x => { fremHtml += maerkedagRad(x); });
     fremHtml += '</div>';
   });
   html += `<details id="frem-i-tiden" style="margin-top:26px;border:2px solid #b8860b;border-radius:8px;background:#fffdf5;">
@@ -565,6 +602,18 @@ function byggZoneB() {
   document.getElementById('zoneB-content').innerHTML = html;
 }
  
+// ── SKOVTURE (samme kilder som Arrangementer: databasen vinder over de indbyggede) ──
+async function hentSkovture() {
+  const alle = {};
+  const flet = (aar, d) => { aar = parseInt(aar, 10); if (aar) alle[aar] = { ...(alle[aar] || {}), ...d }; };
+  Object.keys(SKOVTUR_INDBYGGET).forEach(a => flet(a, SKOVTUR_INDBYGGET[a]));
+  try {
+    const snap = await getDocs(collection(db, 'skovtur_detaljer'));
+    snap.forEach(ds => { if (ds.id === 'datakontrol') return; const d = ds.data(); flet(parseInt(String(ds.id).replace('skovtur', ''), 10) || d.aar, d); });
+  } catch (e) { console.log('Skovture:', e); }
+  skovture = alle;
+}
+
 // ── INITIAL LOAD ────────────────────────────────────────────
 async function init() {
   const ok = await hentData();
@@ -573,6 +622,7 @@ async function init() {
   opdaterStats();
   byggKalender();
   byggNaesteAar();
+  hentSkovture().then(byggNaesteAar);
   byggAlle();
   byggZoneB();
 }
