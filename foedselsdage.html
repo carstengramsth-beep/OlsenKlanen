@@ -274,6 +274,7 @@ function erRund(alder) {
 // ── NÆSTE ÅRS MÆRKEDAGE ─────────────────────────────────────
 // Beregnes ud fra kartoteket: runde fødselsdage, bryllupsdage med runde år
 // og begivenheder (konfirmation, jubilæum m.m.), der er skrevet ind med en dato i næste år.
+const FREM_ANTAL_AAR = 10;   // "Frem i tiden" viser de 10 år efter de to næste
 const RUNDE_ALDRE = [18, 30, 40, 50, 60, 70, 75, 80, 85, 90, 95, 100];
 const BRYLLUP_NAVN = { 10: 'Tinbryllup (10 år)', 25: '🥂 Sølvbryllup (25 år)', 30: 'Perlebryllup (30 år)', 40: 'Rubinbryllup (40 år)',
   50: '💍 Guldbryllup (50 år)', 60: '💎 Diamantbryllup (60 år)', 65: 'Jernbryllup (65 år)', 70: 'Platinbryllup (70 år)' };
@@ -335,6 +336,31 @@ function byggNaesteAar() {
       html += '</div>';
     }
   });
+  // ── Frem i tiden: de vigtige dage længere ude (år 3 til 12), foldet sammen ──
+  const fremAar = [];
+  for (let aar = foerste + 2; aar <= foerste + FREM_ANTAL_AAR + 1; aar++) fremAar.push(aar);
+  let antalFrem = 0, fremHtml = '';
+  fremAar.forEach(aar => {
+    const liste = maerkedageFor(aar);
+    if (!liste.length) return;
+    antalFrem += liste.length;
+    fremHtml += `<h3 style="color:#2d5016;margin:16px 0 6px;">${aar} (${liste.length})</h3><div class="month">`;
+    liste.forEach(x => {
+      fremHtml += `<div class="event milestone">
+        <div class="event-date">${x.dag}. ${MAANEDER[x.mnd-1].substr(0, 3)}</div>
+        <div class="event-name">${escN(x.navn)} <span style="color:#999;font-size:12px;">(nr. ${escN(x.nr)})</span></div>
+        <div class="event-extra">${escN(x.hvad)}${x.besked ? ' — 💬 ' + escN(x.besked) : ''}</div>
+      </div>`;
+    });
+    fremHtml += '</div>';
+  });
+  html += `<details id="frem-i-tiden" style="margin-top:26px;border:2px solid #b8860b;border-radius:8px;background:#fffdf5;">
+    <summary style="cursor:pointer;padding:12px 16px;font-size:17px;font-weight:bold;color:#2d5016;">🔭 Frem i tiden — vigtige dage ${fremAar[0]}–${fremAar[fremAar.length-1]} (${antalFrem}) · tryk for at se</summary>
+    <div style="padding:0 16px 14px;">
+      <p style="color:#5a4a10;font-size:14px;margin:4px 0 8px;">Så man kan være forberedt i god tid. Samme slags mærkedage som ovenfor: runde fødselsdage, runde bryllupsdage og begivenheder med en dato.</p>
+      ${fremHtml || '<div class="loading-besked">Ingen mærkedage fundet endnu.</div>'}
+    </div>
+  </details>`;
   document.getElementById('naeste-content').innerHTML = html;
 }
 
