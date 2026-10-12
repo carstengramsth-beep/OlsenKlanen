@@ -94,13 +94,22 @@ body {
   cursor: zoom-out;
 }
 .lysboks-overlay.vis { display: flex; }
+.lysboks-overlay { flex-direction: column; }
 .lysboks-overlay img {
   max-width: 100%;
-  max-height: 100%;
+  max-height: 82vh;
+  cursor: zoom-in;
+  transition: transform .18s ease;
+  transform-origin: center center;
+  touch-action: none;
+  will-change: transform;
   border-radius: 6px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.5);
 }
+.lysboks-tekst { color: #f3e6c4; font-size: 15px; margin-top: 12px; text-align: center; }
+.lysboks-hint { color: #cbbf9a; font-size: 12px; margin-top: 4px; opacity: .85; text-align: center; }
 .lysboks-luk {
+  z-index: 2;
   position: absolute;
   top: 20px;
   right: 30px;
@@ -145,7 +154,7 @@ body {
 }
 .mindekort-grav { font-size: 13.5px; color: #3a3a2a; border-top: 1px dashed #d8cfa8; padding-top: 8px; margin-top: 10px; line-height: 1.45; }
 .mindekort-grav-note { color: #6b6b55; font-style: italic; margin-top: 2px; }
-.mindekort-grav-foto { display: block; max-width: 100%; max-height: 240px; border-radius: 6px; margin-top: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.mindekort-grav-foto { cursor: zoom-in; display: block; max-width: 100%; max-height: 240px; border-radius: 6px; margin-top: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
 .mindekort-husstand {
   font-size: 11.5px;
   color: #9a9a80;
@@ -242,6 +251,8 @@ body {
 <div class="lysboks-overlay" id="lysboks-overlay">
   <span class="lysboks-luk">×</span>
   <img id="lysboks-billede" src="" alt="">
+  <div class="lysboks-tekst" id="lysboks-tekst"></div>
+  <div class="lysboks-hint">Klik på billedet for at zoome ind · træk for at flytte · klik udenfor eller tryk Esc for at lukke</div>
 </div>
 
 <script type="module">
@@ -554,17 +565,81 @@ function haandterVisFraLink() {
 const lysboksOverlay  = document.getElementById('lysboks-overlay');
 const lysboksBillede  = document.getElementById('lysboks-billede');
 
+// Alle billeder på kortene (portræt og gravsted) kan forstørres og zoomes — som på fotovæggen.
+const ZOOM_TRIN = [1, 1.7, 2.6, 3.8, 5];   // ét klik = ét trin
+let zi = 0, tx = 0, ty = 0, traekker = false, flyttet = false, sx = 0, sy = 0;
+function anvendZoom() {
+  lysboksBillede.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + ZOOM_TRIN[zi] + ')';
+  lysboksBillede.style.cursor = zi >= ZOOM_TRIN.length - 1 ? 'zoom-out' : 'zoom-in';
+}
+function nulstilZoom() { zi = 0; tx = 0; ty = 0; anvendZoom(); }
+function lukLysboks() {
+  lysboksOverlay.classList.remove('vis');
+  lysboksBillede.src = '';
+  nulstilZoom();
+}
+
 document.getElementById('indhold').addEventListener('click', e => {
-  const img = e.target.closest('.mindekort-foto img');
+  const img = e.target.closest('.mindekort-foto img, .mindekort-grav-foto');
   if (!img) return;
   lysboksBillede.src = img.src;
+  lysboksBillede.alt = img.alt || '';
+  document.getElementById('lysboks-tekst').textContent = img.alt || '';
+  nulstilZoom();
   lysboksOverlay.classList.add('vis');
 });
 
-lysboksOverlay.addEventListener('click', () => {
-  lysboksOverlay.classList.remove('vis');
-  lysboksBillede.src = '';
+// Klik udenfor billedet (eller på ×) lukker
+lysboksOverlay.addEventListener('click', e => {
+  if (e.target === lysboksBillede) return;
+  if (flyttet) { flyttet = false; return; }   // et træk, der sluttede udenfor billedet
+  lukLysboks();
 });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && lysboksOverlay.classList.contains('vis')) lukLysboks();
+});
+// Klik på billedet = zoom ét trin ind (og forfra, når man er helt inde)
+lysboksBillede.addEventListener('click', e => {
+  e.stopPropagation();
+  if (flyttet) { flyttet = false; return; }
+  if (zi < ZOOM_TRIN.length - 1) zi++; else { zi = 0; tx = 0; ty = 0; }
+  anvendZoom();
+});
+// Højreklik = zoom ét trin ud
+lysboksBillede.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  if (zi > 0) { zi--; if (zi === 0) { tx = 0; ty = 0; } }
+  anvendZoom();
+});
+// Scrollehjul = zoom ind/ud
+lysboksBillede.addEventListener('wheel', e => {
+  e.preventDefault();
+  if (e.deltaY < 0 && zi < ZOOM_TRIN.length - 1) zi++;
+  else if (e.deltaY > 0 && zi > 0) { zi--; if (zi === 0) { tx = 0; ty = 0; } }
+  anvendZoom();
+}, { passive: false });
+// Træk for at flytte rundt, når der er zoomet
+lysboksBillede.addEventListener('mousedown', e => {
+  if (zi === 0) return;
+  e.preventDefault(); traekker = true; flyttet = false; sx = e.clientX - tx; sy = e.clientY - ty;
+  lysboksBillede.style.cursor = 'grabbing';
+});
+window.addEventListener('mousemove', e => {
+  if (!traekker) return;
+  const nx = e.clientX - sx, ny = e.clientY - sy;
+  if (Math.abs(nx - tx) + Math.abs(ny - ty) > 2) flyttet = true;
+  tx = nx; ty = ny; anvendZoom();
+});
+window.addEventListener('mouseup', () => { if (traekker) { traekker = false; anvendZoom(); } });
+lysboksBillede.addEventListener('touchstart', e => {
+  if (zi === 0 || e.touches.length !== 1) return;
+  sx = e.touches[0].clientX - tx; sy = e.touches[0].clientY - ty; traekker = true;
+}, { passive: true });
+lysboksBillede.addEventListener('touchmove', e => {
+  if (!traekker || e.touches.length !== 1) return;
+  tx = e.touches[0].clientX - sx; ty = e.touches[0].clientY - sy; anvendZoom();
+}, { passive: true });
+lysboksBillede.addEventListener('touchend', () => { traekker = false; });
 
 </script>
 <script type="module" src="post-varsel.js"></script>
