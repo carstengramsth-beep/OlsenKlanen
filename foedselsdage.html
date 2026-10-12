@@ -76,6 +76,7 @@ body.kan-redigere .kun-admin { display: inline-block; }
   <div class="tab active" onclick="visFane('kalender', this)">📅 Begivenhedskalender</div>
   <div class="tab" onclick="visFane('alle', this)">👥 Alle medlemmer</div>
   <div class="tab" onclick="visFane('zoneB', this)">⚠️ Skal rettes</div>
+  <div class="tab" onclick="visFane('naeste', this)">🗓️ Kommende mærkedage</div>
 </div>
  
 <div class="container">
@@ -102,6 +103,10 @@ body.kan-redigere .kun-admin { display: inline-block; }
     <div id="alle-content"></div>
   </div>
  
+  <div id="fane-naeste" class="fane" style="display:none">
+    <div id="naeste-content"><div class="loading-besked">Henter data…</div></div>
+  </div>
+
   <div id="fane-zoneB" class="fane" style="display:none">
     <p style="margin-bottom:14px; color:#6b5b1f; background:#fff8e1; padding:10px 14px; border-radius:4px;">Disse personer mangler data eller har fejl, der skal rettes i medlemskartoteket.</p>
     <div id="zoneB-content"></div>
@@ -266,6 +271,73 @@ function erRund(alder) {
   return [40, 50, 60, 70, 75, 80, 85, 90, 95, 100].includes(alder);
 }
  
+// ── NÆSTE ÅRS MÆRKEDAGE ─────────────────────────────────────
+// Beregnes ud fra kartoteket: runde fødselsdage, bryllupsdage med runde år
+// og begivenheder (konfirmation, jubilæum m.m.), der er skrevet ind med en dato i næste år.
+const RUNDE_ALDRE = [18, 30, 40, 50, 60, 70, 75, 80, 85, 90, 95, 100];
+const BRYLLUP_NAVN = { 10: 'Tinbryllup (10 år)', 25: '🥂 Sølvbryllup (25 år)', 30: 'Perlebryllup (30 år)', 40: 'Rubinbryllup (40 år)',
+  50: '💍 Guldbryllup (50 år)', 60: '💎 Diamantbryllup (60 år)', 65: 'Jernbryllup (65 år)', 70: 'Platinbryllup (70 år)' };
+const BEGI_NAVN = { konfirmation: '🙏 Konfirmation', bryllupsdag: '💐 Bryllupsdag', 'sølvbryllup': '🥂 Sølvbryllup (25 år)',
+  guldbryllup: '💍 Guldbryllup (50 år)', diamantbryllup: '💎 Diamantbryllup (60 år)', 'jubilæum': '🎉 Jubilæum', andet: '📅 Mærkedag' };
+function escN(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function maerkedageFor(aar) {
+  const liste = [];
+  // 1) Runde fødselsdage
+  alleMedlemmer.forEach(p => {
+    const d = parseDato(p.fdato);
+    if (!d) return;
+    const alder = aar - d.aar;
+    if (RUNDE_ALDRE.includes(alder)) liste.push({ mnd: d.mnd, dag: d.dag, navn: p.fuldtNavn || (p.fornavn + ' ' + p.efternavn), hvad: '🎉 fylder ' + alder + ' år', nr: p.husstandsNr });
+  });
+  // 2) Begivenheder fra husstandene
+  alleHusstande.forEach(h => {
+    const husNavn = h.navne || ((h.fornavn || '') + ' ' + (h.efternavn || '')).trim() || ('Husstand ' + h.nr);
+    (h.begivenheder || []).forEach(b => {
+      const d = parseDato(b.dato);
+      if (!d) return;
+      const hvem = (b.beskrivelse || '').trim() || husNavn;
+      if (b.type === 'bryllupsdag' && d.aar < aar) {
+        // Bryllupsdatoen: vis kun, når der er gået et rundt antal år
+        const n = aar - d.aar;
+        if (BRYLLUP_NAVN[n]) liste.push({ mnd: d.mnd, dag: d.dag, navn: hvem, hvad: BRYLLUP_NAVN[n] + ' · gift ' + d.aar, nr: h.nr });
+        return;
+      }
+      if (d.aar !== aar) return;
+      liste.push({ mnd: d.mnd, dag: d.dag, navn: hvem, hvad: BEGI_NAVN[b.type] || ('📅 ' + (b.type || 'Mærkedag')), nr: h.nr, besked: b.besked });
+    });
+  });
+  return liste.sort((a, b) => (a.mnd - b.mnd) || (a.dag - b.dag));
+}
+
+function byggNaesteAar() {
+  const foerste = new Date().getFullYear() + 1;
+  const aarene = [foerste, foerste + 1];
+  let html = `<div style="background:#fff8e1;border-left:4px solid #b8860b;padding:10px 14px;border-radius:4px;margin-bottom:16px;color:#5a4a10;font-size:14px;line-height:1.5;">
+    <b>Udvalgte mærkedage i ${aarene.join(' og ')}</b> — så alle kan nå at få dem skrevet ind og rettet.<br>
+    Her står kun: runde fødselsdage (${RUNDE_ALDRE.join(', ')} år), bryllupsdage med runde år og begivenheder med en dato i ${aarene.join(' eller ')}, fx konfirmation.<br>
+    Mangler en mærkedag? Skriv den ind som "Begivenhed" på familiens kort i <a href="medlemskartotek.html" style="color:#2d5016;font-weight:bold;">Medlemskartoteket</a>. Bryllupsdage skrives ind som "Bryllupsdag" med selve bryllupsdatoen.</div>`;
+  aarene.forEach(aar => {
+    const liste = maerkedageFor(aar);
+    html += `<h2 style="color:#2d5016;margin:18px 0 10px;">${aar} (${liste.length} mærkedage)</h2>`;
+    if (!liste.length) { html += '<div class="loading-besked">Ingen mærkedage fundet for ' + aar + ' endnu.</div>'; return; }
+    for (let mnd = 1; mnd <= 12; mnd++) {
+      const iMnd = liste.filter(x => x.mnd === mnd);
+      if (!iMnd.length) continue;
+      html += `<div class="month"><div class="month-title">${MAANEDER[mnd-1].charAt(0).toUpperCase() + MAANEDER[mnd-1].slice(1)} ${aar}</div>`;
+      iMnd.forEach(x => {
+        html += `<div class="event milestone">
+          <div class="event-date">${x.dag}. ${MAANEDER[mnd-1].substr(0, 3)}</div>
+          <div class="event-name">${escN(x.navn)} <span style="color:#999;font-size:12px;">(nr. ${escN(x.nr)})</span></div>
+          <div class="event-extra">${escN(x.hvad)}${x.besked ? ' — 💬 ' + escN(x.besked) : ''}</div>
+        </div>`;
+      });
+      html += '</div>';
+    }
+  });
+  document.getElementById('naeste-content').innerHTML = html;
+}
+
 // ── KALENDER (Begivenhedskalender) ──────────────────────────
 function byggKalender() {
   const efterMnd = {};
@@ -474,6 +546,7 @@ async function init() {
  
   opdaterStats();
   byggKalender();
+  byggNaesteAar();
   byggAlle();
   byggZoneB();
 }
