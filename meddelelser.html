@@ -206,6 +206,11 @@ try {
         <button type="button" class="knap" id="infomail-prove-knap" onclick="sendInfomail(true)">🧪 Send prøve til mig selv</button>
         <button type="button" class="knap" id="infomail-alle-knap" onclick="sendInfomail(false)" style="background:#8b1e1e;">📨 Send til alle medlemmer</button>
       </div>
+      <div style="background:#f5f1e8;border-radius:8px;padding:10px 12px;margin:6px 0 10px;">
+        <b>Send til ét medlem</b> (fx et nyt medlem, der ikke har fået den):<br>
+        <select id="infomail-enkelt" class="felt" style="max-width:420px;margin-top:6px;"><option value="">Henter medlemmer …</option></select>
+        <button type="button" class="knap" id="infomail-enkelt-knap" onclick="sendInfomail(false, true)" style="margin-top:6px;">📨 Send til det valgte medlem</button>
+      </div>
       <div class="status" id="infomail-status" style="display:none;"></div>
       <div style="font-size:13px;color:#666;margin:14px 0 6px;">Sådan ser mailen ud:</div>
       <div id="infomail-forhaand" style="border:1px solid #ddd;border-radius:8px;max-height:640px;overflow:auto;"></div>
@@ -433,6 +438,7 @@ try {
 
 <script src="olsenbanden.js"></script>
 <script src="olsenpost-skabeloner.js"></script>
+<script src="infomail-visning.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc, deleteDoc,
@@ -826,21 +832,7 @@ if (SKABELON && !SKABELON.infomail) {
 
 /* ════════ FÆRDIG INFOMAIL MED BILLEDER (sendes af serveren, som brevkortene) ════════ */
 let infomailData = null;
-function infomailForhaand(data) {
-  const e = s => escHtml(String(s == null ? "" : s));
-  const dele = [`<p style="font-size:19px;margin:0 0 16px;">${e(data.hilsen)}</p>`];
-  (data.afsnit || []).forEach(a => {
-    if (a.type === "p") dele.push(`<p style="margin:0 0 14px;">${e(a.tekst)}</p>`);
-    else if (a.type === "h") dele.push(`<h3 style="color:#2d5016;margin:22px 0 8px;">${e(a.tekst)}</h3>`);
-    else if (a.type === "trin") dele.push(`<div style="margin:0 0 16px;"><p style="margin:0 0 6px;"><b style="background:#2d5016;color:#fff;border-radius:12px;padding:1px 9px;margin-right:6px;">${e(a.nr)}</b>${e(a.tekst)}</p>${a.billede ? `<img src="${e(a.billede)}" alt="" style="display:block;width:100%;max-width:${a.bredde || 552}px;border:1px solid #ddd;border-radius:6px;">` : ""}</div>`);
-    else if (a.type === "liste" || a.type === "nummerliste") { const t = a.type === "liste" ? "ul" : "ol"; dele.push(`<${t} style="margin:0 0 14px;">` + (a.punkter || []).map(x => `<li>${e(x)}</li>`).join("") + `</${t}>`); }
-    else if (a.type === "tip") dele.push(`<p style="background:#fff8e1;border-left:4px solid #b8860b;padding:8px 12px;margin:0 0 14px;">${e(a.tekst)}</p>`);
-  });
-  dele.push(`<p style="margin:18px 0 0;">${(data.slut || []).map(e).join("<br>")}</p>`);
-  return `<div style="background:#f5f1e8;padding:16px;font-family:Georgia,serif;color:#2c3e1f;line-height:1.55;"><div style="max-width:600px;margin:0 auto;background:#fff;padding:20px;">
-    <div style="font-size:13px;color:#666;border-bottom:1px solid #eee;padding-bottom:8px;margin-bottom:14px;"><b>Fra:</b> OlsenKlanen &lt;post@olsenklanen.dk&gt;<br><b>Emne:</b> ${e(data.emne)}</div>
-    ${dele.join("")}</div></div>`;
-}
+function infomailForhaand(data) { return window.infomailHtml(data, true); }
 if (SKABELON && SKABELON.infomail) {
   document.getElementById("infomail-kort").style.display = "block";
   const almindelig = document.getElementById("send-overskrift").closest(".kort");
@@ -851,7 +843,15 @@ if (SKABELON && SKABELON.infomail) {
     .catch(() => { document.getElementById("infomail-forhaand").textContent = "Kunne ikke hente mailen. Genindlæs siden."; });
 }
 
-window.sendInfomail = async function(prove) {
+// Liste til "Send til ét medlem" (fyldes, når medlemmerne er hentet)
+function fyldInfomailEnkelt(){
+  const sel = document.getElementById("infomail-enkelt");
+  if (!sel || !alleModtagere.length) return;
+  const medMail = alleModtagere.filter(m => String(m.email || "").includes("@"));
+  sel.innerHTML = '<option value="">Vælg medlem …</option>' + medMail.map(m => `<option value="${enc(m.nr)}">${escHtml(m.navn)} (nr. ${escHtml(m.nr)})</option>`).join("");
+}
+
+window.sendInfomail = async function(prove, enkelt) {
   const st = document.getElementById("infomail-status");
   const visSt = (type, t) => { st.className = "status " + type; st.textContent = t; st.style.display = "block"; };
   if (!ER_POSTANSVARLIG) { visSt("fejl", "Kun de 5 postansvarlige kan sende infomails."); return; }
@@ -859,16 +859,24 @@ window.sendInfomail = async function(prove) {
   if (!auth.currentUser) { visSt("fejl", "Bekræft din PIN-kode øverst på siden først."); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
   const egen = mitEmail();
   if (prove && !egen.includes("@")) { visSt("fejl", "Der mangler en mail til prøven."); return; }
+  let modtager = null;
+  if (enkelt) {
+    const nr = document.getElementById("infomail-enkelt").value;
+    modtager = alleModtagere.find(m => m.nr === nr);
+    if (!modtager || !String(modtager.email || "").includes("@")) { visSt("fejl", "Vælg det medlem, mailen skal sendes til."); return; }
+    if (!confirm("Vil du sende infomailen til " + modtager.navn + " (" + modtager.email + ")?")) return;
+  }
   const antal = new Set(alleModtagere.map(m => String(m.email || "").trim().toLowerCase()).filter(x => x.includes("@"))).size;
-  if (!prove && !confirm("Vil du sende infomailen til alle medlemmer med mail (ca. " + antal + ") nu?")) return;
-  const knap = document.getElementById(prove ? "infomail-prove-knap" : "infomail-alle-knap");
+  if (!prove && !enkelt && !confirm("Vil du sende infomailen til alle medlemmer med mail (ca. " + antal + ") nu?")) return;
+  const knap = document.getElementById(prove ? "infomail-prove-knap" : enkelt ? "infomail-enkelt-knap" : "infomail-alle-knap");
   knap.disabled = true;
   try {
     const ref = await addDoc(collection(db, "olsenpost_mail"), {
       type: "infomail", status: "afventer", skabelon: SKABELON.infomail,
       fra_nr: MIT_NR, fra_navn: MIT_NAVN, fra_email: egen,
-      til_nr: "", til_navn: prove ? "Prøve til " + egen : "Alle medlemmer med egen mail", til_email: prove ? egen : "",
-      prove: !!prove, emne: infomailData.emne || "", tekst: "Infomail: " + (infomailData.emne || ""),
+      til_nr: modtager ? modtager.nr : "", til_navn: prove ? "Prøve til " + egen : modtager ? modtager.navn : "Alle medlemmer med egen mail",
+      til_email: prove ? egen : modtager ? String(modtager.email).trim() : "",
+      prove: !!prove, enkelt: !!modtager, emne: infomailData.emne || "", tekst: "Infomail: " + (infomailData.emne || ""),
       sendt: serverTimestamp(), sendt_lokal: Date.now(),
       besvaret: false, besvaret_af: null, besvaret_tid: null
     });
@@ -876,7 +884,7 @@ window.sendInfomail = async function(prove) {
     onSnapshot(doc(db, "olsenpost_mail", ref.id), s => {
       const d = s.data() || {};
       if (d.status === "sender") visSt("ok", "📨 Sender nu …");
-      if (d.status === "sendt") { visSt("ok", prove ? "✅ Prøven er sendt til " + egen + ". Se din indbakke." : "✅ Infomailen er sendt til " + (d.antal_sendt || 0) + " medlemmer." + (d.antal_fejl ? " " + d.antal_fejl + " kunne ikke sendes." : "")); knap.disabled = false; }
+      if (d.status === "sendt") { visSt("ok", prove ? "✅ Prøven er sendt til " + egen + ". Se din indbakke." : modtager ? "✅ Infomailen er sendt til " + modtager.navn + "." : "✅ Infomailen er sendt til " + (d.antal_sendt || 0) + " medlemmer." + (d.antal_fejl ? " " + d.antal_fejl + " kunne ikke sendes." : "")); knap.disabled = false; }
       if (d.status === "fejl") { visSt("fejl", "Mailen kunne ikke sendes: " + (d.mail_fejl || "ukendt fejl")); knap.disabled = false; }
     });
   } catch (e) {
@@ -944,6 +952,7 @@ function forudvaelgModtagereFraLink(){
   tegnModtagere(alleModtagere, "mail");
   tegnValgte("mail");
   // En færdig mail til alle: vælg alle medlemmer med mail
+  fyldInfomailEnkelt();
   if (SKABELON && SKABELON.alle && !window.__skabelonValgt) { window.__skabelonValgt = true; vaelgAlleMail(); }
 }
 

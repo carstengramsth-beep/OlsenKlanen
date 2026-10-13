@@ -368,6 +368,7 @@ function escHtml(s) {
  * Indholdet hentes fra hjemmesiden: infomails/<skabelon>.json (tekst) og billeder/vejledning/*.
  * Lægges i kø fra OlsenPost (meddelelser.html?skabelon=...) med type "infomail".
  */
+const INFOMAIL_FODLINJE = "Kun til medlemmer af OlsenKlanen – send den ikke videre.";
 function infomailIndhold(data, billeder) {
   const html = [], tekst = [];
   const p = t => `<p style="font-size:16px;line-height:1.55;margin:0 0 14px;">${escHtml(t)}</p>`;
@@ -396,10 +397,10 @@ function infomailIndhold(data, billeder) {
     html: `<div style="background:#f5f1e8;padding:20px 0;font-family:Georgia,'Times New Roman',serif;color:#2c3e1f;">
   <div style="max-width:600px;margin:0 auto;background:#fff;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
     ${html.join("\n    ")}
-    <div style="border-top:1px solid #d8cfae;margin-top:22px;padding-top:8px;font-size:12px;color:#8a7a3f;font-style:italic;">Familieforeningen OlsenKlanen · olsenklanen.dk</div>
+    <div style="border-top:1px solid #d8cfae;margin-top:22px;padding-top:8px;font-size:12px;color:#8a7a3f;font-style:italic;">Familieforeningen OlsenKlanen · olsenklanen.dk<br>${escHtml(INFOMAIL_FODLINJE)}</div>
   </div>
 </div>`,
-    tekst: tekst.join("\n")
+    tekst: tekst.join("\n") + "\n\n— Familieforeningen OlsenKlanen · olsenklanen.dk\n" + INFOMAIL_FODLINJE
   };
 }
 
@@ -436,7 +437,9 @@ async function sendInfomail(d) {
 
     // Modtagere: aktive personer med egen mail (hver mail én gang) — eller kun afsenderen ved en prøve
     const modtagere = new Map();
-    if (k.prove && String(k.til_email || "").includes("@")) modtagere.set("prove", String(k.til_email).trim());
+    // Prøve (til afsenderen) eller ét bestemt medlem (fx et nyt medlem): kun til den mail
+    if ((k.prove || k.enkelt) && String(k.til_email || "").includes("@")) modtagere.set("en", String(k.til_email).trim());
+    else if (k.enkelt) throw new Error("Medlemmet har ingen mail");
     else (await db.collection("membres").get()).forEach(m => (m.data().familiemedlemmer || []).forEach(p => {
       if (p.status === "afdød" || p.status === "udmeldt") return;
       const mail = String(p.email || "").trim();
