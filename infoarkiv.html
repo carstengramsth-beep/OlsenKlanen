@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infoarkiv – OlsenKlanen</title>
+<script>
+// Kun for medlemmer: samme login-tjek som forsiden
+try {
+  const hent = n => sessionStorage.getItem(n) || localStorage.getItem(n) || "";
+  if (!(hent("ok_niveau") || hent("ok_navn") || hent("ok_nr"))) window.location.href = "login.html";
+} catch(e) {}
+</script>
+<style>
+body { margin: 0; background: #f5f1e8; font-family: Georgia, 'Times New Roman', serif; color: #2b2b2b; line-height: 1.55; font-size: 17px; }
+.topbar { background: #2d5016; color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+.topbar h1 { margin: 0; font-size: 22px; font-weight: normal; }
+.topbar a { color: #f3e6c4; font-size: 15px; text-decoration: none; border: 1px solid #f3e6c4; padding: 6px 12px; border-radius: 6px; }
+main { max-width: 760px; margin: 0 auto; padding: 18px 16px 50px; }
+.note { background: #fff8e1; border-left: 4px solid #b8860b; padding: 10px 14px; border-radius: 4px; font-size: 15px; color: #5a4a10; }
+h2 { color: #2d5016; font-size: 19px; margin: 26px 0 8px; }
+.mail-knap { display: block; width: 100%; text-align: left; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px 14px; margin: 8px 0; cursor: pointer; font: inherit; color: inherit; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.mail-knap:hover, .mail-knap.aaben { border-color: #2d5016; }
+.mail-knap .dato { color: #8a7a3f; font-size: 13px; }
+.mail-knap .titel { font-weight: bold; color: #2d5016; }
+.visning { margin: 4px 0 16px; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>📚 Infoarkiv</h1>
+  <a href="forside.html">← Forside</a>
+</div>
+<main>
+  <p class="note">Her ligger de infomails og vejledninger, der er sendt ud til alle i OlsenKlanen. Tryk på en for at læse den.<br>
+  Arkivet er kun for medlemmer – send det ikke videre.</p>
+  <div id="liste">Henter …</div>
+</main>
+<script src="infomail-visning.js"></script>
+<script>
+const dato = d => { const m = String(d || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[3]) + ". " + ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"][+m[2] - 1] + " " + m[1] : ""; };
+const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+fetch("infomails/index.json?t=" + Date.now()).then(r => r.json()).then(liste => {
+  liste.sort((a, b) => String(b.dato).localeCompare(String(a.dato)));
+  const grupper = {};
+  liste.forEach(m => (grupper[m.gruppe || "Infomails"] = grupper[m.gruppe || "Infomails"] || []).push(m));
+  document.getElementById("liste").innerHTML = Object.keys(grupper).map(g =>
+    `<h2>${esc(g)}</h2>` + grupper[g].map(m =>
+      `<button class="mail-knap" data-id="${esc(m.id)}"><div class="dato">${esc(dato(m.dato))}</div><div class="titel">${esc(m.titel)}</div></button><div class="visning" id="vis-${esc(m.id)}" style="display:none"></div>`
+    ).join("")).join("") || "Der er ingen infomails endnu.";
+  // Åbn direkte fra et link: infoarkiv.html?vis=<id>
+  const vis = new URLSearchParams(location.search).get("vis");
+  if (vis) { const k = document.querySelector(`.mail-knap[data-id="${CSS.escape(vis)}"]`); if (k) k.click(); }
+}).catch(() => { document.getElementById("liste").textContent = "Kunne ikke hente arkivet. Prøv igen senere."; });
+
+document.addEventListener("click", async ev => {
+  const k = ev.target.closest(".mail-knap");
+  if (!k) return;
+  const boks = document.getElementById("vis-" + k.dataset.id);
+  if (boks.style.display === "block") { boks.style.display = "none"; k.classList.remove("aaben"); return; }
+  k.classList.add("aaben");
+  boks.style.display = "block";
+  if (!boks.dataset.hentet) {
+    boks.textContent = "Henter …";
+    try {
+      const data = await (await fetch("infomails/" + encodeURIComponent(k.dataset.id) + ".json?t=" + Date.now())).json();
+      boks.innerHTML = window.infomailHtml(data, false);
+      boks.dataset.hentet = "1";
+    } catch (e) { boks.textContent = "Kunne ikke hente mailen."; }
+  }
+});
+</script>
+</body>
+</html>
