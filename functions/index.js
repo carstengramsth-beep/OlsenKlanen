@@ -163,6 +163,8 @@ exports.tjekIndkommendeMail = onSchedule(
     try { await sendPlanlagteHilsner(); } catch (e) { console.log("Planlagte hilsner fejlede:", e && e.message); }
     // Brevkort til alle medlemmer (sat i kø fra kort.html af en postansvarlig)
     try { await sendBrevkort(); } catch (e) { console.log("Brevkort fejlede:", e && e.message); }
+    // Medlemmer, der selv har bedt om at få en information tilsendt (automatisk)
+    try { await behandlInfoAnmodninger(); } catch (e) { console.log("Info-anmodninger fejlede:", e && e.message); }
     const db = getFirestore();
     const client = new ImapFlow({
       host: "imap.simply.com",
@@ -489,6 +491,65 @@ async function sendInfomail(d) {
   } catch (e) {
     console.log("Infomail", d.id, "fejlede:", e && e.message);
     await d.ref.update({ status: "fejl", mail_fejl: String(e && e.message || e).slice(0, 300) });
+  }
+}
+
+/**
+ * Et medlem beder selv om at få en information (infomail) tilsendt — fra OlsenPost → 📚 Informationer.
+ * Anmodningen ligger i "olsenpost" med type "info_anmodning" og status "afventer".
+ * Den sendes automatisk, men KUN til en mail, der står på en person i medlemmets egen husstand
+ * i kartoteket (så ingen kan få post sendt til fremmede adresser), og højst 3 gange pr. døgn pr. mail.
+ */
+async function behandlInfoAnmodninger() {
+  const db = getFirestore();
+  const snap = await db.collection("olsenpost").where("type", "==", "info_anmodning").where("status", "==", "afventer").get();
+  for (const d of snap.docs) {
+    const taget = await db.runTransaction(async t => {
+      const frisk = await t.get(d.ref);
+      if (frisk.data().status !== "afventer") return false;
+      t.update(d.ref, { status: "behandles" });
+      return true;
+    });
+    if (!taget) continue;
+    const a = d.data();
+    const afvis = grund => d.ref.update({ status: "afvist", grund, behandlet: FieldValue.serverTimestamp() });
+    try {
+      const id = String(a.skabelon || "");
+      if (!/^[a-z0-9\-]+$/.test(id)) { await afvis("Ukendt information."); continue; }
+      const mail = String(a.email || "").trim().toLowerCase();
+      const hus = String(a.fra_nr || "").split("-")[0];
+      if (!mail.includes("@") || !/^\d+$/.test(hus)) { await afvis("Mailen mangler."); continue; }
+      // Mailen skal stå på en (levende) person i medlemmets egen husstand
+      const husDoc = await db.collection("membres").doc(hus).get();
+      const husData = husDoc.exists ? husDoc.data() : {};
+      const kendte = new Set();
+      (husData.familiemedlemmer || []).forEach(p => {
+        if (p.status === "afdød" || p.status === "udmeldt") return;
+        String(p.email || "").split(/[\/;,\s]+/).forEach(m => { m = m.trim().toLowerCase(); if (m.includes("@")) kendte.add(m); });
+      });
+      String(husData.email || "").split(/[\/;,\s]+/).forEach(m => { m = m.trim().toLowerCase(); if (m.includes("@")) kendte.add(m); });
+      if (!kendte.has(mail)) { await afvis("Mailen står ikke på din familie i Medlemskartoteket. Ret den i kartoteket, eller bed de 5 om hjælp."); continue; }
+      // Højst 3 automatiske pr. døgn til samme mail
+      const igaar = Date.now() - 24 * 60 * 60 * 1000;
+      const tidligere = await db.collection("olsenpost_mail").where("til_email", "==", mail).get();
+      if (tidligere.docs.filter(x => x.data().auto && (x.data().sendt_lokal || 0) > igaar).length >= 3) { await afvis("Du har allerede fået 3 informationer i dag. Prøv igen i morgen."); continue; }
+      // Læg den i kø som en almindelig infomail til ét medlem — og send den med det samme
+      const ref = await db.collection("olsenpost_mail").add({
+        type: "infomail", status: "afventer", skabelon: id, auto: true,
+        fra_nr: "auto", fra_navn: "Automatisk (bestilt af " + (a.fra_navn || a.fra_nr) + ")", fra_email: "post@olsenklanen.dk",
+        til_nr: a.fra_nr || "", til_navn: a.fra_navn || "", til_email: mail,
+        prove: false, enkelt: true, emne: "", tekst: "Automatisk genfremsendelse af information (" + id + ")",
+        sendt: FieldValue.serverTimestamp(), sendt_lokal: Date.now(),
+        besvaret: false, besvaret_af: null, besvaret_tid: null
+      });
+      await sendInfomail(await ref.get());
+      const resultat = (await ref.get()).data() || {};
+      if (resultat.status === "sendt") await d.ref.update({ status: "sendt", behandlet: FieldValue.serverTimestamp(), mail_id: ref.id });
+      else await afvis("Mailen kunne ikke sendes: " + (resultat.mail_fejl || "ukendt fejl"));
+    } catch (e) {
+      console.log("Info-anmodning", d.id, "fejlede:", e && e.message);
+      await afvis("Der skete en fejl. Prøv igen senere.");
+    }
   }
 }
 

@@ -366,7 +366,8 @@ try {
       <h3 style="color:#2d5016;margin-top:18px;">📚 Informationer (nummererede infomails)</h3>
       <p>Under fanen <b>📚 Informationer</b> ligger alle informationer til hele klanen – med nummer og dato (Info nr. 1, 2, 3 …). Tekst og billeder ligger <b>inde i selve mailen</b>, så den kommer frem uden links.</p>
       <p><b>De 5:</b> Bekræft PIN-koden øverst. Tryk »📖 Læs« for at se mailen, »🧪 Prøve til mig selv« for en prøve, »📨 Send til alle« eller vælg ét medlem og »Send til det valgte medlem« (fx et nyt medlem). Under hver information kan I se, hvornår den er sendt.</p>
-      <p><b>Alle andre medlemmer</b> kan læse informationerne og trykke »📩 Bed om at få den tilsendt«. Så får alle 5 en intern besked med et link, hvor medlemmet allerede er valgt.</p>
+      <p><b>Alle andre medlemmer</b> kan læse informationerne og selv få dem på mail: de skriver deres mail og trykker »📩 Send den til min mail«. Serveren sender den <b>automatisk</b> inden for 5 minutter – men kun til en mail, der står på medlemmets egen familie i Medlemskartoteket (højst 3 pr. døgn). I kan se det under informationen (»sendt enkeltvis til …«).<br>
+      Virker det ikke, kan medlemmet trykke »Bed de 5 postansvarlige om hjælp« – så får alle 5 en intern besked med et link, hvor medlemmet allerede er valgt.</p>
 
       <h2>📨 Send en almindelig mail til et medlem</h2>
       <p class="hint">
@@ -842,8 +843,8 @@ function infoStatus(type, t){ const st = document.getElementById("info-status");
 
 async function tegnInformationer(){
   document.getElementById("info-intro").innerHTML = ER_POSTANSVARLIG
-    ? "Her ligger alle informationer, nummereret og dateret. Tryk på <b>📖 Læs</b> for at se mailen. Bekræft din PIN-kode øverst på siden, før du sender. Send altid en prøve til dig selv først."
-    : "Her kan du læse alle informationer, der er sendt til hele OlsenKlanen. Vil du have en af dem på mail, så tryk på <b>📩 Bed om at få den tilsendt</b> – så får de 5 postansvarlige besked.";
+    ? "Her ligger alle informationer, nummereret og dateret. Tryk på <b>📖 Læs</b> for at se mailen. Bekræft din PIN-kode øverst på siden, før du sender. Send altid en prøve til dig selv først. (Medlemmer kan selv bestille en information på mail – den sendes automatisk til den mail, der står på deres familie.)"
+    : "Her kan du læse alle informationer, der er sendt til hele OlsenKlanen. Vil du have en af dem på mail, så skriv din mail og tryk på <b>📩 Send den til min mail</b>.";
   const el = document.getElementById("info-liste");
   try {
     if (!infoListe) infoListe = await (await fetch("infomails/index.json?t=" + Date.now())).json();
@@ -857,6 +858,7 @@ async function tegnInformationer(){
     } catch(e) { console.log("Infomail-log:", e); }
   }
   const medMail = alleModtagere.filter(m => String(m.email || "").includes("@"));
+  const minMail = String((alleModtagere.find(m => m.nr === MIT_NR) || {}).email || "").split("/")[0].trim();
   const liste = [...infoListe].sort((a, b) => (b.nr || 0) - (a.nr || 0));
   el.innerHTML = liste.map(m => {
     const log = (sendtLog[m.id] || []).filter(x => x.status === "sendt" && !x.prove);
@@ -872,8 +874,16 @@ async function tegnInformationer(){
         ${ER_POSTANSVARLIG ? `
         <button type="button" class="knap lille" onclick="sendInfomail('${enc(m.id)}','prove')">🧪 Prøve til mig selv</button>
         <button type="button" class="knap lille" style="background:#8b1e1e;" onclick="sendInfomail('${enc(m.id)}','alle')">📨 Send til alle</button>` : `
-        <button type="button" class="knap lille" onclick="bedOmInfo('${enc(m.id)}')">📩 Bed om at få den tilsendt</button>`}
+`}
       </div>
+      ${!ER_POSTANSVARLIG ? `<div style="margin-top:8px;background:#f5f1e8;border-radius:8px;padding:8px 10px;">
+        <div style="font-size:14px;margin-bottom:4px;">📩 <b>Få den på mail</b> – skriv din mail (den, der står på din familie i Medlemskartoteket):</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input type="email" class="felt info-mail" id="info-mail-${enc(m.id)}" value="${enc(minMail)}" placeholder="din@mail.dk" style="max-width:300px;margin:0;">
+          <button type="button" class="knap lille" onclick="bestilInfo('${enc(m.id)}')">📩 Send den til min mail</button>
+        </div>
+        <div style="font-size:12px;margin-top:4px;color:#666;">Den bliver sendt automatisk inden for 5 minutter fra post@olsenklanen.dk. Virker det ikke? <a href="#" onclick="bedOmInfo('${enc(m.id)}');return false;">Bed de 5 postansvarlige om hjælp</a>.</div>
+      </div>` : ""}
       ${ER_POSTANSVARLIG ? `<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
         <select class="felt info-enkelt" id="info-enkelt-${enc(m.id)}" style="max-width:360px;margin:0;"><option value="">Send til ét medlem …</option>${medMail.map(x => `<option value="${enc(x.nr)}"${infoParam.info === m.id && infoParam.til === x.nr ? " selected" : ""}>${escHtml(x.navn)} (nr. ${escHtml(x.nr)})</option>`).join("")}</select>
         <button type="button" class="knap lille" onclick="sendInfomail('${enc(m.id)}','enkelt')">📨 Send til det valgte medlem</button>
@@ -946,6 +956,27 @@ window.sendInfomail = async function(id, maade){
     console.log("Infomail fejlede:", e);
     infoStatus("fejl", "Det lykkedes ikke. Har du bekræftet din PIN-kode? Prøv igen.");
   }
+};
+
+// Et medlem bestiller selv en information på mail → serveren sender den automatisk
+// (kun til en mail, der står på medlemmets egen familie i kartoteket)
+window.bestilInfo = async function(id){
+  const meta = (infoListe || []).find(x => x.id === id) || {};
+  const mail = String(document.getElementById("info-mail-" + id).value || "").trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) { infoStatus("fejl", "Skriv din mailadresse."); return; }
+  try {
+    const ref = await addDoc(collection(db, "olsenpost"), {
+      type: "info_anmodning", status: "afventer", skabelon: id, info_nr: meta.nr || null,
+      fra_nr: MIT_NR, fra_navn: MIT_NAVN, email: mail, til: [],
+      sendt: serverTimestamp(), sendt_lokal: Date.now()
+    });
+    infoStatus("ok", "✅ Tak! Info nr. " + meta.nr + " bliver sendt til " + mail + " inden for 5 minutter.");
+    onSnapshot(doc(db, "olsenpost", ref.id), s => {
+      const d = s.data() || {};
+      if (d.status === "sendt") infoStatus("ok", "✅ Info nr. " + meta.nr + " er sendt til " + mail + ". Se din indbakke (og evt. uønsket post).");
+      if (d.status === "afvist") infoStatus("fejl", "Den blev ikke sendt: " + (d.grund || "ukendt grund"));
+    });
+  } catch(e) { infoStatus("fejl", "Det lykkedes ikke. Prøv igen."); }
 };
 
 // Et medlem beder om at få en information på mail → intern besked til alle 5
