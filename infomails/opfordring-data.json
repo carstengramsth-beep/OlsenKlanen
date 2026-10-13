@@ -1,0 +1,28 @@
+{
+  "emne": "Et kort med opfordring fra OlsenKlanen",
+  "hilsen": "Alle Olsenklan medlemmer....",
+  "afsnit": [
+    {
+      "type": "billede",
+      "billede": "billeder/kort/esther-1.jpg",
+      "tekst": "Tegning nr. 10 · »Pigen med fregner – der mangler en tand eller to« · © Esther, 8 år · olsenklanen.dk",
+      "bredde": 380
+    },
+    {
+      "type": "p",
+      "tekst": "Kære alle medlemmer\nI dag er der 66 husstande med i Olsenklanen men kun 19 husstande har bekræftet jeres data."
+    },
+    {
+      "type": "p",
+      "tekst": "Dem der mangler at bekræfte (28) bør gå ind på olsenklanen.dk og bekræfte at Jeres data er rigtige og forsyne medlemsdata med e-mail og telefonnummer - hvis ikke disse data ligger inde kan I komme ud for at I ikke modtager information fra olsenklanen.dk - så hjælp hinanden og alle klanmedlemmer med at gøre det lettere at kommunikere med hinanden - undskyld forstyrrelsen!!"
+    },
+    {
+      "type": "p",
+      "tekst": "\"Lad os gi' den en tand til !!!! (smil)\""
+    }
+  ],
+  "slut": [
+    "Stor hilsen fra",
+    "5-banden (Kurt, Carsten, Tommy, Karin og Sanne)"
+  ]
+}

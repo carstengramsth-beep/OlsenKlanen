@@ -11,4 +11,4 @@ Ny infomail:
    Medlemmer kan læse dem og trykke »Bed om at få den tilsendt« (intern besked til de 5).
 
 Serveren (functions/index.js · sendInfomail) bygger mailen med billederne inde i mailen
-og sender fra post@olsenklanen.dk. Afsnitstyper: p, h, trin, liste, nummerliste, tip.
+og sender fra post@olsenklanen.dk. Afsnitstyper: p, h, trin, billede, liste, nummerliste, tip. Nummer (nr) og dato står i index.json – den ældste er nr. 1.

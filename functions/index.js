@@ -378,15 +378,20 @@ function infomailDato(d) {
 function infomailIndhold(data, billeder, meta) {
   const html = [], tekst = [];
   if (meta && meta.nr) {
-    const linje = "Info nr. " + meta.nr + (meta.dato ? " · " + infomailDato(meta.dato) : "");
+    const linje = "Info nr. " + meta.nr + (meta.dato ? " · " + infomailDato(meta.dato) : "") + (meta.gensendt ? "" : "");
     html.push(`<p style="font-size:13px;color:#8a7a3f;margin:0 0 10px;"><b>${escHtml(linje)}</b></p>`);
     tekst.push(linje, "");
   }
-  const p = t => `<p style="font-size:16px;line-height:1.55;margin:0 0 14px;">${escHtml(t)}</p>`;
+  const p = t => `<p style="font-size:16px;line-height:1.55;margin:0 0 14px;">${escHtml(t).replace(/\n/g, "<br>")}</p>`;
   html.push(`<p style="font-size:19px;margin:0 0 16px;">${escHtml(data.hilsen || "")}</p>`);
   tekst.push(data.hilsen || "", "");
   for (const a of data.afsnit || []) {
     if (a.type === "p") { html.push(p(a.tekst)); tekst.push(a.tekst, ""); }
+    else if (a.type === "billede") {
+      const b = billeder.get(a.billede);
+      if (b) html.push(`<div style="margin:0 0 16px;text-align:center;"><img src="cid:${b.cid}" alt="" width="${a.bredde || 420}" style="display:inline-block;width:100%;max-width:${a.bredde || 420}px;height:auto;border-radius:4px;">${a.tekst ? `<div style="font-size:12px;color:#8a7a3f;font-style:italic;margin-top:4px;">${escHtml(a.tekst)}</div>` : ""}</div>`);
+      if (a.tekst) tekst.push("[Billede: " + a.tekst + "]", "");
+    }
     else if (a.type === "h") { html.push(`<h2 style="color:#2d5016;font-size:19px;margin:26px 0 10px;">${escHtml(a.tekst)}</h2>`); tekst.push(String(a.tekst).toUpperCase()); }
     else if (a.type === "trin") {
       const b = billeder.get(a.billede);
@@ -440,7 +445,7 @@ async function sendInfomail(d) {
     let i = 0;
     for (const a of data.afsnit || []) {
       const fil = String(a.billede || "");
-      if (!fil || billeder.has(fil) || !/^billeder\/vejledning\/[\w\-]+\.(png|jpg)$/.test(fil)) continue;
+      if (!fil || billeder.has(fil) || !/^billeder\/(vejledning|kort)\/[\w\-]+\.(png|jpg)$/.test(fil)) continue;
       const b = await fetch("https://olsenklanen.dk/" + fil);
       if (!b.ok) throw new Error("Kunne ikke hente " + fil);
       i++;
