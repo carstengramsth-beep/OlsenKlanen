@@ -334,6 +334,19 @@ function maerkeHtml(x) {
 }
 BEGI_NAVN.kobberbryllup = 'Kobberbryllup (12½ år)';
 
+// Begge voksne i husstanden: "Elisabeth & Carsten Gram" — eller "Karin Gram Lund & Richard Lund"
+function parNavn(h, reserve) {
+  const voksne = (h.familiemedlemmer || []).filter(p => ['forælder', 'ægtefælle', 'samlever', 'partner'].includes(p.rolle) && p.status !== 'udmeldt' && p.status !== 'afdød');
+  if (voksne.length !== 2) return reserve;
+  const navn = voksne.map(p => String(p.navn || ((p.fornavn || '') + ' ' + (p.efternavn || ''))).trim());
+  const efter = navn.map(n => n.split(/\s+/).pop());
+  if (efter[0] && efter[0] === efter[1]) {
+    // Samme efternavn: kun fornavne + fælles efternavn
+    return navn.map(n => n.split(/\s+/)[0]).join(' & ') + ' ' + efter[0];
+  }
+  return navn.join(' & ');
+}
+
 function escN(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 function maerkedageFor(aar) {
@@ -352,7 +365,8 @@ function maerkedageFor(aar) {
       const d = parseDato(b.dato);
       if (!d) return;
       // Navnet er altid husstanden; beskrivelsen (fx "morgenkaffe kl. 10") står som oplysning
-      const hvem = husNavn;
+      // Ved bryllupper og bryllupsdage fejres to: vis begge navne (fx "Elisabeth & Carsten Gram")
+      const hvem = (b.type === 'bryllupsdag' || BEGI_SLAGS[b.type] && BEGI_SLAGS[b.type] !== 'konf') ? parNavn(h, husNavn) : husNavn;
       const besk = [(b.beskrivelse || '').trim(), (b.besked || '').trim()].filter(Boolean).join(' — ');
       if (b.type === 'bryllupsdag' && d.aar < aar) {
         // Bryllupsdatoen: vis kun, når der er gået et rundt antal år
