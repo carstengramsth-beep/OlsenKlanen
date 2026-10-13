@@ -43,6 +43,6 @@ Tip: Skriv bryllupsdagen med selve datoen for brylluppet. Så regner siden selv 
 
 Der er mange flere fine ting på vej i de næste måneder.
 
-Departementet for fut og fejt`
+Departementet for fut og fart`
   }
 };
