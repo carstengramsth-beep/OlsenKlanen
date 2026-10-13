@@ -187,6 +187,7 @@ try {
     <button class="fane" id="fane-laest" onclick="visFane('laest')">👁 Læste mails <span class="badge graa" id="badge-laest" style="display:none">0</span></button>
     <button class="fane" id="fane-sendt" onclick="visFane('sendt')">📤 Sendte mails</button>
     <button class="fane" id="fane-arkiv" onclick="visFane('arkiv')" style="display:none">🗄️ Arkiv</button>
+    <button class="fane" id="fane-info" onclick="visFane('info')">📚 Informationer</button>
     <button class="fane" id="fane-intern" onclick="visFane('intern')">💬 Intern besked</button>
     <button class="fane" id="fane-vagt" onclick="visFane('vagt')" style="display:none">📅 Postvagt</button>
     <button class="fane" id="fane-hjaelp" onclick="visFane('hjaelp')">❓ Sådan virker det</button>
@@ -197,23 +198,6 @@ try {
     <div class="info-boks">
       <strong>📮 Mails sendes fra post@olsenklanen.dk</strong>
       Modtageren ser at mailen kommer fra Familieforeningen Olsenklanen — ikke fra din private mail.
-    </div>
-    <div class="kort" id="infomail-kort" style="display:none;">
-      <h2>📨 Færdig infomail med billeder</h2>
-      <p style="margin:0 0 10px;">Tekst og billeder ligger <b>inde i selve mailen</b> – der er ingen links, modtageren skal trykke på. Mailen sendes fra post@olsenklanen.dk til alle medlemmer med egen mail.</p>
-      <p style="margin:0 0 10px;"><b>1.</b> Bekræft din PIN-kode øverst på siden. &nbsp; <b>2.</b> Send en prøve til dig selv, og se den i din indbakke. &nbsp; <b>3.</b> Send til alle.</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0;">
-        <button type="button" class="knap" id="infomail-prove-knap" onclick="sendInfomail(true)">🧪 Send prøve til mig selv</button>
-        <button type="button" class="knap" id="infomail-alle-knap" onclick="sendInfomail(false)" style="background:#8b1e1e;">📨 Send til alle medlemmer</button>
-      </div>
-      <div style="background:#f5f1e8;border-radius:8px;padding:10px 12px;margin:6px 0 10px;">
-        <b>Send til ét medlem</b> (fx et nyt medlem, der ikke har fået den):<br>
-        <select id="infomail-enkelt" class="felt" style="max-width:420px;margin-top:6px;"><option value="">Henter medlemmer …</option></select>
-        <button type="button" class="knap" id="infomail-enkelt-knap" onclick="sendInfomail(false, true)" style="margin-top:6px;">📨 Send til det valgte medlem</button>
-      </div>
-      <div class="status" id="infomail-status" style="display:none;"></div>
-      <div style="font-size:13px;color:#666;margin:14px 0 6px;">Sådan ser mailen ud:</div>
-      <div id="infomail-forhaand" style="border:1px solid #ddd;border-radius:8px;max-height:640px;overflow:auto;"></div>
     </div>
     <div class="kort">
       <h2 id="send-overskrift">Send mail til et eller flere medlemmer</h2>
@@ -307,6 +291,15 @@ try {
   </div>
 
   <!-- ════════ INTERN BESKED (det eksisterende system) ════════ -->
+  <div id="omr-info" style="display:none">
+    <div class="kort">
+      <h2>📚 Informationer til hele OlsenKlanen</h2>
+      <p id="info-intro" style="margin:0 0 8px;"></p>
+      <div class="status" id="info-status" style="display:none;"></div>
+      <div id="info-liste"><div class="indlaeser">Henter informationer …</div></div>
+    </div>
+  </div>
+
   <div id="omr-intern" style="display:none">
     <div class="info-boks">
       <strong>💬 Interne beskeder mellem klanmedlemmer</strong>
@@ -370,6 +363,11 @@ try {
     </div>
 
     <div class="kort">
+      <h3 style="color:#2d5016;margin-top:18px;">📚 Informationer (nummererede infomails)</h3>
+      <p>Under fanen <b>📚 Informationer</b> ligger alle informationer til hele klanen – med nummer og dato (Info nr. 1, 2, 3 …). Tekst og billeder ligger <b>inde i selve mailen</b>, så den kommer frem uden links.</p>
+      <p><b>De 5:</b> Bekræft PIN-koden øverst. Tryk »📖 Læs« for at se mailen, »🧪 Prøve til mig selv« for en prøve, »📨 Send til alle« eller vælg ét medlem og »Send til det valgte medlem« (fx et nyt medlem). Under hver information kan I se, hvornår den er sendt.</p>
+      <p><b>Alle andre medlemmer</b> kan læse informationerne og trykke »📩 Bed om at få den tilsendt«. Så får alle 5 en intern besked med et link, hvor medlemmet allerede er valgt.</p>
+
       <h2>📨 Send en almindelig mail til et medlem</h2>
       <p class="hint">
         1. Gå til fanen "Send mail til medlem".<br>
@@ -830,68 +828,146 @@ if (SKABELON && !SKABELON.infomail) {
   document.getElementById("tekst-mail").value = SKABELON.tekst || "";
 }
 
-/* ════════ FÆRDIG INFOMAIL MED BILLEDER (sendes af serveren, som brevkortene) ════════ */
-let infomailData = null;
-function infomailForhaand(data) { return window.infomailHtml(data, true); }
-if (SKABELON && SKABELON.infomail) {
-  document.getElementById("infomail-kort").style.display = "block";
-  const almindelig = document.getElementById("send-overskrift").closest(".kort");
-  if (almindelig) almindelig.style.display = "none";
-  fetch("infomails/" + encodeURIComponent(SKABELON.infomail) + ".json?t=" + Date.now())
-    .then(r => r.json())
-    .then(d => { infomailData = d; document.getElementById("infomail-forhaand").innerHTML = infomailForhaand(d); })
-    .catch(() => { document.getElementById("infomail-forhaand").textContent = "Kunne ikke hente mailen. Genindlæs siden."; });
-}
+/* ════════ INFORMATIONER (nummererede infomails med tekst og billeder) ════════
+   Listen står i infomails/index.json, indholdet i infomails/<id>.json.
+   De 5 kan sende en prøve, sende til alle eller til ét medlem (serveren sender fra
+   post@olsenklanen.dk med billederne i mailen). Andre medlemmer kan læse dem og bede
+   om at få én tilsendt — anmodningen går som intern besked til alle 5. */
+let infoListe = null;
+const infoData = {};
+const infoAabne = new Set();
+const infoParam = { info: START_PARAM.get("info") || (SKABELON && SKABELON.infomail) || "", til: START_PARAM.get("til") || "" };
+const infoDato = d => { const m = String(d || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[3]) + ". " + ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"][+m[2] - 1] + " " + m[1] : ""; };
+function infoStatus(type, t){ const st = document.getElementById("info-status"); st.className = "status " + type; st.textContent = t; st.style.display = "block"; st.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
 
-// Liste til "Send til ét medlem" (fyldes, når medlemmerne er hentet)
-function fyldInfomailEnkelt(){
-  const sel = document.getElementById("infomail-enkelt");
-  if (!sel || !alleModtagere.length) return;
-  const medMail = alleModtagere.filter(m => String(m.email || "").includes("@"));
-  sel.innerHTML = '<option value="">Vælg medlem …</option>' + medMail.map(m => `<option value="${enc(m.nr)}">${escHtml(m.navn)} (nr. ${escHtml(m.nr)})</option>`).join("");
-}
-
-window.sendInfomail = async function(prove, enkelt) {
-  const st = document.getElementById("infomail-status");
-  const visSt = (type, t) => { st.className = "status " + type; st.textContent = t; st.style.display = "block"; };
-  if (!ER_POSTANSVARLIG) { visSt("fejl", "Kun de 5 postansvarlige kan sende infomails."); return; }
-  if (!infomailData) { visSt("fejl", "Mailen er ikke hentet endnu. Vent et øjeblik."); return; }
-  if (!auth.currentUser) { visSt("fejl", "Bekræft din PIN-kode øverst på siden først."); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
-  const egen = mitEmail();
-  if (prove && !egen.includes("@")) { visSt("fejl", "Der mangler en mail til prøven."); return; }
-  let modtager = null;
-  if (enkelt) {
-    const nr = document.getElementById("infomail-enkelt").value;
-    modtager = alleModtagere.find(m => m.nr === nr);
-    if (!modtager || !String(modtager.email || "").includes("@")) { visSt("fejl", "Vælg det medlem, mailen skal sendes til."); return; }
-    if (!confirm("Vil du sende infomailen til " + modtager.navn + " (" + modtager.email + ")?")) return;
+async function tegnInformationer(){
+  document.getElementById("info-intro").innerHTML = ER_POSTANSVARLIG
+    ? "Her ligger alle informationer, nummereret og dateret. Tryk på <b>📖 Læs</b> for at se mailen. Bekræft din PIN-kode øverst på siden, før du sender. Send altid en prøve til dig selv først."
+    : "Her kan du læse alle informationer, der er sendt til hele OlsenKlanen. Vil du have en af dem på mail, så tryk på <b>📩 Bed om at få den tilsendt</b> – så får de 5 postansvarlige besked.";
+  const el = document.getElementById("info-liste");
+  try {
+    if (!infoListe) infoListe = await (await fetch("infomails/index.json?t=" + Date.now())).json();
+  } catch(e) { el.textContent = "Kunne ikke hente informationerne. Genindlæs siden."; return; }
+  // Hvornår er de sendt? (de 5 kan se det)
+  let sendtLog = {};
+  if (ER_POSTANSVARLIG) {
+    try {
+      const snap = await getDocs(query(collection(db, "olsenpost_mail"), where("type", "==", "infomail")));
+      snap.forEach(d => { const m = d.data(); (sendtLog[m.skabelon] = sendtLog[m.skabelon] || []).push(m); });
+    } catch(e) { console.log("Infomail-log:", e); }
   }
-  const antal = new Set(alleModtagere.map(m => String(m.email || "").trim().toLowerCase()).filter(x => x.includes("@"))).size;
-  if (!prove && !enkelt && !confirm("Vil du sende infomailen til alle medlemmer med mail (ca. " + antal + ") nu?")) return;
-  const knap = document.getElementById(prove ? "infomail-prove-knap" : enkelt ? "infomail-enkelt-knap" : "infomail-alle-knap");
-  knap.disabled = true;
+  const medMail = alleModtagere.filter(m => String(m.email || "").includes("@"));
+  const liste = [...infoListe].sort((a, b) => (b.nr || 0) - (a.nr || 0));
+  el.innerHTML = liste.map(m => {
+    const log = (sendtLog[m.id] || []).filter(x => x.status === "sendt" && !x.prove);
+    const alle = log.filter(x => !x.enkelt), enkelte = log.filter(x => x.enkelt);
+    const logTekst = ER_POSTANSVARLIG ? (alle.length ? "✅ Sendt til alle " + alle.map(x => infoDato(new Date(x.sendt_lokal).toISOString()) + " (" + (x.antal_sendt || 0) + ")").join(", ") : "Ikke sendt til alle endnu")
+      + (enkelte.length ? " · sendt enkeltvis til: " + enkelte.map(x => escHtml(x.til_navn || "")).join(", ") : "") : "";
+    return `<div class="info-punkt" data-id="${enc(m.id)}" style="border:1px solid #ddd;border-radius:8px;padding:12px 14px;margin:10px 0;background:#fff;">
+      <div style="font-size:13px;color:#8a7a3f;"><b>Info nr. ${escHtml(m.nr)}</b> · ${escHtml(infoDato(m.dato))} · ${escHtml(m.gruppe || "")}</div>
+      <div style="font-weight:bold;color:#2d5016;margin:2px 0 6px;">${escHtml(m.titel)}</div>
+      ${logTekst ? `<div style="font-size:13px;color:#555;margin-bottom:6px;">${logTekst}</div>` : ""}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="knap lille" onclick="visInfo('${enc(m.id)}')">📖 Læs</button>
+        ${ER_POSTANSVARLIG ? `
+        <button type="button" class="knap lille" onclick="sendInfomail('${enc(m.id)}','prove')">🧪 Prøve til mig selv</button>
+        <button type="button" class="knap lille" style="background:#8b1e1e;" onclick="sendInfomail('${enc(m.id)}','alle')">📨 Send til alle</button>` : `
+        <button type="button" class="knap lille" onclick="bedOmInfo('${enc(m.id)}')">📩 Bed om at få den tilsendt</button>`}
+      </div>
+      ${ER_POSTANSVARLIG ? `<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <select class="felt info-enkelt" id="info-enkelt-${enc(m.id)}" style="max-width:360px;margin:0;"><option value="">Send til ét medlem …</option>${medMail.map(x => `<option value="${enc(x.nr)}"${infoParam.info === m.id && infoParam.til === x.nr ? " selected" : ""}>${escHtml(x.navn)} (nr. ${escHtml(x.nr)})</option>`).join("")}</select>
+        <button type="button" class="knap lille" onclick="sendInfomail('${enc(m.id)}','enkelt')">📨 Send til det valgte medlem</button>
+      </div>` : ""}
+      <div class="info-visning" id="info-vis-${enc(m.id)}" style="display:none;margin-top:10px;border:1px solid #ddd;border-radius:8px;max-height:640px;overflow:auto;"></div>
+    </div>`;
+  }).join("") || "Der er ingen informationer endnu.";
+  // Åbn igen dem, der var åbne (listen tegnes igen, når medlemslisten er hentet)
+  infoAabne.forEach(id => visInfo(id, "igen"));
+  if (infoParam.info && !infoParam.vist) { infoParam.vist = true; visInfo(infoParam.info, true); }
+}
+
+async function hentInfo(id){
+  if (!infoData[id]) infoData[id] = await (await fetch("infomails/" + encodeURIComponent(id) + ".json?t=" + Date.now())).json();
+  return infoData[id];
+}
+window.visInfo = async function(id, aabn){
+  const boks = document.getElementById("info-vis-" + id);
+  if (!boks) return;
+  if (boks.style.display === "block" && !aabn) { boks.style.display = "none"; infoAabne.delete(id); return; }
+  boks.style.display = "block";
+  infoAabne.add(id);
+  boks.textContent = "Henter …";
+  try {
+    const meta = (infoListe || []).find(x => x.id === id) || {};
+    boks.innerHTML = window.infomailHtml(await hentInfo(id), true, meta);
+    if (aabn === true) boks.closest(".info-punkt").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch(e) { boks.textContent = "Kunne ikke hente informationen."; }
+};
+
+window.sendInfomail = async function(id, maade){
+  if (!ER_POSTANSVARLIG) { infoStatus("fejl", "Kun de 5 postansvarlige kan sende informationer."); return; }
+  if (!auth.currentUser) { infoStatus("fejl", "Bekræft din PIN-kode øverst på siden først."); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+  const meta = (infoListe || []).find(x => x.id === id) || {};
+  let data;
+  try { data = await hentInfo(id); } catch(e) { infoStatus("fejl", "Kunne ikke hente informationen."); return; }
+  const egen = mitEmail();
+  const prove = maade === "prove";
+  let modtager = null;
+  if (prove && !egen.includes("@")) { infoStatus("fejl", "Der mangler en mail til prøven."); return; }
+  if (maade === "enkelt") {
+    const nr = document.getElementById("info-enkelt-" + id).value;
+    modtager = alleModtagere.find(m => m.nr === nr);
+    if (!modtager || !String(modtager.email || "").includes("@")) { infoStatus("fejl", "Vælg det medlem, informationen skal sendes til."); return; }
+    if (!confirm("Vil du sende Info nr. " + meta.nr + " til " + modtager.navn + " (" + modtager.email + ")?")) return;
+  }
+  if (maade === "alle") {
+    const antal = new Set(alleModtagere.map(m => String(m.email || "").trim().toLowerCase()).filter(x => x.includes("@"))).size;
+    if (!confirm("Vil du sende Info nr. " + meta.nr + " til alle medlemmer med mail (ca. " + antal + ") nu?")) return;
+  }
+  const navn = "Info nr. " + meta.nr;
   try {
     const ref = await addDoc(collection(db, "olsenpost_mail"), {
-      type: "infomail", status: "afventer", skabelon: SKABELON.infomail,
+      type: "infomail", status: "afventer", skabelon: id, info_nr: meta.nr || null,
       fra_nr: MIT_NR, fra_navn: MIT_NAVN, fra_email: egen,
       til_nr: modtager ? modtager.nr : "", til_navn: prove ? "Prøve til " + egen : modtager ? modtager.navn : "Alle medlemmer med egen mail",
       til_email: prove ? egen : modtager ? String(modtager.email).trim() : "",
-      prove: !!prove, enkelt: !!modtager, emne: infomailData.emne || "", tekst: "Infomail: " + (infomailData.emne || ""),
+      prove, enkelt: !!modtager, emne: data.emne || "", tekst: navn + ": " + (data.emne || ""),
       sendt: serverTimestamp(), sendt_lokal: Date.now(),
       besvaret: false, besvaret_af: null, besvaret_tid: null
     });
-    visSt("ok", "✅ " + (prove ? "Prøven" : "Infomailen") + " er sat i kø. Den bliver sendt inden for 5 minutter …");
+    infoStatus("ok", "✅ " + navn + " er sat i kø. Den bliver sendt inden for 5 minutter …");
     onSnapshot(doc(db, "olsenpost_mail", ref.id), s => {
       const d = s.data() || {};
-      if (d.status === "sender") visSt("ok", "📨 Sender nu …");
-      if (d.status === "sendt") { visSt("ok", prove ? "✅ Prøven er sendt til " + egen + ". Se din indbakke." : modtager ? "✅ Infomailen er sendt til " + modtager.navn + "." : "✅ Infomailen er sendt til " + (d.antal_sendt || 0) + " medlemmer." + (d.antal_fejl ? " " + d.antal_fejl + " kunne ikke sendes." : "")); knap.disabled = false; }
-      if (d.status === "fejl") { visSt("fejl", "Mailen kunne ikke sendes: " + (d.mail_fejl || "ukendt fejl")); knap.disabled = false; }
+      if (d.status === "sender") infoStatus("ok", "📨 Sender " + navn + " nu …");
+      if (d.status === "sendt") { infoStatus("ok", prove ? "✅ Prøven er sendt til " + egen + ". Se din indbakke." : modtager ? "✅ " + navn + " er sendt til " + modtager.navn + "." : "✅ " + navn + " er sendt til " + (d.antal_sendt || 0) + " medlemmer." + (d.antal_fejl ? " " + d.antal_fejl + " kunne ikke sendes." : "")); tegnInformationer(); }
+      if (d.status === "fejl") infoStatus("fejl", "Det kunne ikke sendes: " + (d.mail_fejl || "ukendt fejl"));
     });
-  } catch (e) {
+  } catch(e) {
     console.log("Infomail fejlede:", e);
-    visSt("fejl", "Det lykkedes ikke. Har du bekræftet din PIN-kode? Prøv igen.");
-    knap.disabled = false;
+    infoStatus("fejl", "Det lykkedes ikke. Har du bekræftet din PIN-kode? Prøv igen.");
   }
+};
+
+// Et medlem beder om at få en information på mail → intern besked til alle 5
+window.bedOmInfo = async function(id){
+  const meta = (infoListe || []).find(x => x.id === id) || {};
+  const mig = alleModtagere.find(m => m.nr === MIT_NR) || {};
+  const mail = String(mig.email || "").trim();
+  if (!confirm("Vil du bede om at få Info nr. " + meta.nr + " tilsendt" + (mail ? " på " + mail : "") + "?")) return;
+  try {
+    const banden = (window.OLSENBANDEN || []).map(b => b.nr);
+    await addDoc(collection(db, "olsenpost"), {
+      fra_nr: MIT_NR, fra_navn: MIT_NAVN,
+      til: banden, til_navne: (window.OLSENBANDEN || []).map(b => b.navn),
+      tekst: "📩 Anmodning om en information\n\n" + MIT_NAVN + " (nr. " + MIT_NR + ") beder om at få Info nr. " + meta.nr + " (" + infoDato(meta.dato) + ") tilsendt:\n„" + (meta.titel || "") + "“\n\n"
+        + (mail ? "Mail: " + mail : "OBS: Der står ingen mail på medlemmet i kartoteket.")
+        + "\n\nSend den under OlsenPost → 📚 Informationer → Info nr. " + meta.nr + " → vælg medlemmet → Send.\nhttps://olsenklanen.dk/meddelelser.html?fane=info&info=" + encodeURIComponent(id) + "&til=" + encodeURIComponent(MIT_NR),
+      type: "besked", info_anmodning: id,
+      sendt: serverTimestamp(), sendt_lokal: Date.now(),
+      set_af: [], svar: []
+    });
+    infoStatus("ok", "✅ Tak! De 5 postansvarlige har fået besked og sender den til dig.");
+  } catch(e) { infoStatus("fejl", "Det lykkedes ikke. Prøv igen."); }
 };
 
 /* ════════ KLADDE (auto-gem, så tekst ikke går tabt ved genindlæsning) ════════ */
@@ -951,8 +1027,8 @@ function forudvaelgModtagereFraLink(){
   }
   tegnModtagere(alleModtagere, "mail");
   tegnValgte("mail");
+  if (document.getElementById("omr-info").style.display === "block") tegnInformationer();   // nu med medlemslisten
   // En færdig mail til alle: vælg alle medlemmer med mail
-  fyldInfomailEnkelt();
   if (SKABELON && SKABELON.alle && !window.__skabelonValgt) { window.__skabelonValgt = true; vaelgAlleMail(); }
 }
 
@@ -1884,7 +1960,7 @@ window.sendIntern = async function(){
 
 /* ════════ FANER ════════ */
 window.visFane = function(navn){
-  ["send","indbakke","laest","sendt","arkiv","intern","vagt","hjaelp"].forEach(f => {
+  ["send","indbakke","laest","sendt","arkiv","info","intern","vagt","hjaelp"].forEach(f => {
     document.getElementById("omr-"+f).style.display = (f===navn)?"block":"none";
     document.getElementById("fane-"+f).classList.toggle("aktiv", f===navn);
   });
@@ -1893,6 +1969,7 @@ window.visFane = function(navn){
   if (navn === "arkiv") tegnArkiv();
   if (navn === "intern") tegnIntern();
   if (navn === "vagt") tegnVagtplan();
+  if (navn === "info") tegnInformationer();
 };
 
 /* ════════ POSTVAGT ════════ */
@@ -1969,7 +2046,8 @@ if (!ER_POSTANSVARLIG) {
   document.getElementById("fane-send").style.display = "none";
   document.getElementById("omr-send").style.display = "none";
 }
-if (START_FANE === "intern") visFane("intern");
+if (START_FANE === "info" || (SKABELON && SKABELON.infomail)) visFane("info");
+else if (START_FANE === "intern") visFane("intern");
 else if (START_FANE === "indbakke" || !ER_POSTANSVARLIG) visFane("indbakke");
 </script>
 

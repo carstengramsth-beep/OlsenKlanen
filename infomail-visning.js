@@ -5,8 +5,10 @@
    ════════════════════════════════════════════════════════════ */
 (function(){
   const e = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  window.infoDato = d => { const m = String(d || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[3]) + ". " + ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"][+m[2] - 1] + " " + m[1] : String(d || ""); };
   window.INFOMAIL_FODLINJE = "Kun til medlemmer af OlsenKlanen – send den ikke videre.";
-  window.infomailHtml = function(data, visHoved){
+  window.infomailHtml = function(data, visHoved, meta){
+    const nrLinje = meta && meta.nr ? `<div style="font-size:13px;color:#8a7a3f;margin:0 0 10px;"><b>Info nr. ${e(meta.nr)}</b>${meta.dato ? " · " + e(window.infoDato ? window.infoDato(meta.dato) : meta.dato) : ""}</div>` : "";
     const dele = [`<p style="font-size:19px;margin:0 0 16px;">${e(data.hilsen)}</p>`];
     (data.afsnit || []).forEach(a => {
       if (a.type === "p") dele.push(`<p style="margin:0 0 14px;">${e(a.tekst)}</p>`);
@@ -17,7 +19,7 @@
     });
     dele.push(`<p style="margin:18px 0 0;">${(data.slut || []).map(e).join("<br>")}</p>`);
     dele.push(`<div style="border-top:1px solid #d8cfae;margin-top:22px;padding-top:8px;font-size:12px;color:#8a7a3f;font-style:italic;">Familieforeningen OlsenKlanen · olsenklanen.dk<br>${e(window.INFOMAIL_FODLINJE)}</div>`);
-    const hoved = visHoved ? `<div style="font-size:13px;color:#666;border-bottom:1px solid #eee;padding-bottom:8px;margin-bottom:14px;"><b>Fra:</b> OlsenKlanen &lt;post@olsenklanen.dk&gt;<br><b>Emne:</b> ${e(data.emne)}</div>` : "";
-    return `<div style="background:#f5f1e8;padding:16px;font-family:Georgia,serif;color:#2c3e1f;line-height:1.55;"><div style="max-width:600px;margin:0 auto;background:#fff;padding:20px;">${hoved}${dele.join("")}</div></div>`;
+    const hoved = visHoved ? `<div style="font-size:13px;color:#666;border-bottom:1px solid #eee;padding-bottom:8px;margin-bottom:14px;"><b>Fra:</b> OlsenKlanen &lt;post@olsenklanen.dk&gt;<br><b>Emne:</b> ${meta && meta.nr ? "Info nr. " + e(meta.nr) + " – " : ""}${e(data.emne)}</div>` : "";
+    return `<div style="background:#f5f1e8;padding:16px;font-family:Georgia,serif;color:#2c3e1f;line-height:1.55;"><div style="max-width:600px;margin:0 auto;background:#fff;padding:20px;">${hoved}${nrLinje}${dele.join("")}</div></div>`;
   };
 })();
