@@ -69,6 +69,10 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .mk-forklaring .mk.valgt { outline: 3px solid #2d5016; outline-offset: 2px; }
 .mk-andet   { background: #c89e3c; }
 .mk-skovtur { background: #2d5016; }
+.mk-student { background: #fff; color: #b0102c; border: 2px solid #b0102c; text-shadow: none; }
+.mk-udlaert { background: #1f4e79; }
+.mk-eksamen { background: #00796b; }
+.mk-job     { background: #6d4c2f; }
 .mk-forklaring { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
 .mk-forklaring .mk { font-size: 12px; padding: 3px 9px; }
 .search-box { width: 100%; padding: 10px 14px; font-size: 15px; border: 1px solid #c4b896; border-radius: 4px; margin-bottom: 16px; background: #fff; }
@@ -313,14 +317,17 @@ const RUNDE_ALDRE = [18, 30, 40, 50, 60, 70, 75, 80, 85, 90, 95, 100];
 const BRYLLUP_NAVN = { 10: 'Tinbryllup (10 år)', 25: '🥂 Sølvbryllup (25 år)', 30: 'Perlebryllup (30 år)', 40: 'Rubinbryllup (40 år)',
   50: '💍 Guldbryllup (50 år)', 60: '💎 Diamantbryllup (60 år)', 65: 'Jernbryllup (65 år)', 70: 'Platinbryllup (70 år)' };
 const BEGI_NAVN = { konfirmation: '🙏 Konfirmation', bryllupsdag: '💐 Bryllupsdag', 'sølvbryllup': '🥂 Sølvbryllup (25 år)',
-  guldbryllup: '💍 Guldbryllup (50 år)', diamantbryllup: '💎 Diamantbryllup (60 år)', 'jubilæum': '🎉 Jubilæum', andet: '📅 Mærkedag' };
+  guldbryllup: '💍 Guldbryllup (50 år)', diamantbryllup: '💎 Diamantbryllup (60 år)', 'jubilæum': '🎉 Jubilæum',
+  student: '🎓 Student', 'udlært': '🛠️ Udlært', eksamen: '📜 Afsluttende eksamen', nyt_job: '💼 Nyt job', andet: '📅 Mærkedag' };
 // Farve (CSS-klasse .mk-…) og tekst for hver slags mærkedag
 const BRYLLUP_SLAGS = { 10: 'tin', 25: 'soelv', 30: 'perle', 40: 'rubin', 50: 'guld', 60: 'diamant', 65: 'jern', 70: 'platin' };
-const BEGI_SLAGS = { konfirmation: 'konf', bryllupsdag: 'bryllup', 'sølvbryllup': 'soelv', guldbryllup: 'guld', diamantbryllup: 'diamant', kobberbryllup: 'kobber' };
+const BEGI_SLAGS = { konfirmation: 'konf', bryllupsdag: 'bryllup', 'sølvbryllup': 'soelv', guldbryllup: 'guld', diamantbryllup: 'diamant', kobberbryllup: 'kobber',
+  student: 'student', 'udlært': 'udlaert', eksamen: 'eksamen', nyt_job: 'job' };
 const MAERKE_TEKST = {
   kobber: 'Kobberbryllup', soelv: 'Sølvbryllup', guld: 'Guldbryllup', diamant: '✦ Diamantbryllup ✧',
   tin: 'Tinbryllup', perle: 'Perlebryllup', rubin: 'Rubinbryllup', jern: 'Jernbryllup', platin: 'Platinbryllup',
-  konf: '✝ Konfirmation ✝', bryllup: 'Bryllup', skovtur: '🌳 Familieskovtur', andet: '📅 Andre begivenheder'
+  konf: '✝ Konfirmation ✝', bryllup: 'Bryllup', student: '🎓 Student', udlaert: '🛠️ Udlært', eksamen: '📜 Eksamen', job: '💼 Nyt job',
+  skovtur: '🌳 Familieskovtur', andet: '📅 Andre begivenheder'
 };
 const HJERTER = '<span style="color:#d0021b;letter-spacing:-2px;margin:0 5px;">♥♥</span>';
 function maerkeHtml(x) {
@@ -367,8 +374,11 @@ function maerkedageFor(aar) {
       if (!d) return;
       // Navnet er altid husstanden; beskrivelsen (fx "morgenkaffe kl. 10") står som oplysning
       // Ved bryllupper og bryllupsdage fejres to: vis begge navne (fx "Elisabeth & Carsten Gram")
-      const hvem = (b.type === 'bryllupsdag' || BEGI_SLAGS[b.type] && BEGI_SLAGS[b.type] !== 'konf') ? parNavn(h, husNavn) : husNavn;
-      const besk = [(b.beskrivelse || '').trim(), (b.besked || '').trim()].filter(Boolean).join(' — ');
+      // Konfirmation, student, udlært, eksamen og nyt job handler om én person: navnet står i "beskrivelse"
+      const personlig = ['konfirmation', 'student', 'udlært', 'eksamen', 'nyt_job'].includes(b.type) && (b.beskrivelse || '').trim();
+      const bryllup = b.type === 'bryllupsdag' || ['soelv', 'guld', 'diamant', 'kobber'].includes(BEGI_SLAGS[b.type]);
+      const hvem = personlig ? b.beskrivelse.trim() : bryllup ? parNavn(h, husNavn) : husNavn;
+      const besk = [personlig ? '' : (b.beskrivelse || '').trim(), (b.uddannelse || '').trim(), (b.besked || '').trim()].filter(Boolean).join(' — ');
       if (b.type === 'bryllupsdag' && d.aar < aar) {
         // Bryllupsdatoen: vis kun, når der er gået et rundt antal år
         const n = aar - d.aar;
@@ -445,7 +455,7 @@ function byggNaesteAar() {
     Her står kun: runde fødselsdage (${RUNDE_ALDRE.join(', ')} år), bryllupsdage med runde år og begivenheder med en dato i ${aarene.join(' eller ')}, fx konfirmation.<br>
     🌳 Skovturen står med i grønt. Falder en mærkedag samme dage som skovturen, er den markeret med ⚠️.<br>
     <div class="mk-forklaring">${['a18','a30','a40','a50','a60','a70','a75','a80','a85','a90','a95','a100'].map(k => '<span class="mk mk-' + k + (valgtSlags === k ? ' valgt' : '') + '" onclick="vaelgSlags(\'' + k + '\')" title="Tryk for at se alle, der fylder ' + k.slice(1) + ' år frem i tiden">' + k.slice(1) + ' år</span>').join('')}</div>
-    <div class="mk-forklaring">${['tin','kobber','soelv','perle','rubin','guld','diamant','jern','platin','konf','bryllup','skovtur','andet'].map(k => '<span class="mk mk-' + k + (valgtSlags === k ? ' valgt' : '') + '" onclick="vaelgSlags(\'' + k + '\')" title="Tryk for at se alle frem i tiden">' + (k === 'bryllup' ? HJERTER + ' Bryllup ' + HJERTER : MAERKE_TEKST[k]) + '</span>').join('')}</div>
+    <div class="mk-forklaring">${['tin','kobber','soelv','perle','rubin','guld','diamant','jern','platin','konf','bryllup','student','udlaert','eksamen','job','skovtur','andet'].map(k => '<span class="mk mk-' + k + (valgtSlags === k ? ' valgt' : '') + '" onclick="vaelgSlags(\'' + k + '\')" title="Tryk for at se alle frem i tiden">' + (k === 'bryllup' ? HJERTER + ' Bryllup ' + HJERTER : MAERKE_TEKST[k]) + '</span>').join('')}</div>
     <div style="font-size:13px;margin-bottom:6px;">👆 Tryk på en farve for at se alle af den slags de næste ${FREM_ANTAL_AAR + 2} år.</div>
     Mangler en mærkedag? Skriv den ind som "Begivenhed" på familiens kort i <a href="medlemskartotek.html" style="color:#2d5016;font-weight:bold;">Medlemskartoteket</a>. Bryllupsdage skrives ind som "Bryllupsdag" med selve bryllupsdatoen.</div>`;
   if (valgtSlags) {
