@@ -420,6 +420,7 @@ try {
 <div class="bund">OlsenPost · post@olsenklanen.dk · klanens fælles postkasse</div>
 
 <script src="olsenbanden.js"></script>
+<script src="olsenpost-skabeloner.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc, deleteDoc,
@@ -804,6 +805,13 @@ function forudvaelgFraLinkOevrigt(){
 }
 forudvaelgFraLinkOevrigt();
 
+// Færdig mail fra olsenpost-skabeloner.js: meddelelser.html?skabelon=maerkedage
+const SKABELON = (window.OLSENPOST_SKABELONER || {})[new URLSearchParams(window.location.search).get("skabelon") || ""] || null;
+if (SKABELON) {
+  document.getElementById("emne").value = SKABELON.emne || "";
+  document.getElementById("tekst-mail").value = SKABELON.tekst || "";
+}
+
 /* ════════ KLADDE (auto-gem, så tekst ikke går tabt ved genindlæsning) ════════ */
 const KLADDE_NOEGLE = "olsenpost_kladde_mail";
 
@@ -826,7 +834,7 @@ window.ryddKladde = function(){
 
 function genskabKladdeHvisIngenLink(){
   const param = new URLSearchParams(window.location.search);
-  if (param.get("husstand") || param.get("emne") || param.get("brev")) return; // et link har altid forrang
+  if (param.get("husstand") || param.get("emne") || param.get("brev") || SKABELON) return; // et link har altid forrang
   try {
     const raa = localStorage.getItem(KLADDE_NOEGLE);
     if (!raa) return;
@@ -861,6 +869,8 @@ function forudvaelgModtagereFraLink(){
   }
   tegnModtagere(alleModtagere, "mail");
   tegnValgte("mail");
+  // En færdig mail til alle: vælg alle medlemmer med mail
+  if (SKABELON && SKABELON.alle && !window.__skabelonValgt) { window.__skabelonValgt = true; vaelgAlleMail(); }
 }
 
 window.vaelgAlleMail = function(){
