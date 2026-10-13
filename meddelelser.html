@@ -198,6 +198,18 @@ try {
       <strong>📮 Mails sendes fra post@olsenklanen.dk</strong>
       Modtageren ser at mailen kommer fra Familieforeningen Olsenklanen — ikke fra din private mail.
     </div>
+    <div class="kort" id="infomail-kort" style="display:none;">
+      <h2>📨 Færdig infomail med billeder</h2>
+      <p style="margin:0 0 10px;">Tekst og billeder ligger <b>inde i selve mailen</b> – der er ingen links, modtageren skal trykke på. Mailen sendes fra post@olsenklanen.dk til alle medlemmer med egen mail.</p>
+      <p style="margin:0 0 10px;"><b>1.</b> Bekræft din PIN-kode øverst på siden. &nbsp; <b>2.</b> Send en prøve til dig selv, og se den i din indbakke. &nbsp; <b>3.</b> Send til alle.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0;">
+        <button type="button" class="knap" id="infomail-prove-knap" onclick="sendInfomail(true)">🧪 Send prøve til mig selv</button>
+        <button type="button" class="knap" id="infomail-alle-knap" onclick="sendInfomail(false)" style="background:#8b1e1e;">📨 Send til alle medlemmer</button>
+      </div>
+      <div class="status" id="infomail-status" style="display:none;"></div>
+      <div style="font-size:13px;color:#666;margin:14px 0 6px;">Sådan ser mailen ud:</div>
+      <div id="infomail-forhaand" style="border:1px solid #ddd;border-radius:8px;max-height:640px;overflow:auto;"></div>
+    </div>
     <div class="kort">
       <h2 id="send-overskrift">Send mail til et eller flere medlemmer</h2>
 
@@ -807,10 +819,72 @@ forudvaelgFraLinkOevrigt();
 
 // Færdig mail fra olsenpost-skabeloner.js: meddelelser.html?skabelon=maerkedage
 const SKABELON = (window.OLSENPOST_SKABELONER || {})[new URLSearchParams(window.location.search).get("skabelon") || ""] || null;
-if (SKABELON) {
+if (SKABELON && !SKABELON.infomail) {
   document.getElementById("emne").value = SKABELON.emne || "";
   document.getElementById("tekst-mail").value = SKABELON.tekst || "";
 }
+
+/* ════════ FÆRDIG INFOMAIL MED BILLEDER (sendes af serveren, som brevkortene) ════════ */
+let infomailData = null;
+function infomailForhaand(data) {
+  const e = s => escHtml(String(s == null ? "" : s));
+  const dele = [`<p style="font-size:19px;margin:0 0 16px;">${e(data.hilsen)}</p>`];
+  (data.afsnit || []).forEach(a => {
+    if (a.type === "p") dele.push(`<p style="margin:0 0 14px;">${e(a.tekst)}</p>`);
+    else if (a.type === "h") dele.push(`<h3 style="color:#2d5016;margin:22px 0 8px;">${e(a.tekst)}</h3>`);
+    else if (a.type === "trin") dele.push(`<div style="margin:0 0 16px;"><p style="margin:0 0 6px;"><b style="background:#2d5016;color:#fff;border-radius:12px;padding:1px 9px;margin-right:6px;">${e(a.nr)}</b>${e(a.tekst)}</p>${a.billede ? `<img src="${e(a.billede)}" alt="" style="display:block;width:100%;max-width:${a.bredde || 552}px;border:1px solid #ddd;border-radius:6px;">` : ""}</div>`);
+    else if (a.type === "liste" || a.type === "nummerliste") { const t = a.type === "liste" ? "ul" : "ol"; dele.push(`<${t} style="margin:0 0 14px;">` + (a.punkter || []).map(x => `<li>${e(x)}</li>`).join("") + `</${t}>`); }
+    else if (a.type === "tip") dele.push(`<p style="background:#fff8e1;border-left:4px solid #b8860b;padding:8px 12px;margin:0 0 14px;">${e(a.tekst)}</p>`);
+  });
+  dele.push(`<p style="margin:18px 0 0;">${(data.slut || []).map(e).join("<br>")}</p>`);
+  return `<div style="background:#f5f1e8;padding:16px;font-family:Georgia,serif;color:#2c3e1f;line-height:1.55;"><div style="max-width:600px;margin:0 auto;background:#fff;padding:20px;">
+    <div style="font-size:13px;color:#666;border-bottom:1px solid #eee;padding-bottom:8px;margin-bottom:14px;"><b>Fra:</b> OlsenKlanen &lt;post@olsenklanen.dk&gt;<br><b>Emne:</b> ${e(data.emne)}</div>
+    ${dele.join("")}</div></div>`;
+}
+if (SKABELON && SKABELON.infomail) {
+  document.getElementById("infomail-kort").style.display = "block";
+  const almindelig = document.getElementById("send-overskrift").closest(".kort");
+  if (almindelig) almindelig.style.display = "none";
+  fetch("infomails/" + encodeURIComponent(SKABELON.infomail) + ".json?t=" + Date.now())
+    .then(r => r.json())
+    .then(d => { infomailData = d; document.getElementById("infomail-forhaand").innerHTML = infomailForhaand(d); })
+    .catch(() => { document.getElementById("infomail-forhaand").textContent = "Kunne ikke hente mailen. Genindlæs siden."; });
+}
+
+window.sendInfomail = async function(prove) {
+  const st = document.getElementById("infomail-status");
+  const visSt = (type, t) => { st.className = "status " + type; st.textContent = t; st.style.display = "block"; };
+  if (!ER_POSTANSVARLIG) { visSt("fejl", "Kun de 5 postansvarlige kan sende infomails."); return; }
+  if (!infomailData) { visSt("fejl", "Mailen er ikke hentet endnu. Vent et øjeblik."); return; }
+  if (!auth.currentUser) { visSt("fejl", "Bekræft din PIN-kode øverst på siden først."); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+  const egen = mitEmail();
+  if (prove && !egen.includes("@")) { visSt("fejl", "Der mangler en mail til prøven."); return; }
+  const antal = new Set(alleModtagere.map(m => String(m.email || "").trim().toLowerCase()).filter(x => x.includes("@"))).size;
+  if (!prove && !confirm("Vil du sende infomailen til alle medlemmer med mail (ca. " + antal + ") nu?")) return;
+  const knap = document.getElementById(prove ? "infomail-prove-knap" : "infomail-alle-knap");
+  knap.disabled = true;
+  try {
+    const ref = await addDoc(collection(db, "olsenpost_mail"), {
+      type: "infomail", status: "afventer", skabelon: SKABELON.infomail,
+      fra_nr: MIT_NR, fra_navn: MIT_NAVN, fra_email: egen,
+      til_nr: "", til_navn: prove ? "Prøve til " + egen : "Alle medlemmer med egen mail", til_email: prove ? egen : "",
+      prove: !!prove, emne: infomailData.emne || "", tekst: "Infomail: " + (infomailData.emne || ""),
+      sendt: serverTimestamp(), sendt_lokal: Date.now(),
+      besvaret: false, besvaret_af: null, besvaret_tid: null
+    });
+    visSt("ok", "✅ " + (prove ? "Prøven" : "Infomailen") + " er sat i kø. Den bliver sendt inden for 5 minutter …");
+    onSnapshot(doc(db, "olsenpost_mail", ref.id), s => {
+      const d = s.data() || {};
+      if (d.status === "sender") visSt("ok", "📨 Sender nu …");
+      if (d.status === "sendt") { visSt("ok", prove ? "✅ Prøven er sendt til " + egen + ". Se din indbakke." : "✅ Infomailen er sendt til " + (d.antal_sendt || 0) + " medlemmer." + (d.antal_fejl ? " " + d.antal_fejl + " kunne ikke sendes." : "")); knap.disabled = false; }
+      if (d.status === "fejl") { visSt("fejl", "Mailen kunne ikke sendes: " + (d.mail_fejl || "ukendt fejl")); knap.disabled = false; }
+    });
+  } catch (e) {
+    console.log("Infomail fejlede:", e);
+    visSt("fejl", "Det lykkedes ikke. Har du bekræftet din PIN-kode? Prøv igen.");
+    knap.disabled = false;
+  }
+};
 
 /* ════════ KLADDE (auto-gem, så tekst ikke går tabt ved genindlæsning) ════════ */
 const KLADDE_NOEGLE = "olsenpost_kladde_mail";

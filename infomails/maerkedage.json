@@ -1,0 +1,32 @@
+{
+  "emne": "Se familiens mærkedage mange år frem – og hjælp med at gøre listen komplet",
+  "hilsen": "Kære alle i OlsenKlanen",
+  "afsnit": [
+    { "type": "p", "tekst": "På olsenklanen.dk kan I nu se familiens kommende mærkedage helt frem til 2038: runde fødselsdage, bryllupsdage, konfirmationer, studenter, svendeprøver, nye job og familieskovturen." },
+    { "type": "p", "tekst": "Listen laves ud fra det, der står i Medlemskartoteket. Derfor vil vi bede jer om at kigge efter jeres egen familie og skrive det ind, der mangler." },
+    { "type": "h", "tekst": "Sådan ser du overblikket" },
+    { "type": "trin", "nr": 1, "tekst": "Log ind på olsenklanen.dk. Tryk på »Mærkedage« i menuen.", "billede": "billeder/vejledning/maerkedage-1-forside-maerkedage.png", "bredde": 260 },
+    { "type": "trin", "nr": 2, "tekst": "Tryk på fanen »Kommende mærkedage«.", "billede": "billeder/vejledning/maerkedage-2-fanen-kommende.png" },
+    { "type": "trin", "nr": 3, "tekst": "Nu ser du de to næste år. Øverst står en række farver – én for hver slags mærkedag. Tallet i farven viser, hvor mange der er frem til 2038. Den grønne boks viser alle lagt sammen.", "billede": "billeder/vejledning/maerkedage-3-farver-og-antal.png" },
+    { "type": "trin", "nr": 4, "tekst": "Vil du se længere frem? Tryk på boksen »Frem i tiden«. (Navnene er sløret på billedet.)", "billede": "billeder/vejledning/maerkedage-5-frem-i-tiden.png" },
+    { "type": "trin", "nr": 5, "tekst": "Du kan også trykke på en farve, fx »50 år«. Så ser du alle, der fylder 50, frem til 2038. Tryk på »Vis alle mærkedage« for at komme tilbage.", "billede": "billeder/vejledning/maerkedage-4-eksempel-50-aar.png" },
+    { "type": "h", "tekst": "Find det, der mangler" },
+    { "type": "liste", "punkter": [
+      "Står jeres runde fødselsdage der – og er datoen rigtig?",
+      "Står jeres sølv-, guld- eller diamantbryllup der? Hvis ikke, mangler bryllupsdagen.",
+      "Står børnenes og børnebørnenes konfirmation der?",
+      "Er der en student, en svendeprøve, en afsluttende eksamen eller et nyt job på vej?"
+    ] },
+    { "type": "h", "tekst": "Sådan skriver du det ind" },
+    { "type": "nummerliste", "punkter": [
+      "Gå ind i Medlemskartoteket, og find din familie.",
+      "Tryk på »Rediger«.",
+      "Ret fødselsdatoer, hvis de er forkerte.",
+      "Tryk på »+ Begivenhed«. Vælg fx Bryllupsdag, Konfirmation, Student, Udlært, Afsluttende eksamen eller Nyt job. Skriv navn og dato.",
+      "Tryk på »Gem rettelse« – og til sidst på »Godkend medlemsdata«."
+    ] },
+    { "type": "tip", "tekst": "Tip: Skriv bryllupsdagen med selve datoen for brylluppet. Så regner siden selv kobber-, sølv-, guld- og diamantbryllup ud." },
+    { "type": "p", "tekst": "Der er mange flere fine ting på vej i de næste måneder." }
+  ],
+  "slut": ["Stor hilsen", "Carsten", "Departementet for fut og fart"]
+}
