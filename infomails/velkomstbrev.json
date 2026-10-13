@@ -1,0 +1,98 @@
+{
+  "emne": "Velkommen til OlsenKlanen – familiens egen hjemmeside",
+  "hilsen": "Kære familie,",
+  "afsnit": [
+    {
+      "type": "p",
+      "tekst": "Vi har bygget noget, vi er stolte af, og som vi gerne vil dele med jer: OlsenKlanen — vores helt egen familieside. Et sted, hvor vi kan holde sammen på det hele: hinandens navne og fødselsdage, billeder gennem årene, familiehistorien, og en videofon hvor vi kan se og snakke med hinanden — uanset hvor langt der er imellem os."
+    },
+    {
+      "type": "h",
+      "tekst": "Sådan kommer du ind"
+    },
+    {
+      "type": "p",
+      "tekst": "Adressen er: www.olsenklanen.dk\nSkriv adressen i din browser (Chrome, Safari, Edge — det du nu bruger). Så møder du \"hoveddøren\" med vores grantræ-logo."
+    },
+    {
+      "type": "nummerliste",
+      "punkter": [
+        "Skriv dit medlemsnummer i øverste felt. (Du får dit nummer og din PIN-kode af OlsenBanden.)",
+        "Skriv din PIN-kode i næste felt.",
+        "Lad fluebenet i \"Husk mig på denne computer\" blive stående — så husker siden dit nummer næste gang. (Din PIN gemmes aldrig — den skal du selv taste. Det er for din sikkerheds skyld.)",
+        "Tryk \"Log ind\". Velkommen indenfor!"
+      ]
+    },
+    {
+      "type": "h",
+      "tekst": "Læg OlsenKlanen som et ikon — så du nemt kan finde den igen"
+    },
+    {
+      "type": "p",
+      "tekst": "Du behøver ikke huske adressen hver gang. Du kan lægge OlsenKlanen som et lille ikon på din skærm — ligesom en app. Så er det bare ét klik næste gang."
+    },
+    {
+      "type": "p",
+      "tekst": "På computer (Chrome): Gå ind på login-siden. Kig oppe i adresselinjen til højre — der dukker et lille ikon op (en skærm med en pil ned, eller tre prikker → \"Installer\"). Tryk på det og vælg \"Installer\"."
+    },
+    {
+      "type": "p",
+      "tekst": "På telefon eller tablet: Åbn login-siden i browseren. Tryk på \"Del\"-knappen (firkant med pil op) eller menuen med tre prikker. Vælg \"Føj til hjemmeskærm\"."
+    },
+    {
+      "type": "p",
+      "tekst": "Finder du ikke \"Installer\"-knappen? Det er helt fint — så kan du bare sætte siden som bogmærke (tryk på stjernen i adresselinjen)."
+    },
+    {
+      "type": "h",
+      "tekst": "Hvad kan OlsenKlanen?"
+    },
+    {
+      "type": "liste",
+      "punkter": [
+        "Se familiens medlemskartotek — navne, fødselsdage og mærkedage.",
+        "Kigge i billedarkivet og opleve årene gennem familiens fotos.",
+        "Bruge videofonen — gå ind i et af møderummene og se og snak med hinanden, eller invitér et bestemt familiemedlem ind.",
+        "Lytte til familiens musikarkiv.",
+        "Læse om familiens historie."
+      ]
+    },
+    {
+      "type": "h",
+      "tekst": "Sig ja til at være med — på dit eget medlemskort"
+    },
+    {
+      "type": "p",
+      "tekst": "Når du er logget ind, vil vi bede dig om at gå ind på dit eget medlemskort og bekræfte, at du er med i klanen. På den måde kan vi se, hvem der er kommet godt indenfor — og hvem vi måske skal hjælpe lidt mere på vej, så ingen i familien bliver glemt."
+    },
+    {
+      "type": "h",
+      "tekst": "Dine oplysninger — og din PIN-kode"
+    },
+    {
+      "type": "p",
+      "tekst": "Din PIN-kode er din personlige nøgle. Del den aldrig med andre, og skriv den ikke et sted, hvor andre kan se den. Har du brug for at ændre dine oplysninger (telefon, mail, adresse), så kan det gøres direkte på dit medlemskort, når du er logget ind."
+    },
+    {
+      "type": "p",
+      "tekst": "Kender du ikke dit nummer eller din PIN-kode? Spørg OlsenBanden — så hjælper vi dig trygt på vej."
+    },
+    {
+      "type": "h",
+      "tekst": "Vi glæder os til at se dig"
+    },
+    {
+      "type": "p",
+      "tekst": "OlsenKlanen er bygget med kærlighed til familien og et ønske om, at vi holder fast i hinanden — også på tværs af afstande og generationer. Vi håber, du vil tage godt imod det."
+    },
+    {
+      "type": "p",
+      "tekst": "Har du spørgsmål, eller går du i stå, så ring eller skriv til en af os i OlsenBanden. Vi hjælper dig gerne."
+    }
+  ],
+  "slut": [
+    "Mange varme hilsner",
+    "OlsenBanden",
+    "Kurt · Karin · Tommy · Sanne · Carsten"
+  ]
+}
