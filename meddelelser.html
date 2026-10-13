@@ -187,6 +187,7 @@ try {
     <button class="fane" id="fane-laest" onclick="visFane('laest')">👁 Læste mails <span class="badge graa" id="badge-laest" style="display:none">0</span></button>
     <button class="fane" id="fane-sendt" onclick="visFane('sendt')">📤 Sendte mails</button>
     <button class="fane" id="fane-arkiv" onclick="visFane('arkiv')" style="display:none">🗄️ Arkiv</button>
+    <button class="fane" id="fane-ikkeleveret" onclick="visFane('ikkeleveret')" style="display:none">⚠️ Ikke leveret <span class="badge" id="badge-ikkeleveret" style="display:none">0</span></button>
     <button class="fane" id="fane-info" onclick="visFane('info')">📚 Informationer</button>
     <button class="fane" id="fane-intern" onclick="visFane('intern')">💬 Intern besked</button>
     <button class="fane" id="fane-vagt" onclick="visFane('vagt')" style="display:none">📅 Postvagt</button>
@@ -291,6 +292,15 @@ try {
   </div>
 
   <!-- ════════ INTERN BESKED (det eksisterende system) ════════ -->
+  <div id="omr-ikkeleveret" style="display:none">
+    <div class="kort">
+      <h2>⚠️ Mails, der ikke kunne leveres</h2>
+      <p style="margin:0 0 10px;">Når en mail fra post@olsenklanen.dk ikke kan komme frem, sender modtagerens system en besked tilbage. Her er de samlet <b>pr. mailadresse</b> – med hvem det er, hvorfor og hvornår. Listen opdaterer sig selv.</p>
+      <p style="margin:0 0 10px;font-size:14px;color:#555;">Ret adressen i Medlemskartoteket (eller find en ny mail). Står adressen ikke længere i kartoteket, er den markeret som rettet. Tryk »✓ Håndteret«, når I har taget stilling – så flyttes den ned under »Håndteret«.</p>
+      <div id="ikkeleveret-liste"><div class="indlaeser">Henter …</div></div>
+    </div>
+  </div>
+
   <div id="omr-info" style="display:none">
     <div class="kort">
       <h2>📚 Informationer til hele OlsenKlanen</h2>
@@ -479,6 +489,7 @@ if (ER_POSTANSVARLIG) {
   document.getElementById("admin-chip").style.display = "inline";
   document.getElementById("fane-vagt").style.display = "inline-block";
   document.getElementById("fane-arkiv").style.display = "inline-block";
+  document.getElementById("fane-ikkeleveret").style.display = "inline-block";
   document.getElementById("pin-bekraeft-boks").style.display = "block";
 }
 
@@ -1001,6 +1012,70 @@ window.bedOmInfo = async function(id){
   } catch(e) { infoStatus("fejl", "Det lykkedes ikke. Prøv igen."); }
 };
 
+/* ════════ IKKE LEVERET (tilbagemeldinger fra modtagernes mailsystemer) ════════
+   Tilbagemeldingerne ligger i olsenpost_indkomne (fra postmaster/mailer-daemon).
+   Her samles de pr. mailadresse med grund, medlem og datoer. "Håndteret" gemmes i olsenpost/ikke_leveret. */
+let ikkeLeveretStatus = {};
+let ikkeLeveretStatusHentet = false;
+const erTilbagemelding = m => /postmaster|mailer-daemon/i.test(String(m.fra_email || "")) || /undeliver|delivery status|returned mail|mail delivery failed|ikke leveret|kunne ikke leveres/i.test(String(m.emne || ""));
+function tilbagemeldingInfo(m){
+  const t = String(m.tekst || "");
+  let adr = (t.match(/Final-Recipient:\s*rfc822;\s*([^\s<>]+@[^\s<>]+)/i) || [])[1];
+  if (!adr) adr = (t.match(/<([^<>@\s]+@[^<>\s]+)>/g) || []).map(x => x.slice(1, -1)).find(a => !/olsenklanen|simply\.com|mailer-daemon|postmaster/i.test(a));
+  if (!adr) adr = (t.match(/[\w.+\-]+@[\w\-]+(\.[\w\-]+)+/g) || []).find(a => !/olsenklanen|simply\.com|mailer-daemon|postmaster/i.test(a));
+  let grund = "Kunne ikke leveres";
+  if (/host or domain name not found|nullmx|does not accept mail|domain .* not found|no mx/i.test(t)) grund = "Domænet findes ikke eller tager ikke imod mail (tastefejl i adressen?)";
+  else if (/5\.1\.1|does not exist|user unknown|no such user|unknown user|recipient address rejected|mailbox unavailable|invalid recipient/i.test(t)) grund = "Mailadressen findes ikke (mere)";
+  else if (/5\.2\.2|mailbox full|quota|over quota/i.test(t)) grund = "Postkassen er fuld";
+  else if (/5\.7\.\d+|unauthenticated|blocked|spam|policy/i.test(t)) grund = "Afvist af modtagerens system (spamfilter / afsender ikke godkendt)";
+  return { adr: String(adr || "").trim().toLowerCase(), grund };
+}
+async function tegnIkkeLeveret(){
+  const el = document.getElementById("ikkeleveret-liste");
+  if (!el || !ER_POSTANSVARLIG) return;
+  if (!ikkeLeveretStatusHentet) {
+    ikkeLeveretStatusHentet = true;
+    try { const sn = await getDoc(doc(db, "olsenpost", "ikke_leveret")); if (sn.exists()) ikkeLeveretStatus = sn.data().liste || {}; } catch(e) { console.log("Ikke-leveret-status:", e); }
+  }
+  const pr = {};
+  indbakkeData.filter(erTilbagemelding).forEach(m => {
+    const { adr, grund } = tilbagemeldingInfo(m);
+    const key = adr || "(ukendt adresse)";
+    const tid = tidMs(m.modtaget, m.modtaget_lokal);
+    const x = pr[key] = pr[key] || { adr: key, grund, antal: 0, foerste: tid, sidste: tid };
+    x.antal++; x.foerste = Math.min(x.foerste, tid);
+    if (tid >= x.sidste) { x.sidste = tid; x.grund = grund; }
+  });
+  const rows = Object.values(pr).map(x => {
+    const medlem = alleModtagere.filter(mm => String(mm.email || "").toLowerCase().split(/[\/;,\s]+/).includes(x.adr));
+    const st = ikkeLeveretStatus[x.adr] || {};
+    const rettet = !medlem.length;
+    return { ...x, medlem, st, rettet, aaben: !st.haandteret && !(rettet && st.set_rettet) };
+  }).sort((a, b) => b.sidste - a.sidste);
+  const aabne = rows.filter(r => !r.st.haandteret), lukkede = rows.filter(r => r.st.haandteret);
+  const badge = document.getElementById("badge-ikkeleveret");
+  const antalAabne = aabne.filter(r => !r.rettet).length;
+  if (badge) { badge.textContent = antalAabne; badge.style.display = antalAabne ? "inline-block" : "none"; }
+  const d = ms => ms ? new Date(ms).toLocaleDateString("da-DK", { day: "numeric", month: "long", year: "numeric" }) : "";
+  const rad = r => `<div style="border:1px solid ${r.st.haandteret ? "#ddd" : r.rettet ? "#bcd9b0" : "#e0a0a0"};border-radius:8px;padding:10px 12px;margin:8px 0;background:${r.st.haandteret ? "#fafafa" : r.rettet ? "#f2f9ee" : "#fff6f6"};">
+      <div style="font-weight:bold;">${escHtml(r.adr)}</div>
+      <div style="font-size:14px;margin:2px 0;">${r.medlem.length ? "👤 " + r.medlem.map(mm => escHtml(mm.navn) + " (nr. " + escHtml(mm.nr) + ")").join(", ") : "✅ Står ikke (længere) i Medlemskartoteket" + (/@/.test(r.adr) ? " – er den rettet, eller er det fx en videresendelse hos Simply?" : "")}</div>
+      <div style="font-size:14px;color:#8b1e1e;">⚠️ ${escHtml(r.grund)}</div>
+      <div style="font-size:13px;color:#666;">${r.antal} gang${r.antal === 1 ? "" : "e"} · første ${escHtml(d(r.foerste))} · seneste ${escHtml(d(r.sidste))}${r.st.haandteret ? " · håndteret af " + escHtml(r.st.af || "") + " " + escHtml(r.st.dato || "") : ""}</div>
+      <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
+        ${r.medlem.length ? `<a class="knap lille" href="medlemskartotek.html" target="_blank">✏️ Ret i Medlemskartoteket</a>` : ""}
+        <button type="button" class="knap lille grå" onclick="markerIkkeLeveret('${enc(r.adr)}', ${r.st.haandteret ? "false" : "true"})">${r.st.haandteret ? "↺ Sæt som åben igen" : "✓ Håndteret"}</button>
+      </div>
+    </div>`;
+  el.innerHTML = (aabne.length ? aabne.map(rad).join("") : '<div class="indlaeser">🎉 Ingen åbne problemer.</div>')
+    + (lukkede.length ? `<h3 style="color:#2d5016;margin-top:18px;">Håndteret</h3>` + lukkede.map(rad).join("") : "");
+}
+window.markerIkkeLeveret = async function(adr, haandteret){
+  ikkeLeveretStatus[adr] = haandteret ? { haandteret: true, af: MIT_NAVN, dato: new Date().toLocaleDateString("da-DK") } : {};
+  try { await setDoc(doc(db, "olsenpost", "ikke_leveret"), { liste: ikkeLeveretStatus }); } catch(e) { alert("Kunne ikke gemme. Prøv igen."); }
+  tegnIkkeLeveret();
+};
+
 /* ════════ KLADDE (auto-gem, så tekst ikke går tabt ved genindlæsning) ════════ */
 const KLADDE_NOEGLE = "olsenpost_kladde_mail";
 
@@ -1059,6 +1134,7 @@ function forudvaelgModtagereFraLink(){
   tegnModtagere(alleModtagere, "mail");
   tegnValgte("mail");
   if (document.getElementById("omr-info").style.display === "block") tegnInformationer();   // nu med medlemslisten
+  if (ER_POSTANSVARLIG && indbakkeData.length) tegnIkkeLeveret();
   // En færdig mail til alle: vælg alle medlemmer med mail
   if (SKABELON && SKABELON.alle && !window.__skabelonValgt) { window.__skabelonValgt = true; vaelgAlleMail(); }
 }
@@ -1554,6 +1630,7 @@ function lytIndbakke(){
     if (document.getElementById("omr-indbakke").style.display !== "none"
         || document.getElementById("omr-laest").style.display !== "none") tegnIndbakke();
     if (document.getElementById("omr-arkiv").style.display !== "none") tegnArkiv();
+    if (ER_POSTANSVARLIG) tegnIkkeLeveret();
   }, e => console.log("Indbakke-fejl:", e));
 }
 
@@ -1991,7 +2068,7 @@ window.sendIntern = async function(){
 
 /* ════════ FANER ════════ */
 window.visFane = function(navn){
-  ["send","indbakke","laest","sendt","arkiv","info","intern","vagt","hjaelp"].forEach(f => {
+  ["send","indbakke","laest","sendt","arkiv","ikkeleveret","info","intern","vagt","hjaelp"].forEach(f => {
     document.getElementById("omr-"+f).style.display = (f===navn)?"block":"none";
     document.getElementById("fane-"+f).classList.toggle("aktiv", f===navn);
   });
@@ -2001,6 +2078,7 @@ window.visFane = function(navn){
   if (navn === "intern") tegnIntern();
   if (navn === "vagt") tegnVagtplan();
   if (navn === "info") tegnInformationer();
+  if (navn === "ikkeleveret") tegnIkkeLeveret();
 };
 
 /* ════════ POSTVAGT ════════ */
