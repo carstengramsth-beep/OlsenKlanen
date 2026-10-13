@@ -39,6 +39,37 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .event-extra { color: #888; font-size: 13px; }
 .event.milestone { background: #fff8e1; }
 .event.milestone .event-extra { color: #c89e3c; font-weight: bold; }
+/* Farvemærker på kommende mærkedage (højre side) */
+.mk { display: inline-block; padding: 4px 12px; border-radius: 14px; font-weight: bold; font-size: 13px; color: #fff; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,.18); text-shadow: 0 1px 1px rgba(0,0,0,.25); }
+.mk-besked { display: block; color: #8a7a40; font-weight: normal; font-size: 12.5px; margin-top: 4px; text-align: right; }
+.mk-kobber  { background: linear-gradient(135deg, #8c4a1c, #d98b4f 45%, #f0b27a 55%, #a35a26); }
+.mk-soelv   { background: linear-gradient(135deg, #8e959b, #f4f6f8 48%, #d5d9dd 55%, #9aa1a7); color: #2f3439; text-shadow: none; }
+.mk-guld    { background: linear-gradient(135deg, #a8780a, #ffe27a 48%, #f5c842 55%, #b8860b); color: #4a3500; text-shadow: none; }
+.mk-diamant { background: linear-gradient(135deg, #dff4ff, #ffffff 40%, #bfe9ff 60%, #e9f8ff); color: #0b4f6c; border: 1px solid #7cc7e8; text-shadow: none; }
+.mk-tin     { background: #7f939f; }
+.mk-perle   { background: linear-gradient(135deg, #f7f2e8, #ffffff, #ece4d4); color: #5a5040; border: 1px solid #d8ccb4; text-shadow: none; }
+.mk-rubin   { background: #9b111e; }
+.mk-jern    { background: #4b4f54; }
+.mk-platin  { background: linear-gradient(135deg, #c9cbcd, #f2f2f2, #b8babc); color: #333; text-shadow: none; }
+.mk-a18  { background: #2e86de; }
+.mk-a30  { background: #10ac84; }
+.mk-a40  { background: #e84a4a; }
+.mk-a50  { background: #8e44ad; }
+.mk-a60  { background: #e67e22; }
+.mk-a70  { background: #16a085; }
+.mk-a75  { background: #c0392b; }
+.mk-a80  { background: #2c3e50; }
+.mk-a85  { background: #6d4c41; }
+.mk-a90  { background: #d35400; }
+.mk-a95  { background: #5f6b73; }
+.mk-a100 { background: linear-gradient(90deg, #e74c3c, #f39c12, #27ae60, #2980b9, #8e44ad); }
+.mk-konf    { background: #fff; color: #1e3a8a; border: 2px solid #1e3a8a; text-shadow: none; }
+.mk-bryllup { background: #fff0f4; color: #b0102c; border: 1px solid #e8a0b0; text-shadow: none; }
+.mk-forklaring .mk { cursor: pointer; }
+.mk-forklaring .mk.valgt { outline: 3px solid #2d5016; outline-offset: 2px; }
+.mk-andet   { background: #c89e3c; }
+.mk-forklaring { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
+.mk-forklaring .mk { font-size: 12px; padding: 3px 9px; }
 .search-box { width: 100%; padding: 10px 14px; font-size: 15px; border: 1px solid #c4b896; border-radius: 4px; margin-bottom: 16px; background: #fff; }
 .person-row { background: #fff; padding: 10px 16px; margin-bottom: 4px; border-radius: 4px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); flex-wrap: wrap; }
 .person-num { background: #2d5016; color: #f5e6a8; padding: 3px 9px; border-radius: 3px; font-size: 12px; font-weight: bold; min-width: 50px; text-align: center; font-family: monospace; }
@@ -282,6 +313,27 @@ const BRYLLUP_NAVN = { 10: 'Tinbryllup (10 år)', 25: '🥂 Sølvbryllup (25 år
   50: '💍 Guldbryllup (50 år)', 60: '💎 Diamantbryllup (60 år)', 65: 'Jernbryllup (65 år)', 70: 'Platinbryllup (70 år)' };
 const BEGI_NAVN = { konfirmation: '🙏 Konfirmation', bryllupsdag: '💐 Bryllupsdag', 'sølvbryllup': '🥂 Sølvbryllup (25 år)',
   guldbryllup: '💍 Guldbryllup (50 år)', diamantbryllup: '💎 Diamantbryllup (60 år)', 'jubilæum': '🎉 Jubilæum', andet: '📅 Mærkedag' };
+// Farve (CSS-klasse .mk-…) og tekst for hver slags mærkedag
+const BRYLLUP_SLAGS = { 10: 'tin', 25: 'soelv', 30: 'perle', 40: 'rubin', 50: 'guld', 60: 'diamant', 65: 'jern', 70: 'platin' };
+const BEGI_SLAGS = { konfirmation: 'konf', bryllupsdag: 'bryllup', 'sølvbryllup': 'soelv', guldbryllup: 'guld', diamantbryllup: 'diamant', kobberbryllup: 'kobber' };
+const MAERKE_TEKST = {
+  kobber: 'Kobberbryllup', soelv: 'Sølvbryllup', guld: 'Guldbryllup', diamant: '✦ Diamantbryllup ✧',
+  tin: 'Tinbryllup', perle: 'Perlebryllup', rubin: 'Rubinbryllup', jern: 'Jernbryllup', platin: 'Platinbryllup',
+  konf: '✝ Konfirmation ✝', bryllup: 'Bryllup'
+};
+const HJERTER = '<span style="color:#d0021b;letter-spacing:-2px;margin:0 5px;">♥♥</span>';
+function maerkeHtml(x) {
+  const slags = x.slags || 'andet';
+  let tekst = MAERKE_TEKST[slags];
+  if (!tekst && slags[0] === 'a' && /^a\d+$/.test(slags)) tekst = slags.slice(1) + ' år';
+  if (!tekst) tekst = x.hvad;
+  // Ekstra oplysning (fx "gift 1966") efter mærket
+  const gift = (String(x.hvad).match(/gift \d{4}/) || [''])[0];
+  const vist = slags === 'bryllup' ? HJERTER + ' Bryllup ' + HJERTER : escN(tekst);
+  return `<span class="mk mk-${slags}">${vist}</span>${gift ? ' <span style="color:#888;font-weight:normal;">' + gift + '</span>' : ''}`;
+}
+BEGI_NAVN.kobberbryllup = 'Kobberbryllup (12½ år)';
+
 function escN(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 function maerkedageFor(aar) {
@@ -291,7 +343,7 @@ function maerkedageFor(aar) {
     const d = parseDato(p.fdato);
     if (!d) return;
     const alder = aar - d.aar;
-    if (RUNDE_ALDRE.includes(alder)) liste.push({ mnd: d.mnd, dag: d.dag, navn: p.fuldtNavn || (p.fornavn + ' ' + p.efternavn), hvad: '🎉 fylder ' + alder + ' år', nr: p.husstandsNr });
+    if (RUNDE_ALDRE.includes(alder)) liste.push({ mnd: d.mnd, dag: d.dag, navn: p.fuldtNavn || (p.fornavn + ' ' + p.efternavn), hvad: '🎉 fylder ' + alder + ' år', nr: p.husstandsNr, slags: 'a' + alder });
   });
   // 2) Begivenheder fra husstandene
   alleHusstande.forEach(h => {
@@ -299,15 +351,21 @@ function maerkedageFor(aar) {
     (h.begivenheder || []).forEach(b => {
       const d = parseDato(b.dato);
       if (!d) return;
-      const hvem = (b.beskrivelse || '').trim() || husNavn;
+      // Navnet er altid husstanden; beskrivelsen (fx "morgenkaffe kl. 10") står som oplysning
+      const hvem = husNavn;
+      const besk = [(b.beskrivelse || '').trim(), (b.besked || '').trim()].filter(Boolean).join(' — ');
       if (b.type === 'bryllupsdag' && d.aar < aar) {
         // Bryllupsdatoen: vis kun, når der er gået et rundt antal år
         const n = aar - d.aar;
-        if (BRYLLUP_NAVN[n]) liste.push({ mnd: d.mnd, dag: d.dag, navn: hvem, hvad: BRYLLUP_NAVN[n] + ' · gift ' + d.aar, nr: h.nr });
+        if (BRYLLUP_NAVN[n]) liste.push({ mnd: d.mnd, dag: d.dag, navn: hvem, hvad: BRYLLUP_NAVN[n] + ' · gift ' + d.aar, nr: h.nr, slags: BRYLLUP_SLAGS[n] });
+        // Kobberbryllup: 12½ år efter brylluppet
+        let km = d.mnd + 6, ka = d.aar + 12;
+        if (km > 12) { km -= 12; ka++; }
+        if (ka === aar) liste.push({ mnd: km, dag: Math.min(d.dag, new Date(aar, km, 0).getDate()), navn: hvem, hvad: 'Kobberbryllup (12½ år) · gift ' + d.aar, nr: h.nr, slags: 'kobber' });
         return;
       }
       if (d.aar !== aar) return;
-      liste.push({ mnd: d.mnd, dag: d.dag, navn: hvem, hvad: BEGI_NAVN[b.type] || ('📅 ' + (b.type || 'Mærkedag')), nr: h.nr, besked: b.besked });
+      liste.push({ mnd: d.mnd, dag: d.dag, navn: hvem, hvad: BEGI_NAVN[b.type] || ('📅 ' + (b.type || 'Mærkedag')), nr: h.nr, besked: besk, slags: BEGI_SLAGS[b.type] || 'andet' });
     });
   });
   // 3) Skovturen — og markér mærkedage, der falder samme dage som skovturen
@@ -339,7 +397,7 @@ function maerkedagRad(x) {
   return `<div class="event milestone"${x.sammenfald ? ' style="border-left:4px solid #c0392b;"' : ''}>
       <div class="event-date">${x.dag}. ${MAANEDER[x.mnd-1].substr(0, 3)}</div>
       <div class="event-name">${escN(x.navn)} <span style="color:#999;font-size:12px;">(nr. ${escN(x.nr)})</span></div>
-      <div class="event-extra">${escN(x.hvad)}${x.besked ? ' — 💬 ' + escN(x.besked) : ''}${x.sammenfald ? ' <span style="color:#c0392b;">· ⚠️ samme dag som skovturen</span>' : ''}</div>
+      <div class="event-extra" style="text-align:right;max-width:55%;">${maerkeHtml(x)}${x.sammenfald ? ' <span style="color:#c0392b;">⚠️ samme dag som skovturen</span>' : ''}${x.besked ? '<span class="mk-besked">💬 ' + escN(x.besked) + '</span>' : ''}</div>
     </div>`;
 }
 
@@ -357,6 +415,13 @@ function skovturLinje(aar, liste) {
   return `<div style="background:#e8f2e0;border-left:4px solid #2d5016;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:14px;color:#2d4a10;">🌳 <b>Skovtur ${aar}: ${escN(st.datoer)}${st.sted ? ' · ' + escN(st.sted) : ''}</b><br>${tekst}</div>`;
 }
 
+let valgtSlags = null;   // valgt farve i "Kommende mærkedage" (fx 'a50')
+window.vaelgSlags = function(k) {
+  valgtSlags = (k && k !== valgtSlags) ? k : null;
+  byggNaesteAar();
+  document.getElementById('naeste-content').scrollIntoView({ behavior: 'smooth' });
+};
+
 function byggNaesteAar() {
   const foerste = new Date().getFullYear() + 1;
   const aarene = [foerste, foerste + 1];
@@ -364,7 +429,29 @@ function byggNaesteAar() {
     <b>Udvalgte mærkedage i ${aarene.join(' og ')}</b> — så alle kan nå at få dem skrevet ind og rettet.<br>
     Her står kun: runde fødselsdage (${RUNDE_ALDRE.join(', ')} år), bryllupsdage med runde år og begivenheder med en dato i ${aarene.join(' eller ')}, fx konfirmation.<br>
     🌳 Skovturen står med i grønt. Falder en mærkedag samme dage som skovturen, er den markeret med ⚠️.<br>
+    <div class="mk-forklaring">${['a18','a30','a40','a50','a60','a70','a75','a80','a85','a90','a95','a100'].map(k => '<span class="mk mk-' + k + (valgtSlags === k ? ' valgt' : '') + '" onclick="vaelgSlags(\'' + k + '\')" title="Tryk for at se alle, der fylder ' + k.slice(1) + ' år frem i tiden">' + k.slice(1) + ' år</span>').join('')}</div>
+    <div class="mk-forklaring">${['tin','kobber','soelv','perle','rubin','guld','diamant','jern','platin','konf','bryllup'].map(k => '<span class="mk mk-' + k + (valgtSlags === k ? ' valgt' : '') + '" onclick="vaelgSlags(\'' + k + '\')" title="Tryk for at se alle frem i tiden">' + (k === 'bryllup' ? HJERTER + ' Bryllup ' + HJERTER : MAERKE_TEKST[k]) + '</span>').join('')}</div>
+    <div style="font-size:13px;margin-bottom:6px;">👆 Tryk på en farve for at se alle af den slags de næste ${FREM_ANTAL_AAR + 2} år.</div>
     Mangler en mærkedag? Skriv den ind som "Begivenhed" på familiens kort i <a href="medlemskartotek.html" style="color:#2d5016;font-weight:bold;">Medlemskartoteket</a>. Bryllupsdage skrives ind som "Bryllupsdag" med selve bryllupsdatoen.</div>`;
+  if (valgtSlags) {
+    // Overblik over én slags (fx alle der fylder 50) — de næste år
+    const tekst = MAERKE_TEKST[valgtSlags] || (valgtSlags.slice(1) + ' år');
+    let fundne = [];
+    for (let aar = foerste; aar <= foerste + FREM_ANTAL_AAR + 1; aar++)
+      maerkedageFor(aar).filter(x => x.slags === valgtSlags).forEach(x => fundne.push({ ...x, aar }));
+    html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0;">
+      <h2 style="color:#2d5016;margin:0;">Overblik: <span class="mk mk-${valgtSlags}" style="font-size:16px;">${valgtSlags === 'bryllup' ? HJERTER + ' Bryllup ' + HJERTER : escN(tekst)}</span> ${foerste}–${foerste + FREM_ANTAL_AAR + 1} (${fundne.length})</h2>
+      <button onclick="vaelgSlags(null)" style="background:#2d5016;color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-weight:bold;">← Vis alle mærkedage</button></div>`;
+    if (!fundne.length) html += '<div class="loading-besked">Ingen fundet i de år.</div>';
+    let sidsteAar = 0;
+    fundne.forEach(x => {
+      if (x.aar !== sidsteAar) { if (sidsteAar) html += '</div>'; html += `<div class="month"><div class="month-title">${x.aar}</div>`; sidsteAar = x.aar; }
+      html += maerkedagRad(x);
+    });
+    if (sidsteAar) html += '</div>';
+    document.getElementById('naeste-content').innerHTML = html;
+    return;
+  }
   aarene.forEach(aar => {
     const liste = maerkedageFor(aar);
     const antal = liste.filter(x => !x.skovtur).length;
