@@ -450,13 +450,21 @@ window.vaelgSlags = function(k) {
 function byggNaesteAar() {
   const foerste = new Date().getFullYear() + 1;
   const aarene = [foerste, foerste + 1];
+  const sidste = foerste + FREM_ANTAL_AAR + 1;
+  // Tæl alle mærkedage i hele oversigten (de næste 12 år), pr. slags og i alt
+  const antal = {};
+  let iAlt = 0;
+  for (let aar = foerste; aar <= sidste; aar++)
+    maerkedageFor(aar).forEach(x => { const k = x.slags || 'andet'; antal[k] = (antal[k] || 0) + 1; iAlt++; });
+  const tal = k => '<span style="display:inline-block;margin-left:5px;background:rgba(0,0,0,.22);color:#fff;border-radius:9px;padding:0 6px;font-size:11px;text-shadow:none;">' + (antal[k] || 0) + '</span>';
   let html = `<div style="background:#fff8e1;border-left:4px solid #b8860b;padding:10px 14px;border-radius:4px;margin-bottom:16px;color:#5a4a10;font-size:14px;line-height:1.5;">
     <b>Udvalgte mærkedage i ${aarene.join(' og ')}</b> — så alle kan nå at få dem skrevet ind og rettet.<br>
     Her står kun: runde fødselsdage (${RUNDE_ALDRE.join(', ')} år), bryllupsdage med runde år og begivenheder med en dato i ${aarene.join(' eller ')}, fx konfirmation.<br>
     🌳 Skovturen står med i grønt. Falder en mærkedag samme dage som skovturen, er den markeret med ⚠️.<br>
-    <div class="mk-forklaring">${['a18','a30','a40','a50','a60','a70','a75','a80','a85','a90','a95','a100'].map(k => '<span class="mk mk-' + k + (valgtSlags === k ? ' valgt' : '') + '" onclick="vaelgSlags(\'' + k + '\')" title="Tryk for at se alle, der fylder ' + k.slice(1) + ' år frem i tiden">' + k.slice(1) + ' år</span>').join('')}</div>
-    <div class="mk-forklaring">${['tin','kobber','soelv','perle','rubin','guld','diamant','jern','platin','konf','bryllup','student','udlaert','eksamen','job','skovtur','andet'].map(k => '<span class="mk mk-' + k + (valgtSlags === k ? ' valgt' : '') + '" onclick="vaelgSlags(\'' + k + '\')" title="Tryk for at se alle frem i tiden">' + (k === 'bryllup' ? HJERTER + ' Bryllup ' + HJERTER : MAERKE_TEKST[k]) + '</span>').join('')}</div>
-    <div style="font-size:13px;margin-bottom:6px;">👆 Tryk på en farve for at se alle af den slags de næste ${FREM_ANTAL_AAR + 2} år.</div>
+    <div class="mk-forklaring">${['a18','a30','a40','a50','a60','a70','a75','a80','a85','a90','a95','a100'].map(k => '<span class="mk mk-' + k + (valgtSlags === k ? ' valgt' : '') + '" onclick="vaelgSlags(\'' + k + '\')" title="Tryk for at se alle, der fylder ' + k.slice(1) + ' år frem i tiden">' + k.slice(1) + ' år' + tal(k) + '</span>').join('')}</div>
+    <div class="mk-forklaring">${['tin','kobber','soelv','perle','rubin','guld','diamant','jern','platin','konf','bryllup','student','udlaert','eksamen','job','skovtur','andet'].map(k => '<span class="mk mk-' + k + (valgtSlags === k ? ' valgt' : '') + '" onclick="vaelgSlags(\'' + k + '\')" title="Tryk for at se alle frem i tiden">' + (k === 'bryllup' ? HJERTER + ' Bryllup ' + HJERTER : MAERKE_TEKST[k]) + tal(k) + '</span>').join('')}</div>
+    <div style="display:inline-block;background:#2d5016;color:#fff;border-radius:8px;padding:8px 16px;margin:4px 0 8px;font-size:16px;"><b>I alt ${iAlt} begivenheder</b> i oversigten ${foerste}–${sidste} <span style="opacity:.8;font-size:13px;">(alle farverne lagt sammen)</span></div>
+    <div style="font-size:13px;margin-bottom:6px;">👆 Tryk på en farve for at se alle af den slags de næste ${FREM_ANTAL_AAR + 2} år. Tallet i hver farve er antallet i de år.</div>
     Mangler en mærkedag? Skriv den ind som "Begivenhed" på familiens kort i <a href="medlemskartotek.html" style="color:#2d5016;font-weight:bold;">Medlemskartoteket</a>. Bryllupsdage skrives ind som "Bryllupsdag" med selve bryllupsdatoen.</div>`;
   if (valgtSlags) {
     // Overblik over én slags (fx alle der fylder 50) — de næste år
