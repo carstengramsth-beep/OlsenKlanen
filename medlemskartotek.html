@@ -972,8 +972,16 @@ const BEGI_TYPE = {
   'guldbryllup':  '💍 Guldbryllup (50 år)',
   'diamantbryllup':'💎 Diamantbryllup (60 år)',
   'jubilæum':     '🎉 Jubilæum',
+  'student':      '🎓 Student',
+  'udlært':       '🛠️ Udlært (svendeprøve)',
+  'eksamen':      '📜 Afsluttende eksamen',
+  'nyt_job':      '💼 Nyt job',
   'andet':        '📅 Andet',
 };
+// Typer med plads til uddannelse / stilling
+const BEGI_MED_UDDANNELSE = { student: 'Uddannelse og skole, fx STX fra Køge Gymnasium',
+  'udlært': 'Fag og sted, fx tømrer hos Hansen Byg', eksamen: 'Uddannelse, fx cand.jur. fra Københavns Universitet',
+  nyt_job: 'Stilling og arbejdsplads, fx sygeplejerske på Rigshospitalet' };
  
 function begiLabel(type) { return BEGI_TYPE[type] || type; }
  
@@ -1074,6 +1082,7 @@ function byggKort(m) {
             <div class="begi-type">${begiLabel(b.type)}</div>
             <div class="begi-dato">${formatDato(b.dato)}</div>
             ${b.beskrivelse ? `<div class="begi-besk">${b.beskrivelse}</div>` : ''}
+            ${b.uddannelse ? `<div class="begi-besk">🎓 ${b.uddannelse}</div>` : ''}
             ${b.besked ? `<div class="begi-besked">💬 ${b.besked}</div>` : ''}
           </div>`).join('')}
        </div>` : '';
@@ -1682,10 +1691,14 @@ function renderBegiEdit() {
         ${Object.entries(BEGI_TYPE).map(([v,l]) =>
           `<option value="${v}" ${b.type===v?'selected':''}>${l}</option>`).join('')}
       </select>
-      <input data-bi="${i}" data-felt="beskrivelse" placeholder="Kort beskrivelse" value="${b.beskrivelse||''}">
+      <input data-bi="${i}" data-felt="beskrivelse" placeholder="${BEGI_MED_UDDANNELSE[b.type] ? 'Hvem? fx Mille' : 'Kort beskrivelse'}" value="${b.beskrivelse||''}">
       <input data-bi="${i}" data-felt="dato" type="date" value="${b.dato||''}">
       <button class="begi-slet" data-bslet="${i}">×</button>
     </div>
+    ${BEGI_MED_UDDANNELSE[b.type] ? `<div class="begi-besked-rad">
+      <label>🎓 ${b.type === 'nyt_job' ? 'Stilling og arbejdsplads' : 'Uddannelse'}</label>
+      <input data-bi="${i}" data-felt="uddannelse" placeholder="${BEGI_MED_UDDANNELSE[b.type]}" value="${(b.uddannelse||'').replace(/"/g,'&quot;')}" style="width:100%;border:1px solid var(--border);padding:.35rem .55rem;font-size:12px;border-radius:3px;box-sizing:border-box">
+    </div>` : ''}
     <div class="begi-besked-rad">
       <label>💬 Besked til forsiden (vises på mærkedagen)</label>
       <textarea data-bi="${i}" data-felt="besked" placeholder="F.eks. 'Der er kaffe kl. 9.00 — alle er velkomne' eller 'Vi er ikke hjemme på dagen'">${b.besked||''}</textarea>
@@ -1954,6 +1967,7 @@ document.getElementById('begi-liste-edit').addEventListener('change', e => {
   if (t.dataset.bi !== undefined && t.dataset.felt) {
     begiListe[+t.dataset.bi][t.dataset.felt] = t.value;
     markDirty();
+    if (t.dataset.felt === 'type') renderBegiEdit();   // vis/skjul feltet til uddannelse
   }
 });
 document.getElementById('begi-liste-edit').addEventListener('input', e => {
