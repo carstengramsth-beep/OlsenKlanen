@@ -32,7 +32,8 @@ h2 { color: #2d5016; font-size: 19px; margin: 26px 0 8px; }
   <a href="forside.html">← Forside</a>
 </div>
 <main>
-  <p class="note">Her ligger de infomails og vejledninger, der er sendt ud til alle i OlsenKlanen. Tryk på en for at læse den.<br>
+  <p class="note">Her ligger de informationer, der er sendt ud til alle i OlsenKlanen – nummereret og dateret. Tryk på en for at læse den.<br>
+  Vil du have en af dem på mail? Gå til <b>OlsenPost → 📚 Informationer</b> og tryk på »Bed om at få den tilsendt«.<br>
   Arkivet er kun for medlemmer – send det ikke videre.</p>
   <div id="liste">Henter …</div>
 </main>
@@ -40,13 +41,15 @@ h2 { color: #2d5016; font-size: 19px; margin: 26px 0 8px; }
 <script>
 const dato = d => { const m = String(d || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[3]) + ". " + ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"][+m[2] - 1] + " " + m[1] : ""; };
 const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-fetch("infomails/index.json?t=" + Date.now()).then(r => r.json()).then(liste => {
-  liste.sort((a, b) => String(b.dato).localeCompare(String(a.dato)));
+let liste = [];
+fetch("infomails/index.json?t=" + Date.now()).then(r => r.json()).then(l => {
+  liste = l;
+  liste.sort((a, b) => (b.nr || 0) - (a.nr || 0));
   const grupper = {};
   liste.forEach(m => (grupper[m.gruppe || "Infomails"] = grupper[m.gruppe || "Infomails"] || []).push(m));
   document.getElementById("liste").innerHTML = Object.keys(grupper).map(g =>
     `<h2>${esc(g)}</h2>` + grupper[g].map(m =>
-      `<button class="mail-knap" data-id="${esc(m.id)}"><div class="dato">${esc(dato(m.dato))}</div><div class="titel">${esc(m.titel)}</div></button><div class="visning" id="vis-${esc(m.id)}" style="display:none"></div>`
+      `<button class="mail-knap" data-id="${esc(m.id)}"><div class="dato"><b>Info nr. ${esc(m.nr)}</b> · ${esc(dato(m.dato))}</div><div class="titel">${esc(m.titel)}</div></button><div class="visning" id="vis-${esc(m.id)}" style="display:none"></div>`
     ).join("")).join("") || "Der er ingen infomails endnu.";
   // Åbn direkte fra et link: infoarkiv.html?vis=<id>
   const vis = new URLSearchParams(location.search).get("vis");
@@ -64,7 +67,7 @@ document.addEventListener("click", async ev => {
     boks.textContent = "Henter …";
     try {
       const data = await (await fetch("infomails/" + encodeURIComponent(k.dataset.id) + ".json?t=" + Date.now())).json();
-      boks.innerHTML = window.infomailHtml(data, false);
+      boks.innerHTML = window.infomailHtml(data, false, liste.find(x => x.id === k.dataset.id));
       boks.dataset.hentet = "1";
     } catch (e) { boks.textContent = "Kunne ikke hente mailen."; }
   }

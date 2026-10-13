@@ -369,8 +369,17 @@ function escHtml(s) {
  * Lægges i kø fra OlsenPost (meddelelser.html?skabelon=...) med type "infomail".
  */
 const INFOMAIL_FODLINJE = "Kun til medlemmer af OlsenKlanen – send den ikke videre.";
-function infomailIndhold(data, billeder) {
+function infomailDato(d) {
+  const m = String(d || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? (+m[3]) + ". " + ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"][+m[2] - 1] + " " + m[1] : "";
+}
+function infomailIndhold(data, billeder, meta) {
   const html = [], tekst = [];
+  if (meta && meta.nr) {
+    const linje = "Info nr. " + meta.nr + (meta.dato ? " · " + infomailDato(meta.dato) : "");
+    html.push(`<p style="font-size:13px;color:#8a7a3f;margin:0 0 10px;"><b>${escHtml(linje)}</b></p>`);
+    tekst.push(linje, "");
+  }
   const p = t => `<p style="font-size:16px;line-height:1.55;margin:0 0 14px;">${escHtml(t)}</p>`;
   html.push(`<p style="font-size:19px;margin:0 0 16px;">${escHtml(data.hilsen || "")}</p>`);
   tekst.push(data.hilsen || "", "");
@@ -420,6 +429,9 @@ async function sendInfomail(d) {
     const svar = await fetch("https://olsenklanen.dk/infomails/" + navn + ".json?t=" + Date.now());
     if (!svar.ok) throw new Error("Kunne ikke hente infomails/" + navn + ".json");
     const data = await svar.json();
+    // Nummer og dato fra listen (infomails/index.json)
+    let meta = {};
+    try { meta = ((await (await fetch("https://olsenklanen.dk/infomails/index.json?t=" + Date.now())).json()) || []).find(x => x.id === navn) || {}; } catch (e) { /* uden nummer */ }
 
     // Billederne hentes én gang og lægges ind i mailen (cid)
     const billeder = new Map();
@@ -432,7 +444,7 @@ async function sendInfomail(d) {
       i++;
       billeder.set(fil, { cid: "billede" + i, filnavn: fil.split("/").pop(), indhold: Buffer.from(await b.arrayBuffer()) });
     }
-    const { html, tekst } = infomailIndhold(data, billeder);
+    const { html, tekst } = infomailIndhold(data, billeder, meta);
     const vedhaeft = [...billeder.values()].map(b => ({ filename: b.filnavn, content: b.indhold, cid: b.cid }));
 
     // Modtagere: aktive personer med egen mail (hver mail én gang) — eller kun afsenderen ved en prøve
@@ -458,7 +470,7 @@ async function sendInfomail(d) {
           from: { name: "OlsenKlanen", address: "post@olsenklanen.dk" },
           to: mail,
           replyTo: k.fra_email || "post@olsenklanen.dk",
-          subject: (k.prove ? "[PRØVE] " : "") + (data.emne || k.emne || "Nyt fra OlsenKlanen"),
+          subject: (k.prove ? "[PRØVE] " : "") + (meta.nr ? "Info nr. " + meta.nr + " – " : "") + (data.emne || k.emne || "Nyt fra OlsenKlanen"),
           text: tekst,
           html,
           attachments: vedhaeft
