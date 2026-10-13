@@ -1,6 +1,14 @@
 [
   {
     "nr": 1,
+    "id": "velkomstbrev",
+    "titel": "Velkommen til OlsenKlanen – familiens egen hjemmeside (velkomstbrevet)",
+    "dato": "2026-06-14",
+    "gruppe": "Velkomst og vejledninger",
+    "note": "Sendt som PDF med personlige mails til husstandene fra 14. juni 2026 (opdateret 27. juni). Adressen er her rettet til www.olsenklanen.dk."
+  },
+  {
+    "nr": 2,
     "id": "postkort",
     "titel": "Et kort fra OlsenKlanen – nu kan alle sende Olsenpostkort",
     "dato": "2026-10-07",
@@ -8,7 +16,7 @@
     "note": "Oprindeligt sendt som brevkort til 41 medlemmer."
   },
   {
-    "nr": 2,
+    "nr": 3,
     "id": "opfordring-data",
     "titel": "Et kort med opfordring – bekræft jeres medlemsdata",
     "dato": "2026-10-11",
@@ -16,11 +24,11 @@
     "note": "Oprindeligt sendt som brevkort til 43 medlemmer."
   },
   {
-    "nr": 3,
+    "nr": 4,
     "id": "maerkedage",
     "titel": "Se familiens mærkedage mange år frem – og hjælp med at gøre listen komplet",
     "dato": "2026-10-13",
-    "gruppe": "Vejledninger",
+    "gruppe": "Velkomst og vejledninger",
     "note": "Sendt til 45 medlemmer (med emnet »Info nr. 1«, før nummereringen blev lavet om)."
   }
 ]
