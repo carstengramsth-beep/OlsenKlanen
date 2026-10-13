@@ -1,0 +1,24 @@
+{
+  "emne": "Et kort fra OlsenKlanen",
+  "hilsen": "Kære alle olsenklanere",
+  "afsnit": [
+    {
+      "type": "billede",
+      "billede": "billeder/kort/landskab-2012.jpg",
+      "tekst": "Maleri: »Landskab, 2012« © Elisabeth Gram · olsenklanen.dk",
+      "bredde": 420
+    },
+    {
+      "type": "p",
+      "tekst": "Dette er en lille prøve på et Olsenpostkort...\nSom alle medlemmer kan sende til hinanden - under forudsætning af at Jeres data er opdaterede og godkendt"
+    },
+    {
+      "type": "p",
+      "tekst": "Det er en ny mulighed fra Olsenklanen.dk\nGiv mig gerne en melding om det virker hos jer via at sende \"svar tilbage\" - så modtager jeg jeres svar - ha' en dejlig dag!"
+    }
+  ],
+  "slut": [
+    "Stor hilsen på vegne af adm. gruppen!",
+    "Carsten Gram"
+  ]
+}
