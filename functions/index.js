@@ -363,11 +363,129 @@ async function sendPlanlagteHilsner() {
 function escHtml(s) {
   return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
+/**
+ * Infomail til alle medlemmer: tekst og billeder ligger i selve mailen (ingen links nødvendige).
+ * Indholdet hentes fra hjemmesiden: infomails/<skabelon>.json (tekst) og billeder/vejledning/*.
+ * Lægges i kø fra OlsenPost (meddelelser.html?skabelon=...) med type "infomail".
+ */
+function infomailIndhold(data, billeder) {
+  const html = [], tekst = [];
+  const p = t => `<p style="font-size:16px;line-height:1.55;margin:0 0 14px;">${escHtml(t)}</p>`;
+  html.push(`<p style="font-size:19px;margin:0 0 16px;">${escHtml(data.hilsen || "")}</p>`);
+  tekst.push(data.hilsen || "", "");
+  for (const a of data.afsnit || []) {
+    if (a.type === "p") { html.push(p(a.tekst)); tekst.push(a.tekst, ""); }
+    else if (a.type === "h") { html.push(`<h2 style="color:#2d5016;font-size:19px;margin:26px 0 10px;">${escHtml(a.tekst)}</h2>`); tekst.push(String(a.tekst).toUpperCase()); }
+    else if (a.type === "trin") {
+      const b = billeder.get(a.billede);
+      html.push(`<div style="margin:0 0 18px;"><p style="font-size:16px;line-height:1.55;margin:0 0 8px;"><b style="display:inline-block;background:#2d5016;color:#fff;border-radius:12px;padding:1px 9px;margin-right:6px;">${escHtml(a.nr)}</b>${escHtml(a.tekst)}</p>` +
+        (b ? `<img src="cid:${b.cid}" alt="" width="${a.bredde || 552}" style="display:block;width:100%;max-width:${a.bredde || 552}px;height:auto;border:1px solid #ddd;border-radius:6px;">` : "") + `</div>`);
+      tekst.push(a.nr + ". " + a.tekst);
+    }
+    else if (a.type === "liste" || a.type === "nummerliste") {
+      const tag = a.type === "liste" ? "ul" : "ol";
+      html.push(`<${tag} style="font-size:16px;line-height:1.55;margin:0 0 14px;padding-left:24px;">` + (a.punkter || []).map(x => `<li style="margin:4px 0;">${escHtml(x)}</li>`).join("") + `</${tag}>`);
+      (a.punkter || []).forEach((x, i) => tekst.push((a.type === "liste" ? "- " : (i + 1) + ". ") + x));
+      tekst.push("");
+    }
+    else if (a.type === "tip") { html.push(`<p style="font-size:15px;line-height:1.5;margin:0 0 14px;background:#fff8e1;border-left:4px solid #b8860b;padding:8px 12px;">${escHtml(a.tekst)}</p>`); tekst.push(a.tekst, ""); }
+  }
+  html.push(`<p style="font-size:16px;line-height:1.5;margin:20px 0 0;">${(data.slut || []).map(escHtml).join("<br>")}</p>`);
+  tekst.push("", ...(data.slut || []));
+  return {
+    html: `<div style="background:#f5f1e8;padding:20px 0;font-family:Georgia,'Times New Roman',serif;color:#2c3e1f;">
+  <div style="max-width:600px;margin:0 auto;background:#fff;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+    ${html.join("\n    ")}
+    <div style="border-top:1px solid #d8cfae;margin-top:22px;padding-top:8px;font-size:12px;color:#8a7a3f;font-style:italic;">Familieforeningen OlsenKlanen · olsenklanen.dk</div>
+  </div>
+</div>`,
+    tekst: tekst.join("\n")
+  };
+}
+
+async function sendInfomail(d) {
+  const db = getFirestore();
+  const taget = await db.runTransaction(async t => {
+    const frisk = await t.get(d.ref);
+    if (frisk.data().status !== "afventer") return false;
+    t.update(d.ref, { status: "sender", sender_start: FieldValue.serverTimestamp() });
+    return true;
+  });
+  if (!taget) return;
+  const k = d.data();
+  try {
+    const navn = String(k.skabelon || "");
+    if (!/^[a-z0-9\-]+$/.test(navn)) throw new Error("Ukendt infomail");
+    const svar = await fetch("https://olsenklanen.dk/infomails/" + navn + ".json?t=" + Date.now());
+    if (!svar.ok) throw new Error("Kunne ikke hente infomails/" + navn + ".json");
+    const data = await svar.json();
+
+    // Billederne hentes én gang og lægges ind i mailen (cid)
+    const billeder = new Map();
+    let i = 0;
+    for (const a of data.afsnit || []) {
+      const fil = String(a.billede || "");
+      if (!fil || billeder.has(fil) || !/^billeder\/vejledning\/[\w\-]+\.(png|jpg)$/.test(fil)) continue;
+      const b = await fetch("https://olsenklanen.dk/" + fil);
+      if (!b.ok) throw new Error("Kunne ikke hente " + fil);
+      i++;
+      billeder.set(fil, { cid: "billede" + i, filnavn: fil.split("/").pop(), indhold: Buffer.from(await b.arrayBuffer()) });
+    }
+    const { html, tekst } = infomailIndhold(data, billeder);
+    const vedhaeft = [...billeder.values()].map(b => ({ filename: b.filnavn, content: b.indhold, cid: b.cid }));
+
+    // Modtagere: aktive personer med egen mail (hver mail én gang) — eller kun afsenderen ved en prøve
+    const modtagere = new Map();
+    if (k.prove && String(k.til_email || "").includes("@")) modtagere.set("prove", String(k.til_email).trim());
+    else (await db.collection("membres").get()).forEach(m => (m.data().familiemedlemmer || []).forEach(p => {
+      if (p.status === "afdød" || p.status === "udmeldt") return;
+      const mail = String(p.email || "").trim();
+      if (mail.includes("@") && !modtagere.has(mail.toLowerCase())) modtagere.set(mail.toLowerCase(), mail);
+    }));
+
+    const transport = nodemailer.createTransport({
+      host: "smtp.simply.com", port: 587, secure: false, pool: true, maxConnections: 1,
+      auth: { user: "post@olsenklanen.dk", pass: imapAdgangskode.value() }
+    });
+    let sendt = 0;
+    const fejl = [];
+    for (const mail of modtagere.values()) {
+      try {
+        await transport.sendMail({
+          from: { name: "OlsenKlanen", address: "post@olsenklanen.dk" },
+          to: mail,
+          replyTo: k.fra_email || "post@olsenklanen.dk",
+          subject: (k.prove ? "[PRØVE] " : "") + (data.emne || k.emne || "Nyt fra OlsenKlanen"),
+          text: tekst,
+          html,
+          attachments: vedhaeft
+        });
+        sendt++;
+      } catch (e) {
+        fejl.push(mail + ": " + String(e && e.message || e).slice(0, 120));
+      }
+      await new Promise(r => setTimeout(r, 300));
+    }
+    transport.close();
+    await d.ref.update({
+      status: "sendt", antal_sendt: sendt, antal_fejl: fejl.length,
+      fejl_liste: fejl.slice(0, 20), sendt_faerdig: FieldValue.serverTimestamp()
+    });
+  } catch (e) {
+    console.log("Infomail", d.id, "fejlede:", e && e.message);
+    await d.ref.update({ status: "fejl", mail_fejl: String(e && e.message || e).slice(0, 300) });
+  }
+}
+
 async function sendBrevkort() {
   const db = getFirestore();
   const koe = await db.collection("olsenpost_mail").where("status", "==", "afventer").get();
   // brevkort: til alle (kun fra postansvarlige) · kort_medlem: til ét medlem (lagt i kø af logInPostansvarlig)
   const kort = koe.docs.filter(d => (d.data().type === "brevkort" && POSTANSVARLIGE.includes(d.data().fra_nr)) || d.data().type === "kort_medlem");
+  // Færdige infomails med billeder i selve mailen (kun fra postansvarlige)
+  for (const d of koe.docs.filter(d => d.data().type === "infomail" && POSTANSVARLIGE.includes(d.data().fra_nr))) {
+    await sendInfomail(d);
+  }
   if (!kort.length) return;
 
   for (const d of kort) {
