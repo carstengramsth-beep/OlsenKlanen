@@ -68,6 +68,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .mk-forklaring .mk { cursor: pointer; }
 .mk-forklaring .mk.valgt { outline: 3px solid #2d5016; outline-offset: 2px; }
 .mk-andet   { background: #c89e3c; }
+.mk-skovtur { background: #2d5016; }
 .mk-forklaring { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
 .mk-forklaring .mk { font-size: 12px; padding: 3px 9px; }
 .search-box { width: 100%; padding: 10px 14px; font-size: 15px; border: 1px solid #c4b896; border-radius: 4px; margin-bottom: 16px; background: #fff; }
@@ -319,12 +320,12 @@ const BEGI_SLAGS = { konfirmation: 'konf', bryllupsdag: 'bryllup', 'sølvbryllup
 const MAERKE_TEKST = {
   kobber: 'Kobberbryllup', soelv: 'Sølvbryllup', guld: 'Guldbryllup', diamant: '✦ Diamantbryllup ✧',
   tin: 'Tinbryllup', perle: 'Perlebryllup', rubin: 'Rubinbryllup', jern: 'Jernbryllup', platin: 'Platinbryllup',
-  konf: '✝ Konfirmation ✝', bryllup: 'Bryllup'
+  konf: '✝ Konfirmation ✝', bryllup: 'Bryllup', skovtur: '🌳 Familieskovtur', andet: '📅 Andre begivenheder'
 };
 const HJERTER = '<span style="color:#d0021b;letter-spacing:-2px;margin:0 5px;">♥♥</span>';
 function maerkeHtml(x) {
   const slags = x.slags || 'andet';
-  let tekst = MAERKE_TEKST[slags];
+  let tekst = slags === 'andet' ? null : MAERKE_TEKST[slags];
   if (!tekst && slags[0] === 'a' && /^a\d+$/.test(slags)) tekst = slags.slice(1) + ' år';
   if (!tekst) tekst = x.hvad;
   // Ekstra oplysning (fx "gift 1966") efter mærket
@@ -385,7 +386,7 @@ function maerkedageFor(aar) {
   // 3) Skovturen — og markér mærkedage, der falder samme dage som skovturen
   const st = skovturFor(aar);
   if (st) {
-    liste.push({ mnd: st.fra.mnd, dag: st.fra.dag, navn: '🌳 Skovtur ' + aar + (st.sted ? ' · ' + st.sted : ''), hvad: st.datoer, skovtur: true });
+    liste.push({ mnd: st.fra.mnd, dag: st.fra.dag, navn: '🌳 Skovtur ' + aar + (st.sted ? ' · ' + st.sted : ''), hvad: st.datoer, skovtur: true, slags: 'skovtur' });
     const fraN = st.fra.mnd * 100 + st.fra.dag, tilN = st.til.mnd * 100 + st.til.dag;
     liste.forEach(x => { if (!x.skovtur && x.mnd * 100 + x.dag >= fraN && x.mnd * 100 + x.dag <= tilN) x.sammenfald = true; });
   }
@@ -444,7 +445,7 @@ function byggNaesteAar() {
     Her står kun: runde fødselsdage (${RUNDE_ALDRE.join(', ')} år), bryllupsdage med runde år og begivenheder med en dato i ${aarene.join(' eller ')}, fx konfirmation.<br>
     🌳 Skovturen står med i grønt. Falder en mærkedag samme dage som skovturen, er den markeret med ⚠️.<br>
     <div class="mk-forklaring">${['a18','a30','a40','a50','a60','a70','a75','a80','a85','a90','a95','a100'].map(k => '<span class="mk mk-' + k + (valgtSlags === k ? ' valgt' : '') + '" onclick="vaelgSlags(\'' + k + '\')" title="Tryk for at se alle, der fylder ' + k.slice(1) + ' år frem i tiden">' + k.slice(1) + ' år</span>').join('')}</div>
-    <div class="mk-forklaring">${['tin','kobber','soelv','perle','rubin','guld','diamant','jern','platin','konf','bryllup'].map(k => '<span class="mk mk-' + k + (valgtSlags === k ? ' valgt' : '') + '" onclick="vaelgSlags(\'' + k + '\')" title="Tryk for at se alle frem i tiden">' + (k === 'bryllup' ? HJERTER + ' Bryllup ' + HJERTER : MAERKE_TEKST[k]) + '</span>').join('')}</div>
+    <div class="mk-forklaring">${['tin','kobber','soelv','perle','rubin','guld','diamant','jern','platin','konf','bryllup','skovtur','andet'].map(k => '<span class="mk mk-' + k + (valgtSlags === k ? ' valgt' : '') + '" onclick="vaelgSlags(\'' + k + '\')" title="Tryk for at se alle frem i tiden">' + (k === 'bryllup' ? HJERTER + ' Bryllup ' + HJERTER : MAERKE_TEKST[k]) + '</span>').join('')}</div>
     <div style="font-size:13px;margin-bottom:6px;">👆 Tryk på en farve for at se alle af den slags de næste ${FREM_ANTAL_AAR + 2} år.</div>
     Mangler en mærkedag? Skriv den ind som "Begivenhed" på familiens kort i <a href="medlemskartotek.html" style="color:#2d5016;font-weight:bold;">Medlemskartoteket</a>. Bryllupsdage skrives ind som "Bryllupsdag" med selve bryllupsdatoen.</div>`;
   if (valgtSlags) {
@@ -456,13 +457,18 @@ function byggNaesteAar() {
     html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0;">
       <h2 style="color:#2d5016;margin:0;">Overblik: <span class="mk mk-${valgtSlags}" style="font-size:16px;">${valgtSlags === 'bryllup' ? HJERTER + ' Bryllup ' + HJERTER : escN(tekst)}</span> ${foerste}–${foerste + FREM_ANTAL_AAR + 1} (${fundne.length})</h2>
       <button onclick="vaelgSlags(null)" style="background:#2d5016;color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-weight:bold;">← Vis alle mærkedage</button></div>`;
-    if (!fundne.length) html += '<div class="loading-besked">Ingen fundet i de år.</div>';
+    if (!fundne.length && valgtSlags !== 'skovtur') html += '<div class="loading-besked">Ingen fundet i de år.</div>';
     let sidsteAar = 0;
     fundne.forEach(x => {
       if (x.aar !== sidsteAar) { if (sidsteAar) html += '</div>'; html += `<div class="month"><div class="month-title">${x.aar}</div>`; sidsteAar = x.aar; }
       html += maerkedagRad(x);
     });
     if (sidsteAar) html += '</div>';
+    if (valgtSlags === 'skovtur') {
+      // Skovture uden fastsat dato (de næste to år, eller hvor et sted allerede er valgt)
+      for (let aar = foerste; aar <= foerste + FREM_ANTAL_AAR + 1; aar++)
+        if (!skovturFor(aar) && (aar <= foerste + 1 || skovture[aar])) html += skovturLinje(aar, []);
+    }
     document.getElementById('naeste-content').innerHTML = html;
     return;
   }
