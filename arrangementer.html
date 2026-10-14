@@ -812,7 +812,7 @@ async function visAar(){
     detRaekke("Medbring", d.medbring) +
     detRaekke("Program / info", d.program) +
     detRaekke("Generalforsamling", [datoTekst(d.gf_dato), d.gf_sted].filter(Boolean).join(" · ")) +
-    detFold("🏕️ Skovtursreferat " + aar + afHtml(refNavn(d.beretning) ? "skrevet af " + escHtml(refNavn(d.beretning)) : "skrevet af arrangementskomitéen") + klik, d.beretning, aabnAlt).replace("<details", '<details id="aar-skovtur"') +
+    detFold("🏕️ Skovtursreferat " + aar + afHtml(refNavn(d.beretning) ? "skrevet af " + escHtml(refNavn(d.beretning)) : "skrevet af arrangementskomitéen") + klik, d.beretning, aabnAlt, billedeHtml(d.skovtur_billede, d.skovtur_billede_tekst)).replace("<details", '<details id="aar-skovtur"') +
     referat +
     billederLink(aar, d.billeder_link) +
     vedtaegtLink();
