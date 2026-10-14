@@ -400,8 +400,15 @@ import { INDBYGGET } from "./skovtur-indbygget.js";
 // Steder, hvor oplysningerne måske ikke passer — vises med "?" i oversigten og som orange boks på året.
 // Fjern punktet her, når det er tjekket og rettet. De samme spørgsmål står i datakontrol.html
 // (administrationen → "Data der skal tjekkes"), hvor OlsenBanden kan svare og markere dem som afklaret.
-// År, hvor referatet fra generalforsamlingen efterlyses tydeligt (rød boks på årets side og "mangler" i oversigten)
-const REFERAT_EFTERLYST = [2022];
+// Referatet fra generalforsamlingen efterlyses (rød boks på årets side og "mangler" i oversigten)
+// for alle afholdte skovture uden referat. Aflyste år (fx 2020) og kommende år tæller ikke med.
+function referatMangler(aar){
+  const d = AAR_DATA[aar] || {};
+  if (d.referat || !harIndhold(d) || /aflyst/i.test(d.note || "")) return false;
+  const nu = new Date(), iAar = nu.getFullYear();
+  if (aar < iAar) return true;
+  return aar === iAar && !!d.gf_dato && new Date(d.gf_dato) < nu;
+}
 const TJEK = {
   2020: ["Skovturen 2020 blev aflyst (corona). Tjek om der er andre oplysninger fra 2020, fx hvor turen skulle have været."],
   2021: [
@@ -743,7 +750,7 @@ async function visAar(){
   const aabnAlt = AABN_ALT; AABN_ALT = false;
   const klik = ' <span style="font-weight:normal;color:#888;font-size:13px;">— klik for at læse</span>';
   let referat = detFold("📄 Referat fra generalforsamlingen " + aar + klik, d.referat, aabnAlt).replace("<details", '<details id="aar-referat"');
-  if (!referat && REFERAT_EFTERLYST.includes(aar))
+  if (!referat && referatMangler(aar))
     referat = `<div id="aar-referat" style="background:#fff3f3;border:2px solid #c0392b;border-radius:8px;padding:12px 14px;margin:10px 0;">
       <div style="font-weight:bold;color:#8b1e1e;font-size:16px;">📄 Referatet fra generalforsamlingen ${aar} mangler</div>
       <div style="margin-top:6px;line-height:1.5;">Har du referatet – eller ved du, hvem der skrev det? Så vil vi meget gerne have det, så historien bliver hel.<br>
@@ -791,7 +798,12 @@ function visOversigt(){
     return;
   }
   const mangler = '<span style="color:#aaa;font-style:italic;">ikke registreret</span>';
-  el.innerHTML = `<table class="aar-tabel">
+  const uden = aarListe.filter(referatMangler).sort((a,b) => a - b);
+  const bem = uden.length ? `<div id="referat-bemaerkning" style="background:#fff3f3;border:1px solid #e0a0a0;border-left:5px solid #c0392b;border-radius:6px;padding:10px 12px;margin-bottom:10px;line-height:1.5;">
+      <b style="color:#8b1e1e;">📄 Vi mangler referatet fra generalforsamlingen for ${uden.length} år:</b> ${uden.join(", ")}.<br>
+      Har du et af dem? Send det til OlsenBanden på <b>post@olsenklanen.dk</b>, eller skriv i <a href="meddelelser.html" style="color:#2d5016;font-weight:bold;">OlsenPost</a>.
+    </div>` : "";
+  el.innerHTML = bem + `<table class="aar-tabel">
     <thead><tr><th>År</th><th>Sted</th><th>Datoer</th><th class="aar-komite">Komité</th><th class="aar-ref">Referat</th></tr></thead>
     <tbody>${aarListe.map(a => { const d = AAR_DATA[a] || {}; return `
       <tr class="${a === DET_AKTUELT_AAR ? "valgt" : ""}" onclick="vaelgAar(${a})" title="Klik for at se ${a}">
@@ -799,7 +811,7 @@ function visOversigt(){
         <td>${visSted(d) ? escHtml(visSted(d)) : mangler}${komiteTekstFor(a) ? `<div class="aar-komite-mobil">Komité: ${escHtml(komiteTekstFor(a))}</div>` : ""}</td>
         <td>${visDatoer(d) ? escHtml(visDatoer(d)) : mangler}</td>
         <td class="aar-komite">${komiteTekstFor(a) ? escHtml(komiteTekstFor(a)) : mangler}</td>
-        <td class="aar-ref">${d.referat ? `<button class="aar-link" style="color:#2d5016;font-weight:bold;font-size:18px;text-decoration:none;" title="Åbn referatet fra ${a}" onclick="event.stopPropagation();visReferat(${a})">✓</button>` : (REFERAT_EFTERLYST.includes(a) ? `<button class="aar-link" style="color:#c0392b;font-weight:bold;font-size:12px;" title="Referatet fra generalforsamlingen ${a} mangler – har du det?" onclick="event.stopPropagation();visReferat(${a})">mangler</button>` : '<span style="color:#ccc;" title="Intet referat endnu">–</span>')}${tjekMaerke(a)}</td>
+        <td class="aar-ref">${d.referat ? `<button class="aar-link" style="color:#2d5016;font-weight:bold;font-size:18px;text-decoration:none;" title="Åbn referatet fra ${a}" onclick="event.stopPropagation();visReferat(${a})">✓</button>` : (referatMangler(a) ? `<button class="aar-link" style="color:#c0392b;font-weight:bold;font-size:12px;" title="Referatet fra generalforsamlingen ${a} mangler – har du det?" onclick="event.stopPropagation();visReferat(${a})">mangler</button>` : '<span style="color:#ccc;" title="Intet referat endnu">–</span>')}${tjekMaerke(a)}</td>
       </tr>`; }).join("")}
     </tbody></table>`;
 }
