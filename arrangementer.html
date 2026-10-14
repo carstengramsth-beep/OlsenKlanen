@@ -220,10 +220,12 @@ try {
           <div><label>Generalforsamling — dato</label><input type="date" id="d-gf-dato" onchange="gfAendret()"></div>
           <div><label>Generalforsamling — sted</label><input type="text" id="d-gf-sted" placeholder="f.eks. Eriksminde, Rørvig" onchange="gfAendret()"></div>
         </div>
-        <label>Referat fra generalforsamlingen — sæt hele teksten ind her</label>
-        <textarea id="d-referat" rows="14" placeholder="Indsæt referatet her…" style="min-height:160px"></textarea>
-        <label>Arrangementskomitéens beretning fra skovturen — sæt hele teksten ind her</label>
-        <textarea id="d-beretning" rows="10" placeholder="Indsæt komitéens beretning her…" style="min-height:120px"></textarea>
+        <label>🏕️ Skovtursreferat — hele turen, sæt teksten ind her</label>
+        <textarea id="d-beretning" rows="10" placeholder="Indsæt skovtursreferatet her…" style="min-height:120px"></textarea>
+        <div style="font-size:13px;color:#666;margin:4px 0 8px;">Står generalforsamlingen inde i skovtursreferatet? Tryk på knappen, så flyttes den over i sit eget felt.
+          <button type="button" class="knap knap-graa" style="padding:4px 10px;font-size:13px;margin-left:4px;" onclick="traekGfUd()">✂️ Træk generalforsamlingen ud</button></div>
+        <label>📄 Referat fra generalforsamlingen — sæt teksten ind her</label>
+        <textarea id="d-referat" rows="14" placeholder="Indsæt referatet fra generalforsamlingen her…" style="min-height:160px"></textarea>
         <div class="form-knapper">
           <button class="knap" id="d-gem" onclick="gemDet()">Gem oplysninger</button>
           <button class="knap knap-graa" onclick="skjulDetForm()">Annullér</button>
@@ -509,10 +511,29 @@ window.aarFrem    = function(){ skiftAar(DET_AKTUELT_AAR + 1); };
 // Klik på et år i oversigten: årets side skifter til det år
 window.vaelgAar   = function(aar){ AABN_ALT = true; skiftAar(parseInt(aar, 10), true); };
 // Klik på ✓ i oversigtens Referat-kolonne: åbn året og hop direkte til referatet
-window.visReferat = async function(aar){
+// Finder generalforsamlingen inde i et skovtursreferat (fra "Punkt 1"/"1. Valg af dirigent"
+// til linjen, hvor generalforsamlingen afsluttes) og flytter den over i sit eget felt.
+function findGf(tekst){
+  const start = tekst.search(/^[ \t]*(punkt\.?\s*1\b|1\.\s*valg af dirigent)/im);
+  if (start < 0) return null;
+  // Tag også en evt. overskrift/indledning lige før med (fx "... gik startskuddet til årets generalforsamling.")
+  const slutM = /^.*(afslutt\w*\s+generalforsamling|generalforsamlingen\s+(blev\s+)?(herefter\s+)?(afsluttet|slut)|erklærede\s+.*generalforsamlingen).*$/im.exec(tekst.slice(start));
+  const slut = slutM ? start + slutM.index + slutM[0].length : tekst.length;
+  return { start, slut, gf: tekst.slice(start, slut).trim() };
+}
+window.traekGfUd = function(){
+  const ber = document.getElementById("d-beretning"), ref = document.getElementById("d-referat");
+  const f = findGf(ber.value);
+  if (!f){ alert("Jeg kunne ikke finde generalforsamlingen i skovtursreferatet.\n\nDen skal starte med \"Punkt 1\" eller \"1. Valg af dirigent\". Du kan også klippe den over i hånden."); return; }
+  if (ref.value.trim() && !confirm("Der står allerede noget i feltet til generalforsamlingen.\n\nSkal den udtrukne tekst sættes ind under det, der står?")) return;
+  ref.value = ref.value.trim() ? ref.value.trim() + "\n\n" + f.gf : f.gf;
+  ber.value = (ber.value.slice(0, f.start).trimEnd() + "\n\n[Generalforsamlingen – se referatet fra generalforsamlingen]\n\n" + ber.value.slice(f.slut).trimStart()).trim();
+  alert("Generalforsamlingen er flyttet over i sit eget felt. Tjek de to felter, og tryk så på \"Gem oplysninger\".");
+};
+window.visReferat = async function(aar, hvilket){
   AABN_ALT = true;
   await skiftAar(parseInt(aar, 10), false);
-  const ref = document.getElementById("aar-referat");
+  const ref = document.getElementById(hvilket === "skovtur" ? "aar-skovtur" : "aar-referat");
   if (!ref) { document.getElementById("aarets-side").scrollIntoView({behavior:"smooth"}); return; }
   ref.open = true;
   ref.scrollIntoView({behavior:"smooth", block:"start"});
@@ -773,8 +794,8 @@ async function visAar(){
     detRaekke("Medbring", d.medbring) +
     detRaekke("Program / info", d.program) +
     detRaekke("Generalforsamling", [datoTekst(d.gf_dato), d.gf_sted].filter(Boolean).join(" · ")) +
+    detFold("🏕️ Skovtursreferat " + aar + klik, d.beretning, aabnAlt).replace("<details", '<details id="aar-skovtur"') +
     referat +
-    detFold("🏕️ Arrangementskomitéens beretning fra skovturen " + aar + klik, d.beretning, aabnAlt) +
     billederLink(aar, d.billeder_link) +
     vedtaegtLink();
   if(d.opdateret_af){
@@ -804,13 +825,14 @@ function visOversigt(){
       Har du et af dem? Send det til OlsenBanden på <b>post@olsenklanen.dk</b>, eller skriv i <a href="meddelelser.html" style="color:#2d5016;font-weight:bold;">OlsenPost</a>.
     </div>` : "";
   el.innerHTML = bem + `<table class="aar-tabel">
-    <thead><tr><th>År</th><th>Sted</th><th>Datoer</th><th class="aar-komite">Komité</th><th class="aar-ref">Referat</th></tr></thead>
+    <thead><tr><th>År</th><th>Sted</th><th>Datoer</th><th class="aar-komite">Komité</th><th class="aar-ref" title="Skovtursreferat">🏕️ Skovtur</th><th class="aar-ref" title="Referat fra generalforsamlingen">📄 Gen.fors.</th></tr></thead>
     <tbody>${aarListe.map(a => { const d = AAR_DATA[a] || {}; return `
       <tr class="${a === DET_AKTUELT_AAR ? "valgt" : ""}" onclick="vaelgAar(${a})" title="Klik for at se ${a}">
         <td><button class="aar-link" onclick="event.stopPropagation();vaelgAar(${a})">${a}</button></td>
         <td>${visSted(d) ? escHtml(visSted(d)) : mangler}${komiteTekstFor(a) ? `<div class="aar-komite-mobil">Komité: ${escHtml(komiteTekstFor(a))}</div>` : ""}</td>
         <td>${visDatoer(d) ? escHtml(visDatoer(d)) : mangler}</td>
         <td class="aar-komite">${komiteTekstFor(a) ? escHtml(komiteTekstFor(a)) : mangler}</td>
+        <td class="aar-ref">${d.beretning ? `<button class="aar-link" style="color:#2d5016;font-weight:bold;font-size:18px;text-decoration:none;" title="Åbn skovtursreferatet fra ${a}" onclick="event.stopPropagation();visReferat(${a},'skovtur')">✓</button>` : '<span style="color:#ccc;" title="Intet skovtursreferat endnu">–</span>'}</td>
         <td class="aar-ref">${d.referat ? `<button class="aar-link" style="color:#2d5016;font-weight:bold;font-size:18px;text-decoration:none;" title="Åbn referatet fra ${a}" onclick="event.stopPropagation();visReferat(${a})">✓</button>` : (referatMangler(a) ? `<button class="aar-link" style="color:#c0392b;font-weight:bold;font-size:12px;" title="Referatet fra generalforsamlingen ${a} mangler – har du det?" onclick="event.stopPropagation();visReferat(${a})">mangler</button>` : '<span style="color:#ccc;" title="Intet referat endnu">–</span>')}${tjekMaerke(a)}</td>
       </tr>`; }).join("")}
     </tbody></table>`;
