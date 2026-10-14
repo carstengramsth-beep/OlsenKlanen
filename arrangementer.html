@@ -406,9 +406,15 @@ import { INDBYGGET } from "./skovtur-indbygget.js";
 // (administrationen → "Data der skal tjekkes"), hvor OlsenBanden kan svare og markere dem som afklaret.
 // Referatet fra generalforsamlingen efterlyses (rød boks på årets side og "mangler" i oversigten)
 // for alle afholdte skovture uden referat. Aflyste år (fx 2020) og kommende år tæller ikke med.
+// Aflyste skovture (fx 2020) kendes på ordet "aflyst" i bemærkningen
+function aflystTekst(d){
+  const n = String((d || {}).note || "");
+  if (!/aflyst/i.test(n)) return "";
+  return /corona|covid/i.test(n) ? "Aflyst på grund af corona" : "Aflyst";
+}
 function referatMangler(aar){
   const d = AAR_DATA[aar] || {};
-  if (d.referat || !harIndhold(d) || /aflyst/i.test(d.note || "")) return false;
+  if (d.referat || !harIndhold(d) || aflystTekst(d)) return false;
   const nu = new Date(), iAar = nu.getFullYear();
   if (aar < iAar) return true;
   return aar === iAar && !!d.gf_dato && new Date(d.gf_dato) < nu;
@@ -798,7 +804,9 @@ async function visAar(){
     </div>`;
   else if (!referat && aar <= new Date().getFullYear())
     referat = detRaekkeHtml("📄 Referat", '<span style="color:#aaa;font-style:italic;">ikke lagt ind endnu</span>');
+  const aflyst = aflystTekst(d);
   let html = fejl + tjekBoks(aar) +
+    (aflyst ? `<div style="background:#f3f3f3;border:2px solid #888;border-radius:8px;padding:12px 14px;margin:10px 0;font-size:17px;font-weight:bold;color:#444;">❌ Skovturen ${aar}: ${aflyst}</div>` : "") +
     detRaekke("Sted / lejr", visSted(d)) +
     detRaekke("Datoer", visDatoer(d)) +
     detRaekke("Bemærkning", d.note) +
@@ -847,9 +855,9 @@ function visOversigt(){
     <tbody>${aarListe.map(a => { const d = AAR_DATA[a] || {}; return `
       <tr class="${a === DET_AKTUELT_AAR ? "valgt" : ""}" onclick="vaelgAar(${a})" title="Klik for at se ${a}">
         <td><button class="aar-link" onclick="event.stopPropagation();vaelgAar(${a})">${a}</button></td>
-        <td>${visSted(d) ? escHtml(visSted(d)) : mangler}${komiteTekstFor(a) ? `<div class="aar-komite-mobil">Komité: ${escHtml(komiteTekstFor(a))}</div>` : ""}</td>
-        <td>${visDatoer(d) ? escHtml(visDatoer(d)) : mangler}</td>
-        <td class="aar-komite">${komiteTekstFor(a) ? escHtml(komiteTekstFor(a)) : mangler}</td>
+        <td>${aflystTekst(d) && !visSted(d) ? `<b style="color:#666;">❌ ${aflystTekst(d)}</b>` : (visSted(d) ? escHtml(visSted(d)) : mangler)}${komiteTekstFor(a) ? `<div class="aar-komite-mobil">Komité: ${escHtml(komiteTekstFor(a))}</div>` : ""}</td>
+        <td>${visDatoer(d) ? escHtml(visDatoer(d)) : (aflystTekst(d) ? '<span style="color:#aaa;">–</span>' : mangler)}</td>
+        <td class="aar-komite">${komiteTekstFor(a) ? escHtml(komiteTekstFor(a)) : (aflystTekst(d) ? '<span style="color:#aaa;">–</span>' : mangler)}</td>
         <td class="aar-ref">${d.beretning ? `<button class="aar-link" style="color:#2d5016;font-weight:bold;font-size:18px;text-decoration:none;" title="Åbn skovtursreferatet fra ${a}" onclick="event.stopPropagation();visReferat(${a},'skovtur')">✓</button>` : '<span style="color:#ccc;" title="Intet skovtursreferat endnu">–</span>'}</td>
         <td class="aar-ref">${d.referat ? `<button class="aar-link" style="color:#2d5016;font-weight:bold;font-size:18px;text-decoration:none;" title="Åbn referatet fra ${a}" onclick="event.stopPropagation();visReferat(${a})">✓</button>` : (referatMangler(a) ? `<button class="aar-link" style="color:#c0392b;font-weight:bold;font-size:12px;" title="Referatet fra generalforsamlingen ${a} mangler – har du det?" onclick="event.stopPropagation();visReferat(${a})">mangler</button>` : '<span style="color:#ccc;" title="Intet referat endnu">–</span>')}${tjekMaerke(a)}</td>
       </tr>`; }).join("")}
