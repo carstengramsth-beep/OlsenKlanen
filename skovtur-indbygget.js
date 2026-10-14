@@ -39,6 +39,7 @@ export const INDBYGGET = {
   },
   2012: {
     billeder_link: "aarenes-billeder.html?aar=2012",
+    note: "Kassereren Tommy V. Olsen varslede på den gamle hjemmeside, at deltagergebyret måtte hæves lidt (gældende fra 2011), fordi kassebeholdningen svandt ind, og lejen af kolonierne steg hvert år.",
     sted: "Kolonien Næsbystrand, Bildsøvej 134, Kirke Stillinge, 4200 Slagelse",
     dato_fra: "2012-06-08", dato_til: "2012-06-10",
     datoer: "8.–10. juni 2012 — OlsenKlanens 50 års jubilæumsskovtur",
