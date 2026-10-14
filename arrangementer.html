@@ -220,12 +220,14 @@ try {
           <div><label>Generalforsamling — dato</label><input type="date" id="d-gf-dato" onchange="gfAendret()"></div>
           <div><label>Generalforsamling — sted</label><input type="text" id="d-gf-sted" placeholder="f.eks. Eriksminde, Rørvig" onchange="gfAendret()"></div>
         </div>
-        <label>🏕️ Skovtursreferat — hele turen, sæt teksten ind her</label>
+        <label>🏕️ Skovtursreferat — skrives af arrangementskomitéen, sæt teksten ind her</label>
         <textarea id="d-beretning" rows="10" placeholder="Indsæt skovtursreferatet her…" style="min-height:120px"></textarea>
         <div style="font-size:13px;color:#666;margin:4px 0 8px;">Står generalforsamlingen inde i skovtursreferatet? Tryk på knappen, så flyttes den over i sit eget felt.
           <button type="button" class="knap knap-graa" style="padding:4px 10px;font-size:13px;margin-left:4px;" onclick="traekGfUd()">✂️ Træk generalforsamlingen ud</button></div>
         <label>📄 Referat fra generalforsamlingen — sæt teksten ind her</label>
         <textarea id="d-referat" rows="14" placeholder="Indsæt referatet fra generalforsamlingen her…" style="min-height:160px"></textarea>
+        <label>Referent — hvem skrev referatet fra generalforsamlingen? (valgfri)</label>
+        <input type="text" id="d-referent" placeholder="f.eks. Karin Lund — tomt felt: findes selv ud fra &quot;Ref. …&quot; nederst i referatet">
         <div class="form-knapper">
           <button class="knap" id="d-gem" onclick="gemDet()">Gem oplysninger</button>
           <button class="knap knap-graa" onclick="skjulDetForm()">Annullér</button>
@@ -391,7 +393,7 @@ const FELTER = {
   "d-kontakt-navn":"kontaktNavn", "d-kontakt-tlf":"kontaktTlf",
   "d-medbring":"medbring", "d-program":"program", "d-note":"note",
   "d-billeder":"billeder_link", "d-gf-dato":"gf_dato", "d-gf-sted":"gf_sted", "d-referat":"referat",
-  "d-beretning":"beretning", "d-komite-tekst":"komite_tekst"
+  "d-beretning":"beretning", "d-komite-tekst":"komite_tekst", "d-referent":"referent"
 };
 function harIndhold(d){ return !!d && Object.values(FELTER).some(f => d[f]); }
 
@@ -670,6 +672,14 @@ function detRaekkeHtml(label, html){
 }
 
 // Lang tekst som foldbar blok (klik på titlen for at åbne/lukke)
+// Skovtursreferatet skrives af arrangementskomitéen; referatet fra generalforsamlingen af en referent.
+// Referenten står i feltet "referent" – ellers findes navnet ud fra "Ref. Karin" nederst i referatet.
+function refNavn(tekst){
+  const m = [...String(tekst || "").matchAll(/^[ \t]*(?:ref\.|refr\.|referent:?)[ \t]*(.+?)[ \t]*$/gim)].pop();
+  return m ? m[1] : "";
+}
+function referentFor(d){ return d.referent || refNavn(d.referat); }
+function afHtml(tekst){ return tekst ? ` <span style="font-weight:normal;color:#666;font-size:13px;">· ${tekst}</span>` : ""; }
 function detFold(titel, vaerdi, aabn){
   const aaben = aabn ? " open" : "";
   if(!vaerdi) return "";
@@ -770,7 +780,8 @@ async function visAar(){
   const kontakt = [d.kontaktNavn, d.kontaktTlf].filter(Boolean).join(" · ");
   const aabnAlt = AABN_ALT; AABN_ALT = false;
   const klik = ' <span style="font-weight:normal;color:#888;font-size:13px;">— klik for at læse</span>';
-  let referat = detFold("📄 Referat fra generalforsamlingen " + aar + klik, d.referat, aabnAlt).replace("<details", '<details id="aar-referat"');
+  const referent = referentFor(d);
+  let referat = detFold("📄 Referat fra generalforsamlingen " + aar + afHtml(referent ? "referent: " + escHtml(referent) : "referent ikke oplyst") + klik, d.referat, aabnAlt).replace("<details", '<details id="aar-referat"');
   if (!referat && referatMangler(aar))
     referat = `<div id="aar-referat" style="background:#fff3f3;border:2px solid #c0392b;border-radius:8px;padding:12px 14px;margin:10px 0;">
       <div style="font-weight:bold;color:#8b1e1e;font-size:16px;">📄 Referatet fra generalforsamlingen ${aar} mangler</div>
@@ -794,7 +805,7 @@ async function visAar(){
     detRaekke("Medbring", d.medbring) +
     detRaekke("Program / info", d.program) +
     detRaekke("Generalforsamling", [datoTekst(d.gf_dato), d.gf_sted].filter(Boolean).join(" · ")) +
-    detFold("🏕️ Skovtursreferat " + aar + klik, d.beretning, aabnAlt).replace("<details", '<details id="aar-skovtur"') +
+    detFold("🏕️ Skovtursreferat " + aar + afHtml(refNavn(d.beretning) ? "skrevet af " + escHtml(refNavn(d.beretning)) : "skrevet af arrangementskomitéen") + klik, d.beretning, aabnAlt).replace("<details", '<details id="aar-skovtur"') +
     referat +
     billederLink(aar, d.billeder_link) +
     vedtaegtLink();
