@@ -260,6 +260,17 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+// Årets billeder ligger i fotovaeg/<år>/<ramme> (samme 14 rammer som på "Årenes billeder")
+import { getStorage, ref as sRef, listAll, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+const storage = getStorage(app);
+const FOTO_RAMMER = ["fre-aftensmad","flaghejsning","morgenmad","generalfors","faellesfoto","tagselvbord","konkurrencer",
+  "kaffebord","grill","aftenhygge","son-morgenmad","pakning","farvel","fri-leg"];
+const FOTO_CACHE = {};
+function aaretsFotos(aar){
+  if (!FOTO_CACHE[aar]) FOTO_CACHE[aar] = Promise.all(FOTO_RAMMER.map(r =>
+    listAll(sRef(storage, `fotovaeg/${aar}/${r}`)).then(x => x.items || []).catch(() => []))).then(l => l.flat());
+  return FOTO_CACHE[aar];
+}
 
 // --- Bruger ---
 function hent(n){ return sessionStorage.getItem(n) || localStorage.getItem(n) || ""; }
@@ -709,6 +720,37 @@ function vedtaegtLink(){
   return detRaekkeHtml("📜 Vedtægter", `<a href="vedtaegter.html" style="color:#2d5016;font-weight:600;">Læs foreningens vedtægter →</a>`);
 }
 
+// Række med små billeder fra året — fyldes ud, når billederne er hentet
+const fotoRaekke = aar => `<div id="aar-fotos">${detRaekkeHtml("📷 Årets billeder", '<span style="color:#aaa;font-style:italic;">henter billeder …</span>')}</div>`;
+async function visAaretsFotos(aar, nr, link){
+  const items = await aaretsFotos(aar);
+  const boks = document.getElementById("aar-fotos");
+  if (!boks || nr !== VIS_NR) return;
+  const galleri = "aarenes-billeder.html?aar=" + aar;
+  const ekstra = sikkertLink(link);
+  const andetLink = ekstra && !ekstra.startsWith("aarenes-billeder.html")
+    ? `<div style="margin-top:6px;"><a href="${escAttr(ekstra)}"${/^https?:/i.test(ekstra) ? ' target="_blank" rel="noopener"' : ""} style="color:#2d5016;">Flere billeder fra ${aar} →</a></div>` : "";
+  if (!items.length){
+    boks.innerHTML = detRaekkeHtml("📷 Årets billeder", `<span style="color:#888;">Der er ingen billeder fra ${aar} endnu.</span> <a href="${galleri}" style="color:#2d5016;font-weight:600;">Læg dine billeder ind →</a>${andetLink}`);
+    return;
+  }
+  const vis = items.slice(0, 8);
+  const urls = await Promise.all(vis.map(it => getDownloadURL(it).catch(() => "")));
+  if (nr !== VIS_NR) return;
+  const smaa = urls.filter(Boolean).map(u => `<a href="${galleri}" title="Se alle billeder fra ${aar}"><img src="${escAttr(u)}" alt="" loading="lazy" style="width:84px;height:84px;object-fit:cover;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.2);"></a>`).join("");
+  boks.innerHTML = detRaekkeHtml("📷 Årets billeder", `<div style="display:flex;flex-wrap:wrap;gap:6px;">${smaa}</div>
+    <div style="margin-top:6px;"><a href="${galleri}" style="color:#2d5016;font-weight:600;">Se alle ${items.length} billeder fra ${aar} →</a></div>${andetLink}`);
+}
+// Antal billeder ud for årstallet i oversigten (hentes lidt ad gangen)
+async function taelFotosIOversigt(aarListe){
+  for (let i = 0; i < aarListe.length; i += 3){
+    await Promise.all(aarListe.slice(i, i + 3).map(async a => {
+      const n = (await aaretsFotos(a)).length;
+      const el = document.getElementById("foto-" + a);
+      if (el){ el.textContent = n ? "📷 " + n : "📷"; el.style.opacity = n ? "1" : ".35"; el.title = n ? `Se de ${n} billeder fra ${a}` : `Ingen billeder fra ${a} endnu – læg dine ind`; }
+    }));
+  }
+}
 function billederLink(aar, link){
   link = sikkertLink(link);
   if(!link) return "";
@@ -787,9 +829,10 @@ async function visAar(){
                : detRaekke("Arrangementskomité " + aar, komiteTekst);
   const fejl = DATA_OK ? "" : '<div class="tom-besked">Kunne ikke hente alle oplysninger. Prøv at genindlæse siden.</div>';
   if (!harIndhold(d)){
-    el.innerHTML = fejl + tjekBoks(aar) + komite +
+    el.innerHTML = fejl + tjekBoks(aar) + fotoRaekke(aar) + komite +
       (DATA_OK ? '<div class="tom-besked">Ingen oplysninger for ' + aar + ' endnu.' + (maa ? ' Tryk “✎ Ret året” for at udfylde.' : '') + '</div>' : "") +
       vedtaegtLink();
+    visAaretsFotos(aar, nr, d.billeder_link);
     return;
   }
   const kontakt = [d.kontaktNavn, d.kontaktTlf].filter(Boolean).join(" · ");
@@ -811,6 +854,7 @@ async function visAar(){
     (aflyst ? `<div style="background:#f3f3f3;border:2px solid #888;border-radius:8px;padding:12px 14px;margin:10px 0;font-size:17px;font-weight:bold;color:#444;">❌ Skovturen ${aar}: ${aflyst}</div>` : "") +
     detRaekke("Sted / lejr", visSted(d)) +
     detRaekke("Datoer", visDatoer(d)) +
+    fotoRaekke(aar) +
     detRaekke("Bemærkning", d.note) +
     detRaekke("Ankomst", d.ankomst) +
     detRaekke("Afgang", d.afgang) +
@@ -824,13 +868,13 @@ async function visAar(){
     detRaekke("Generalforsamling", [datoTekst(d.gf_dato), d.gf_sted].filter(Boolean).join(" · ")) +
     detFold("🏕️ Skovtursreferat " + aar + afHtml(refNavn(d.beretning) ? "skrevet af " + escHtml(refNavn(d.beretning)) : "skrevet af arrangementskomitéen") + klik, d.beretning, aabnAlt, billedeHtml(d.skovtur_billede, d.skovtur_billede_tekst)).replace("<details", '<details id="aar-skovtur"') +
     referat +
-    billederLink(aar, d.billeder_link) +
     vedtaegtLink();
   if(d.opdateret_af){
     const od = d.opdateret_dato ? new Date(d.opdateret_dato).toLocaleDateString("da-DK") : "";
     html += `<div style="margin-top:12px;font-size:12px;color:#aaa;font-style:italic;">Senest opdateret af ${escHtml(d.opdateret_af)}${od ? " · " + od : ""}</div>`;
   }
   el.innerHTML = html;
+  visAaretsFotos(aar, nr, d.billeder_link);
 }
 
 // ---- Samlet oversigt: alle år, nyeste øverst ----
@@ -856,7 +900,7 @@ function visOversigt(){
     <thead><tr><th>År</th><th>Sted</th><th>Datoer</th><th class="aar-komite">Komité</th><th class="aar-ref" title="Skovtursreferat">🏕️ Skovtur</th><th class="aar-ref" title="Referat fra generalforsamlingen">📄 Gen.fors.</th></tr></thead>
     <tbody>${aarListe.map(a => { const d = AAR_DATA[a] || {}; return `
       <tr class="${a === DET_AKTUELT_AAR ? "valgt" : ""}" onclick="vaelgAar(${a})" title="Klik for at se ${a}">
-        <td><button class="aar-link" onclick="event.stopPropagation();vaelgAar(${a})">${a}</button></td>
+        <td><button class="aar-link" onclick="event.stopPropagation();vaelgAar(${a})">${a}</button><a id="foto-${a}" href="aarenes-billeder.html?aar=${a}" onclick="event.stopPropagation()" style="display:block;font-size:12px;color:#2d5016;text-decoration:none;white-space:nowrap;opacity:.35;" title="Se billederne fra ${a}">📷</a></td>
         <td>${aflystTekst(d) && !visSted(d) ? `<b style="color:#666;">❌ ${aflystTekst(d)}</b>` : (visSted(d) ? escHtml(visSted(d)) : mangler)}${komiteTekstFor(a) ? `<div class="aar-komite-mobil">Komité: ${escHtml(komiteTekstFor(a))}</div>` : ""}</td>
         <td>${visDatoer(d) ? escHtml(visDatoer(d)) : (aflystTekst(d) ? '<span style="color:#aaa;">–</span>' : mangler)}</td>
         <td class="aar-komite">${komiteTekstFor(a) ? escHtml(komiteTekstFor(a)) : (aflystTekst(d) ? '<span style="color:#aaa;">–</span>' : mangler)}</td>
@@ -864,6 +908,7 @@ function visOversigt(){
         <td class="aar-ref">${d.referat ? `<button class="aar-link" style="color:#2d5016;font-weight:bold;font-size:18px;text-decoration:none;" title="Åbn referatet fra ${a}" onclick="event.stopPropagation();visReferat(${a})">✓</button>` : (referatMangler(a) ? `<button class="aar-link" style="color:#c0392b;font-weight:bold;font-size:12px;" title="Referatet fra generalforsamlingen ${a} mangler – har du det?" onclick="event.stopPropagation();visReferat(${a})">mangler</button>` : '<span style="color:#ccc;" title="Intet referat endnu">–</span>')}${tjekMaerke(a)}</td>
       </tr>`; }).join("")}
     </tbody></table>`;
+  taelFotosIOversigt(aarListe);
 }
 
 if (ER_ADMIN) document.getElementById("det-nyt-knap").classList.remove("skjul");
