@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indkøbsliste til skovturen – OlsenKlanen</title>
+<script>
+// Kun for medlemmer: samme login-tjek som forsiden
+try {
+  const hent = n => sessionStorage.getItem(n) || localStorage.getItem(n) || "";
+  if (!(hent("ok_niveau") || hent("ok_navn") || hent("ok_nr"))) window.location.href = "login.html";
+} catch(e) {}
+</script>
+<style>
+body { margin: 0; background: #f5f1e8; font-family: Georgia, 'Times New Roman', serif; color: #2b2b2b; line-height: 1.5; font-size: 16px; }
+.topbar { background: #2d5016; color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+.topbar h1 { margin: 0; font-size: 22px; font-weight: normal; }
+.topbar a { color: #f3e6c4; font-size: 15px; text-decoration: none; border: 1px solid #f3e6c4; padding: 6px 12px; border-radius: 6px; }
+main { max-width: 900px; margin: 0 auto; padding: 18px 16px 60px; }
+.note { background: #fff8e1; border-left: 4px solid #b8860b; padding: 10px 14px; border-radius: 4px; font-size: 15px; color: #5a4a10; }
+.kort { background: #fff; border: 1px solid #e0d8c0; border-radius: 10px; margin: 16px 0; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+.kort-header { padding: 12px 16px; border-bottom: 1px solid #e0d8c0; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.kort-titel { font-size: 19px; color: #2d5016; font-weight: bold; }
+.kort-body { padding: 14px 16px; }
+.btn { background: #e8e2d0; color: #2d5016; border: none; border-radius: 6px; padding: 7px 12px; font-family: inherit; font-size: 14px; cursor: pointer; }
+.indk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem 1.5rem; }
+h3 { font-size: 16px; color: #2d5016; margin: .2rem 0 .4rem; border-bottom: 1px solid #e5ddc7; padding-bottom: .2rem; }
+ul { list-style: none; margin: 0; padding: 0; }
+li { font-size: 15px; padding: 3px 0; }
+input[type=checkbox] { margin-right: 6px; transform: scale(1.15); }
+@media print { .topbar, .note, #forside-knap, .indk-print { display: none !important; } .kort { box-shadow: none; } }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>🛒 Indkøbsliste til skovturen</h1>
+  <a href="arrangementer.html">← Arrangementer</a>
+</div>
+<main>
+  <p class="note">Til arrangementskomitéen – og alle andre, der er nysgerrige. Listen giver en idé om, hvad der går til på en skovturs-weekend for ca. 50 personer.<br>
+  Sæt flueben, mens du handler (fluebenene gemmes ikke). Tryk på <b>🖨️ Udskriv</b> for at få listen på papir.</p>
+<div class="kort">
+          <div class="kort-header"><div class="kort-titel">🛒 Weekenden – ca. 50 personer</div><button class="btn indk-print" onclick="window.print()">🖨️ Udskriv</button></div>
+          <div class="kort-body"><div class="indk-grid">
+            <div class="indk-gruppe"><h3>🍞 Morgenmad og frokost</h3><ul><li><label><input type="checkbox"> 4 pakker rullepølse</label></li><li><label><input type="checkbox"> 3 pakker spegepølse</label></li><li><label><input type="checkbox"> 1 kg leverpostej</label></li><li><label><input type="checkbox"> 10 pakker smør</label></li><li><label><input type="checkbox"> 2 kg ost (mellemlagret)</label></li><li><label><input type="checkbox"> 140 skiver rugbrød</label></li><li><label><input type="checkbox"> 3 franskbrød (lørdag)</label></li><li><label><input type="checkbox"> 1 franskbrød (søndag)</label></li><li><label><input type="checkbox"> Rundstykker (lørdag)</label></li><li><label><input type="checkbox"> Rundstykker (søndag)</label></li><li><label><input type="checkbox"> 3 glas marmelade à 400 g</label></li><li><label><input type="checkbox"> 4 poser kaffe</label></li><li><label><input type="checkbox"> 1 pakke te med 4 slags</label></li><li><label><input type="checkbox"> 1 kg sukker</label></li><li><label><input type="checkbox"> 10 l mælk</label></li><li><label><input type="checkbox"> 6 l æblejuice</label></li><li><label><input type="checkbox"> 10 l appelsinjuice</label></li><li><label><input type="checkbox"> 30 stk. pålægschokolade (lys)</label></li><li><label><input type="checkbox"> 1 pakke cornflakes</label></li><li><label><input type="checkbox"> 1 yoghurt (pære/banan)</label></li><li><label><input type="checkbox"> 1 fedt</label></li></ul></div>
+            <div class="indk-gruppe"><h3>🌭 Pølser og snobrød (lørdag aften)</h3><ul><li><label><input type="checkbox"> 150 pølser</label></li><li><label><input type="checkbox"> 70 pølsebrød</label></li><li><label><input type="checkbox"> 1 kg Heinz ketchup</label></li><li><label><input type="checkbox"> 1 flaske sandwich-ketchup</label></li><li><label><input type="checkbox"> 1 flaske sød sennep</label></li><li><label><input type="checkbox"> 1 flaske stærk sennep</label></li><li><label><input type="checkbox"> 2 poser ristede løg</label></li><li><label><input type="checkbox"> 4 rå løg</label></li><li><label><input type="checkbox"> 2 kg mel, bagepulver, salt og 1 pakke margarine (til snobrød)</label></li><li><label><input type="checkbox"> Peber</label></li></ul></div>
+            <div class="indk-gruppe"><h3>🍫 Hygge, slik og drikke</h3><ul><li><label><input type="checkbox"> 2 pakker fryse-is</label></li><li><label><input type="checkbox"> 6 poser chips</label></li><li><label><input type="checkbox"> 1 kg peanuts</label></li><li><label><input type="checkbox"> 3 pakker småkager (fredag)</label></li><li><label><input type="checkbox"> 2 poser blandet Toms chokolade</label></li><li><label><input type="checkbox"> 3 kg slik</label></li><li><label><input type="checkbox"> Frisk frugt – god idé, alt blev spist</label></li><li><label><input type="checkbox"> 24 flasker hvidvin</label></li><li><label><input type="checkbox"> 30 flasker rødvin</label></li><li><label><input type="checkbox"> Øl og vand (antal?)</label></li></ul></div>
+            <div class="indk-gruppe"><h3>🧻 Køkken og andet</h3><ul><li><label><input type="checkbox"> 4 haveblus</label></li><li><label><input type="checkbox"> 5 karklude</label></li><li><label><input type="checkbox"> Papirdug</label></li><li><label><input type="checkbox"> 1 opvaskemiddel</label></li><li><label><input type="checkbox"> 30 ruller toiletpapir</label></li><li><label><input type="checkbox"> 4 køkkenruller</label></li><li><label><input type="checkbox"> 300 servietter</label></li><li><label><input type="checkbox"> 1 rulle stanniol</label></li><li><label><input type="checkbox"> 1 rulle fryseposer</label></li><li><label><input type="checkbox"> 4 håndsæber</label></li><li><label><input type="checkbox"> 2 ruller affaldssække</label></li><li><label><input type="checkbox"> 50 fyrfadslys</label></li><li><label><input type="checkbox"> 50 pølsebakker</label></li><li><label><input type="checkbox"> 100 engangskrus</label></li><li><label><input type="checkbox"> 100 snapseglas</label></li><li><label><input type="checkbox"> 1 pakke kaffefiltre</label></li></ul></div>
+          </div></div>
+        </div>
+        <div class="kort">
+          <div class="kort-header"><div class="kort-titel">🍲 Aftensmad fredag – 50 personer</div></div>
+          <div class="kort-body">
+            <p style="font-size:13px;color:var(--tekst-lys);margin:0 0 .6rem">2 slags gryderet · ca. 175 g kød pr. person. Kylling og oksefars var lige lidt nok – køb gerne lidt mere.</p>
+            <div class="indk-grid"><div class="indk-gruppe"><h3>Gryderet med kylling og oksekød</h3><ul><li><label><input type="checkbox"> 1 pakke hønsebouillon</label></li><li><label><input type="checkbox"> 6 kg kylling (lige lidt nok)</label></li><li><label><input type="checkbox"> 3 kg oksefars (lige lidt nok)</label></li><li><label><input type="checkbox"> 4 × bolognese-krydderi</label></li><li><label><input type="checkbox"> 4 × tomatkoncentrat</label></li><li><label><input type="checkbox"> 4 poser pasta</label></li><li><label><input type="checkbox"> 4 kg ris</label></li><li><label><input type="checkbox"> 10 × wokmix</label></li><li><label><input type="checkbox"> 5 dåser ananas</label></li><li><label><input type="checkbox"> 2 poser kokos</label></li><li><label><input type="checkbox"> 3 pakker rosiner</label></li><li><label><input type="checkbox"> 10 bananer</label></li><li><label><input type="checkbox"> 2 × mango chutney</label></li><li><label><input type="checkbox"> 4 dåser mandariner</label></li><li><label><input type="checkbox"> Karry, salt og peber</label></li><li><label><input type="checkbox"> Olie (til pastaen)</label></li><li><label><input type="checkbox"> Margarine</label></li></ul></div></div>
+          </div>
+        </div>
+      
+</main>
+<script src="forside-knap.js" defer></script>
+</body>
+</html>
