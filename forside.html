@@ -666,6 +666,8 @@ function renderFremhaevede(kommende) {
   // Når nr. 11 kommer til, forsvinder den ældste. Dem, der havde fødselsdag for 1–2 dage siden,
   // står der altid, så man kan nå at sende en forsinket hilsen.
   const idag0 = new Date(); idag0.setHours(0, 0, 0, 0);
+  // Alle rækker samles med dato og vises til sidst i datoorden (tidligste øverst)
+  const raekker = [];
   const tidligere = {};
   Object.keys(hilsenTal).forEach(noegle => {
     const [aar, navn, fd] = noegle.split("|");
@@ -690,13 +692,13 @@ function renderFremhaevede(kommende) {
       const stjerne = info.antal ? `<span class="hilsen-antal klik" title="Klik og se fødselsdagskortet" onclick="visKort('${noegle}')">⭐ ${info.antal}</span>` : '';
       const kortKnap = info.antal ? `<button class="kort-knap" onclick="visKort('${noegle}')">🎉 Se fødselsdagskort</button>` : '';
       const knap = (k.email && k.vindue === "efter") ? hilsenKnapHtml(k, info) : '';
-      html += `
+      raekker.push({ dato: x.dag, html: `
       <div class="fremh-row">
         <div class="fremh-dato">${x.dag.getDate()}. ${MAANEDER[x.dag.getMonth()]}</div>
         <div class="fremh-tekst">${escHtmlF(x.navn)} fyldte ${x.alder} år${stjerne}</div>
         ${kortKnap}${knap}
         <div class="fremh-tag tag-maerk">Mærkedag</div>
-      </div>`;
+      </div>` });
     });
   kommende.forEach(k => {
     const datoTekst = k.dato.getDate() + '. ' + MAANEDER[k.dato.getMonth()];
@@ -709,13 +711,13 @@ function renderFremhaevede(kommende) {
     let knap = '';
     k.vindue = hilsenVindue(k.dato);
     if (k.email && (k.vindue === "foer" || k.vindue === "dag")) knap = hilsenKnapHtml(k, info);
-    html += `
+    raekker.push({ dato: k.dato, html: `
       <div class="fremh-row">
         <div class="fremh-dato">${datoTekst}</div>
         <div class="fremh-tekst">${escHtmlF(k.navn)} fylder ${k.alder} år${stjerne}</div>
         ${kortKnap}${knap}
         <div class="fremh-tag tag-maerk">Mærkedag</div>
-      </div>`;
+      </div>` });
   });
   // Arrangementer fra databasen (hentes i koerMaerkedage)
   (window.OLSEN_ARRANGEMENTER || []).forEach(a => {
@@ -727,13 +729,14 @@ function renderFremhaevede(kommende) {
     }
     const tagKlasse = a.type === 'inv' ? 'tag-jub' : 'tag-arr';
     const tagTekst  = a.type === 'inv' ? 'Invitation' : 'Arrangement';
-    html += `
+    raekker.push({ dato: d, html: `
       <div class="fremh-row">
         <div class="fremh-dato">${datoTekst}</div>
         <div class="fremh-tekst">${a.titel}</div>
         <div class="fremh-tag ${tagKlasse}">${tagTekst}</div>
-      </div>`;
+      </div>` });
   });
+  raekker.sort((a, b) => a.dato - b.dato).forEach(r => { html += r.html; });
   el.innerHTML = html;
  
   // Opdater også den lille info-tekst i venstre opslag
