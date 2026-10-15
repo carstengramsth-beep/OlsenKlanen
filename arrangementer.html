@@ -79,6 +79,11 @@ textarea { min-height: 70px; resize: vertical; }
   .aar-tabel .aar-komite { display: none; }
   .aar-tabel .aar-komite-mobil { display: block; }
 }
+/* Tom billedramme — "Ingen billeder endnu" */
+.ingen-fotos{display:block;margin-top:4px;padding:5px 4px;border:2px dashed #c8b98a;border-radius:6px;background:#fbf8ef;color:#8a7a4f !important;font-size:10.5px !important;line-height:1.25;text-align:center;white-space:normal !important;max-width:88px;}
+.ingen-fotos:hover{border-color:#2d5016;color:#2d5016 !important;}
+.ingen-fotos-stor{display:block;max-width:320px;padding:16px;border:2px dashed #c8b98a;border-radius:8px;background:#fbf8ef;color:#6f6240;text-align:center;text-decoration:none;line-height:1.4;}
+.ingen-fotos-stor:hover{border-color:#2d5016;color:#2d5016;}
 </style>
 <script>
 // Login-tjek (samme princip som forside.html)
@@ -731,7 +736,11 @@ async function visAaretsFotos(aar, nr, link){
   const andetLink = ekstra && !ekstra.startsWith("aarenes-billeder.html")
     ? `<div style="margin-top:6px;"><a href="${escAttr(ekstra)}"${/^https?:/i.test(ekstra) ? ' target="_blank" rel="noopener"' : ""} style="color:#2d5016;">Flere billeder fra ${aar} →</a></div>` : "";
   if (!items.length){
-    boks.innerHTML = detRaekkeHtml("📷 Årets billeder", `<span style="color:#888;">Der er ingen billeder fra ${aar} endnu.</span> <a href="${galleri}" style="color:#2d5016;font-weight:600;">Læg dine billeder ind →</a>${andetLink}`);
+    boks.innerHTML = detRaekkeHtml("📷 Årets billeder", `<a href="${galleri}" class="ingen-fotos-stor">
+        <div style="font-size:26px;">📷</div>
+        <div style="font-weight:600;">Ingen billeder endnu</div>
+        <div style="font-size:13px;">Har du billeder fra ${aar} i gemmerne? Klik her og læg dem ind.</div>
+      </a>${andetLink}`);
     return;
   }
   const vis = items.slice(0, 8);
@@ -747,7 +756,15 @@ async function taelFotosIOversigt(aarListe){
     await Promise.all(aarListe.slice(i, i + 3).map(async a => {
       const n = (await aaretsFotos(a)).length;
       const el = document.getElementById("foto-" + a);
-      if (el){ el.textContent = n ? "📷 " + n : "📷"; el.style.opacity = n ? "1" : ".35"; el.title = n ? `Se de ${n} billeder fra ${a}` : `Ingen billeder fra ${a} endnu – læg dine ind`; }
+      if (!el) return;
+      if (n){
+        el.textContent = "📷 " + n; el.style.opacity = "1"; el.className = ""; el.title = `Se de ${n} billeder fra ${a}`;
+      } else {
+        // Tom ramme: opfordrer medlemmerne til at finde billeder frem fra gemmerne
+        el.className = "ingen-fotos"; el.style.opacity = "1";
+        el.innerHTML = "📷<br>Ingen billeder endnu";
+        el.title = `Har du billeder fra ${a}? Klik og læg dem ind`;
+      }
     }));
   }
 }
