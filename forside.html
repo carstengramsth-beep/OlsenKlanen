@@ -604,8 +604,10 @@ async function hentAllePersoner() {
           if (p.status === "afdød" || p.status === "udmeldt") return;
           // Mail til fødselsdagshilsen: personens egen mail (voksne må bruge husstandens mail)
           const email = (p.email || (p.rolle !== "barn" ? fam.email : "") || "").trim();
+          // Fulde navn (fornavn, mellemnavn, efternavn) vises på listen; fornavnet bruges stadig som nøgle til hilsner
+          const fuldtNavn = ([p.fornavn, p.mellemnavn, p.efternavn].filter(x => x && String(x).trim()).join(' ').trim()) || (p.navn || '').trim() || navn;
           personer.push({
-            navn, email, foedselsdato: p.foedselsdato, hus, rolle: p.rolle || "",
+            navn, fuldtNavn, email, foedselsdato: p.foedselsdato, hus, rolle: p.rolle || "",
             aar: parseInt(dele[0]),
             maaned: parseInt(dele[1]),
             dag: parseInt(dele[2])
@@ -634,6 +636,7 @@ function kommendeFoedselsdage(personer, idag, antal) {
       const naeste = naesteForekomst(p.maaned, p.dag, idag);
       return {
         navn: p.navn,
+        fuldtNavn: p.fuldtNavn,
         email: p.email,
         foedselsdato: p.foedselsdato,
         dato: naeste,
@@ -685,6 +688,11 @@ function renderFremhaevede(kommende) {
     const noegle = hilsenTilNoegle({ navn: p.navn, foedselsdato: p.foedselsdato, dato: dag });
     tidligere[noegle] = Object.assign(tidligere[noegle] || { noegle, navn: p.navn, foedselsdato: p.foedselsdato, dag, alder: idag0.getFullYear() - p.aar }, { email: p.email });
   });
+  // Slå det fulde navn op ud fra fornavn + fødselsdato
+  const fuldtNavnAf = (navn, fd) => {
+    const p = allePersonerHilsen.find(x => x.navn === navn && x.foedselsdato === fd);
+    return (p && p.fuldtNavn) || navn;
+  };
   const tidligereListe = Object.values(tidligere)
     .sort((a, b) => b.dag - a.dag)
     .slice(0, ANTAL_I_LISTEN - MIN_KOMMENDE);
@@ -699,7 +707,7 @@ function renderFremhaevede(kommende) {
       raekker.push({ dato: x.dag, html: `
       <div class="fremh-row">
         <div class="fremh-dato">${x.dag.getDate()}. ${MAANEDER[x.dag.getMonth()]}</div>
-        <div class="fremh-tekst">${escHtmlF(x.navn)} fyldte ${x.alder} år${stjerne}</div>
+        <div class="fremh-tekst">${escHtmlF(fuldtNavnAf(x.navn, x.foedselsdato))} fyldte ${x.alder} år${stjerne}</div>
         ${kortKnap}${knap}
         <div class="fremh-tag tag-maerk">Mærkedag</div>
       </div>` });
@@ -718,7 +726,7 @@ function renderFremhaevede(kommende) {
     raekker.push({ dato: k.dato, html: `
       <div class="fremh-row">
         <div class="fremh-dato">${datoTekst}</div>
-        <div class="fremh-tekst">${escHtmlF(k.navn)} fylder ${k.alder} år${stjerne}</div>
+        <div class="fremh-tekst">${escHtmlF(k.fuldtNavn || k.navn)} fylder ${k.alder} år${stjerne}</div>
         ${kortKnap}${knap}
         <div class="fremh-tag tag-maerk">Mærkedag</div>
       </div>` });
