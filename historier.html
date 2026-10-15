@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Historier – OlsenKlanen</title>
+<script>
+// Kun for medlemmer: samme login-tjek som forsiden
+const hent = n => { try { return sessionStorage.getItem(n) || localStorage.getItem(n) || ""; } catch(e) { return ""; } };
+window.hent = hent;
+if (!(hent("ok_niveau") || hent("ok_navn") || hent("ok_nr"))) window.location.href = "login.html";
+</script>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; background: #f5f1e8; font-family: Georgia, 'Times New Roman', serif; color: #2b2b2b; line-height: 1.6; font-size: 17px; }
+.topbar { background: #2d5016; color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+.topbar h1 { margin: 0; font-size: 22px; font-weight: normal; }
+.topbar a { color: #f3e6c4; font-size: 15px; text-decoration: none; border: 1px solid #f3e6c4; padding: 6px 12px; border-radius: 6px; }
+main { max-width: 780px; margin: 0 auto; padding: 18px 16px 60px; }
+.note { background: #fff8e1; border-left: 4px solid #b8860b; padding: 10px 14px; border-radius: 4px; font-size: 15px; color: #5a4a10; }
+.knap { background: #2d5016; color: #fff; border: none; border-radius: 8px; padding: 11px 18px; font-family: inherit; font-size: 16px; cursor: pointer; }
+.knap:hover { background: #3d6b1f; }
+.knap-graa { background: #e8e2d0; color: #2d5016; }
+.knap-graa:hover { background: #ddd4bb; }
+.filtre { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 6px; }
+.filtre button { background: #fff; border: 1px solid #c8bfa0; border-radius: 20px; padding: 6px 14px; font-family: inherit; font-size: 15px; cursor: pointer; color: #2d5016; }
+.filtre button.valgt { background: #2d5016; color: #fff; border-color: #2d5016; }
+.historie { background: #fff; border: 1px solid #e0d8c0; border-radius: 10px; margin: 12px 0; box-shadow: 0 1px 3px rgba(0,0,0,.05); overflow: hidden; }
+.historie > button.hoved { display: block; width: 100%; text-align: left; background: none; border: none; padding: 14px 16px; cursor: pointer; font: inherit; color: inherit; }
+.historie .titel { font-size: 19px; font-weight: bold; color: #2d5016; }
+.historie .meta { font-size: 14px; color: #8a7a3f; margin-top: 2px; }
+.historie .kat { display: inline-block; font-size: 12px; background: #f1ead6; color: #6b5a1f; border-radius: 10px; padding: 1px 9px; margin-left: 6px; vertical-align: 2px; }
+.historie .tekst { padding: 0 18px 16px; white-space: pre-wrap; font-size: 18px; line-height: 1.7; display: none; }
+.historie.aaben .tekst, .historie.aaben .handlinger { display: block; }
+.historie .handlinger { display: none; padding: 0 16px 14px; border-top: 1px dashed #e0d8c0; padding-top: 10px; }
+.historie .handlinger button { margin: 4px 6px 0 0; font-size: 14px; padding: 6px 12px; }
+.skjult-maerke { color: #b03030; font-size: 13px; font-weight: bold; }
+#form { display: none; background: #fff; border: 2px solid #2d5016; border-radius: 10px; padding: 16px 18px; margin: 16px 0; }
+#form h2 { margin: 0 0 6px; color: #2d5016; font-size: 20px; }
+label { display: block; font-size: 15px; color: #555; margin: 12px 0 4px; }
+input[type=text], textarea, select { width: 100%; font-family: inherit; font-size: 17px; padding: 9px 11px; border: 1px solid #c8bfa0; border-radius: 6px; background: #fdfbf5; }
+textarea { min-height: 260px; resize: vertical; line-height: 1.6; }
+.to-kol { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+@media (max-width: 600px) { .to-kol { grid-template-columns: 1fr; } }
+#status { margin-top: 10px; font-weight: bold; }
+#status.ok { color: #155724; } #status.fejl { color: #b03030; }
+.tom { color: #8a7a3f; font-style: italic; padding: 14px 0; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>📖 Historier fra OlsenKlanen</h1>
+  <a href="forside.html">← Forside</a>
+</div>
+<main>
+  <p class="note">Her samler vi små historier fra familien: minder, oplevelser og sjove episoder – til godnatlæsning eller bare til at blive klogere på, hvor vi kommer fra.<br>
+  Alle medlemmer kan læse dem og skrive nye. Tryk på en historie for at læse den. Tryk på <b>🔊 Læs højt</b>, hvis du vil have den læst op.<br>
+  Historierne er kun for medlemmer – send dem ikke videre.</p>
+
+  <p style="margin:16px 0 0;"><button class="knap" id="ny-knap">✍️ Skriv en historie</button></p>
+
+  <div id="form">
+    <h2 id="form-titel">✍️ Skriv en historie</h2>
+    <div style="font-size:14px;color:#666;">Skriv lige så kort eller langt, du vil. Du kan altid rette den bagefter.</div>
+    <label for="h-titel">Overskrift</label>
+    <input type="text" id="h-titel" maxlength="120" placeholder="F.eks. Dengang tyskerne kom">
+    <div class="to-kol">
+      <div><label for="h-fortaeller">Hvem fortæller?</label>
+        <input type="text" id="h-fortaeller" maxlength="80" placeholder="F.eks. Birthe"></div>
+      <div><label for="h-hvornaar">Hvornår skete det? (valgfri)</label>
+        <input type="text" id="h-hvornaar" maxlength="60" placeholder="F.eks. 9. april 1940 eller 1960'erne"></div>
+    </div>
+    <label for="h-kat">Hvilken slags historie?</label>
+    <select id="h-kat"></select>
+    <label for="h-tekst">Historien</label>
+    <textarea id="h-tekst" placeholder="Skriv historien her …"></textarea>
+    <p style="margin:14px 0 0;">
+      <button class="knap" id="gem-knap">Gem historien</button>
+      <button class="knap knap-graa" id="annuller-knap">Annullér</button>
+    </p>
+    <div id="status"></div>
+  </div>
+
+  <div class="filtre" id="filtre"></div>
+  <div id="liste" class="tom">Henter historier …</div>
+</main>
+
+<script type="module">
+/* Historierne gemmes i olsenpost (åben for medlemmerne) som type "historie" — samme måde som postkortene (type "kort").
+   De har ingen modtagere (til: []), så de dukker ikke op som post i nogens indbakke. */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, serverTimestamp, query, where }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+});
+const db = getFirestore(app);
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+const POSTANSVARLIGE = ["8-B", "19-A", "22-B", "23-B", "48-B"];   // de 5 – samme som i meddelelser.html
+const MIT_NR = hent("ok_nr").trim();
+const MIT_NAVN = hent("ok_navn").trim();
+const ER_GAEST = (hent("ok_niveau") || "").toLowerCase() === "gaest";
+const ER_DE5 = POSTANSVARLIGE.includes(MIT_NR);
+const KATEGORIER = ["Erindring", "Godnathistorie", "Information", "Andet"];
+
+let HISTORIER = [], FILTER = "Alle", RET_ID = null;
+$("h-kat").innerHTML = KATEGORIER.map(k => `<option>${k}</option>`).join("");
+if (ER_GAEST || !MIT_NR) $("ny-knap").style.display = "none";
+
+const maaRette = h => !ER_GAEST && MIT_NR && (h.fra_nr === MIT_NR || ER_DE5);
+const tid = h => h.oprettet_lokal || (h.oprettet && h.oprettet.seconds * 1000) || 0;
+const datoTekst = ms => ms ? new Date(ms).toLocaleDateString("da-DK", { day: "numeric", month: "long", year: "numeric" }) : "";
+
+async function hentHistorier(){
+  try {
+    const snap = await getDocs(query(collection(db, "olsenpost"), where("type", "==", "historie")));
+    HISTORIER = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .filter(h => !h.skjult || maaRette(h))
+      .sort((a, b) => tid(b) - tid(a));
+    tegn();
+  } catch(e) {
+    console.log("Historier:", e);
+    $("liste").textContent = "Kunne ikke hente historierne. Prøv at genindlæse siden.";
+  }
+}
+
+function tegn(){
+  const antal = k => HISTORIER.filter(h => k === "Alle" || h.kategori === k).length;
+  $("filtre").innerHTML = ["Alle", ...KATEGORIER].filter(k => k === "Alle" || antal(k))
+    .map(k => `<button class="${k === FILTER ? "valgt" : ""}" data-filter="${esc(k)}">${esc(k)} (${antal(k)})</button>`).join("");
+  const vis = HISTORIER.filter(h => FILTER === "Alle" || h.kategori === FILTER);
+  const el = $("liste");
+  el.className = vis.length ? "" : "tom";
+  el.innerHTML = vis.length ? vis.map(h => `
+    <div class="historie" id="h-${esc(h.id)}">
+      <button class="hoved" data-aabn="${esc(h.id)}">
+        <div class="titel">${esc(h.titel || "Uden overskrift")}${h.kategori ? `<span class="kat">${esc(h.kategori)}</span>` : ""}${h.skjult ? ' <span class="skjult-maerke">(skjult for andre)</span>' : ""}</div>
+        <div class="meta">${[h.fortaeller ? "Fortalt af " + esc(h.fortaeller) : "", h.hvornaar ? esc(h.hvornaar) : ""].filter(Boolean).join(" · ")}</div>
+        <div class="meta" style="font-size:12.5px;">Lagt ind af ${esc(h.fra_navn || "et medlem")}${tid(h) ? " · " + datoTekst(tid(h)) : ""}${h.rettet_lokal ? " · rettet " + datoTekst(h.rettet_lokal) : ""}</div>
+      </button>
+      <div class="tekst">${esc(h.tekst)}</div>
+      <div class="handlinger">
+        <button class="knap knap-graa" data-laes="${esc(h.id)}">🔊 Læs højt</button>
+        ${maaRette(h) ? `<button class="knap knap-graa" data-ret="${esc(h.id)}">✎ Ret</button>
+        <button class="knap knap-graa" data-skjul="${esc(h.id)}">${h.skjult ? "👁 Vis igen" : "🙈 Skjul"}</button>` : ""}
+      </div>
+    </div>`).join("") : "Der er ingen historier endnu. Skriv den første!";
+}
+
+function visForm(h){
+  RET_ID = h ? h.id : null;
+  $("form-titel").textContent = h ? "✎ Ret historien" : "✍️ Skriv en historie";
+  $("h-titel").value = h ? h.titel || "" : "";
+  $("h-fortaeller").value = h ? h.fortaeller || "" : MIT_NAVN;
+  $("h-hvornaar").value = h ? h.hvornaar || "" : "";
+  $("h-kat").value = h && h.kategori ? h.kategori : "Erindring";
+  $("h-tekst").value = h ? h.tekst || "" : "";
+  $("status").textContent = ""; $("status").className = "";
+  $("form").style.display = "block";
+  $("form").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function gem(){
+  const data = {
+    titel: $("h-titel").value.trim(), fortaeller: $("h-fortaeller").value.trim(),
+    hvornaar: $("h-hvornaar").value.trim(), kategori: $("h-kat").value, tekst: $("h-tekst").value.trim()
+  };
+  if (!data.titel || !data.tekst) { $("status").textContent = "Skriv både en overskrift og selve historien."; $("status").className = "fejl"; return; }
+  $("gem-knap").disabled = true;
+  try {
+    if (RET_ID) {
+      await updateDoc(doc(db, "olsenpost", RET_ID), { ...data, rettet_af: MIT_NAVN, rettet_lokal: Date.now() });
+    } else {
+      await addDoc(collection(db, "olsenpost"), {
+        ...data, type: "historie", til: [], skjult: false,
+        fra_nr: MIT_NR, fra_navn: MIT_NAVN || ("Medlem " + MIT_NR),
+        oprettet: serverTimestamp(), oprettet_lokal: Date.now()
+      });
+    }
+    $("form").style.display = "none";
+    await hentHistorier();
+  } catch(e) {
+    console.log("Gem historie:", e);
+    $("status").textContent = "Det lykkedes ikke at gemme. Prøv igen."; $("status").className = "fejl";
+  }
+  $("gem-knap").disabled = false;
+}
+
+function laesHoejt(h, knap){
+  if (!("speechSynthesis" in window)) { alert("Din browser kan desværre ikke læse højt."); return; }
+  if (speechSynthesis.speaking) { speechSynthesis.cancel(); knap.textContent = "🔊 Læs højt"; return; }
+  const tale = new SpeechSynthesisUtterance([h.titel, h.fortaeller ? "Fortalt af " + h.fortaeller : "", h.tekst].filter(Boolean).join(". \n"));
+  tale.lang = "da-DK"; tale.rate = 0.9;
+  const stemme = speechSynthesis.getVoices().find(v => v.lang && v.lang.toLowerCase().startsWith("da"));
+  if (stemme) tale.voice = stemme;
+  tale.onend = () => { knap.textContent = "🔊 Læs højt"; };
+  knap.textContent = "⏹ Stop oplæsning";
+  speechSynthesis.speak(tale);
+}
+
+document.addEventListener("click", async ev => {
+  const t = ev.target.closest("button");
+  if (!t) return;
+  const find = id => HISTORIER.find(h => h.id === id);
+  if (t.id === "ny-knap") visForm(null);
+  else if (t.id === "annuller-knap") $("form").style.display = "none";
+  else if (t.id === "gem-knap") gem();
+  else if (t.dataset.filter) { FILTER = t.dataset.filter; tegn(); }
+  else if (t.dataset.aabn) $("h-" + t.dataset.aabn).classList.toggle("aaben");
+  else if (t.dataset.laes) laesHoejt(find(t.dataset.laes), t);
+  else if (t.dataset.ret) visForm(find(t.dataset.ret));
+  else if (t.dataset.skjul) {
+    const h = find(t.dataset.skjul);
+    if (!h.skjult && !confirm("Skjul historien? Den kan stadig ses og vises igen af den, der lagde den ind, og af de 5.")) return;
+    await updateDoc(doc(db, "olsenpost", h.id), { skjult: !h.skjult, rettet_af: MIT_NAVN, rettet_lokal: Date.now() });
+    await hentHistorier();
+  }
+});
+
+hentHistorier().then(() => {
+  // Åbn direkte fra et link: historier.html?vis=<id>
+  const vis = new URLSearchParams(location.search).get("vis");
+  const el = vis && document.getElementById("h-" + vis);
+  if (el) { el.classList.add("aaben"); el.scrollIntoView({ behavior: "smooth" }); }
+});
+</script>
+</body>
+</html>
