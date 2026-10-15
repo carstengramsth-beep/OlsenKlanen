@@ -251,5 +251,6 @@ const p = new URLSearchParams(location.search);
 const rumFraLink = (p.get("rum") || "").replace(/[^A-Za-z0-9-]/g, "");
 if (rumFraLink) startSamtale(rumFraLink, p.get("med") || "familien");
 </script>
+<script src="forside-knap.js" defer></script>
 </body>
 </html>
