@@ -4,6 +4,7 @@
   var side = (location.pathname.split("/").pop() || "").toLowerCase();
   if (side === "" || side === "forside.html" || side === "index.html" || side === "login.html" || side === "404.html") return;
   if (document.getElementById("forside-knap")) return;
+  if (document.querySelector(".til-forsiden")) return; // siden har allerede sin egen faste forside-knap
   var stil = document.createElement("style");
   stil.textContent =
     "#forside-knap{position:fixed;left:14px;bottom:14px;z-index:9000;background:#2d5016;color:#f5e6a8;" +
