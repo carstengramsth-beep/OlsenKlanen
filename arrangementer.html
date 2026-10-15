@@ -436,13 +436,12 @@ function referatMangler(aar){
   return aar === iAar && !!d.gf_dato && new Date(d.gf_dato) < nu;
 }
 const TJEK = {
+  2009: ["Indbydelsen 2009 er en dårlig scanning: børnepriserne for mad er usikre. Har nogen den rigtige indbydelse?"],
   2017: ["Mangler: fællesfoto og billeder fra turen.", "Mangler: priser og program for turen (stod i Information nr. 42)."],
-  2020: ["Skovturen 2020 blev aflyst (corona). Tjek om der er andre oplysninger fra 2020, fx hvor turen skulle have været."],
   2021: [
     "Referatet punkt 2 nævner godkendelse af \"beretning/referat 2020\" — men der var ingen skovtur i 2020. Var det referatet fra 2019?",
     "Referatet punkt 6 nævner Langeland 19.–21. maj 2023. Det ser ud til at være skrevet ind senere end 2021."
   ],
-  2022: ["Referatet fra generalforsamlingen 2022 mangler. Komitéens beretning er lagt ind."],
   2026: ["Invitationen siger, at vi har været på Eriksminde i \"2014, 2020 og 2022\" — 2020 blev aflyst, og vi var der i 2010. Skal det være 2010, 2014 og 2022?"]
 };
 function tjekMaerke(aar){
