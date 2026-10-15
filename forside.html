@@ -662,10 +662,13 @@ function renderFremhaevede(kommende) {
         <button class="hilsen-knap" onclick="aabnHilsen(${i})">✍️ Skriv hilsen</button>
       </div>`;
   }
-  // De seneste 10 fødselarer, der har fået hilsner, bliver stående (nyeste øverst).
-  // Når nr. 11 kommer til, forsvinder den ældste. Dem, der havde fødselsdag for 1–2 dage siden,
-  // står der altid, så man kan nå at sende en forsinket hilsen.
+  // Fødselsdage fra de seneste 8 dage bliver stående. Ældre flyttes ud,
+  // og listen fyldes op med kommende fødselsdage, så man bliver husket på at sende en hilsen.
+  // Dem, der havde fødselsdag for 1–2 dage siden, kan stadig få en forsinket hilsen.
   const idag0 = new Date(); idag0.setHours(0, 0, 0, 0);
+  const graense = new Date(idag0); graense.setDate(graense.getDate() - 8);
+  const ANTAL_I_LISTEN = 8;     // fødselsdage i alt (tidligere + kommende)
+  const MIN_KOMMENDE = 3;       // altid mindst 3 kommende
   // Alle rækker samles med dato og vises til sidst i datoorden (tidligste øverst)
   const raekker = [];
   const tidligere = {};
@@ -674,7 +677,7 @@ function renderFremhaevede(kommende) {
     const dele = (fd || "").split("-");
     if (dele.length !== 3 || !hilsenTal[noegle].antal) return;
     const dag = new Date(parseInt(aar), parseInt(dele[1]) - 1, parseInt(dele[2]));
-    if (dag < idag0) tidligere[noegle] = { noegle, navn, foedselsdato: fd, dag, alder: parseInt(aar) - parseInt(dele[0]) };
+    if (dag < idag0 && dag >= graense) tidligere[noegle] = { noegle, navn, foedselsdato: fd, dag, alder: parseInt(aar) - parseInt(dele[0]) };
   });
   allePersonerHilsen.forEach(p => {
     const dag = new Date(idag0.getFullYear(), p.maaned - 1, p.dag);
@@ -682,10 +685,11 @@ function renderFremhaevede(kommende) {
     const noegle = hilsenTilNoegle({ navn: p.navn, foedselsdato: p.foedselsdato, dato: dag });
     tidligere[noegle] = Object.assign(tidligere[noegle] || { noegle, navn: p.navn, foedselsdato: p.foedselsdato, dag, alder: idag0.getFullYear() - p.aar }, { email: p.email });
   });
-  Object.values(tidligere)
+  const tidligereListe = Object.values(tidligere)
     .sort((a, b) => b.dag - a.dag)
-    .slice(0, 10)
-    .forEach(x => {
+    .slice(0, ANTAL_I_LISTEN - MIN_KOMMENDE);
+  const antalKommende = Math.max(MIN_KOMMENDE, ANTAL_I_LISTEN - tidligereListe.length);
+  tidligereListe.forEach(x => {
       const k = { navn: x.navn, foedselsdato: x.foedselsdato, dato: x.dag, alder: x.alder, email: x.email, vindue: hilsenVindue(x.dag) };
       const info = hilsenInfo(k);
       const noegle = encodeURIComponent(x.noegle);
@@ -700,7 +704,7 @@ function renderFremhaevede(kommende) {
         <div class="fremh-tag tag-maerk">Mærkedag</div>
       </div>` });
     });
-  kommende.forEach(k => {
+  kommende.slice(0, antalKommende).forEach(k => {
     const datoTekst = k.dato.getDate() + '. ' + MAANEDER[k.dato.getMonth()];
     const info = hilsenInfo(k);
     // ⭐ og antal hilsner, når der er sendt mindst én
@@ -1126,7 +1130,8 @@ let foedselsdagsTekst = "";
     }
  
     // 2) Kommende mærkedage → Fremhævede begivenheder
-    const kommende = kommendeFoedselsdage(personer, idag, 3);
+    // Hent nok kommende til at fylde listen op (renderFremhaevede vælger, hvor mange der vises)
+    const kommende = kommendeFoedselsdage(personer, idag, 12);
  
     // 2b) Hent kommende arrangementer fra databasen
     try {
