@@ -722,7 +722,8 @@ function detFold(titel, vaerdi, aabn, foerHtml){
 
 // Fast link til foreningens vedtægter (vises altid)
 function vedtaegtLink(){
-  return detRaekkeHtml("📜 Vedtægter", `<a href="vedtaegter.html" style="color:#2d5016;font-weight:600;">Læs foreningens vedtægter →</a>`);
+  return detRaekkeHtml("🛒 Indkøbsliste", `<a href="indkoebsliste.html" style="color:#2d5016;font-weight:600;">Se hvad der skal købes ind til en skovtur →</a>`) +
+    detRaekkeHtml("📜 Vedtægter", `<a href="vedtaegter.html" style="color:#2d5016;font-weight:600;">Læs foreningens vedtægter →</a>`);
 }
 
 // Række med små billeder fra året — fyldes ud, når billederne er hentet
