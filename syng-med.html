@@ -134,6 +134,8 @@ Jubijæ – jubijæ
 Farvel, vi ses næste år.`;
 
 let SANG = { titel: "", tekst: "", tider: [], undertitel: "" };
+// Sange, der (endnu) kun ligger hos Suno: søgeord -> Sunos delingslink
+const SUNO_LINKS = { jubij: "https://suno.com/s/fzMPO5XFuwBE2S6p" };
 let LINJER = [];          // alle ikke-tomme linjer i rækkefølge
 let saetter = false, nyeTider = [];
 const audio = $("audio");
@@ -220,7 +222,23 @@ $("gem-tekst").onclick = async () => {
       const hit = res.items.find(it => it.name.toLowerCase().includes(FIND));
       if (hit) { STI = hit.fullPath; DOK_ID = "sangtekst_" + STI.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
     } catch(e) {}
-    if (!STI) { $("titel").textContent = "Sangen er ikke lagt op endnu."; $("note").innerHTML = '<div class="note">Den kommer snart. Imens kan du se teksten til Skovtursangen 2015 under skovturen 2015 på siden Arrangementer.</div>'; return; }
+    if (!STI) {
+      // Ingen MP3 på hjemmesiden endnu: vis teksten og et link til sangen hos Suno
+      const suno = Object.keys(SUNO_LINKS).find(k => FIND.includes(k));
+      if (suno && /jubij/.test(FIND)) {
+        SANG = { titel: "Jubijæ – Jubijæ", tekst: SKOVTURSANGEN_2015, tider: [],
+          undertitel: "Skovtursangen 2015 – på melodien »Jeg er en glad lille cowboy« · holdenes vers fra skovturen på Lønsømaj" };
+        $("titel").textContent = SANG.titel;
+        $("undertitel").textContent = SANG.undertitel;
+        audio.style.display = "none";
+        tegnTekst();
+        $("note").innerHTML = `<div style="text-align:center;margin:6px 0 18px;">
+          <a href="${SUNO_LINKS[suno]}" target="_blank" rel="noopener" class="knap" style="display:inline-block;text-decoration:none;font-size:19px;padding:14px 26px;">▶ Hør sangen</a>
+          <div style="font-size:13px;color:#cdbb85;margin-top:8px;">Sangen åbner hos Suno i en ny fane. Skift tilbage hertil og syng med på teksten.</div></div>`;
+        return;
+      }
+      $("titel").textContent = "Sangen er ikke lagt op endnu."; $("note").innerHTML = '<div class="note">Den kommer snart. Imens kan du se teksten til Skovtursangen 2015 under skovturen 2015 på siden Arrangementer.</div>'; return;
+    }
   }
   if (!STI) { $("titel").textContent = "Vælg en sang på siden Sange."; return; }
   try {
