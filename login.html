@@ -212,6 +212,24 @@
     Log ind med dit medlemsnummer og din PIN-kode.
   </div>
  
+  <!-- Skovtursangen: teksten kommer frem, mens sangen spiller (offentlig - kræver ikke login) -->
+  <div id="sang-boks" style="margin-top:1.2rem;padding:1rem .9rem;background:rgba(0,0,0,.18);border-radius:12px;">
+    <div style="font-size:17px;color:#f5d36b;font-weight:600;">🎤 Skovtursangen – Jubijæ – Jubijæ</div>
+    <div style="font-size:12.5px;color:#d9cfa9;font-style:italic;margin:2px 0 10px;">på melodien »Jeg er en glad lille cowboy« · holdenes vers fra skovturen 2015</div>
+    <div id="sang-tekst" style="text-align:center;line-height:1.5;"></div>
+    <div id="sang-hoer" style="margin-top:8px;"></div>
+  </div>
+<style>
+#sang-tekst{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;text-align:center}
+@media (max-width:520px){#sang-tekst{grid-template-columns:1fr}}
+#sang-tekst .vers{margin:0 0 12px;transition:opacity .8s}
+#sang-tekst .l{font-size:15px;color:#faf6ec}
+#sang-tekst.afspil .vers{opacity:0}
+#sang-tekst.afspil .vers.vist{opacity:1}
+#sang-tekst .vers.nu .l{color:#f5d36b}
+#sang-boks{transition:opacity .8s;width:min(640px,94vw);position:relative;left:50%;transform:translateX(-50%);box-sizing:border-box}
+</style>
+ 
   <!-- Musikafspiller (offentlig - kræver ikke login) -->
   <div id="musik-boks" style="margin-top:1.2rem;padding:.9rem;background:rgba(45,80,22,.06);border-radius:12px;display:none">
     <div style="font-size:16px;color:#faf6ec;font-weight:600;margin-bottom:.5rem">🎵 Lyt til OlsenKlanens sange</div>
@@ -312,6 +330,7 @@
       // Skovtursangen (Jubijæ – Jubijæ) spiller altid først, når den er lagt op på siden Sange
       const skovIdx = sange.findIndex(x => /jubij/i.test(x.navn));
       if (skovIdx > 0) sange.unshift(sange.splice(skovIdx, 1)[0]);
+      if (skovIdx >= 0) skovStart(sange[0].url);
       loginMusikListe = sange;
       if(sange.length>0){
         const sel = document.getElementById('login-musik-vaelger');
@@ -372,6 +391,53 @@
     document.addEventListener(ev, loginProevAutostart, { passive:true });
   });
  
+
+  // ---- SKOVTURSANGEN: teksten vises linje for linje, mens sangen spiller ----
+  // Uden MP3 på hjemmesiden: hele teksten + link til sangen hos Suno.
+  // Med MP3 (navn med "jubij" i musik/): linjerne kommer frem i takt (tider fra Syng med, ellers vers for vers).
+  const SKOVSANG = [
+    ["Vi mødes til en weekend","Med spas og sammenhold","Vi får en lille en' til halsen","Og synger en fjollet sang","Jubijæ – jubijæ","Det er det, vi allerbedst kan"],
+    ["Vi vågner her til morgen","men øjnene er små","for kroppen blev lidt doven","da nattens timer blev få","Jubijæ – jubijæ","da nattens timer blev få"],
+    ["Vi er Olsenklanen på skovtur","som går på skattejagt","Vi ser ud over fjorden","og nyder en dejlig dag","Jubijæ – jubijæ","Og nu en øl vi skal ha'"],
+    ["Jeg er en træt lille Olsen","for fredag den var våd","10 kiks og ærter suges","Det gør os allermest kåd","Jubijæ – jubijæ","Det gør os allermest kåd"],
+    ["Nu er det søndag morgen","og vi skal alle op","For no'en de skal spise","og andre de vasker op","Jubijæ – jubijæ","Og andre de vasker op"],
+    ["Jeg er en glad lille Olsen","fra Danmarks ferieland","At spise og drikke med glæde","er det, vi allerbedst kan","Jubijæ – jubijæ","Farvel, vi ses næste år."]
+  ];
+  const SKOVSANG_SUNO = "https://suno.com/s/fzMPO5XFuwBE2S6p";
+  const sangTekstEl = document.getElementById('sang-tekst');
+  let skovUrl = null, skovTider = null, skovLinjer = [];
+  const versHtml = v => '<div class="vers">' + v.map(l => '<div class="l">' + l + '</div>').join('') + '</div>';
+  const halv = Math.ceil(SKOVSANG.length / 2);
+  sangTekstEl.innerHTML = '<div>' + SKOVSANG.slice(0, halv).map(versHtml).join('') + '</div><div>' + SKOVSANG.slice(halv).map(versHtml).join('') + '</div>';
+  skovLinjer = Array.from(sangTekstEl.querySelectorAll('.l'));
+  const skovVers = Array.from(sangTekstEl.querySelectorAll('.vers'));
+  const sangBoks = document.getElementById('sang-boks');
+  document.getElementById('sang-hoer').innerHTML =
+    '<a href="' + SKOVSANG_SUNO + '" target="_blank" rel="noopener" style="display:inline-block;background:#f5d36b;color:#1e3a12;font-weight:700;text-decoration:none;padding:.5rem 1rem;border-radius:8px;">▶ Hør sangen</a>';
+
+  function skovStart(url){
+    skovUrl = url;
+    document.getElementById('sang-hoer').innerHTML = '<span style="font-size:12.5px;color:#d9cfa9;">Teksten kommer frem, mens sangen spiller ▸ tryk på 🔊 Afspil, hvis den ikke starter</span>';
+    // Tider sat på siden "Syng med" (gemt i olsenpost som sangtekst_<sti>)
+    const sti = url && decodeURIComponent((url.split('/o/')[1] || '').split('?')[0]);
+    const id = 'sangtekst_' + (sti || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    fetch('https://firestore.googleapis.com/v1/projects/olsenklanen-familieside/databases/(default)/documents/olsenpost/' + id + '?key=AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU')
+      .then(r => r.ok ? r.json() : null).then(d => {
+        const v = d && d.fields && d.fields.tider && d.fields.tider.arrayValue && d.fields.tider.arrayValue.values;
+        if (v && v.length === skovLinjer.length) skovTider = v.map(x => Number(x.doubleValue ?? x.integerValue));
+      }).catch(() => {});
+  }
+  loginMusik.addEventListener('timeupdate', () => {
+    if (!skovUrl) return;
+    if (loginMusik.src !== skovUrl) { sangBoks.style.display = 'none'; return; }   // Birthes sange: teksten forsvinder
+    sangBoks.style.display = '';
+    sangTekstEl.classList.add('afspil');
+    const t = loginMusik.currentTime, dur = loginMusik.duration || 0;
+    let vers = -1;
+    if (skovTider) { skovTider.forEach((x, i) => { if (t >= x) vers = Math.floor(i / 6); }); }  // tider fra "Syng med"
+    else if (dur) vers = Math.min(SKOVSANG.length - 1, Math.floor(t / dur * SKOVSANG.length)); // jævnt fordelt
+    skovVers.forEach((v, i) => { v.classList.toggle('vist', i <= vers); v.classList.toggle('nu', i === vers); });
+  });
   loginHentMusik();
  
   // ---- Admin styres i KARTOTEKET (feltet 'rettighed' = "admin") ----
