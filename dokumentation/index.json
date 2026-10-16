@@ -1,5 +1,26 @@
 [
-  {"fil": "2026-10-16-pc1-arbejde-14-16-okt.md", "titel": "Lagt op fra pc-1: referater, historier, syng med m.m.", "dato": "2026-10-16", "af": "Claude Code (pc-1)"},
-  {"fil": "2026-10-16-fund-fra-dropbox.md", "titel": "Fundet materiale fra Dropbox (pc-2)", "dato": "2026-10-16", "af": "Claude (pc-2)"},
-  {"fil": "README.md", "titel": "Om denne mappe", "dato": "2026-10-16", "af": "Claude (pc-2)"}
+  {
+    "fil": "2026-10-17-fund-fra-backup.md",
+    "titel": "Fundet i gamle backups: 2010–2014 (pc-2)",
+    "dato": "2026-10-17",
+    "af": "Claude (pc-2)"
+  },
+  {
+    "fil": "2026-10-16-pc1-arbejde-14-16-okt.md",
+    "titel": "Lagt op fra pc-1: referater, historier, syng med m.m.",
+    "dato": "2026-10-16",
+    "af": "Claude Code (pc-1)"
+  },
+  {
+    "fil": "2026-10-16-fund-fra-dropbox.md",
+    "titel": "Fundet materiale fra Dropbox (pc-2)",
+    "dato": "2026-10-16",
+    "af": "Claude (pc-2)"
+  },
+  {
+    "fil": "README.md",
+    "titel": "Om denne mappe",
+    "dato": "2026-10-16",
+    "af": "Claude (pc-2)"
+  }
 ]
