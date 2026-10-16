@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dokumentation — OlsenKlanen</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="marked.min.js"></script>
+<style>
+:root{
+  --mos:#3a5a2e;--mos-mork:#243b1c;--guld:#b8892a;--guld-pale:#f5e9cc;
+  --creme:#faf6ee;--hvid:#fffdf8;--tekst:#2a2015;--tekst-mid:#5a4f3a;--kant:rgba(184,137,42,.25);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Jost',sans-serif;background:var(--creme);color:var(--tekst);line-height:1.55}
+.topbar{background:var(--mos-mork);color:var(--guld-pale);padding:14px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.topbar h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:24px;margin:0;flex:1}
+.topbar a{color:var(--guld-pale);text-decoration:none;border:1px solid rgba(245,233,204,.5);padding:6px 14px;border-radius:20px;font-size:14px}
+.ramme{max-width:1150px;margin:0 auto;padding:20px 16px;display:grid;grid-template-columns:280px 1fr;gap:20px}
+@media (max-width:800px){.ramme{grid-template-columns:1fr}}
+.liste{background:var(--hvid);border:1px solid var(--kant);border-radius:8px;padding:10px;align-self:start}
+.liste h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--tekst-mid);margin:6px 8px 10px}
+.post{display:block;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:10px;cursor:pointer;font:inherit;color:inherit}
+.post:hover{background:var(--guld-pale)}
+.post.valgt{background:var(--mos);color:#fff}
+.post small{display:block;opacity:.75;font-size:12px}
+.indhold{background:var(--hvid);border:1px solid var(--kant);border-radius:8px;padding:22px 26px;overflow-x:auto}
+.indhold h1,.indhold h2{font-family:'Cormorant Garamond',serif;color:var(--mos-mork)}
+.indhold h1{font-size:30px;margin-top:0}
+.indhold table{border-collapse:collapse;margin:12px 0;font-size:14px}
+.indhold th,.indhold td{border:1px solid var(--kant);padding:6px 9px;vertical-align:top}
+.indhold th{background:var(--guld-pale)}
+.indhold code{background:#f3eee2;padding:1px 5px;border-radius:4px;font-size:13px}
+.besked{padding:40px 20px;text-align:center;color:var(--tekst-mid)}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <h1>Dokumentation</h1>
+  <a href="admin.html">← Administration</a>
+  <a href="forside.html">⌂ Forside</a>
+</header>
+<div id="lukket" class="besked" style="display:none">
+  Denne side er kun for administratorer. <a href="login.html">Log ind</a>.
+</div>
+<main class="ramme" id="aaben" style="display:none">
+  <nav class="liste"><h2>Noter</h2><div id="poster"></div></nav>
+  <article class="indhold" id="indhold"><div class="besked">Henter…</div></article>
+</main>
+<script>
+// Fælles noter for Claude (pc-2) og Claude Code (pc-1). Filerne ligger i mappen dokumentation/.
+function erAdmin(){
+  try{ return (sessionStorage.getItem('ok_niveau')||localStorage.getItem('ok_niveau')||'').trim().toLowerCase()==='admin'; }
+  catch(e){ return false; }
+}
+if(!erAdmin()){ document.getElementById('lukket').style.display='block'; }
+else {
+  document.getElementById('aaben').style.display='grid';
+  const poster=document.getElementById('poster'), indhold=document.getElementById('indhold');
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  async function vis(fil,knap){
+    document.querySelectorAll('.post').forEach(b=>b.classList.remove('valgt')); if(knap) knap.classList.add('valgt');
+    indhold.innerHTML='<div class="besked">Henter…</div>';
+    try{
+      const r=await fetch('dokumentation/'+encodeURIComponent(fil)+'?v='+Date.now());
+      if(!r.ok) throw new Error(r.status);
+      indhold.innerHTML=marked.parse(await r.text());
+      try{ history.replaceState(null,'','#'+fil); }catch(e){}
+    }catch(e){ indhold.innerHTML='<div class="besked">Kunne ikke hente noten ('+esc(e.message)+').</div>'; }
+  }
+  fetch('dokumentation/index.json?v='+Date.now()).then(r=>r.json()).then(liste=>{
+    const oensket=decodeURIComponent(location.hash.slice(1));
+    let foerste=null;
+    liste.forEach(p=>{
+      const b=document.createElement('button'); b.className='post';
+      b.innerHTML=esc(p.titel)+'<small>'+esc(p.dato)+(p.af?' · '+esc(p.af):'')+'</small>';
+      b.onclick=()=>vis(p.fil,b); poster.appendChild(b);
+      if(!foerste||p.fil===oensket) foerste=[p.fil,b];
+    });
+    if(foerste) vis(foerste[0],foerste[1]);
+  }).catch(()=>{ indhold.innerHTML='<div class="besked">Kunne ikke hente listen over noter.</div>'; });
+}
+</script>
+</body>
+</html>
