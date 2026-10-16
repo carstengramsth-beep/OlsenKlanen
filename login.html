@@ -309,6 +309,9 @@
         return { url, navn };
       }));
       sange.sort(()=>Math.random()-0.5);
+      // Skovtursangen (Jubijæ – Jubijæ) spiller altid først, når den er lagt op på siden Sange
+      const skovIdx = sange.findIndex(x => /jubij/i.test(x.navn));
+      if (skovIdx > 0) sange.unshift(sange.splice(skovIdx, 1)[0]);
       loginMusikListe = sange;
       if(sange.length>0){
         const sel = document.getElementById('login-musik-vaelger');
