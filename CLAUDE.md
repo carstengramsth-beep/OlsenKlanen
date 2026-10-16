@@ -15,3 +15,11 @@
 - Passer filen ikke til beskeden: stop og spørg. Gæt ikke, og gå ikke videre med den forkerte fil.
 - Brugeren kan i stedet skrive, at filen ligger i OneDrive-mappen
   "Skrivebord/Olsenklanen/Olsenklanen referater". Så hent den derfra, og bekræft på samme måde.
+
+# Fælles dokumentation (læs ved start af hver opgave)
+
+- Mappen `dokumentation/` er det fælles sted for Claude på pc-2 og Claude Code på pc-1.
+- Læs `dokumentation/index.json` og de nyeste noter, før du går i gang. Her står fx hvad der er fundet og lagt op.
+- Når du har lavet noget, som den anden bør vide: skriv en kort note `ÅÅÅÅ-MM-DD-emne.md` i mappen,
+  og tilføj den øverst i `dokumentation/index.json`. Se `dokumentation/README.md`.
+- Noterne kan læses på hjemmesiden under Administration → Dokumentation (`dokumentation.html`).

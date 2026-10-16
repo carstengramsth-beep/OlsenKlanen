@@ -1,6 +1,6 @@
 # OlsenKlanen — Projektstatus
 
-Sidst opdateret: 2026-10-06
+Sidst opdateret: 2026-10-16
 
 ---
 
@@ -24,6 +24,9 @@ Sidst opdateret: 2026-10-06
 | OlsenPost: gul post-linje åbner fanen "Intern besked" med den nye besked øverst | Deployed (5. okt. 2026) |
 | Fødselsdagshilsen: "Skriv hilsen" på dagen + ⭐ og antal (højst 100) + prøve-hilsen (`forside.html?testhilsen=1`) | Deployed (5. okt. 2026) |
 | Fødselsdagskort: navnene på alle afsendere i flæng, kan gemmes som PDF / printes på A4 | Deployed (6. okt. 2026) |
+| Årbogen: blade 2017 (nr. 42, korrektur), 2018 (nr. 43) og 2019 (nr. 44) fra Dropbox | Deployed (16. okt. 2026) |
+| Årenes billeder: 266 skovturbilleder 2015–2017 fra Dropbox | Deployed (16. okt. 2026) — se `dokumentation/2026-10-16-fund-fra-dropbox.md` |
+| Fælles dokumentation: mappen `dokumentation/` + siden Administration → Dokumentation | Deployed (16. okt. 2026) |
 
 ## Huskeliste — oprydning (aftalt 3. okt. 2026, tages en anden dag)
 
