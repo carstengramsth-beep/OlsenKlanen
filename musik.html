@@ -184,6 +184,7 @@ function visListe(){
         <div class="sang-titel">${s.titel}</div>
         <div class="sang-meta">🎵 OlsenKlanens egne sange</div>
       </div>
+      <a class="sang-syng" href="syng-med.html?sti=${encodeURIComponent(s.sti)}" title="Teksten lyser op, mens sangen spiller" style="text-decoration:none;font-size:14px;font-weight:600;color:#2d5016;border:1px solid #c8bfa0;border-radius:8px;padding:6px 10px;white-space:nowrap;">🎤 Syng med</a>
       ${erAdmin() ? `<button class="sang-slet" onclick="sletSang(${i})">🗑️ Slet</button>` : ''}
     </li>
   `).join('');

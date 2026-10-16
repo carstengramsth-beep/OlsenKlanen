@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Syng med – OlsenKlanen</title>
+<script>
+// Kun for medlemmer: samme login-tjek som forsiden
+const hent = n => { try { return sessionStorage.getItem(n) || localStorage.getItem(n) || ""; } catch(e) { return ""; } };
+if (!(hent("ok_niveau") || hent("ok_navn") || hent("ok_nr"))) window.location.href = "login.html";
+</script>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; background: #1f3a10; color: #f5e6a8; font-family: Georgia, 'Times New Roman', serif; }
+.topbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding: 12px 18px; background: #16290b; }
+.topbar h1 { margin: 0; font-size: 21px; font-weight: normal; }
+.topbar a { color: #f5e6a8; text-decoration: none; border: 1px solid #f5e6a8; padding: 6px 12px; border-radius: 6px; font-size: 14px; }
+main { max-width: 760px; margin: 0 auto; padding: 14px 16px 140px; }
+#titel { font-size: 26px; text-align: center; margin: 10px 0 2px; color: #fff3c4; }
+#undertitel { text-align: center; font-style: italic; color: #cdbb85; margin-bottom: 14px; font-size: 15px; }
+audio { width: 100%; margin: 6px 0 14px; }
+#tekst { text-align: center; line-height: 1.5; }
+.vers { margin: 0 0 26px; }
+.vers-nr { font-size: 14px; color: #a99a66; margin-bottom: 4px; }
+.linje { font-size: 24px; color: rgba(245,230,168,.45); padding: 3px 6px; border-radius: 8px; transition: color .25s, background .25s, transform .25s; }
+.linje.sunget { color: rgba(245,230,168,.7); }
+.linje.nu { color: #fff; background: rgba(200,158,60,.35); transform: scale(1.06); font-weight: bold; }
+.ingen-tider .linje { color: #f5e6a8; }
+.note { background: rgba(0,0,0,.25); border-left: 4px solid #c89e3c; padding: 10px 14px; border-radius: 6px; font-size: 15px; color: #e8dcb0; margin: 10px 0 18px; }
+.admin { margin: 22px 0; padding: 14px; border: 1px dashed #a99a66; border-radius: 10px; }
+.admin h2 { margin: 0 0 8px; font-size: 17px; color: #fff3c4; }
+.knap { background: #c89e3c; color: #1f3a10; border: none; border-radius: 8px; padding: 10px 16px; font-family: inherit; font-size: 16px; font-weight: bold; cursor: pointer; margin: 4px 6px 4px 0; }
+.knap.graa { background: #e8dcb0; }
+textarea { width: 100%; min-height: 320px; font-family: inherit; font-size: 16px; padding: 10px; border-radius: 8px; border: none; }
+#naeste { position: fixed; left: 50%; transform: translateX(-50%); bottom: 22px; z-index: 50; font-size: 22px; padding: 18px 30px; display: none; box-shadow: 0 4px 16px rgba(0,0,0,.5); }
+#status { margin-top: 8px; font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>🎤 Syng med</h1>
+  <a href="musik.html">← Sange</a>
+</div>
+<main>
+  <div id="titel">Henter sangen …</div>
+  <div id="undertitel"></div>
+  <audio id="audio" controls preload="auto"></audio>
+  <div id="note"></div>
+  <div id="tekst"></div>
+
+  <div class="admin" id="admin" style="display:none">
+    <h2>For administratorer</h2>
+    <div style="font-size:14px;color:#e8dcb0;margin-bottom:8px;">
+      <b>Sæt tider:</b> Tryk på knappen. Sangen starter forfra. Tryk på den store knap <b>»Næste linje«</b> (eller mellemrumstasten),
+      lige når hver linje begynder at blive sunget. Til sidst gemmes tiderne af sig selv.
+    </div>
+    <button class="knap" id="saet-tider">⏱️ Sæt tider</button>
+    <button class="knap graa" id="ret-tekst">✎ Ret teksten</button>
+    <div id="ret-boks" style="display:none;margin-top:10px;">
+      <div style="font-size:14px;color:#e8dcb0;margin-bottom:6px;">Én linje pr. linje i sangen. Tom linje mellem versene. Når teksten ændres, skal tiderne sættes igen.</div>
+      <textarea id="tekst-felt"></textarea>
+      <button class="knap" id="gem-tekst">Gem teksten</button>
+    </div>
+    <div id="status"></div>
+  </div>
+</main>
+<button class="knap" id="naeste">▶ Næste linje</button>
+
+<script type="module">
+/* Sangtekst og tider gemmes i olsenpost som type "sangtekst" (åben for medlemmerne), ét dokument pr. sang.
+   Selve sangen ligger i Storage under musik/ (lægges op på siden Sange). Linket er syng-med.html?sti=musik/<fil>.mp3 */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getStorage, ref, getDownloadURL, getMetadata } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+});
+const storage = getStorage(app), db = getFirestore(app);
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const ER_ADMIN = (hent("ok_niveau") || "").trim().toLowerCase() === "admin";
+const STI = new URLSearchParams(location.search).get("sti") || "";
+const DOK_ID = "sangtekst_" + STI.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+// Skovtursangen 2015 (holdenes vers) – bruges som forslag til sange med "jubij" i navnet
+const SKOVTURSANGEN_2015 = `Vi mødes til en weekend
+Med spas og sammenhold
+Vi får en lille en' til halsen
+Og synger en fjollet sang
+Jubijæ – jubijæ
+Det er det, vi allerbedst kan
+
+Vi vågner her til morgen
+men øjnene er små
+for kroppen blev lidt doven
+da nattens timer blev få
+Jubijæ – jubijæ
+da nattens timer blev få
+
+Vi er Olsenklanen på skovtur
+som går på skattejagt
+Vi ser ud over fjorden
+og nyder en dejlig dag
+Jubijæ – jubijæ
+Og nu en øl vi skal ha'
+
+Jeg er en træt lille Olsen
+for fredag den var våd
+10 kiks og ærter suges
+Det gør os allermest kåd
+Jubijæ – jubijæ
+Det gør os allermest kåd
+
+Nu er det søndag morgen
+og vi skal alle op
+For no'en de skal spise
+og andre de vasker op
+Jubijæ – jubijæ
+Og andre de vasker op
+
+Jeg er en glad lille Olsen
+fra Danmarks ferieland
+At spise og drikke med glæde
+er det, vi allerbedst kan
+Jubijæ – jubijæ
+Farvel, vi ses næste år.`;
+
+let SANG = { titel: "", tekst: "", tider: [], undertitel: "" };
+let LINJER = [];          // alle ikke-tomme linjer i rækkefølge
+let saetter = false, nyeTider = [];
+const audio = $("audio");
+
+function tegnTekst(){
+  const vers = SANG.tekst.split(/\n\s*\n/).map(v => v.split("\n").map(l => l.trim()).filter(Boolean)).filter(v => v.length);
+  LINJER = [];
+  $("tekst").innerHTML = vers.map((v, i) => `<div class="vers"><div class="vers-nr">${i + 1}.</div>` +
+    v.map(l => { LINJER.push(l); return `<div class="linje" data-i="${LINJER.length - 1}">${esc(l)}</div>`; }).join("") + `</div>`).join("");
+  const harTider = SANG.tider && SANG.tider.length === LINJER.length;
+  $("tekst").classList.toggle("ingen-tider", !harTider);
+  $("note").innerHTML = harTider ? "" : `<div class="note">Teksten lyser endnu ikke op i takt med sangen.${ER_ADMIN ? " Tryk på <b>⏱️ Sæt tider</b> nederst for at sætte det op." : " Det bliver snart sat op."}</div>`;
+}
+
+let sidsteNu = -1;
+function opdater(){
+  const tider = saetter ? nyeTider : SANG.tider;
+  if (!tider || (!saetter && tider.length !== LINJER.length)) return;
+  const t = audio.currentTime;
+  let nu = -1;
+  for (let i = 0; i < tider.length; i++) if (t >= tider[i]) nu = i;
+  if (nu === sidsteNu) return;
+  sidsteNu = nu;
+  document.querySelectorAll(".linje").forEach(el => {
+    const i = +el.dataset.i;
+    el.classList.toggle("nu", i === nu);
+    el.classList.toggle("sunget", i < nu);
+  });
+  const el = document.querySelector(`.linje[data-i="${nu}"]`);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+audio.addEventListener("timeupdate", opdater);
+audio.addEventListener("seeked", () => { sidsteNu = -2; opdater(); });
+
+async function gem(data){
+  await setDoc(doc(db, "olsenpost", DOK_ID), { type: "sangtekst", til: [], sti: STI, ...data,
+    rettet_af: hent("ok_navn") || "", rettet_lokal: Date.now() }, { merge: true });
+}
+
+function naesteLinje(){
+  if (!saetter) return;
+  nyeTider.push(Math.max(0, audio.currentTime - 0.15));
+  sidsteNu = -2; opdater();
+  if (nyeTider.length >= LINJER.length) afslutTider();
+  else $("naeste").textContent = `▶ Næste linje (${nyeTider.length + 1} af ${LINJER.length})`;
+}
+async function afslutTider(){
+  saetter = false;
+  $("naeste").style.display = "none";
+  SANG.tider = nyeTider.slice();
+  $("status").textContent = "Gemmer tiderne …";
+  try { await gem({ tider: SANG.tider, titel: SANG.titel, tekst: SANG.tekst, undertitel: SANG.undertitel || "" }); $("status").textContent = "✅ Tiderne er gemt. Spil sangen igen for at se teksten lyse op."; }
+  catch(e) { $("status").textContent = "Det lykkedes ikke at gemme. Prøv igen."; }
+  tegnTekst();
+}
+
+$("saet-tider").onclick = () => {
+  if (!LINJER.length) { alert("Der er ingen tekst endnu."); return; }
+  saetter = true; nyeTider = []; sidsteNu = -2;
+  $("tekst").classList.remove("ingen-tider");
+  audio.currentTime = 0; audio.play();
+  $("naeste").textContent = `▶ Næste linje (1 af ${LINJER.length})`;
+  $("naeste").style.display = "block";
+  $("status").textContent = "Tryk på »Næste linje«, lige når hver linje begynder.";
+};
+$("naeste").onclick = naesteLinje;
+document.addEventListener("keydown", e => { if (saetter && (e.code === "Space" || e.key === "Enter")) { e.preventDefault(); naesteLinje(); } });
+audio.addEventListener("ended", () => { if (saetter && nyeTider.length) { while (nyeTider.length < LINJER.length) nyeTider.push(audio.duration || nyeTider[nyeTider.length - 1]); afslutTider(); } });
+
+$("ret-tekst").onclick = () => { $("tekst-felt").value = SANG.tekst; $("ret-boks").style.display = "block"; };
+$("gem-tekst").onclick = async () => {
+  const ny = $("tekst-felt").value.trim();
+  const aendret = ny !== SANG.tekst;
+  SANG.tekst = ny; if (aendret) SANG.tider = [];
+  try { await gem({ tekst: ny, tider: SANG.tider, titel: SANG.titel, undertitel: SANG.undertitel || "" }); $("status").textContent = "✅ Teksten er gemt." + (aendret ? " Husk at sætte tiderne igen." : ""); }
+  catch(e) { $("status").textContent = "Det lykkedes ikke at gemme. Prøv igen."; }
+  $("ret-boks").style.display = "none"; tegnTekst();
+};
+
+(async function start(){
+  if (!STI) { $("titel").textContent = "Vælg en sang på siden Sange."; return; }
+  try {
+    const r = ref(storage, STI);
+    const [url, meta] = await Promise.all([getDownloadURL(r), getMetadata(r).catch(() => ({}))]);
+    audio.src = url;
+    SANG.titel = ((meta.customMetadata || {}).titel) || STI.split("/").pop().replace(/\.mp3$/i, "").replace(/-/g, " ");
+  } catch(e) { $("titel").textContent = "Sangen kunne ikke findes."; return; }
+  try {
+    const d = await getDoc(doc(db, "olsenpost", DOK_ID));
+    if (d.exists()) Object.assign(SANG, d.data(), { titel: d.data().titel || SANG.titel });
+  } catch(e) {}
+  if (!SANG.tekst && /jubij/i.test(STI + " " + SANG.titel)) {
+    SANG.tekst = SKOVTURSANGEN_2015;
+    SANG.undertitel = "Skovtursangen 2015 – på melodien »Jeg er en glad lille cowboy« · holdenes vers fra skovturen på Lønsømaj";
+  }
+  $("titel").textContent = SANG.titel;
+  $("undertitel").textContent = SANG.undertitel || "";
+  if (ER_ADMIN) $("admin").style.display = "block";
+  if (!SANG.tekst) $("note").innerHTML = `<div class="note">Der er ingen tekst til sangen endnu.${ER_ADMIN ? " Tryk på <b>✎ Ret teksten</b> nederst." : ""}</div>`;
+  else tegnTekst();
+})();
+</script>
+<script src="forside-knap.js" defer></script>
+</body>
+</html>
