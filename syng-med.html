@@ -70,7 +70,7 @@ textarea { width: 100%; min-height: 320px; font-family: inherit; font-size: 16px
 /* Sangtekst og tider gemmes i olsenpost som type "sangtekst" (åben for medlemmerne), ét dokument pr. sang.
    Selve sangen ligger i Storage under musik/ (lægges op på siden Sange). Linket er syng-med.html?sti=musik/<fil>.mp3 */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getStorage, ref, getDownloadURL, getMetadata } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getStorage, ref, getDownloadURL, getMetadata, listAll } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
@@ -85,8 +85,10 @@ const storage = getStorage(app), db = getFirestore(app);
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const ER_ADMIN = (hent("ok_niveau") || "").trim().toLowerCase() === "admin";
-const STI = new URLSearchParams(location.search).get("sti") || "";
-const DOK_ID = "sangtekst_" + STI.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const PARAM = new URLSearchParams(location.search);
+let STI = PARAM.get("sti") || "";
+const FIND = (PARAM.get("find") || "").toLowerCase();   // fx syng-med.html?find=jubij – finder sangen i musik/ ud fra navnet
+let DOK_ID = "sangtekst_" + STI.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
 // Skovtursangen 2015 (holdenes vers) – bruges som forslag til sange med "jubij" i navnet
 const SKOVTURSANGEN_2015 = `Vi mødes til en weekend
@@ -212,6 +214,14 @@ $("gem-tekst").onclick = async () => {
 };
 
 (async function start(){
+  if (!STI && FIND) {
+    try {
+      const res = await listAll(ref(storage, "musik/"));
+      const hit = res.items.find(it => it.name.toLowerCase().includes(FIND));
+      if (hit) { STI = hit.fullPath; DOK_ID = "sangtekst_" + STI.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
+    } catch(e) {}
+    if (!STI) { $("titel").textContent = "Sangen er ikke lagt op endnu."; $("note").innerHTML = '<div class="note">Den kommer snart. Imens kan du se teksten til Skovtursangen 2015 under skovturen 2015 på siden Arrangementer.</div>'; return; }
+  }
   if (!STI) { $("titel").textContent = "Vælg en sang på siden Sange."; return; }
   try {
     const r = ref(storage, STI);
