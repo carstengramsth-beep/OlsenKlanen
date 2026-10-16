@@ -648,6 +648,13 @@ window.gfAendret = function(){ udfyldFraGf(); visDatoerTekst(); };
 window.skjulDetForm = function(){ document.getElementById("det-form").classList.add("skjul"); };
 
 // Link til årets billeder: en side her på hjemmesiden eller en https-adresse
+// Lyt til årets skovtursang (fx en AI-sunget version på Suno)
+function sangRaekke(d){
+  const link = sikkertLink(d.sang_link);
+  if (!link) return "";
+  const tekst = d.sang_tekst || "Lyt til skovtursangen";
+  return detRaekkeHtml("🎵 Skovtursangen", `<a href="${escAttr(link)}" target="_blank" rel="noopener" style="color:#2d5016;font-weight:600;">${escHtml(tekst)} →</a>`);
+}
 function sikkertLink(u){
   u = (u || "").trim();
   if (/^www\./i.test(u)) u = "https://" + u;
@@ -873,6 +880,7 @@ async function visAar(){
     detRaekke("Datoer", visDatoer(d)) +
     fotoRaekke(aar) +
     detRaekke("Bemærkning", d.note) +
+    sangRaekke(d) +
     detRaekke("Ankomst", d.ankomst) +
     detRaekke("Afgang", d.afgang) +
     detRaekke("Pris pr. husstand", d.pris) +
