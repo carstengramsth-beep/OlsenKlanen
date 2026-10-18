@@ -28,6 +28,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .kort-valg .titel { text-align: center; font-size: 11.5px; color: #555; line-height: 1.25; padding: 1px 2px 0; }
 .kort-gruppe { margin-bottom: 14px; }
 .kort-gruppe h3 { font-size: 14px; color: #2d5016; margin: 6px 0 6px; font-weight: bold; }
+.kort-gruppe h4.tema { font-size: 13px; color: #8b5a1a; margin: 10px 0 4px; font-weight: bold; font-style: italic; border-bottom: 1px solid #e6dcc4; padding-bottom: 2px; }
 .kort-gruppe .tom { font-size: 13px; color: #8a7a3f; font-style: italic; background: #fdfbf5; border: 1px dashed #d8c99a; border-radius: 8px; padding: 10px 12px; }
 label { display: block; font-size: 14px; color: #555; margin: 10px 0 4px; }
 input[type=text], textarea, select { width: 100%; font-family: inherit; font-size: 16px; padding: 9px 11px; border: 1px solid #c8bfa0; border-radius: 6px; background: #fdfbf5; }
@@ -181,15 +182,15 @@ try {
 // gruppe: "malerier" (Elisabeth), "boern" (børnetegninger) eller "voksne" (medlemmernes egne værker).
 const BILLED_VERSION = 2;
 const KORT = [
-  { nr: 1, gruppe: "malerier", fil: "billeder/kort/hulemaleri.jpg",         titel: "Hulemaleri",        maler: "Elisabeth Gram" },
-  { nr: 2, gruppe: "malerier", fil: "billeder/kort/landskab-2014.jpg",      titel: "Landskab, 2014",    maler: "Elisabeth Gram" },
-  { nr: 3, gruppe: "malerier", fil: "billeder/kort/landskab-2012.jpg",      titel: "Landskab, 2012",    maler: "Elisabeth Gram" },
-  { nr: 4, gruppe: "malerier", fil: "billeder/kort/balletdanser.jpg",       titel: "Balletdanser",      maler: "Elisabeth Gram" },
-  { nr: 5, gruppe: "malerier", fil: "billeder/kort/frugter-abstrakt.jpg",   titel: "Frugter",           maler: "Elisabeth Gram" },
-  { nr: 6, gruppe: "malerier", fil: "billeder/kort/kvinde-i-farver.jpg",    titel: "Kvinde i farver",   maler: "Elisabeth Gram" },
-  { nr: 7, gruppe: "malerier", fil: "billeder/kort/vinterstemning.jpg",     titel: "Vinterstemning",    maler: "Elisabeth Gram" },
-  { nr: 8, gruppe: "malerier", fil: "billeder/kort/paeoner-i-haven.jpg",    titel: "Pæoner i haven",    maler: "Elisabeth Gram" },
-  { nr: 9, gruppe: "malerier", fil: "billeder/kort/damen-med-guldhaar.jpg", titel: "Damen med guldhår", maler: "Elisabeth Gram" },
+  { nr: 1, gruppe: "malerier", fil: "billeder/kort/hulemaleri.jpg",         titel: "Hulemaleri",        maler: "Elisabeth Gram", tema: "Natur og blomster" },
+  { nr: 2, gruppe: "malerier", fil: "billeder/kort/landskab-2014.jpg",      titel: "Landskab, 2014",    maler: "Elisabeth Gram", tema: "Landskaber" },
+  { nr: 3, gruppe: "malerier", fil: "billeder/kort/landskab-2012.jpg",      titel: "Landskab, 2012",    maler: "Elisabeth Gram", tema: "Landskaber" },
+  { nr: 4, gruppe: "malerier", fil: "billeder/kort/balletdanser.jpg",       titel: "Balletdanser",      maler: "Elisabeth Gram", tema: "Illustrationer" },
+  { nr: 5, gruppe: "malerier", fil: "billeder/kort/frugter-abstrakt.jpg",   titel: "Frugter",           maler: "Elisabeth Gram", tema: "Natur og blomster" },
+  { nr: 6, gruppe: "malerier", fil: "billeder/kort/kvinde-i-farver.jpg",    titel: "Kvinde i farver",   maler: "Elisabeth Gram", tema: "Illustrationer" },
+  { nr: 7, gruppe: "malerier", fil: "billeder/kort/vinterstemning.jpg",     titel: "Vinterstemning",    maler: "Elisabeth Gram", tema: "Landskaber" },
+  { nr: 8, gruppe: "malerier", fil: "billeder/kort/paeoner-i-haven.jpg",    titel: "Pæoner i haven",    maler: "Elisabeth Gram", tema: "Natur og blomster" },
+  { nr: 9, gruppe: "malerier", fil: "billeder/kort/damen-med-guldhaar.jpg", titel: "Damen med guldhår", maler: "Elisabeth Gram", tema: "Illustrationer" },
   { nr: 10, gruppe: "boern", fil: "billeder/kort/esther-1.jpg", titel: "Selvportræt – Pigen med den mærkelige næse, og hun mangler en tand eller to", maler: "Esther, 4 år", art: "Tegning" },
   { nr: 11, gruppe: "boern", fil: "billeder/kort/esther-fastelavn.jpg", titel: "Fastelavn", maler: "Esther", art: "Tegning" },
   { nr: 12, gruppe: "boern", fil: "billeder/kort/esther-halloween.jpg", titel: "Halloween", maler: "Esther", art: "Tegning" },
@@ -199,6 +200,12 @@ const KORT = [
   // Samlekortet laves med lav_samlekort.py — kør den igen, når der kommer nye motiver.
   // Næste motiv får nr. 16 — børnetegninger: gruppe "boern", art "Tegning"; medlemmernes egne værker: gruppe "voksne".
 ];
+// Temaer — rækkefølgen her er rækkefølgen på siden. Flere temaer: skriv dem her.
+// Et motiv uden tema (eller med et tema, der ikke står her) kommer under "Uden tema".
+// Temaerne vises kun i en gruppe, hvor mindst ét motiv har et tema.
+const TEMAER = ["Landskaber", "Illustrationer", "Natur og blomster"];
+const UDEN_TEMA = "Uden tema";
+
 // Overskrifterne i "Vælg et kort". vis_tom: gruppen vises, også før der er billeder i den.
 const GRUPPER = [
   { id: "malerier", titel: "Malerier af Elisabeth Gram" },
@@ -235,13 +242,20 @@ const escK = t => String(t == null ? "" : t).replace(/[&<>"]/g, c => ({"&":"&amp
 $("kort-valg").innerHTML = GRUPPER.map(g => {
   const kort = KORT.map((k, i) => ({ k, i })).filter(x => (x.k.gruppe || "malerier") === g.id);
   if (!kort.length && !g.vis_tom) return "";
-  return `<div class="kort-gruppe"><h3>${escK(g.titel)}</h3>` + (kort.length
-    ? `<div class="kort-valg">` + kort.map(({ k, i }) =>
+  const visKort = liste => `<div class="kort-valg">` + liste.map(({ k, i }) =>
         `<div class="valg"><button type="button" data-i="${i}" title="Nr. ${k.nr} · ${escK(k.titel)} · ${escK(k.maler)}"><img src="${escK(k.fil)}?v=${BILLED_VERSION}" alt="${escK(k.titel)}"></button>` +
         (visTitel(k) ? `<div class="titel">"${escK(k.titel)}"</div>` : "") +
         (g.id !== "malerier" ? `<div class="kunstner">${escK(k.maler)}</div>` : "") +
-        `<div class="under"><span class="nr">Nr. ${k.nr}</span><span class="brugt" data-fil="${escK(k.fil)}"></span></div></div>`).join("") + `</div>`
-    : `<div class="tom">${escK(g.tom || "Kommer snart.")}</div>`) + `</div>`;
+        `<div class="under"><span class="nr">Nr. ${k.nr}</span><span class="brugt" data-fil="${escK(k.fil)}"></span></div></div>`).join("") + `</div>`;
+  const temaAf = k => TEMAER.includes(k.tema) ? k.tema : UDEN_TEMA;
+  let indhold;
+  if (!kort.length) indhold = `<div class="tom">${escK(g.tom || "Kommer snart.")}</div>`;
+  else if (!kort.some(x => x.k.tema)) indhold = visKort(kort);
+  else indhold = [...TEMAER, UDEN_TEMA].map(tm => {
+    const del = kort.filter(x => temaAf(x.k) === tm);
+    return del.length ? `<h4 class="tema">${escK(tm)}</h4>` + visKort(del) : "";
+  }).join("");
+  return `<div class="kort-gruppe"><h3>${escK(g.titel)}</h3>` + indhold + `</div>`;
 }).join("");
 // Lille tal under hvert billede: hvor mange gange det er brugt til et kort (fyldes ud, når tallene er hentet)
 window.visBrug = tael => document.querySelectorAll("#kort-valg .brugt").forEach(el => {
