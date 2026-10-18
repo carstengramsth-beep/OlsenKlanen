@@ -783,7 +783,13 @@
       return;
     }
  
-    videreTil("forside.html");
+    // ?videre=side.html: tilbage til den side, man kom fra (kun egne sider)
+    let maal = "forside.html";
+    try {
+      const v = new URLSearchParams(location.search).get("videre") || "";
+      if (/^[a-z0-9\-]+\.html$/i.test(v)) maal = v;
+    } catch(e) {}
+    videreTil(maal);
   }
  
   function fortryd() {
