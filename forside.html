@@ -1149,7 +1149,7 @@ let foedselsdagsTekst = "";
     const idagsFoedselsdage = foedselsdageIdag(personer, idag);
     if (idagsFoedselsdage.length) {
       foedselsdagsTekst = idagsFoedselsdage
-        .map(f => `🎂 I dag er det ${f.navn}${/[sxz]$/i.test(f.navn) ? "'" : "s"} ${f.alder} års fødselsdag — Hurra og tillykke fra OlsenKlanen!`)
+        .map(f => `🎂 I dag fylder ${f.navn} ${f.alder} år — Hurra og tillykke fra OlsenKlanen!`)
         .join('     ');
     }
  
