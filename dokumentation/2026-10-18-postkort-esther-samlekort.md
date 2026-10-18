@@ -23,3 +23,11 @@
 - Arbejdsgang for et indsendt værk: Carsten og Claude henter billedet, beskærer/tilpasser det (højst 1600 punkter),
   lægger det i `billeder/kort/`, tilføjer en linje i `KORT` med næste nr. og tema, kører `lav_samlekort.py` igen,
   og trykker "Lagt op som postkort".
+
+## Tilføjet senere samme dag
+
+- Esthers tegninger nr. 11–14 står nu som "Esther, 8 år". **Regel:** tegninger af børn skal altid have alderen med.
+  På `send-kunst.html` skal man svare, om kunstneren er et barn. Svarer man ja, skal alderen udfyldes (gemmes som `barn`, `alder`).
+- Ny undertekst på alle kort: "<Art> venligt udlånt af kunstneren til postkort i OlsenKlanen"
+  (samlekortet: "Billederne er venligt udlånt af kunstnerne …"). Står i `kort.html`, `meddelelser.html` (intern post)
+  og `functions/index.js` (mails). Functions skal deployes med hånden (Actions → "Deploy Cloud Functions").

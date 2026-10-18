@@ -53,6 +53,7 @@ textarea { min-height: 150px; resize: vertical; }
 #kort .maleri figure { margin: 0; display: flex; flex-direction: column; align-items: flex-end; max-width: 200mm; }
 #kort .maleri img { width: 200mm; height: 138mm; object-fit: cover; box-shadow: 0 1mm 3mm rgba(0,0,0,0.25); display: block; }
 #kort .maleri figcaption { font-size: 9pt; color: #8a7a3f; font-style: italic; margin-top: 1.8mm; text-align: right; }
+#kort .maleri figcaption .udlaant { font-size: 8pt; }
 /* Malerier på højkant beskæres ikke — de vises i fuld højde (ca. 185 mm) */
 #kort .maleri img.hoejkant { width: auto; height: 180mm; max-width: 200mm; object-fit: contain; }
 #kort .tekst { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; padding: 10mm 17mm 4mm; color: #2c3e1f; overflow: hidden; }
@@ -166,7 +167,7 @@ try {
     <div class="forhaand-titel" id="forhaand-titel">Sådan ser kortet ud:</div>
     <button class="print-knap forhaand-titel" id="vis-print" onclick="window.print()" style="display:none; max-width:620px; margin-bottom:12px;">🖨️ Print kortet på A4 / Gem som PDF</button>
     <div id="kort-ramme"><div id="kort">
-      <div class="maleri"><figure><img id="kort-billede" alt=""><figcaption id="v-maler">Maleri: © Elisabeth Gram · olsenklanen.dk</figcaption></figure></div>
+      <div class="maleri"><figure><img id="kort-billede" alt=""><figcaption><span id="v-maler">Maleri: © Elisabeth Gram · olsenklanen.dk</span><br><span id="v-udlaant" class="udlaant"></span></figcaption></figure></div>
       <div class="tekst">
         <div class="til" id="v-til"></div>
         <div class="besked" id="v-besked"></div>
@@ -194,10 +195,10 @@ const KORT = [
   { nr: 8, gruppe: "malerier", fil: "billeder/kort/paeoner-i-haven.jpg",    titel: "Pæoner i haven",    maler: "Elisabeth Gram", tema: "Natur og blomster" },
   { nr: 9, gruppe: "malerier", fil: "billeder/kort/damen-med-guldhaar.jpg", titel: "Damen med guldhår", maler: "Elisabeth Gram", tema: "Illustrationer" },
   { nr: 10, gruppe: "boern", fil: "billeder/kort/esther-1.jpg", titel: "Selvportræt – Pigen med den mærkelige næse, og hun mangler en tand eller to", maler: "Esther, 4 år", art: "Tegning" },
-  { nr: 11, gruppe: "boern", fil: "billeder/kort/esther-fastelavn.jpg", titel: "Fastelavn", maler: "Esther", art: "Tegning" },
-  { nr: 12, gruppe: "boern", fil: "billeder/kort/esther-halloween.jpg", titel: "Halloween", maler: "Esther", art: "Tegning" },
-  { nr: 13, gruppe: "boern", fil: "billeder/kort/esther-jul.jpg",       titel: "Jul",       maler: "Esther", art: "Tegning" },
-  { nr: 14, gruppe: "boern", fil: "billeder/kort/esther-paaske.jpg",    titel: "Påske",     maler: "Esther", art: "Tegning" },
+  { nr: 11, gruppe: "boern", fil: "billeder/kort/esther-fastelavn.jpg", titel: "Fastelavn", maler: "Esther, 8 år", art: "Tegning" },
+  { nr: 12, gruppe: "boern", fil: "billeder/kort/esther-halloween.jpg", titel: "Halloween", maler: "Esther, 8 år", art: "Tegning" },
+  { nr: 13, gruppe: "boern", fil: "billeder/kort/esther-jul.jpg",       titel: "Jul",       maler: "Esther, 8 år", art: "Tegning" },
+  { nr: 14, gruppe: "boern", fil: "billeder/kort/esther-paaske.jpg",    titel: "Påske",     maler: "Esther, 8 år", art: "Tegning" },
   { nr: 15, gruppe: "saerlige", fil: "billeder/kort/samlekort.jpg", titel: "Alle vores kort", maler: "Olsenklanens kunstnere", art: "Samlekort" },
   // Samlekortet laves med lav_samlekort.py — kør den igen, når der kommer nye motiver.
   // Næste motiv får nr. 16 — børnetegninger: gruppe "boern", art "Tegning"; medlemmernes egne værker: gruppe "voksne".
@@ -241,6 +242,10 @@ $("fra").value = hent("ok_navn");
 let valgt = 0;
 // Titlen vises under billedet og på kortet for alle motiver — også Elisabeths malerier
 const visTitel = k => !!(k.titel && String(k.titel).trim());
+// Undertekst under billedet på alle kort (aftalt med Carsten 18-10-2026)
+const udlaant = art => art === "Samlekort"
+  ? "Billederne er venligt udlånt af kunstnerne til postkort i OlsenKlanen"
+  : (art || "Maleri") + " venligt udlånt af kunstneren til postkort i OlsenKlanen";
 const escK = t => String(t == null ? "" : t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 $("kort-valg").innerHTML = GRUPPER.map(g => {
   const kort = KORT.map((k, i) => ({ k, i })).filter(x => (x.k.gruppe || "malerier") === g.id);
@@ -279,6 +284,7 @@ function opdater(){
   $("kort-billede").src = k.fil + "?v=" + BILLED_VERSION;
   $("kort-billede").alt = k.titel;
   $("v-maler").textContent = (k.art || "Maleri") + " nr. " + k.nr + (visTitel(k) ? " · \u201c" + k.titel + "\u201d ·" : ":") + " © " + k.maler + " · olsenklanen.dk";
+  $("v-udlaant").textContent = udlaant(k.art);
   $("kort-valg").querySelectorAll("button").forEach(b => b.classList.toggle("valgt", +b.dataset.i === valgt));
   $("v-til").textContent = $("til").value.trim();
   $("v-besked").textContent = $("besked").value.trim() || "Skriv din hilsen …";

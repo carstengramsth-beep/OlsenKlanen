@@ -97,8 +97,15 @@ textarea{min-height:80px}
     <label class="felt" for="kunstner">Hvem har lavet det?</label>
     <input type="text" id="kunstner" maxlength="80">
 
-    <label class="felt" for="alder">Alder <small>(kun hvis det er et barn)</small></label>
-    <input type="number" id="alder" min="1" max="17" style="max-width:120px">
+    <label class="felt">Er kunstneren et barn?</label>
+    <div class="valg">
+      <label><input type="radio" name="barn" value="ja"> Ja</label>
+      <label><input type="radio" name="barn" value="nej"> Nej, en voksen</label>
+    </div>
+    <div id="alder-del" style="display:none">
+      <label class="felt" for="alder">Hvor gammel er barnet? <small>(alderen står på postkortet)</small></label>
+      <input type="number" id="alder" min="1" max="17" style="max-width:120px">
+    </div>
 
     <label class="felt">Er det en tegning eller et maleri?</label>
     <div class="valg">
@@ -190,6 +197,10 @@ function mangler() {
   if (!fil) m.push("vælg billedet");
   if ($("titel").value.trim().length < 2) m.push("skriv hvad det hedder");
   if ($("kunstner").value.trim().length < 2) m.push("skriv hvem der har lavet det");
+  const barn = (document.querySelector('input[name=barn]:checked') || {}).value;
+  if (!barn) m.push("svar på om kunstneren er et barn");
+  const a = Number($("alder").value);
+  if (barn === "ja" && !(a >= 1 && a <= 17)) m.push("skriv barnets alder");
   const t = valgtTema();
   if (!t) m.push("vælg et tema");
   if (t === NYT && $("nyt-tema").value.trim().length < 2) m.push("skriv dit tema");
@@ -197,6 +208,7 @@ function mangler() {
 }
 function tjek() {
   $("nyt-tema").style.display = valgtTema() === NYT ? "block" : "none";
+  $("alder-del").style.display = (document.querySelector('input[name=barn]:checked') || {}).value === "ja" ? "block" : "none";
   const m = mangler();
   $("send").disabled = m.length > 0;
   $("mangler").textContent = m.length ? "Mangler: " + m.join(", ") + "." : "";
@@ -219,7 +231,8 @@ $("send").onclick = async () => {
   const knap = $("send"); knap.disabled = true;
   const titel = $("titel").value.trim();
   const kunstner = $("kunstner").value.trim();
-  const alder = $("alder").value ? Number($("alder").value) : null;
+  const erBarn = (document.querySelector('input[name=barn]:checked') || {}).value === "ja";
+  const alder = erBarn && $("alder").value ? Number($("alder").value) : null;
   const art = (document.querySelector('input[name=art]:checked') || {}).value || "Tegning";
   const tv = valgtTema();
   const tema = tv === NYT ? $("nyt-tema").value.trim() : tv === VED_IKKE ? "" : tv;
@@ -244,7 +257,7 @@ $("send").onclick = async () => {
     await setDoc(doc(db, "olsenpost", id), {
       type: "kunst_indsendt", til: [],
       afsender: mitNr, navn: mitNavn,
-      titel, kunstner, alder, art,
+      titel, kunstner, barn: erBarn, alder, art,
       tema, tema_nyt: tv === NYT, tema_ved_ikke: tv === VED_IKKE,
       kommentar, sti, url, filnavn: fil.name, bytes: fil.size,
       status: "modtaget", tid: new Date().toISOString(), sendt_lokal: Date.now()
@@ -266,7 +279,7 @@ $("send").onclick = async () => {
     // Klar til næste
     fil = null; $("fil").value = ""; $("forhaand").style.display = "none";
     $("titel").value = ""; $("alder").value = ""; $("kommentar").value = ""; $("nyt-tema").value = "";
-    document.querySelectorAll('input[name=tema]').forEach(r => r.checked = false);
+    document.querySelectorAll('input[name=tema], input[name=barn]').forEach(r => r.checked = false);
     $("bar").style.display = "none"; $("bar-fyld").style.width = "0";
     tjek();
     if (erAdmin) hentAdmin();
