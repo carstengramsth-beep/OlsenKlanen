@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Send din tegning eller dit maleri – OlsenKlanen</title>
+<script>
+// Kun for medlemmer. Efter login kommer man tilbage hertil.
+try {
+  const hent = n => sessionStorage.getItem(n) || localStorage.getItem(n) || "";
+  if (!(hent("ok_niveau") || hent("ok_navn") || hent("ok_nr"))) window.location.href = "login.html?videre=send-kunst.html";
+} catch(e) {}
+</script>
+<script src="kort-temaer.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gron:#2d5016;--gron-lys:#4a7c2a;--gron-pale:#c8e6b0;
+  --guld:#c8952a;--guld-lys:#f5e6c8;--guld-pale:#fdf8ee;
+  --tekst:#1a1a0e;--tekst-lys:#5a5a40;--border:#d4c9a0;
+  --baggrund:#fffde0;--roed:#a33;
+}
+body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var(--tekst);min-height:100vh;padding-bottom:6rem;font-size:17px;line-height:1.5}
+header{background:var(--gron);color:#fff;text-align:center;padding:2rem 1rem 2.2rem;border-bottom:3px solid var(--guld)}
+header h1{font-family:'Playfair Display',serif;font-weight:500;font-size:2rem}
+header p{margin-top:.4rem;color:var(--gron-pale)}
+header a{color:#f5e6a8}
+main{max-width:760px;margin:0 auto;padding:1.4rem 1rem}
+.kort{background:#fff;border:1px solid var(--border);border-radius:12px;padding:1.2rem 1.4rem;margin-bottom:1.2rem}
+.kort h2{font-family:'Playfair Display',serif;font-weight:500;color:var(--gron);font-size:1.35rem;margin-bottom:.6rem}
+label.felt{display:block;font-weight:600;color:var(--gron);margin:.9rem 0 .25rem}
+label.felt small{font-weight:400;color:var(--tekst-lys)}
+input[type=text],input[type=number],textarea{width:100%;font-family:inherit;font-size:17px;padding:.55rem .7rem;border:1px solid var(--border);border-radius:8px}
+textarea{min-height:80px}
+.valg{display:flex;flex-direction:column;gap:.35rem;margin-top:.2rem}
+.valg label{display:flex;gap:.5rem;align-items:center;cursor:pointer}
+.valg input[type=radio]{width:20px;height:20px;accent-color:var(--gron)}
+.drop{border:3px dashed var(--guld);border-radius:12px;background:var(--guld-pale);text-align:center;padding:1.6rem 1rem;cursor:pointer}
+.drop .stor{font-size:2.4rem}
+#forhaand{display:none;margin-top:.8rem;text-align:center}
+#forhaand img{max-width:100%;max-height:340px;border-radius:8px;border:1px solid var(--border)}
+.btn{font-family:inherit;font-size:17px;border:none;border-radius:8px;padding:.8rem 1.4rem;cursor:pointer;font-weight:600}
+.btn-gron{background:var(--gron);color:#fff;width:100%;margin-top:1.2rem}
+.btn-gron:hover{background:var(--gron-lys)}
+.btn-lille{font-size:14px;padding:.4rem .8rem;background:var(--gron);color:#fff;border:none;border-radius:6px;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:default}
+.hjaelp{font-size:15px;color:var(--tekst-lys)}
+.mangler{font-size:15px;color:var(--roed);margin-top:.5rem;min-height:1.4em}
+.bar{height:20px;background:#eee5cc;border-radius:10px;overflow:hidden;margin-top:.8rem;display:none}
+.bar div{height:100%;width:0;background:var(--gron-lys)}
+.status{margin-top:.6rem;font-weight:600;color:var(--gron);min-height:1.5em}
+.fejl{color:var(--roed)}
+#admin-del{display:none}
+.indsendt{display:flex;gap:.9rem;border-top:1px solid #eee5cc;padding:.8rem 0}
+.indsendt img{width:120px;height:90px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex:none}
+.indsendt .info{font-size:15px}
+.indsendt .info b{color:var(--gron)}
+.maerke{display:inline-block;font-size:13px;padding:1px 8px;border-radius:10px;background:var(--guld-lys)}
+.maerke.lagt{background:var(--gron-pale)}
+.maerke.ny{background:#f7d9d9}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎨 Send din tegning eller dit maleri</h1>
+  <p>Måske bliver den til et postkort, som hele klanen kan sende!</p>
+  <p style="margin-top:.6rem"><a href="kort.html">Se postkortene</a> · <a href="forside.html">Til forsiden</a></p>
+</header>
+
+<main>
+  <div class="kort">
+    <h2>Sådan gør du</h2>
+    <p>Tag et billede af tegningen eller maleriet. Læg det lige på et bord i dagslys, og tag billedet lige ovenfra.</p>
+    <p style="margin-top:.4rem">Udfyld felterne herunder, og tryk <b>Send</b>. Carsten får besked og lægger det på plads.</p>
+    <p style="margin-top:.4rem" class="hjaelp">Er det svært? Så send bare billedet på mail til
+      <a href="mailto:post@olsenklanen.dk?subject=Tegning%20eller%20maleri%20til%20postkortene">post@olsenklanen.dk</a>
+      og skriv, hvad det hedder, og hvem der har lavet det.</p>
+  </div>
+
+  <div class="kort" id="formular">
+    <h2>1. Vælg billedet</h2>
+    <div class="drop" id="drop">
+      <div class="stor">🖼️</div>
+      <div><b>Tryk her</b> for at vælge billedet</div>
+      <div class="hjaelp">eller træk det herind</div>
+    </div>
+    <input type="file" id="fil" accept="image/*" style="display:none">
+    <div id="forhaand"><img id="forhaand-billede" alt="Dit billede"><div class="hjaelp" id="fil-navn"></div></div>
+
+    <h2 style="margin-top:1.4rem">2. Om værket</h2>
+    <label class="felt" for="titel">Hvad hedder det?</label>
+    <input type="text" id="titel" maxlength="120" placeholder="Fx Påskeharen i haven">
+
+    <label class="felt" for="kunstner">Hvem har lavet det?</label>
+    <input type="text" id="kunstner" maxlength="80">
+
+    <label class="felt" for="alder">Alder <small>(kun hvis det er et barn)</small></label>
+    <input type="number" id="alder" min="1" max="17" style="max-width:120px">
+
+    <label class="felt">Er det en tegning eller et maleri?</label>
+    <div class="valg">
+      <label><input type="radio" name="art" value="Tegning" checked> Tegning</label>
+      <label><input type="radio" name="art" value="Maleri"> Maleri</label>
+      <label><input type="radio" name="art" value="Andet"> Noget andet</label>
+    </div>
+
+    <h2 style="margin-top:1.4rem">3. Vælg et tema</h2>
+    <p class="hjaelp">Postkortene står i grupper efter tema. Vælg det, der passer bedst. Du kan også finde på et nyt.</p>
+    <div class="valg" id="temaer" style="margin-top:.5rem"></div>
+    <input type="text" id="nyt-tema" maxlength="40" placeholder="Skriv dit tema, fx Dyr eller Højtider" style="display:none;margin-top:.4rem">
+
+    <label class="felt" for="kommentar">Vil du fortælle noget mere? <small>(valgfrit)</small></label>
+    <textarea id="kommentar" maxlength="600"></textarea>
+
+    <button class="btn btn-gron" id="send" disabled>💌 Send</button>
+    <div class="mangler" id="mangler"></div>
+    <div class="bar" id="bar"><div id="bar-fyld"></div></div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="kort" id="admin-del">
+    <h2>📥 Indsendte værker (kun for administratorer)</h2>
+    <p class="hjaelp">Nyeste øverst. Når et værk er lagt ind som postkort, så tryk "Lagt op som postkort". Så får afsenderen en besked.</p>
+    <div id="admin-liste" style="margin-top:.6rem">Henter …</div>
+  </div>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, addDoc, collection, query, where, getDocs }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+});
+const storage = getStorage(app);
+const db = getFirestore(app);
+
+const hent = n => { try { return (sessionStorage.getItem(n) || localStorage.getItem(n) || "").trim(); } catch(e) { return ""; } };
+const mitNr = hent("ok_nr") || "ukendt";
+const mitNavn = hent("ok_navn") || "";
+const erAdmin = hent("ok_niveau") === "admin";
+const CARSTEN = ["8-B"];                 // får besked i OlsenPost
+const ROD = "gamle_billeder/kunst/";     // samme lager som "Send materiale"
+const NYT = "__nyt__", VED_IKKE = "__ved_ikke__";
+
+const $ = id => document.getElementById(id);
+const esc = t => String(t == null ? "" : t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const rens = s => (s || "").normalize("NFC").replace(/[\\/#?\[\]*:"<>|]/g, "_").replace(/\s+/g, "_").trim();
+
+$("kunstner").value = mitNavn;
+
+// ---- Temaer ----
+const TEMAER = window.KORT_TEMAER || [];
+$("temaer").innerHTML =
+  TEMAER.map(t => `<label><input type="radio" name="tema" value="${esc(t)}"> ${esc(t)}</label>`).join("") +
+  `<label><input type="radio" name="tema" value="${NYT}"> ✏️ Mit eget tema</label>` +
+  `<label><input type="radio" name="tema" value="${VED_IKKE}"> 🤔 Ved ikke — Carsten finder et tema sammen med mig</label>`;
+const valgtTema = () => (document.querySelector('input[name=tema]:checked') || {}).value || "";
+
+// ---- Billede ----
+let fil = null;
+function vaelg(f) {
+  if (!f) return;
+  if (!/^image\//.test(f.type)) { $("mangler").textContent = "Det skal være et billede (fx et foto fra telefonen)."; return; }
+  fil = f;
+  $("forhaand-billede").src = URL.createObjectURL(f);
+  $("fil-navn").textContent = f.name + " · " + (f.size / 1048576).toLocaleString("da-DK", { maximumFractionDigits: 1 }) + " MB";
+  $("forhaand").style.display = "block";
+  tjek();
+}
+$("drop").onclick = () => $("fil").click();
+$("fil").onchange = e => vaelg(e.target.files[0]);
+$("drop").ondragover = e => { e.preventDefault(); };
+$("drop").ondrop = e => { e.preventDefault(); vaelg(e.dataTransfer.files[0]); };
+
+// ---- Er alt udfyldt? ----
+function mangler() {
+  const m = [];
+  if (!fil) m.push("vælg billedet");
+  if ($("titel").value.trim().length < 2) m.push("skriv hvad det hedder");
+  if ($("kunstner").value.trim().length < 2) m.push("skriv hvem der har lavet det");
+  const t = valgtTema();
+  if (!t) m.push("vælg et tema");
+  if (t === NYT && $("nyt-tema").value.trim().length < 2) m.push("skriv dit tema");
+  return m;
+}
+function tjek() {
+  $("nyt-tema").style.display = valgtTema() === NYT ? "block" : "none";
+  const m = mangler();
+  $("send").disabled = m.length > 0;
+  $("mangler").textContent = m.length ? "Mangler: " + m.join(", ") + "." : "";
+}
+document.querySelectorAll("#formular input, #formular textarea").forEach(el => { el.addEventListener("input", tjek); el.addEventListener("change", tjek); });
+tjek();
+
+async function besked(til, tekst, fraNr, fraNavn) {
+  try {
+    await addDoc(collection(db, "olsenpost"), {
+      fra_nr: fraNr, fra_navn: fraNavn, til, til_navne: til, tekst,
+      type: "besked", sendt: new Date(), sendt_lokal: Date.now(), set_af: [], svar: []
+    });
+  } catch(e) { console.warn("Besked fejlede", e); }
+}
+
+// ---- Send ----
+$("send").onclick = async () => {
+  if (mangler().length) return;
+  const knap = $("send"); knap.disabled = true;
+  const titel = $("titel").value.trim();
+  const kunstner = $("kunstner").value.trim();
+  const alder = $("alder").value ? Number($("alder").value) : null;
+  const art = (document.querySelector('input[name=art]:checked') || {}).value || "Tegning";
+  const tv = valgtTema();
+  const tema = tv === NYT ? $("nyt-tema").value.trim() : tv === VED_IKKE ? "" : tv;
+  const temaTekst = tv === NYT ? `${tema} (nyt tema)` : tv === VED_IKKE ? "Ved ikke — vil gerne have hjælp" : tema;
+  const kommentar = $("kommentar").value.trim();
+  const id = "kunst_" + mitNr.replace(/[^0-9A-Za-z-]/g, "") + "_" + Date.now();
+  const endelse = (fil.name.match(/\.[A-Za-z0-9]+$/) || [".jpg"])[0].toLowerCase();
+  const sti = ROD + rens(mitNr + " " + mitNavn) + "/" + id + endelse;
+
+  $("bar").style.display = "block";
+  $("status").textContent = "Sender billedet …";
+  window.onbeforeunload = () => "Billedet er ikke sendt færdigt endnu.";
+  try {
+    await new Promise((res, rej) => {
+      const t = uploadBytesResumable(ref(storage, sti), fil, {
+        contentType: fil.type || "image/jpeg",
+        customMetadata: { afsender: mitNr, navn: mitNavn, titel: titel.slice(0, 120), kunstner: kunstner.slice(0, 80), tema: temaTekst.slice(0, 80) }
+      });
+      t.on("state_changed", s => { $("bar-fyld").style.width = (s.bytesTransferred / s.totalBytes * 100) + "%"; }, rej, res);
+    });
+    const url = await getDownloadURL(ref(storage, sti));
+    await setDoc(doc(db, "olsenpost", id), {
+      type: "kunst_indsendt", til: [],
+      afsender: mitNr, navn: mitNavn,
+      titel, kunstner, alder, art,
+      tema, tema_nyt: tv === NYT, tema_ved_ikke: tv === VED_IKKE,
+      kommentar, sti, url, filnavn: fil.name, bytes: fil.size,
+      status: "modtaget", tid: new Date().toISOString(), sendt_lokal: Date.now()
+    });
+    const hvem = kunstner + (alder ? `, ${alder} år` : "");
+    await besked(CARSTEN,
+      `🎨 Ny ${art.toLowerCase()} til postkortene fra ${mitNavn || mitNr} (nr. ${mitNr}).\n\n` +
+      `Titel: ${titel}\nLavet af: ${hvem}\nTema: ${temaTekst}` + (kommentar ? `\n\nBesked:\n${kommentar}` : "") +
+      (tv === VED_IKKE ? `\n\n👉 Kunstneren vil gerne have hjælp til at finde et tema.` : "") +
+      `\n\nSe det på olsenklanen.dk/send-kunst.html`,
+      mitNr, (mitNavn || mitNr) + " (Send tegning/maleri)");
+    await besked([mitNr],
+      `🎨 Tak, ${(mitNavn || "").split(/\s+/)[0] || "kære medlem"}!\n\n` +
+      `Vi har modtaget "${titel}" af ${hvem}.\nTema: ${temaTekst}\n\n` +
+      `Carsten kigger på det og lægger det ind blandt postkortene. Du får en besked, når det er sket.\n\nVenlig hilsen\nOlsenKlanen`,
+      "8-B", "OlsenKlanen (Postkort)");
+    window.onbeforeunload = null;
+    $("status").innerHTML = `🎉 Tak! "${esc(titel)}" er sendt. Carsten har fået besked.<br><span class="hjaelp">Vil du sende én til? Vælg bare et nyt billede.</span>`;
+    // Klar til næste
+    fil = null; $("fil").value = ""; $("forhaand").style.display = "none";
+    $("titel").value = ""; $("alder").value = ""; $("kommentar").value = ""; $("nyt-tema").value = "";
+    document.querySelectorAll('input[name=tema]').forEach(r => r.checked = false);
+    $("bar").style.display = "none"; $("bar-fyld").style.width = "0";
+    tjek();
+    if (erAdmin) hentAdmin();
+  } catch(e) {
+    window.onbeforeunload = null;
+    console.error(e);
+    $("status").innerHTML = `<span class="fejl">Det gik galt. Prøv at trykke Send igen.</span>`;
+    knap.disabled = false;
+  }
+};
+
+// ---- Admin: oversigt ----
+async function hentAdmin() {
+  try {
+    const snap = await getDocs(query(collection(db, "olsenpost"), where("type", "==", "kunst_indsendt")));
+    const alle = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.sendt_lokal || 0) - (a.sendt_lokal || 0));
+    if (!alle.length) { $("admin-liste").innerHTML = '<p class="hjaelp">Der er ikke sendt noget ind endnu.</p>'; return; }
+    $("admin-liste").innerHTML = alle.map(k => {
+      const temaTxt = k.tema_ved_ikke ? '<span class="maerke ny">Ved ikke — tag en snak</span>' : esc(k.tema) + (k.tema_nyt ? ' <span class="maerke">nyt tema</span>' : "");
+      const st = k.status === "lagt op" ? '<span class="maerke lagt">✅ Lagt op</span>' : '<span class="maerke">Modtaget</span>';
+      return `<div class="indsendt">
+        <a href="${esc(k.url)}" target="_blank" title="Åbn i fuld størrelse"><img src="${esc(k.url)}" alt=""></a>
+        <div class="info">
+          <b>"${esc(k.titel)}"</b> · ${esc(k.art)}<br>
+          Lavet af: ${esc(k.kunstner)}${k.alder ? ", " + esc(k.alder) + " år" : ""}<br>
+          Tema: ${temaTxt}<br>
+          Sendt af ${esc(k.navn || k.afsender)} (nr. ${esc(k.afsender)}) · ${esc((k.tid || "").slice(0, 10))} · ${st}
+          ${k.kommentar ? `<br><i>${esc(k.kommentar)}</i>` : ""}
+          ${k.status !== "lagt op" ? `<br><button class="btn-lille" data-lagt="${esc(k.id)}" style="margin-top:.4rem">✅ Lagt op som postkort</button>` : ""}
+        </div></div>`;
+    }).join("");
+  } catch(e) { $("admin-liste").innerHTML = '<p class="fejl">Kunne ikke hente listen.</p>'; console.error(e); }
+}
+if (erAdmin) {
+  $("admin-del").style.display = "block";
+  hentAdmin();
+  $("admin-liste").addEventListener("click", async e => {
+    const b = e.target.closest("[data-lagt]"); if (!b) return;
+    b.disabled = true;
+    const id = b.dataset.lagt;
+    const s = await getDoc(doc(db, "olsenpost", id)); if (!s.exists()) return;
+    const k = s.data();
+    await updateDoc(doc(db, "olsenpost", id), { status: "lagt op", lagt_op: new Date().toISOString(), lagt_op_af: mitNr });
+    await besked([k.afsender],
+      `🖼️ Nu er "${k.titel}" af ${k.kunstner} et postkort på olsenklanen.dk!\n\nSe det under "Skriv et kort": olsenklanen.dk/kort.html\n\nTusind tak for bidraget.\n\nVenlig hilsen\nOlsenKlanen`,
+      "8-B", "OlsenKlanen (Postkort)");
+    hentAdmin();
+  });
+}
+</script>
+<script src="forside-knap.js" defer></script>
+</body>
+</html>

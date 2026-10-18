@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OlsenKlanen · Skriv et kort</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<script src="kort-temaer.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=EB+Garamond:ital@0;1&family=Caveat:wght@500&family=Great+Vibes&family=Kalam&family=Lora&family=Open+Sans&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -97,6 +98,7 @@ try {
       <h2>1. Vælg et kort</h2>
       <div id="kort-valg"></div>
       <p class="hint">Hvert motiv har et fast nummer (Nr.), så det er nemt at tale om et bestemt kort. Nummeret står også på kortet.</p>
+      <p class="hint" style="margin-top:8px;"><a href="send-kunst.html" style="color:#2d5016; font-weight:bold;">🎨 Har du selv en tegning eller et maleri? Send det her</a> — måske bliver det til et postkort.</p>
     </div>
     <div class="trin">
       <h2>2. Skriv din hilsen</h2>
@@ -200,10 +202,11 @@ const KORT = [
   // Samlekortet laves med lav_samlekort.py — kør den igen, når der kommer nye motiver.
   // Næste motiv får nr. 16 — børnetegninger: gruppe "boern", art "Tegning"; medlemmernes egne værker: gruppe "voksne".
 ];
-// Temaer — rækkefølgen her er rækkefølgen på siden. Flere temaer: skriv dem her.
+// Temaer — rækkefølgen er rækkefølgen på siden. Flere temaer: skriv dem i kort-temaer.js.
 // Et motiv uden tema (eller med et tema, der ikke står her) kommer under "Uden tema".
 // Temaerne vises kun i en gruppe, hvor mindst ét motiv har et tema.
-const TEMAER = ["Landskaber", "Illustrationer", "Natur og blomster"];
+// Selve listen står i kort-temaer.js (deles med send-kunst.html).
+const TEMAER = window.KORT_TEMAER || ["Landskaber", "Illustrationer", "Natur og blomster"];
 const UDEN_TEMA = "Uden tema";
 
 // Overskrifterne i "Vælg et kort". vis_tom: gruppen vises, også før der er billeder i den.
