@@ -122,7 +122,7 @@ textarea{width:100%;min-height:80px;font-family:inherit;font-size:16px;padding:.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getStorage, ref, uploadBytesResumable, getMetadata, listAll, getDownloadURL }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-import { getFirestore, doc, setDoc, collection, query, where, getDocs }
+import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
@@ -143,6 +143,24 @@ const erAdmin = hent("ok_niveau") === "admin";
 const ROD = "gamle_billeder/indsendt/";
 
 const $ = id => document.getElementById(id);
+
+// Adgang: admin altid. Andre kun hvis husstanden har fået lov på medlemskortet (send_materiale).
+if (!erAdmin) {
+  let aaben = false;
+  try {
+    const hus = mitNr.split("-")[0];
+    const snap = await getDoc(doc(db, "membres", hus));
+    aaben = snap.exists() && snap.data().send_materiale === true;
+  } catch(e) { aaben = false; }
+  if (!aaben) {
+    document.querySelector("main").innerHTML = `<div class="kort"><h2>Siden er ikke åbnet for dig endnu</h2>
+      <p>Det er kun muligt at sende materiale <b>efter aftale</b>.</p>
+      <p>Har du billeder eller gamle papirer til klanen? Så skriv til OlsenBanden på
+      <a href="mailto:post@olsenklanen.dk">post@olsenklanen.dk</a>.</p>
+      <p style="margin-top:.8rem"><a href="medlemskartotek.html">← Til medlemskortet</a></p></div>`;
+    throw new Error("Ingen adgang til at sende materiale");
+  }
+}
 const rens = s => (s || "").normalize("NFC").replace(/[\\#?\[\]*:"<>|]/g, "_").replace(/\s+/g, " ").trim();
 const mb = b => (b / 1048576).toLocaleString("da-DK", { maximumFractionDigits: 1 }) + " MB";
 const SKJULT = /(^|\/)(\.|thumbs\.db$|desktop\.ini$|__MACOSX)/i;

@@ -509,6 +509,14 @@ body.kan-redigere .historisk-btn-wrapper{display:none}
         </div>
       </div>
 
+      <div id="sendmat-sektion" style="display:none">
+        <div class="edit-sek-titel">📤 Send materiale</div>
+        <label style="display:flex;gap:.5rem;align-items:center;font-size:14px;cursor:pointer">
+          <input type="checkbox" id="ef-send-materiale"> Husstanden må sende billeder og papirer til klanen
+        </label>
+        <div style="font-size:12px;color:var(--tekst-lys);margin:.3rem 0 .6rem">Så kommer der en knap "📤 Send materiale" på husstandens eget medlemskort. Materialet vises ikke på siden, før det er gennemgået.</div>
+      </div>
+
       <div class="edit-sek-titel">Begivenheder</div>
       <div id="begi-liste-edit"></div>
       <div class="tilfoej-rad">
@@ -1056,6 +1064,18 @@ const ROLLE_GRUPPER = [
   { rolle:'ven af huset',        label:'Venner af huset' },
 ];
  
+// Send materiale: åbnes af admin pr. husstand (feltet send_materiale)
+function sendMaterialeHtml(m, erEgen) {
+  if (m.send_materiale !== true) return '';
+  if (erEgen || erHjaelperFor(m.nr)) {
+    return `<div class="info-linje"><span class="info-ikon">📤</span><span class="info-tekst"><a href="indsend.html" style="display:inline-block;background:var(--guld,#c8952a);color:#1a1a0e;padding:.35rem .8rem;border-radius:6px;font-weight:600;text-decoration:none">Send materiale til klanen →</a><br><span style="font-size:12px;opacity:.75">Billeder, referater og gamle papirer</span></span></div>`;
+  }
+  if (document.body.classList.contains('kan-redigere')) {
+    return `<div class="info-linje"><span class="info-ikon">📤</span><span class="info-tekst" style="font-size:13px">Må sende materiale</span></div>`;
+  }
+  return '';
+}
+
 function byggKort(m) {
   const erEgen    = egetNr && sammeHusstand(egetNr, m.nr);
   const visRed    = kanRedigere(m.nr);
@@ -1117,6 +1137,7 @@ function byggKort(m) {
         <span class="info-tekst">${emailHtml || '<span class="tom-info">Ingen email</span>'}</span>
       </div>
       ${hjaelperHtml(m)}
+      ${sendMaterialeHtml(m, erEgen)}
     </div>
     <div class="udvidet-sektion">
       <div class="familie-blok">${familieHtml}</div>
@@ -2166,6 +2187,8 @@ function aabneEditModal(nr) {
   renderPersonEdit();
   renderBegiEdit();
   renderHjaelpere();
+  document.getElementById('sendmat-sektion').style.display = document.body.classList.contains('kan-redigere') ? '' : 'none';
+  document.getElementById('ef-send-materiale').checked = m.send_materiale === true;
   opdaterManglerListe();
   editModal.classList.add('vis');
   editModal.scrollTop = 0;
@@ -2286,6 +2309,7 @@ async function gemData() {
     medlemskab_bekraeftet: _bekraeftelse,
     godkendelse_nulstillet: _nulstillet,
     hjaelpere: erAdmin ? hjaelperListe : (tidl.hjaelpere || []),
+    send_materiale: erAdmin ? document.getElementById('ef-send-materiale').checked : (tidl.send_materiale === true),
     numre_laast: _numreLaast,
     sidstRedigeretAf: auth.currentUser?.email || (familieSession ? `Medlem nr. ${familieSession.nr}` : 'ukendt')
   };

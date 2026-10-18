@@ -2,7 +2,10 @@
 
 18\. oktober 2026 · Claude Code på pc-1 sammen med Carsten
 
-- Ny side **olsenklanen.dk/indsend.html**, kun for medlemmer (login med nr. + kode).
+- Ny side **olsenklanen.dk/indsend.html** – kun **efter aftale**. Admin åbner pr. husstand på medlemskortet
+  (Rediger → "📤 Send materiale", feltet `send_materiale: true` på `membres/<nr>`). Så får husstanden en knap på sit eget kort.
+  Admin har altid adgang. Andre ser "Siden er ikke åbnet for dig endnu".
+- Login med nr. + kode.
   Er man ikke logget ind, sendes man til login og derefter tilbage (`login.html?videre=indsend.html`).
 - Medlemmer kan trække filer eller en hel mappe ind (alle filtyper, ingen størrelsesgrænse).
 - Filerne lægges i lageret under `gamle_billeder/indsendt/<nr>_<navn>/<dato>/<mappens egen struktur>`.
