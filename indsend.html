@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Send materiale til OlsenKlanen</title>
+<script>
+// Kun for medlemmer. Efter login kommer man tilbage hertil.
+try {
+  const hent = n => sessionStorage.getItem(n) || localStorage.getItem(n) || "";
+  if (!(hent("ok_niveau") || hent("ok_navn") || hent("ok_nr"))) window.location.href = "login.html?videre=indsend.html";
+} catch(e) {}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gron:#2d5016;--gron-lys:#4a7c2a;--gron-pale:#c8e6b0;
+  --guld:#c8952a;--guld-lys:#f5e6c8;--guld-pale:#fdf8ee;
+  --hvid:#fefcf8;--tekst:#1a1a0e;--tekst-lys:#5a5a40;--border:#d4c9a0;
+  --baggrund:#fffde0;--roed:#a33;
+}
+body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var(--tekst);min-height:100vh;padding-bottom:6rem;font-size:17px;line-height:1.5}
+header{background:var(--gron);color:#fff;text-align:center;padding:2rem 1rem 2.2rem;border-bottom:3px solid var(--guld)}
+header h1{font-family:'Playfair Display',serif;font-weight:500;font-size:2rem}
+header p{margin-top:.4rem;color:var(--gron-pale)}
+main{max-width:760px;margin:0 auto;padding:1.4rem 1rem}
+.kort{background:#fff;border:1px solid var(--border);border-radius:12px;padding:1.2rem 1.4rem;margin-bottom:1.2rem}
+.kort h2{font-family:'Playfair Display',serif;font-weight:500;color:var(--gron);font-size:1.35rem;margin-bottom:.6rem}
+ol.trin{padding-left:1.4rem}
+ol.trin li{margin:.35rem 0}
+.drop{border:3px dashed var(--guld);border-radius:12px;background:var(--guld-pale);text-align:center;padding:2rem 1rem;cursor:pointer;transition:background .15s}
+.drop.over{background:var(--guld-lys)}
+.drop .stor{font-size:2.6rem}
+.knapper{display:flex;gap:.7rem;flex-wrap:wrap;justify-content:center;margin-top:1rem}
+.btn{font-family:inherit;font-size:16px;border:none;border-radius:8px;padding:.7rem 1.2rem;cursor:pointer;font-weight:600}
+.btn-gron{background:var(--gron);color:#fff}
+.btn-gron:hover{background:var(--gron-lys)}
+.btn-guld{background:var(--guld);color:var(--tekst)}
+.btn-lys{background:#e8e2d0;color:var(--gron)}
+.btn:disabled{opacity:.5;cursor:default}
+textarea{width:100%;min-height:80px;font-family:inherit;font-size:16px;padding:.6rem;border:1px solid var(--border);border-radius:8px}
+.liste{max-height:320px;overflow:auto;border:1px solid var(--border);border-radius:8px;margin-top:.8rem;font-size:14px}
+.liste div{padding:.3rem .6rem;border-bottom:1px solid #eee5cc;display:flex;justify-content:space-between;gap:.6rem}
+.liste div span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ok{color:var(--gron);font-weight:600}
+.fejl{color:var(--roed);font-weight:600}
+.bar{height:22px;background:#eee5cc;border-radius:11px;overflow:hidden;margin-top:.8rem}
+.bar div{height:100%;width:0;background:var(--gron-lys);transition:width .2s}
+.status{margin-top:.5rem;font-weight:600;color:var(--gron);min-height:1.5em}
+.hjaelp{font-size:15px;color:var(--tekst-lys)}
+#admin-del{display:none}
+.mappe{border:1px solid var(--border);border-radius:8px;margin:.6rem 0;background:var(--guld-pale)}
+.mappe summary{padding:.6rem .9rem;cursor:pointer;font-weight:600;color:var(--gron)}
+.filer{background:#fff;padding:.4rem .9rem;font-size:14px}
+.filer a{color:var(--gron)}
+.thumbs{display:flex;flex-wrap:wrap;gap:6px;margin:.4rem 0}
+.thumbs img{height:90px;border-radius:4px;border:1px solid var(--border)}
+</style>
+</head>
+<body>
+<header>
+  <h1>📤 Send materiale til OlsenKlanen</h1>
+  <p>Billeder, referater, blade og andre gamle papirer</p>
+</header>
+<main>
+
+  <div class="kort">
+    <h2>Sådan gør du</h2>
+    <ol class="trin">
+      <li>Sæt den eksterne harddisk eller USB-nøgle i computeren.</li>
+      <li>Træk filerne eller hele mappen ind i det gule felt nedenfor.<br>
+        <span class="hjaelp">Eller tryk på <b>Vælg en hel mappe</b> eller <b>Vælg filer</b>.</span></li>
+      <li>Skriv gerne et par ord om materialet (fx år og hvad det er).</li>
+      <li>Tryk på <b>Send</b>. Lad siden stå åben, til der står <b>Færdig</b>.</li>
+    </ol>
+    <p class="hjaelp" style="margin-top:.6rem">Det kan tage lang tid med mange billeder (fx 500 MB: ca. ½–1 time). Går det i stå, så tryk Send igen – det, der allerede er sendt, springes over.<br>
+    Materialet bliver <b>ikke</b> vist på hjemmesiden med det samme. Carsten gennemgår det først og lægger det på plads.</p>
+  </div>
+
+  <div class="kort">
+    <h2>1. Vælg materiale</h2>
+    <div class="drop" id="drop">
+      <div class="stor">📁</div>
+      <div><b>Træk filer eller mapper herind</b></div>
+      <div class="hjaelp">– eller brug knapperne –</div>
+      <div class="knapper">
+        <button class="btn btn-guld" type="button" id="vaelg-mappe">📁 Vælg en hel mappe</button>
+        <button class="btn btn-lys" type="button" id="vaelg-filer">📄 Vælg filer</button>
+      </div>
+    </div>
+    <input type="file" id="in-filer" multiple style="display:none">
+    <input type="file" id="in-mappe" webkitdirectory directory multiple style="display:none">
+    <div id="valgt" class="status"></div>
+    <div class="liste" id="liste" style="display:none"></div>
+    <div class="knapper" id="ryd-boks" style="display:none;justify-content:flex-start"><button class="btn btn-lys" type="button" id="ryd">✖ Start forfra</button></div>
+  </div>
+
+  <div class="kort">
+    <h2>2. Skriv et par ord (frivilligt)</h2>
+    <textarea id="kommentar" placeholder="Fx: Billeder fra skovturene 2003–2008 og referater fra 1990'erne."></textarea>
+  </div>
+
+  <div class="kort">
+    <h2>3. Send</h2>
+    <button class="btn btn-gron" id="send" disabled>📤 Send</button>
+    <div class="bar"><div id="bar"></div></div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="kort" id="admin-del">
+    <h2>📥 Modtaget materiale (kun for administratorer)</h2>
+    <p class="hjaelp">Alt, der er sendt via denne side. Ligger i lageret under <code>gamle_billeder/indsendt/</code>.</p>
+    <div class="knapper" style="justify-content:flex-start"><button class="btn btn-lys" id="hent-modtaget">🔄 Vis modtaget materiale</button></div>
+    <div id="modtaget"></div>
+  </div>
+
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getStorage, ref, uploadBytesResumable, getMetadata, listAll, getDownloadURL }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getFirestore, doc, setDoc, collection, query, where, getDocs }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+});
+const storage = getStorage(app);
+const db = getFirestore(app);
+
+const hent = n => { try { return (sessionStorage.getItem(n) || localStorage.getItem(n) || "").trim(); } catch(e) { return ""; } };
+const mitNr = hent("ok_nr") || "ukendt";
+const mitNavn = hent("ok_navn") || "";
+const erAdmin = hent("ok_niveau") === "admin";
+const ROD = "gamle_billeder/indsendt/";
+
+const $ = id => document.getElementById(id);
+const rens = s => (s || "").normalize("NFC").replace(/[\\#?\[\]*:"<>|]/g, "_").replace(/\s+/g, " ").trim();
+const mb = b => (b / 1048576).toLocaleString("da-DK", { maximumFractionDigits: 1 }) + " MB";
+const SKJULT = /(^|\/)(\.|thumbs\.db$|desktop\.ini$|__MACOSX)/i;
+
+let valgte = [];  // { fil, sti }
+
+function tilfoej(fil, sti) {
+  sti = (sti || fil.name).replace(/^\/+/, "");
+  if (SKJULT.test(sti) || fil.size === 0) return;
+  if (valgte.some(v => v.sti === sti && v.fil.size === fil.size)) return;
+  valgte.push({ fil, sti });
+}
+
+function visValgte() {
+  const total = valgte.reduce((s, v) => s + v.fil.size, 0);
+  $("valgt").textContent = valgte.length ? `${valgte.length} filer valgt · ${mb(total)}` : "";
+  $("send").disabled = valgte.length === 0;
+  $("ryd-boks").style.display = valgte.length ? "flex" : "none";
+  const l = $("liste");
+  l.style.display = valgte.length ? "block" : "none";
+  l.innerHTML = valgte.slice(0, 500).map((v, i) =>
+    `<div><span title="${v.sti}">${v.sti}</span><span id="st-${i}">${mb(v.fil.size)}</span></div>`).join("")
+    + (valgte.length > 500 ? `<div><span>… og ${valgte.length - 500} flere</span></div>` : "");
+}
+
+$("vaelg-filer").onclick = e => { e.stopPropagation(); $("in-filer").click(); };
+$("vaelg-mappe").onclick = e => { e.stopPropagation(); $("in-mappe").click(); };
+$("drop").onclick = () => $("in-mappe").click();
+$("in-filer").onchange = e => { [...e.target.files].forEach(f => tilfoej(f)); e.target.value = ""; visValgte(); };
+$("in-mappe").onchange = e => { [...e.target.files].forEach(f => tilfoej(f, f.webkitRelativePath)); e.target.value = ""; visValgte(); };
+$("ryd").onclick = () => { valgte = []; $("status").textContent = ""; $("bar").style.width = "0"; visValgte(); };
+
+// Træk-og-slip, også hele mapper
+const drop = $("drop");
+["dragenter", "dragover"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", async e => {
+  const items = [...(e.dataTransfer.items || [])].map(i => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+  if (!items.length) { [...e.dataTransfer.files].forEach(f => tilfoej(f)); visValgte(); return; }
+  $("valgt").textContent = "Læser mappen …";
+  for (const it of items) await laesEntry(it, "");
+  visValgte();
+});
+function laesEntry(entry, sti) {
+  return new Promise(resolve => {
+    if (entry.isFile) {
+      entry.file(f => { tilfoej(f, sti + f.name); resolve(); }, () => resolve());
+    } else if (entry.isDirectory) {
+      const r = entry.createReader(); const alle = [];
+      const laes = () => r.readEntries(async bunke => {
+        if (!bunke.length) { for (const b of alle) await laesEntry(b, sti + entry.name + "/"); resolve(); }
+        else { alle.push(...bunke); laes(); }
+      }, () => resolve());
+      laes();
+    } else resolve();
+  });
+}
+
+// Hjælpere
+function idag() { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+async function findes(r, size) { try { const m = await getMetadata(r); return Number(m.size) === size; } catch(e) { return false; } }
+function send1(r, fil, meta, onProg) {
+  return new Promise((res, rej) => {
+    const t = uploadBytesResumable(r, fil, meta);
+    t.on("state_changed", s => onProg(s.bytesTransferred), rej, res);
+  });
+}
+
+$("send").onclick = async () => {
+  if (!valgte.length) return;
+  const knap = $("send"); knap.disabled = true;
+  $("ryd").disabled = true;
+  const kommentar = $("kommentar").value.trim();
+  const mappe = ROD + rens(mitNr + " " + mitNavn).replace(/ /g, "_") + "/" + idag() + "/";
+  const total = valgte.reduce((s, v) => s + v.fil.size, 0);
+  let faerdigBytes = 0, ok = 0, sprunget = 0, fejl = 0;
+  window.onbeforeunload = () => "Filerne er ikke færdige endnu.";
+
+  for (let i = 0; i < valgte.length; i++) {
+    const { fil, sti } = valgte[i];
+    const st = $("st-" + i);
+    const r = ref(storage, mappe + sti.split("/").map(rens).join("/"));
+    $("status").textContent = `Sender ${i + 1} af ${valgte.length}: ${fil.name}`;
+    try {
+      if (await findes(r, fil.size)) { sprunget++; if (st) st.innerHTML = '<span class="ok">✓ allerede sendt</span>'; }
+      else {
+        await send1(r, fil, {
+          contentType: fil.type || "application/octet-stream",
+          customMetadata: { afsender: mitNr, navn: mitNavn, originalSti: sti, kommentar: kommentar.slice(0, 500) }
+        }, b => { $("bar").style.width = Math.min(100, (faerdigBytes + b) / total * 100) + "%"; });
+        ok++; if (st) st.innerHTML = '<span class="ok">✓ sendt</span>';
+      }
+    } catch(err) {
+      fejl++; if (st) st.innerHTML = '<span class="fejl">✖ fejl</span>';
+      console.error(sti, err);
+    }
+    faerdigBytes += fil.size;
+    $("bar").style.width = (faerdigBytes / total * 100) + "%";
+  }
+  window.onbeforeunload = null;
+
+  // Kort note, så Carsten kan se, at der er kommet noget
+  try {
+    const id = "indsendt_" + mitNr.replace(/[^0-9A-Za-z-]/g, "") + "_" + Date.now();
+    await setDoc(doc(db, "olsenpost", id), {
+      type: "indsendt", til: [], afsender: mitNr, navn: mitNavn, mappe,
+      antal: valgte.length, sendt: ok, sprunget, fejl, bytes: total,
+      kommentar, tid: new Date().toISOString()
+    });
+  } catch(e) { console.warn("Kunne ikke gemme note", e); }
+
+  $("status").innerHTML = fejl
+    ? `<span class="fejl">Færdig, men ${fejl} filer gik galt.</span> Tryk Send igen for at prøve dem igen.`
+    : `🎉 Færdig! ${ok + sprunget} filer er modtaget. Tusind tak!`;
+  knap.disabled = false; $("ryd").disabled = false;
+};
+
+// ---- Admin: vis modtaget materiale ----
+if (erAdmin) $("admin-del").style.display = "block";
+
+async function alleFiler(r) {
+  const res = await listAll(r);
+  let filer = [...res.items];
+  for (const p of res.prefixes) filer = filer.concat(await alleFiler(p));
+  return filer;
+}
+
+$("hent-modtaget").onclick = async () => {
+  const boks = $("modtaget");
+  boks.innerHTML = "<p class='hjaelp'>Henter …</p>";
+  try {
+    const noter = {};
+    try {
+      const snap = await getDocs(query(collection(db, "olsenpost"), where("type", "==", "indsendt")));
+      snap.forEach(d => { const v = d.data(); (noter[v.mappe] = noter[v.mappe] || []).push(v); });
+    } catch(e) {}
+    const personer = await listAll(ref(storage, ROD));
+    if (!personer.prefixes.length) { boks.innerHTML = "<p class='hjaelp'>Der er ikke kommet noget endnu.</p>"; return; }
+    let html = "";
+    for (const p of personer.prefixes) {
+      const dage = await listAll(p);
+      for (const d of dage.prefixes) {
+        const filer = await alleFiler(d);
+        const metas = await Promise.all(filer.map(f => getMetadata(f).catch(() => null)));
+        const total = metas.reduce((s, m) => s + (m ? Number(m.size) : 0), 0);
+        const n = (noter[d.fullPath + "/"] || []);
+        const kom = n.map(x => x.kommentar).filter(Boolean).join(" · ");
+        const billeder = filer.filter(f => /\.(jpe?g|png|gif|webp)$/i.test(f.name)).slice(0, 24);
+        const urls = await Promise.all(billeder.map(f => getDownloadURL(f).catch(() => "")));
+        html += `<details class="mappe"><summary>${p.name.replace(/_/g, " ")} · ${d.name} · ${filer.length} filer · ${mb(total)}</summary><div class="filer">`
+          + (kom ? `<p><b>Kommentar:</b> ${kom.replace(/</g, "&lt;")}</p>` : "")
+          + (urls.length ? `<div class="thumbs">${urls.filter(Boolean).map(u => `<a href="${u}" target="_blank"><img src="${u}" loading="lazy"></a>`).join("")}</div>` : "")
+          + filer.map((f, i) => `<div><a href="#" data-sti="${f.fullPath}">${f.fullPath.slice(d.fullPath.length + 1)}</a> · ${metas[i] ? mb(Number(metas[i].size)) : ""}</div>`).join("")
+          + `</div></details>`;
+      }
+    }
+    boks.innerHTML = html;
+    boks.querySelectorAll("a[data-sti]").forEach(a => a.onclick = async e => {
+      e.preventDefault();
+      window.open(await getDownloadURL(ref(storage, a.dataset.sti)), "_blank");
+    });
+  } catch(err) {
+    boks.innerHTML = "<p class='fejl'>Kunne ikke hente: " + (err.message || err) + "</p>";
+  }
+};
+</script>
+<script src="forside-knap.js" defer></script>
+</body>
+</html>
