@@ -195,14 +195,17 @@ const KORT = [
   { nr: 12, gruppe: "boern", fil: "billeder/kort/esther-halloween.jpg", titel: "Halloween", maler: "Esther", art: "Tegning" },
   { nr: 13, gruppe: "boern", fil: "billeder/kort/esther-jul.jpg",       titel: "Jul",       maler: "Esther", art: "Tegning" },
   { nr: 14, gruppe: "boern", fil: "billeder/kort/esther-paaske.jpg",    titel: "Påske",     maler: "Esther", art: "Tegning" },
-  // Næste motiv får nr. 15 — børnetegninger: gruppe "boern", art "Tegning"; medlemmernes egne værker: gruppe "voksne".
+  { nr: 15, gruppe: "saerlige", fil: "billeder/kort/samlekort.jpg", titel: "Alle vores kort", maler: "Olsenklanens kunstnere", art: "Samlekort" },
+  // Samlekortet laves med lav_samlekort.py — kør den igen, når der kommer nye motiver.
+  // Næste motiv får nr. 16 — børnetegninger: gruppe "boern", art "Tegning"; medlemmernes egne værker: gruppe "voksne".
 ];
 // Overskrifterne i "Vælg et kort". vis_tom: gruppen vises, også før der er billeder i den.
 const GRUPPER = [
   { id: "malerier", titel: "Malerier af Elisabeth Gram" },
   { id: "boern",    titel: "Børnetegninger", vis_tom: true,
     tom: "Her kommer børnenes tegninger — kunstnerens navn står under hver tegning. Den første er på vej!" },
-  { id: "voksne",   titel: "Medlemmernes egne værker" }
+  { id: "voksne",   titel: "Medlemmernes egne værker" },
+  { id: "saerlige", titel: "Særlige kort" }
 ];
 
 // Skrifttyper — f = størrelsesfaktor, så de ser nogenlunde lige store ud (1 = 14 pkt)
