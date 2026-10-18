@@ -14,3 +14,13 @@
 - Admin ser alt modtaget nederst på siden (og via Administration → 📥 Indsendt materiale).
 - Lavet til Bent W-H (husstand 4), som har ca. 500 MB på en ekstern harddisk.
 - Liste over filer uden login: `https://firebasestorage.googleapis.com/v0/b/olsenklanen-familieside.firebasestorage.app/o?prefix=gamle_billeder/indsendt/`
+
+## Beskeder og status (tilføjet samme dag)
+
+- Medlemmet **skal** skrive, hvad materialet handler om, før der kan sendes.
+- Når admin åbner på medlemskortet, får husstandens voksne en besked i OlsenPost med vejledning.
+- Når medlemmet begynder at sende, får Carsten (8-B) en besked. Når alt er modtaget, får Carsten en ny besked, og afsenderen får en tak.
+- Noten i `olsenpost` (type `indsendt`) har `status`: "på vej" → "modtaget" (eller "delvist") → "fordelt".
+- Admin-oversigten på `indsend.html` viser: hvem der er åbnet for (med "🔒 Luk igen") og alle forsendelser med besked og status.
+  Knappen "✅ Markér som gennemgået og fordelt" kan også sende en besked til afsenderen.
+- Claude kan følge med via REST: `olsenpost` med `type == "indsendt"`.
