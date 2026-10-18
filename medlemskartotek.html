@@ -2310,6 +2310,9 @@ async function gemData() {
     godkendelse_nulstillet: _nulstillet,
     hjaelpere: erAdmin ? hjaelperListe : (tidl.hjaelpere || []),
     send_materiale: erAdmin ? document.getElementById('ef-send-materiale').checked : (tidl.send_materiale === true),
+    send_materiale_aabnet: (erAdmin && document.getElementById('ef-send-materiale').checked && tidl.send_materiale !== true)
+      ? { dato: new Date().toISOString().slice(0, 10), af: String(egetNr || (familieSession && familieSession.nr) || '') }
+      : (tidl.send_materiale_aabnet || null),
     numre_laast: _numreLaast,
     sidstRedigeretAf: auth.currentUser?.email || (familieSession ? `Medlem nr. ${familieSession.nr}` : 'ukendt')
   };
@@ -2368,6 +2371,20 @@ async function gemData() {
         });
       }
     } catch (e) { console.log('Besked til ny hjælper fejlede:', e); }
+
+    // Åbnet for "Send materiale"? Så får husstandens voksne en besked med vejledning.
+    try {
+      if (opdateret.send_materiale === true && tidl.send_materiale !== true) {
+        const voksne = (opdateret.familiemedlemmer || []).filter(p => p.bogstav);
+        const til = voksne.map(p => `${nytNr}-${p.bogstav}`);
+        if (til.length) await addDoc(collection(db, 'olsenpost'), {
+          fra_nr: '8-B', fra_navn: 'OlsenKlanen (Send materiale)',
+          til, til_navne: voksne.map(p => visPersonNavn(p)),
+          tekst: `📤 Kære ${visKortNavn(opdateret)}\n\nSom aftalt kan I nu sende billeder og gamle papirer til OlsenKlanen.\n\nSådan gør I:\n1. Gå ind på olsenklanen.dk som I plejer.\n2. Åbn "👥 Medlemskartotek" og find jeres eget kort.\n3. Tryk på knappen "Send materiale til klanen →".\n4. Træk filerne eller mappen ind, skriv hvad det handler om, og tryk "Send".\n\nI får en besked, når alt er modtaget.\n\nVenlig hilsen\nOlsenKlanen`,
+          type: 'besked', sendt: new Date(), sendt_lokal: Date.now(), set_af: [], svar: []
+        });
+      }
+    } catch (e) { console.log('Besked om Send materiale fejlede:', e); }
 
     // Har en af de 5 postansvarlige (OlsenBanden) fået ny mail? Mailen bruges så automatisk alle steder
     // på siden (olsenbanden.js henter den her fra kartoteket), og admin-login prøver også den tidligere

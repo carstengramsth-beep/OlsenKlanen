@@ -72,11 +72,12 @@ textarea{width:100%;min-height:80px;font-family:inherit;font-size:16px;padding:.
       <li>Sæt den eksterne harddisk eller USB-nøgle i computeren.</li>
       <li>Træk filerne eller hele mappen ind i det gule felt nedenfor.<br>
         <span class="hjaelp">Eller tryk på <b>Vælg en hel mappe</b> eller <b>Vælg filer</b>.</span></li>
-      <li>Skriv gerne et par ord om materialet (fx år og hvad det er).</li>
+      <li>Skriv, hvad materialet handler om (fx år og hvad det er).</li>
       <li>Tryk på <b>Send</b>. Lad siden stå åben, til der står <b>Færdig</b>.</li>
+      <li>Du får en besked i OlsenPosten, når alt er modtaget – og igen, når det er lagt på plads.</li>
     </ol>
     <p class="hjaelp" style="margin-top:.6rem">Det kan tage lang tid med mange billeder (fx 500 MB: ca. ½–1 time). Går det i stå, så tryk Send igen – det, der allerede er sendt, springes over.<br>
-    Materialet bliver <b>ikke</b> vist på hjemmesiden med det samme. Carsten gennemgår det først og lægger det på plads.</p>
+    Materialet bliver <b>ikke</b> vist på hjemmesiden med det samme. Carsten får besked, når du begynder, og når du er færdig. Han gennemgår det og lægger det på plads.</p>
   </div>
 
   <div class="kort">
@@ -98,8 +99,9 @@ textarea{width:100%;min-height:80px;font-family:inherit;font-size:16px;padding:.
   </div>
 
   <div class="kort">
-    <h2>2. Skriv et par ord (frivilligt)</h2>
+    <h2>2. Hvad handler materialet om?</h2>
     <textarea id="kommentar" placeholder="Fx: Billeder fra skovturene 2003–2008 og referater fra 1990'erne."></textarea>
+    <div class="hjaelp" id="kom-hjaelp">Skriv mindst et par ord – så ved vi, hvor det skal hen.</div>
   </div>
 
   <div class="kort">
@@ -110,9 +112,13 @@ textarea{width:100%;min-height:80px;font-family:inherit;font-size:16px;padding:.
   </div>
 
   <div class="kort" id="admin-del">
-    <h2>📥 Modtaget materiale (kun for administratorer)</h2>
-    <p class="hjaelp">Alt, der er sendt via denne side. Ligger i lageret under <code>gamle_billeder/indsendt/</code>.</p>
-    <div class="knapper" style="justify-content:flex-start"><button class="btn btn-lys" id="hent-modtaget">🔄 Vis modtaget materiale</button></div>
+    <h2>📥 Oversigt (kun for administratorer)</h2>
+    <p class="hjaelp">Her ser du, hvem der har fået lov, hvad der er på vej, og hvad der er modtaget.
+    Filerne ligger i lageret under <code>gamle_billeder/indsendt/</code>. Man åbner for et medlem på medlemskortet (Rediger → 📤 Send materiale).</p>
+    <div class="knapper" style="justify-content:flex-start"><button class="btn btn-lys" id="hent-modtaget">🔄 Opdatér oversigten</button></div>
+    <h3 style="color:var(--gron);margin-top:1rem">🔓 Åbnet for</h3>
+    <div id="aabne"></div>
+    <h3 style="color:var(--gron);margin-top:1rem">📦 Forsendelser</h3>
     <div id="modtaget"></div>
   </div>
 
@@ -122,7 +128,7 @@ textarea{width:100%;min-height:80px;font-family:inherit;font-size:16px;padding:.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getStorage, ref, uploadBytesResumable, getMetadata, listAll, getDownloadURL }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs }
+import { getFirestore, doc, setDoc, getDoc, updateDoc, addDoc, collection, query, where, getDocs }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
@@ -177,7 +183,7 @@ function tilfoej(fil, sti) {
 function visValgte() {
   const total = valgte.reduce((s, v) => s + v.fil.size, 0);
   $("valgt").textContent = valgte.length ? `${valgte.length} filer valgt · ${mb(total)}` : "";
-  $("send").disabled = valgte.length === 0;
+  tjekKlar();
   $("ryd-boks").style.display = valgte.length ? "flex" : "none";
   const l = $("liste");
   l.style.display = valgte.length ? "block" : "none";
@@ -185,6 +191,13 @@ function visValgte() {
     `<div><span title="${v.sti}">${v.sti}</span><span id="st-${i}">${mb(v.fil.size)}</span></div>`).join("")
     + (valgte.length > 500 ? `<div><span>… og ${valgte.length - 500} flere</span></div>` : "");
 }
+
+function tjekKlar() {
+  const okTekst = $("kommentar").value.trim().length >= 5;
+  $("send").disabled = valgte.length === 0 || !okTekst;
+  $("kom-hjaelp").style.color = (valgte.length && !okTekst) ? "var(--roed)" : "";
+}
+$("kommentar").addEventListener("input", tjekKlar);
 
 $("vaelg-filer").onclick = e => { e.stopPropagation(); $("in-filer").click(); };
 $("vaelg-mappe").onclick = e => { e.stopPropagation(); $("in-mappe").click(); };
@@ -229,16 +242,44 @@ function send1(r, fil, meta, onProg) {
   });
 }
 
+const CARSTEN = ["8-B"];   // får besked i OlsenPost
+let noteId = null;        // samme forsendelse, hvis man trykker Send igen
+
+async function beskedTilCarsten(tekst) { return besked(CARSTEN, tekst, mitNr, (mitNavn || mitNr) + " (Send materiale)"); }
+async function besked(til, tekst, fraNr, fraNavn) {
+  try {
+    await addDoc(collection(db, "olsenpost"), {
+      fra_nr: fraNr, fra_navn: fraNavn,
+      til, til_navne: til, tekst,
+      type: "besked", sendt: new Date(), sendt_lokal: Date.now(), set_af: [], svar: []
+    });
+  } catch(e) { console.warn("Besked til Carsten fejlede", e); }
+}
+
 $("send").onclick = async () => {
-  if (!valgte.length) return;
+  const kommentar = $("kommentar").value.trim();
+  if (!valgte.length || kommentar.length < 5) return;
   const knap = $("send"); knap.disabled = true;
   $("ryd").disabled = true;
-  const kommentar = $("kommentar").value.trim();
   const mappe = ROD + rens(mitNr + " " + mitNavn).replace(/ /g, "_") + "/" + idag() + "/";
   const total = valgte.reduce((s, v) => s + v.fil.size, 0);
   let faerdigBytes = 0, ok = 0, sprunget = 0, fejl = 0;
   window.onbeforeunload = () => "Filerne er ikke færdige endnu.";
 
+  // Note om forsendelsen: "på vej" nu, "modtaget" til sidst
+  const forste = !noteId;
+  if (forste) noteId = "indsendt_" + mitNr.replace(/[^0-9A-Za-z-]/g, "") + "_" + Date.now();
+  const noteRef = doc(db, "olsenpost", noteId);
+  try {
+    await setDoc(noteRef, {
+      type: "indsendt", til: [], afsender: mitNr, navn: mitNavn, mappe,
+      antal: valgte.length, sendt: 0, sprunget: 0, fejl: 0, bytes: total,
+      kommentar, status: "på vej", startet: new Date().toISOString(), tid: new Date().toISOString()
+    }, { merge: true });
+  } catch(e) { console.warn("Kunne ikke gemme note", e); }
+  if (forste) await beskedTilCarsten(`📤 ${mitNavn || mitNr} (nr. ${mitNr}) er begyndt at sende materiale.\n\n${valgte.length} filer · ${mb(total)}\n\nOm materialet:\n${kommentar}\n\nSe status på olsenklanen.dk/indsend.html`);
+
+  let sidstOpdat = Date.now();
   for (let i = 0; i < valgte.length; i++) {
     const { fil, sti } = valgte[i];
     const st = $("st-" + i);
@@ -259,22 +300,22 @@ $("send").onclick = async () => {
     }
     faerdigBytes += fil.size;
     $("bar").style.width = (faerdigBytes / total * 100) + "%";
+    if (Date.now() - sidstOpdat > 30000) {   // vis fremdrift for admin ca. hvert halve minut
+      sidstOpdat = Date.now();
+      updateDoc(noteRef, { sendt: ok, sprunget, fejl, tid: new Date().toISOString() }).catch(() => {});
+    }
   }
   window.onbeforeunload = null;
 
-  // Kort note, så Carsten kan se, at der er kommet noget
   try {
-    const id = "indsendt_" + mitNr.replace(/[^0-9A-Za-z-]/g, "") + "_" + Date.now();
-    await setDoc(doc(db, "olsenpost", id), {
-      type: "indsendt", til: [], afsender: mitNr, navn: mitNavn, mappe,
-      antal: valgte.length, sendt: ok, sprunget, fejl, bytes: total,
-      kommentar, tid: new Date().toISOString()
-    });
-  } catch(e) { console.warn("Kunne ikke gemme note", e); }
+    await updateDoc(noteRef, { sendt: ok, sprunget, fejl, status: fejl ? "delvist" : "modtaget", tid: new Date().toISOString() });
+  } catch(e) { console.warn("Kunne ikke opdatere note", e); }
+  if (!fejl) await besked([mitNr], `📬 Tak, ${(mitNavn || "").split(/\s+/)[0] || "kære medlem"}!\n\nVi har modtaget dit materiale: ${ok + sprunget} filer · ${mb(total)}.\n\nOm materialet:\n${kommentar}\n\nCarsten gennemgår det og lægger det på plads på hjemmesiden. Du får en ny besked, når det er sket.\n\nVenlig hilsen\nOlsenKlanen`, "8-B", "OlsenKlanen (Send materiale)");
+  if (!fejl) await beskedTilCarsten(`✅ ${mitNavn || mitNr} (nr. ${mitNr}) er færdig med at sende.\n\n${ok + sprunget} filer · ${mb(total)} er modtaget.\n\nOm materialet:\n${kommentar}\n\nSe det på olsenklanen.dk/indsend.html`);
 
   $("status").innerHTML = fejl
     ? `<span class="fejl">Færdig, men ${fejl} filer gik galt.</span> Tryk Send igen for at prøve dem igen.`
-    : `🎉 Færdig! ${ok + sprunget} filer er modtaget. Tusind tak!`;
+    : `🎉 Færdig! ${ok + sprunget} filer er modtaget. Tusind tak! Carsten har fået besked.`;
   knap.disabled = false; $("ryd").disabled = false;
 };
 
@@ -288,44 +329,94 @@ async function alleFiler(r) {
   return filer;
 }
 
-$("hent-modtaget").onclick = async () => {
-  const boks = $("modtaget");
-  boks.innerHTML = "<p class='hjaelp'>Henter …</p>";
-  try {
-    const noter = {};
-    try {
-      const snap = await getDocs(query(collection(db, "olsenpost"), where("type", "==", "indsendt")));
-      snap.forEach(d => { const v = d.data(); (noter[v.mappe] = noter[v.mappe] || []).push(v); });
-    } catch(e) {}
-    const personer = await listAll(ref(storage, ROD));
-    if (!personer.prefixes.length) { boks.innerHTML = "<p class='hjaelp'>Der er ikke kommet noget endnu.</p>"; return; }
-    let html = "";
-    for (const p of personer.prefixes) {
-      const dage = await listAll(p);
-      for (const d of dage.prefixes) {
-        const filer = await alleFiler(d);
-        const metas = await Promise.all(filer.map(f => getMetadata(f).catch(() => null)));
-        const total = metas.reduce((s, m) => s + (m ? Number(m.size) : 0), 0);
-        const n = (noter[d.fullPath + "/"] || []);
-        const kom = n.map(x => x.kommentar).filter(Boolean).join(" · ");
-        const billeder = filer.filter(f => /\.(jpe?g|png|gif|webp)$/i.test(f.name)).slice(0, 24);
-        const urls = await Promise.all(billeder.map(f => getDownloadURL(f).catch(() => "")));
-        html += `<details class="mappe"><summary>${p.name.replace(/_/g, " ")} · ${d.name} · ${filer.length} filer · ${mb(total)}</summary><div class="filer">`
-          + (kom ? `<p><b>Kommentar:</b> ${kom.replace(/</g, "&lt;")}</p>` : "")
-          + (urls.length ? `<div class="thumbs">${urls.filter(Boolean).map(u => `<a href="${u}" target="_blank"><img src="${u}" loading="lazy"></a>`).join("")}</div>` : "")
-          + filer.map((f, i) => `<div><a href="#" data-sti="${f.fullPath}">${f.fullPath.slice(d.fullPath.length + 1)}</a> · ${metas[i] ? mb(Number(metas[i].size)) : ""}</div>`).join("")
-          + `</div></details>`;
-      }
-    }
-    boks.innerHTML = html;
-    boks.querySelectorAll("a[data-sti]").forEach(a => a.onclick = async e => {
-      e.preventDefault();
-      window.open(await getDownloadURL(ref(storage, a.dataset.sti)), "_blank");
-    });
-  } catch(err) {
-    boks.innerHTML = "<p class='fejl'>Kunne ikke hente: " + (err.message || err) + "</p>";
-  }
+const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const datoTxt = iso => { if (!iso) return ""; try { return new Date(iso).toLocaleString("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }); } catch(e) { return iso || ""; } };
+const STATUS = {
+  "på vej":   "⏳ På vej",
+  "delvist":  "⚠️ Delvist modtaget (nogle filer fejlede)",
+  "modtaget": "📬 Modtaget – venter på at blive fordelt",
+  "fordelt":  "✅ Gennemgået og fordelt"
 };
+
+async function hentOversigt() {
+  const boks = $("modtaget"), aabne = $("aabne");
+  boks.innerHTML = aabne.innerHTML = "<p class='hjaelp'>Henter …</p>";
+  // Forsendelser
+  let noter = [];
+  try {
+    const snap = await getDocs(query(collection(db, "olsenpost"), where("type", "==", "indsendt")));
+    snap.forEach(d => noter.push({ id: d.id, ...d.data() }));
+  } catch(e) {}
+  noter.sort((a, b) => String(b.startet || b.tid).localeCompare(String(a.startet || a.tid)));
+  // Husstande, der har fået lov
+  try {
+    const snap = await getDocs(query(collection(db, "membres"), where("send_materiale", "==", true)));
+    const rk = [];
+    snap.forEach(d => {
+      const m = d.data(), nr = d.id;
+      const mine = noter.filter(n => String(n.afsender || "").split("-")[0] === nr);
+      const sidste = mine[0];
+      const st = sidste ? (STATUS[sidste.status] || "📬 Modtaget") : "🕓 Venter – intet modtaget endnu";
+      const aab = m.send_materiale_aabnet && m.send_materiale_aabnet.dato ? " · åbnet " + esc(m.send_materiale_aabnet.dato) : "";
+      rk.push(`<div class="mappe" style="padding:.6rem .9rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+        <b style="color:var(--gron)">Nr. ${esc(nr)} – ${esc(m.fornavn || "")}</b><span class="hjaelp">${aab}</span>
+        <span style="margin-left:auto">${st}</span>
+        <button class="btn btn-lys" data-luk="${esc(nr)}" style="padding:.3rem .7rem;font-size:14px">🔒 Luk igen</button></div>`);
+    });
+    aabne.innerHTML = rk.join("") || "<p class='hjaelp'>Der er ikke åbnet for nogen lige nu.</p>";
+  } catch(e) { aabne.innerHTML = "<p class='fejl'>Kunne ikke hente: " + esc(e.message || e) + "</p>"; }
+
+  boks.innerHTML = noter.length ? noter.map(n => `
+    <details class="mappe" data-mappe="${esc(n.mappe)}">
+      <summary>${esc(n.navn || n.afsender)} (nr. ${esc(n.afsender)}) · ${datoTxt(n.startet || n.tid)} · ${STATUS[n.status] || "📬 Modtaget"}</summary>
+      <div class="filer">
+        <p><b>Om materialet:</b> ${esc(n.kommentar || "(ingen besked)")}</p>
+        <p class="hjaelp">${esc(n.antal)} filer · ${mb(Number(n.bytes || 0))} · sendt ${esc((n.sendt || 0) + (n.sprunget || 0))}${n.fejl ? " · fejl " + esc(n.fejl) : ""} · senest ${datoTxt(n.tid)}</p>
+        ${n.status !== "fordelt" ? `<button class="btn btn-gron" data-fordelt="${esc(n.id)}" style="padding:.35rem .8rem;font-size:14px;margin:.3rem 0">✅ Markér som gennemgået og fordelt</button>` : ""}
+        <div class="indhold hjaelp">Åbn for at se filerne …</div>
+      </div>
+    </details>`).join("") : "<p class='hjaelp'>Der er ikke kommet noget endnu.</p>";
+
+  // Filerne hentes først, når man åbner en forsendelse
+  boks.querySelectorAll("details[data-mappe]").forEach(det => det.addEventListener("toggle", async () => {
+    if (!det.open || det.dataset.hentet) return;
+    det.dataset.hentet = "1";
+    const ind = det.querySelector(".indhold");
+    try {
+      const mappe = det.dataset.mappe.replace(/\/$/, "");
+      const filer = await alleFiler(ref(storage, mappe));
+      const metas = await Promise.all(filer.map(f => getMetadata(f).catch(() => null)));
+      const billeder = filer.filter(f => /\.(jpe?g|png|gif|webp)$/i.test(f.name)).slice(0, 24);
+      const urls = (await Promise.all(billeder.map(f => getDownloadURL(f).catch(() => "")))).filter(Boolean);
+      ind.innerHTML = (urls.length ? `<div class="thumbs">${urls.map(u => `<a href="${u}" target="_blank"><img src="${u}" loading="lazy"></a>`).join("")}</div>` : "")
+        + (filer.map((f, i) => `<div><a href="#" data-sti="${esc(f.fullPath)}">${esc(f.fullPath.slice(mappe.length + 1))}</a> · ${metas[i] ? mb(Number(metas[i].size)) : ""}</div>`).join("") || "Ingen filer endnu.");
+      ind.querySelectorAll("a[data-sti]").forEach(a => a.onclick = async e => {
+        e.preventDefault();
+        window.open(await getDownloadURL(ref(storage, a.dataset.sti)), "_blank");
+      });
+    } catch(err) { ind.innerHTML = "<span class='fejl'>Kunne ikke hente filerne: " + esc(err.message || err) + "</span>"; }
+  }));
+}
+
+$("hent-modtaget").onclick = hentOversigt;
+$("admin-del").addEventListener("click", async e => {
+  const f = e.target.closest("[data-fordelt]");
+  if (f) {
+    const nSnap = await getDoc(doc(db, "olsenpost", f.dataset.fordelt));
+    const n = nSnap.exists() ? nSnap.data() : {};
+    await updateDoc(doc(db, "olsenpost", f.dataset.fordelt), { status: "fordelt", fordelt: new Date().toISOString(), fordelt_af: mitNr });
+    if (n.afsender && confirm("Skal " + (n.navn || n.afsender) + " have besked om, at materialet er lagt på plads?")) {
+      await besked([n.afsender], `✅ Kære ${(n.navn || "").split(/\s+/)[0] || "medlem"}\n\nDit materiale er nu gennemgået og lagt på plads på hjemmesiden.\n\nOm materialet:\n${n.kommentar || ""}\n\nTusind tak for hjælpen!\n\nVenlig hilsen\nOlsenKlanen`, mitNr, "OlsenKlanen (Send materiale)");
+    }
+    return hentOversigt();
+  }
+  const l = e.target.closest("[data-luk]");
+  if (l && confirm("Luk for at sende materiale for nr. " + l.dataset.luk + "?")) {
+    await updateDoc(doc(db, "membres", l.dataset.luk), { send_materiale: false });
+    return hentOversigt();
+  }
+});
+if (erAdmin) hentOversigt();
 </script>
 <script src="forside-knap.js" defer></script>
 </body>
