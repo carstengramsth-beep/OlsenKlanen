@@ -176,6 +176,7 @@ function vis(pid, aabenRel) {
       ${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="">` : `<div class="foto">${esc(ini(n))}</div>`}
       <div style="flex:1;min-width:240px">
         <div class="navn">${esc(n)}${p.status === "afdød" ? " 🕯️" : ""}</div>
+        ${p.tidligere_navne ? `<div class="linje">📝 Tidligere navne: ${esc(p.tidligere_navne)}</div>` : ""}
         ${p.foedselsdato ? `<div class="linje">🎂 Født ${dato(p.foedselsdato)}</div>` : ""}
         ${p.status === "afdød" ? `<div class="linje">🕯️ Død ${dato(p.status_dato) || "(dato mangler)"}${alder !== "" ? ` · ${alder} år` : ""}</div>` : (alder !== "" ? `<div class="linje">${alder} år</div>` : "")}
         <div class="linje">${r.kilde === "kartotek" ? `📇 Medlemsnr. ${esc(personNr(r))} · ${esc(r.husNavn)}` : "🌿 I Slægten (ikke på et medlemskort)"}</div>
