@@ -21,12 +21,12 @@ Vi er i gang med at bygge et **familietræ** på olsenklanen.dk. Det viser, hvor
 **Kan du hjælpe?**
 - En **lille rød prik** betyder, at der mangler noget om personen – fx fødselsdato eller billede.
 - Ved du noget, så tryk på personen og vælg **"✏️ Foreslå en rettelse"**. Alle forslag bliver læst, før de kommer på.
-- Har du gamle billeder eller papirer, så skriv til OlsenBanden.
+- Har du gamle billeder eller papirer, så skriv til 5-Banden.
 
 Vi glæder os til at høre jeres synspunkter.
 
 Mange hilsner
-OlsenBanden
+5-Banden
 
 ---
 
