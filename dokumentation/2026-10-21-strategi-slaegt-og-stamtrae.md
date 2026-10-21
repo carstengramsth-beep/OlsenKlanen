@@ -76,3 +76,8 @@ Rasmus er Tinas søn og Renés bonusbarn.
 - Mærkedage-siden (`foedselsdage.html`, oversigt + "Frem i tiden") regner runde bryllupsdage ud fra `bryllup_dato`. Gamle bryllups-begivenheder springes over for husstande, der har en fast bryllupsdato (ingen dobbelte).
 - Begivenhedskalenderen på Mærkedage-siden viser KUN mærkebryllupper (fx Kobberbryllup 12½ år) – aftalt med Carsten. Det samme gælder forsiden (liste og bånd).
 - Kommende bryllup: ligger `bryllup_dato` i fremtiden, vises det som "💒 Bryllup" (kort, forside-liste og bånd, Mærkedage-kalender og "Frem i tiden"). Bagefter regnes mærkebryllupper ud fra datoen.
+
+## Ret data fra stamtræet (21. okt.)
+- Administratorer ser "✏️ Ret data" i personkortet i stamtræet: navn, født, status/død, fortælling og billede for personer i Slægten (gemmes i `olsenpost/slaegt_<pid>`). Billeder formindskes til maks. 800 px og lægges i `gamle_billeder/slaegt/`.
+- Kartotekspersoner: knappen sender til Medlemskartoteket.
+- Listen "🕯️ Afdøde" i kartoteket viser også afdøde i Slægten (🌿).

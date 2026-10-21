@@ -77,6 +77,11 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
 .panel .linje{font-size:14px;margin:.25rem 0}
 .panel .foto{width:90px;height:90px;line-height:90px;font-size:28px;float:right;margin:0 0 .5rem .8rem}
 .panel-fod{display:flex;gap:.5rem;flex-wrap:wrap;padding:.8rem 1.3rem;background:var(--guld-pale);border-top:1px solid var(--border)}
+.ret-gitter{display:grid;grid-template-columns:1fr 1fr;gap:.5rem .7rem}
+.ret-gitter label,.ret-hel{display:block;font-size:12px;color:var(--tekst-lys)}
+.ret-hel{margin-top:.5rem}
+.ret-gitter input,.ret-gitter select,.ret-hel textarea,.ret-hel input{width:100%;margin-top:2px;padding:.4rem .5rem;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:14px;background:#fff}
+.panel{max-height:92vh;overflow:auto}
 .tom{text-align:center;padding:3rem 1rem;color:var(--tekst-lys);font-size:15px;line-height:1.6}
 @media (max-width:600px){ header{padding-top:3.2rem !important} }
 </style>
@@ -110,6 +115,24 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
 <div class="panel-baggrund" id="panel-bg">
   <div class="panel">
     <div class="panel-krop" id="panel-krop"></div>
+    <div class="panel-krop" id="ret-boks" style="display:none;border-top:1px solid var(--border)">
+      <div style="font-weight:600;color:var(--gron);margin-bottom:.5rem">✏️ Ret data</div>
+      <div class="ret-gitter">
+        <label>Fornavn<input id="r-fornavn"></label>
+        <label>Mellemnavn<input id="r-mellemnavn"></label>
+        <label>Efternavn<input id="r-efternavn"></label>
+        <label>Født<input type="date" id="r-foedt"></label>
+        <label>Status<select id="r-status"><option value="">Lever / ukendt</option><option value="afdød">Afdød</option></select></label>
+        <label>Død<input type="date" id="r-doed"></label>
+      </div>
+      <label class="ret-hel">Fortælling<textarea id="r-fortaelling" rows="4" placeholder="Fx hvor personen boede, arbejde, sjove historier …"></textarea></label>
+      <label class="ret-hel">📷 Billede<input type="file" id="r-foto" accept="image/*"></label>
+      <div style="display:flex;gap:.5rem;align-items:center;margin-top:.6rem;flex-wrap:wrap">
+        <button class="btn gron" id="r-gem">💾 Gem</button>
+        <button class="btn" id="r-annuller">Annullér</button>
+        <span id="r-status-tekst" style="font-size:13px"></span>
+      </div>
+    </div>
     <div class="panel-krop" id="forslag-boks" style="display:none;border-top:1px solid var(--border)">
       <div style="font-weight:600;color:var(--gron);margin-bottom:.4rem">✏️ Dit forslag om <span id="forslag-navn"></span></div>
       <textarea id="forslag-tekst" rows="4" style="width:100%;font-family:inherit;font-size:14px;padding:.5rem;border:1px solid var(--border);border-radius:6px" placeholder="Fx: Født 3. maj 1931 i Odense. Gift med … Datter af …"></textarea>
@@ -119,6 +142,7 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
     <div class="panel-fod">
       <button class="btn gron" id="p-herfra">🌳 Vis træ herfra</button>
       <a class="btn" id="p-kort" href="#">📇 Medlemskort</a>
+      <button class="btn gron" id="p-ret" style="display:none">✏️ Ret data</button>
       <button class="btn" id="p-forslag">✏️ Foreslå en rettelse</button>
       <button class="btn" id="p-luk" style="margin-left:auto">Luk</button>
     </div>
@@ -127,7 +151,8 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -138,6 +163,8 @@ const app = initializeApp({
   appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
 });
 const db = getFirestore(app);
+const storage = getStorage(app);
+const erAdmin = (() => { try { return (sessionStorage.getItem("ok_niveau") || localStorage.getItem("ok_niveau") || "").trim().toLowerCase() === "admin"; } catch(e) { return false; } })();
 const $ = id => document.getElementById(id);
 const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const hent = n => { try { return (sessionStorage.getItem(n) || localStorage.getItem(n) || "").trim(); } catch(e) { return ""; } };
@@ -287,12 +314,74 @@ function visPanel(pid) {
   $("panel-krop").innerHTML = `${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="">` : `<div class="foto">${esc(initialer)}</div>`}
     <h2>${esc(navn)}</h2>${linjer.map(l => `<div class="linje">${l}</div>`).join("")}<div style="clear:both"></div>`;
   $("p-kort").style.display = r.kilde === "kartotek" ? "" : "none";
+  $("p-ret").style.display = erAdmin ? "" : "none";
+  $("p-ret").textContent = r.kilde === "kartotek" ? "✏️ Ret i kartoteket" : "✏️ Ret data";
+  $("ret-boks").style.display = "none";
   $("p-kort").href = "medlemskartotek.html";
   $("forslag-boks").style.display = "none";
   $("panel-bg").style.display = "flex";
 }
 $("p-luk").onclick = () => $("panel-bg").style.display = "none";
+$("p-ret").onclick = () => {
+  const r = P.get(panelPid);
+  if (r.kilde === "kartotek") { location.href = "medlemskartotek.html"; return; }
+  const p = r.p;
+  $("r-fornavn").value = p.fornavn || ""; $("r-mellemnavn").value = p.mellemnavn || ""; $("r-efternavn").value = p.efternavn || "";
+  $("r-foedt").value = p.foedselsdato || ""; $("r-status").value = p.status === "afdød" ? "afdød" : "";
+  $("r-doed").value = p.status_dato || ""; $("r-fortaelling").value = p.fortaelling || ""; $("r-foto").value = "";
+  $("r-status-tekst").textContent = "";
+  $("forslag-boks").style.display = "none";
+  $("ret-boks").style.display = "block";
+  $("ret-boks").scrollIntoView({ behavior: "smooth", block: "nearest" });
+};
+$("r-annuller").onclick = () => $("ret-boks").style.display = "none";
+// Gør billedet mindre (maks. 800 px) før det lægges op
+function formindsk(fil) {
+  return new Promise((ok, fejl) => {
+    const img = new Image(); const url = URL.createObjectURL(fil);
+    img.onload = () => {
+      const m = 800, f = Math.min(1, m / Math.max(img.width, img.height));
+      const c = document.createElement("canvas"); c.width = Math.round(img.width * f); c.height = Math.round(img.height * f);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(b => { URL.revokeObjectURL(url); b ? ok(b) : fejl(new Error("Kunne ikke læse billedet")); }, "image/jpeg", 0.85);
+    };
+    img.onerror = () => fejl(new Error("Kunne ikke læse billedet"));
+    img.src = url;
+  });
+}
+$("r-gem").onclick = async () => {
+  const r = P.get(panelPid); const p = r.p;
+  const nyt = {
+    fornavn: $("r-fornavn").value.trim(), mellemnavn: $("r-mellemnavn").value.trim(), efternavn: $("r-efternavn").value.trim(),
+    foedselsdato: $("r-foedt").value, status: $("r-status").value, status_dato: $("r-status").value === "afdød" ? $("r-doed").value : "",
+    fortaelling: $("r-fortaelling").value.trim(), sidst_rettet: new Date().toISOString(), sidst_rettet_af: hent("ok_nr")
+  };
+  if (!nyt.fornavn) { $("r-status-tekst").textContent = "Fornavn mangler."; return; }
+  nyt.navn = [nyt.fornavn, nyt.mellemnavn, nyt.efternavn].filter(Boolean).join(" ");
+  $("r-gem").disabled = true; $("r-status-tekst").textContent = "Gemmer …";
+  try {
+    const fil = $("r-foto").files[0];
+    if (fil) {
+      $("r-status-tekst").textContent = "Lægger billedet op …";
+      const blob = await formindsk(fil);
+      const sti = sRef(storage, `gamle_billeder/slaegt/${panelPid}_${Date.now()}.jpg`);
+      await uploadBytes(sti, blob, { contentType: "image/jpeg" });
+      nyt.foto = await getDownloadURL(sti);
+    }
+    await updateDoc(doc(db, "olsenpost", "slaegt_" + panelPid), nyt);
+    Object.assign(p, nyt);
+    beregnSlaegtsnumre();
+    const top = new URL(location.href).searchParams.get("top");
+    tegnTrae(top && P.has(top) ? [top] : stamPids);
+    visPanel(panelPid);
+    $("r-status-tekst").textContent = "";
+  } catch(e) {
+    $("r-status-tekst").textContent = "Kunne ikke gemme: " + (e.message || e);
+  }
+  $("r-gem").disabled = false;
+};
 $("p-forslag").onclick = () => {
+  $("ret-boks").style.display = "none";
   $("forslag-boks").style.display = "block";
   $("forslag-navn").textContent = navnAf(P.get(panelPid).p);
   $("forslag-status").textContent = ""; $("forslag-tekst").focus();
