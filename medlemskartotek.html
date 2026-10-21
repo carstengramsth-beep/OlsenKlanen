@@ -1670,6 +1670,13 @@ function renderStatusListe() {
     if (q && !navn.toLowerCase().includes(q) && String(m.nr) !== q) return;
     rk.push({ p, m, navn });
   }));
+  // Afdøde i Slægten (ikke medlemmer) kommer også med på listen over afdøde
+  if (statusFilter === 'afdød') slaegtData.forEach(p => {
+    if (p.status !== 'afdød') return;
+    const navn = visPersonNavn(p) || p.navn || '';
+    if (!navn.trim() || (q && !navn.toLowerCase().includes(q))) return;
+    rk.push({ p, m: null, navn });
+  });
   rk.sort((a, b) => String(a.p.foedselsdato || '9999').localeCompare(String(b.p.foedselsdato || '9999')));
   const navne = { aktiv: 'aktive personer', 'afdød': 'afdøde', udmeldt: 'udmeldte' };
   document.getElementById('antal-linje').textContent = `${rk.length} ${navne[statusFilter]}`;
@@ -1685,7 +1692,7 @@ function renderStatusListe() {
       return `<tr><td>${p.foto ? `<img src="${p.foto}" style="width:22px;height:22px;border-radius:3px;object-fit:cover;vertical-align:middle;margin-right:6px">` : ''}<b>${escH(navn)}</b>${relationerHtml(p, _relIx)}</td>
         <td>${p.foedselsdato ? formatDato(p.foedselsdato) : '—'}</td>
         ${visDato ? `<td>${p.status_dato ? formatDato(p.status_dato) : '—'}</td><td>${alder !== '' ? alder + ' år' : ''}</td>` : ''}
-        <td><a href="#" class="hjaelper-link" data-gaa-til="${escH(String(m.nr))}">nr. ${escH(String(m.nr))}</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">${escH(visKortNavn(m))}</span></td></tr>`;
+        <td>${m ? `<a href="#" class="hjaelper-link" data-gaa-til="${escH(String(m.nr))}">nr. ${escH(String(m.nr))}</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">${escH(visKortNavn(m))}</span>` : `<a href="stamtrae.html?top=${encodeURIComponent(p.pid)}">🌿 Slægten</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">ikke medlem</span>`}</td></tr>`;
     }).join('')}</tbody></table>`;
 }
 function renderSvaevere() {
