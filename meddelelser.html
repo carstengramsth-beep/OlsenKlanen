@@ -878,7 +878,8 @@ async function tegnInformationer(){
       + (enkelte.length ? " · sendt enkeltvis til: " + enkelte.map(x => escHtml(x.til_navn || "")).join(", ") : "") : "";
     return `<div class="info-punkt" data-id="${enc(m.id)}" style="border:1px solid #ddd;border-radius:8px;padding:12px 14px;margin:10px 0;background:#fff;">
       <div style="font-size:13px;color:#8a7a3f;"><b>Info nr. ${escHtml(m.nr)}</b> · ${escHtml(infoDato(m.dato))} · ${escHtml(m.gruppe || "")}</div>
-      <div style="font-weight:bold;color:#2d5016;margin:2px 0 6px;">${escHtml(m.titel)}</div>
+      <div style="font-weight:bold;color:#2d5016;margin:2px 0 ${m.rids ? 2 : 6}px;">${escHtml(m.titel)}</div>
+      ${m.rids ? `<div style="font-size:14px;color:#444;margin-bottom:6px;">${escHtml(m.rids)}</div>` : ""}
       ${logTekst ? `<div style="font-size:13px;color:#555;margin-bottom:6px;">${logTekst}</div>` : ""}
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button type="button" class="knap lille" onclick="visInfo('${enc(m.id)}')">📖 Læs</button>
