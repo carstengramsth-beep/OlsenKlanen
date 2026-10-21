@@ -43,3 +43,5 @@ Rasmus er Tinas søn og Renés bonusbarn.
 - Kortet viser relationer og udleder Børn/Bonusbørn automatisk. Partner vises begge veje.
 - Nye personer får automatisk `pid`.
 - Rettet gammel fejl: personer med rollen "ægtefælle" (husstand 8) blev ikke vist på kortet.
+- Relationsfelterne er nu søgefelter: skriv personligt medlemsnr. (fx 8-B) eller navn, eller vælg fra listen.
+- Ny knap **🧩 Svævere**: alle, der ikke hænger sammen med Agnes og Svend Aage (husstand 1) via far/mor/bonus/partner. Kolonnen "Mangler" viser "Ingen relationer endnu" eller "Ikke forbundet til Agnes og Svend Aage". Ved start: 130 svævere af 132.

@@ -655,6 +655,7 @@ body.kan-redigere .historisk-btn-wrapper{display:none}
     <button type="button" data-status-filter="aktiv" class="status-knap">🟢 Aktive</button>
     <button type="button" data-status-filter="afdød" class="status-knap">🕯️ Afdøde</button>
     <button type="button" data-status-filter="udmeldt" class="status-knap">Udmeldte</button>
+    <button type="button" data-status-filter="svaever" class="status-knap" title="Personer, der endnu ikke hænger sammen med Agnes og Svend Aage i stamtræet">🧩 Svævere</button>
   </div>
   <div class="grid" id="grid"></div>
   <div class="historisk-btn-wrapper">
@@ -756,22 +757,37 @@ function relationerHtml(p, ix) {
   if (!dele.length) return '';
   return `<div class="person-relationer" style="margin-top:4px;font-size:12px;color:var(--tekst);display:flex;flex-wrap:wrap;gap:2px 12px">👪 ${dele.join('')}</div>`;
 }
-// Valgliste til relationer: alle personer i kartoteket (også dem i husstanden, der redigeres)
-function relValg(valgt, egenPid) {
-  const rk = [];
-  const set = new Set();
-  const tilfoej = (p, nr) => {
-    if (!p.pid || p.pid === egenPid || set.has(p.pid)) return;
+// Relationsvalg: alle personer med personligt medlemsnummer, fx "8-B · Carsten Gram (f. 1952)"
+function relEtiketter() {
+  const rk = [], set = new Set();
+  const tilfoej = (p, husNr, personer) => {
+    if (!p.pid || set.has(p.pid)) return;
     const navn = visPersonNavn(p) || p.navn || '';
     if (!navn.trim()) return;
     set.add(p.pid);
     const aar = (p.foedselsdato || '').slice(0, 4);
-    rk.push({ pid: p.pid, tekst: `${navn}${aar ? ' (f. ' + aar + ')' : ''} – nr. ${nr}${p.status === 'afdød' ? ' 🕯️' : ''}` });
+    let nr = String(husNr);
+    try { nr = beregnPersonNr(husNr, personer, p); } catch(e) {}
+    rk.push({ pid: p.pid, tekst: `${nr} · ${navn}${aar ? ' (f. ' + aar + ')' : ''}${p.status === 'afdød' ? ' 🕯️' : ''}` });
   };
-  personListe.forEach(p => tilfoej(p, aktivtNr));
-  data.forEach(m => (m.familiemedlemmer || []).forEach(p => tilfoej(p, m.nr)));
-  rk.sort((a, b) => a.tekst.localeCompare(b.tekst, 'da'));
-  return '<option value="">— ingen valgt —</option>' + rk.map(r => `<option value="${r.pid}" ${r.pid === valgt ? 'selected' : ''}>${escH(r.tekst)}</option>`).join('');
+  personListe.forEach(p => tilfoej(p, aktivtNr, personListe));
+  data.forEach(m => (m.familiemedlemmer || []).forEach(p => tilfoej(p, m.nr, m.familiemedlemmer)));
+  rk.sort((a, b) => a.tekst.localeCompare(b.tekst, 'da', { numeric: true }));
+  return rk;
+}
+let _relEtiketter = [];
+function relTekst(pid) { const r = _relEtiketter.find(x => x.pid === pid); return r ? r.tekst : ''; }
+function relFind(tekst) {
+  const t = String(tekst || '').trim();
+  if (!t) return '';
+  const eksakt = _relEtiketter.find(x => x.tekst === t);
+  if (eksakt) return eksakt.pid;
+  // Kun medlemsnummer skrevet, fx "8-B"
+  const nr = _relEtiketter.filter(x => x.tekst.toLowerCase().startsWith(t.toLowerCase() + ' ·'));
+  if (nr.length === 1) return nr[0].pid;
+  const navn = _relEtiketter.filter(x => x.tekst.toLowerCase().includes(t.toLowerCase()));
+  if (navn.length === 1) return navn[0].pid;
+  return null;   // ukendt eller flertydig
 }
 let soegeTekst = '';
 let aktivtNr = null;
@@ -1582,8 +1598,21 @@ document.getElementById('grid').addEventListener('click', e => {
 });
  
 // ── STATUS-LISTE ── viser personer med en bestemt status på tværs af husstande
+// Hvem hænger sammen med Agnes og Svend Aage (husstand 1) via far/mor/bonus/partner?
+function forbundneTilStamfar() {
+  const kanter = new Map();
+  const forbind = (a, b) => { if (!a || !b) return; (kanter.get(a) || kanter.set(a, new Set()).get(a)).add(b); (kanter.get(b) || kanter.set(b, new Set()).get(b)).add(a); };
+  data.forEach(m => (m.familiemedlemmer || []).forEach(p => {
+    ['far_pid', 'mor_pid', 'bonus1_pid', 'bonus2_pid', 'partner_pid'].forEach(f => forbind(p.pid, p[f]));
+  }));
+  const start = (data.find(m => String(m.nr) === '1')?.familiemedlemmer || []).map(p => p.pid).filter(Boolean);
+  const set = new Set(start), koe = [...start];
+  while (koe.length) { const x = koe.pop(); (kanter.get(x) || []).forEach(y => { if (!set.has(y)) { set.add(y); koe.push(y); } }); }
+  return set;
+}
 function renderStatusListe() {
   const grid = document.getElementById('grid');
+  if (statusFilter === 'svaever') return renderSvaevere();
   const q = soegeTekst.trim().toLowerCase();
   const rk = [];
   data.forEach(m => (m.familiemedlemmer || []).forEach(p => {
@@ -1612,6 +1641,38 @@ function renderStatusListe() {
         <td><a href="#" class="hjaelper-link" data-gaa-til="${escH(String(m.nr))}">nr. ${escH(String(m.nr))}</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">${escH(visKortNavn(m))}</span></td></tr>`;
     }).join('')}</tbody></table>`;
 }
+function renderSvaevere() {
+  const grid = document.getElementById('grid');
+  const q = soegeTekst.trim().toLowerCase();
+  const forbundne = forbundneTilStamfar();
+  // Personer med mindst én relation (som far/mor/bonus/partner – eller som andres far/mor osv.)
+  const harRel = new Set();
+  data.forEach(m => (m.familiemedlemmer || []).forEach(p => {
+    ['far_pid', 'mor_pid', 'bonus1_pid', 'bonus2_pid', 'partner_pid'].forEach(f => { if (p[f]) { harRel.add(p.pid); harRel.add(p[f]); } });
+  }));
+  const rk = []; let alle = 0;
+  data.forEach(m => (m.familiemedlemmer || []).forEach(p => {
+    const navn = visPersonNavn(p) || p.navn || '';
+    if (!navn.trim()) return;
+    alle++;
+    if (forbundne.has(p.pid)) return;
+    if (q && !navn.toLowerCase().includes(q) && String(m.nr) !== q) return;
+    let nr = String(m.nr);
+    try { nr = beregnPersonNr(m.nr, m.familiemedlemmer, p); } catch(e) {}
+    rk.push({ p, m, navn, nr, ingen: !harRel.has(p.pid) });
+  }));
+  rk.sort((a, b) => (b.ingen - a.ingen) || String(a.p.foedselsdato || '9999').localeCompare(String(b.p.foedselsdato || '9999')));
+  const antalIngen = rk.filter(r => r.ingen).length;
+  document.getElementById('antal-linje').textContent = `${rk.length} svævere af ${alle} personer (${antalIngen} helt uden relationer)`;
+  if (!rk.length) { grid.innerHTML = '<div class="ingen-resultater">🎉 Alle hænger sammen med Agnes og Svend Aage!</div>'; return; }
+  grid.innerHTML = `<div style="grid-column:1/-1;font-size:13px;color:var(--tekst-lys);margin-bottom:.4rem">Svævere er personer, der endnu ikke hænger sammen med <b>Agnes og Svend Aage</b> i stamtræet. Tryk på husstanden og vælg <b>✏️ Rediger</b> for at skrive far, mor eller partner ind (brug medlemsnummeret, fx 8-B). Så forsvinder personen fra listen.</div>
+    <table class="status-tabel"><thead><tr><th>Medl.nr.</th><th>Navn</th><th>Mangler</th><th>Født</th><th>Husstand</th></tr></thead><tbody>
+    ${rk.map(({ p, m, navn, nr, ingen }) => `<tr><td><b>${escH(nr)}</b></td><td>${escH(navn)}${p.status === 'afdød' ? ' 🕯️' : ''}${relationerHtml(p, _relIx)}</td>
+      <td style="font-size:12px">${ingen ? '<span style="color:var(--fare)">Ingen relationer endnu</span>' : '<span style="color:var(--tekst-lys)">Ikke forbundet til Agnes og Svend Aage</span>'}</td>
+      <td>${p.foedselsdato ? formatDato(p.foedselsdato) : '—'}</td>
+      <td><a href="#" class="hjaelper-link" data-gaa-til="${escH(String(m.nr))}">nr. ${escH(String(m.nr))}</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">${escH(visKortNavn(m))}</span></td></tr>`).join('')}
+    </tbody></table>`;
+}
 function saetStatusFilter(v) {
   statusFilter = v;
   document.querySelectorAll('[data-status-filter]').forEach(b => b.classList.toggle('aktiv', b.dataset.statusFilter === v));
@@ -1635,6 +1696,10 @@ const editGemKnap    = document.getElementById('edit-gem-knap');
  
 function renderPersonEdit() {
   const el = document.getElementById('person-liste-edit');
+  _relEtiketter = relEtiketter();
+  let dl = document.getElementById('rel-personer');
+  if (!dl) { dl = document.createElement('datalist'); dl.id = 'rel-personer'; document.body.appendChild(dl); }
+  dl.innerHTML = _relEtiketter.map(r => `<option value="${escH(r.tekst)}"></option>`).join('');
   if (!personListe.length) {
     el.innerHTML = '<div style="font-size:12px;color:var(--tekst-lys);font-style:italic;margin-bottom:.5rem">Ingen medlemmer endnu — brug knapperne herunder.</div>';
     return;
@@ -1755,7 +1820,7 @@ function renderPersonEdit() {
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px">
           ${[['far_pid','Far'],['mor_pid','Mor'],['bonus1_pid','Bonusforælder'],['bonus2_pid','Bonusforælder 2'],['partner_pid','Ægtefælle / partner']].map(([felt, label]) => `
           <label style="font-size:11.5px;color:var(--tekst-lys)">${label}
-            <select data-pi="${i}" data-felt="${felt}" style="width:100%;border:1px solid var(--border);padding:.35rem .5rem;font-size:12.5px;font-family:'Source Sans 3',sans-serif;background:var(--hvid);border-radius:3px">${relValg(p[felt] || '', p.pid)}</select>
+            <input list="rel-personer" data-pi="${i}" data-relfelt="${felt}" value="${escH(relTekst(p[felt]))}" placeholder="Skriv medlemsnr. (fx 8-B) eller navn" style="width:100%;border:1px solid var(--border);padding:.35rem .5rem;font-size:12.5px;font-family:'Source Sans 3',sans-serif;background:var(--hvid);border-radius:3px">
           </label>`).join('')}
         </div>
       </div>
@@ -2072,6 +2137,18 @@ document.getElementById('person-liste-edit').addEventListener('change', e => {
     } else {
       p.dataansvarlig = false;
     }
+    markDirty();
+    return;
+  }
+  if (t.dataset.pi !== undefined && t.dataset.relfelt) {
+    if (e.type === 'input' && !_relEtiketter.some(x => x.tekst === t.value)) return; // vent til et valg er færdigt
+    const p = personListe[+t.dataset.pi];
+    const pid = relFind(t.value);
+    if (pid === null) { t.style.borderColor = 'var(--fare)'; t.title = 'Personen blev ikke fundet – skriv medlemsnr. eller vælg fra listen'; return; }
+    if (pid === p.pid) { t.style.borderColor = 'var(--fare)'; t.title = 'En person kan ikke være sin egen relation'; return; }
+    t.style.borderColor = ''; t.title = '';
+    p[t.dataset.relfelt] = pid;
+    t.value = relTekst(pid);
     markDirty();
     return;
   }
