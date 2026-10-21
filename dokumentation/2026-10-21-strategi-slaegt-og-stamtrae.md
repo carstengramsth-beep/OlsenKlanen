@@ -66,3 +66,8 @@ Rasmus er Tinas søn og Renés bonusbarn.
 - Når Carsten skriver "Tjek forslag til stamtræet": hent forslagene via REST, gennemgå dem ét ad gangen med Carsten, læg kun det godkendte ind, og sæt `status` til "godkendt" eller "afvist".
 - MyHeritage-data lægges for sig som "ikke bekræftet" (afventer GEDCOM-fil). Spurgt: Birthes fulde navn (Haugaard eller Vormslev?) og om Gydda skal hedde Gram Pedersen.
 - Karin Gram Lund (23-B) koblet som datter af Finn og Birthe.
+
+## Bryllupsdage (21. okt.)
+- Feltet `bryllup_dato` på personen (ved partneren) i kartotekets Rediger. Kortet viser "⚭ Gift med X <dato> (n år)".
+- Forsiden: bryllupsdage vises under "Fremhævede begivenheder" (3 dage tilbage til 45 dage frem) med tag "Bryllupsdag", runde dage navngivet (sølv 25, rubin 40, guld 50, diamant 60, jern 65, platin 70, krondiamant 75). På dagen også i det gule bånd. Kun par, hvor begge er aktive.
+- Flyttet fra husstandens Begivenheder: nr. 8 Elisabeth og Carsten 1972-09-23 (fra diamantbryllup 2032), nr. 23 Richard og Karin 1970-01-17 (fra diamantbryllup 2030), nr. 29 Steen og Lise 1988-07-02, nr. 46 Anders og Mie 2013-08-03. Partner-relationer sat for de tre sidste. Begivenhederne er ikke slettet.
