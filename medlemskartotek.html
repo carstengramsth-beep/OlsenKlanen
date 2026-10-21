@@ -675,7 +675,7 @@ import { initializeApp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, addDoc }
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, addDoc, query, where }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
  
 const firebaseConfig = {
@@ -716,12 +716,14 @@ function hilsenAntal(p) {
 
 // ── STATE ─────────────────────────────────────────────────────
 let data = [];
-let statusFilter = 'alle';   // alle | aktiv | afdød | udmeldt
+let statusFilter = 'alle';
+let slaegtData = [];        // personer i Slægten (ikke medlemmer)   // alle | aktiv | afdød | udmeldt
 
 // ── RELATIONER ── Hver person har et fast, usynligt ID (pid). Relationer peger altid på pid.
 // Felter på personen: far_pid, mor_pid, bonus1_pid, bonus2_pid, partner_pid. Børn udledes.
 function nyPid() {
   const alle = new Set(data.flatMap(m => (m.familiemedlemmer || []).map(p => p.pid)));
+  slaegtData.forEach(p => alle.add(p.pid));
   (typeof personListe !== 'undefined' ? personListe : []).forEach(p => alle.add(p.pid));
   let id;
   do { id = 'p' + Math.random().toString(36).slice(2, 11).padEnd(9, '0'); } while (alle.has(id));
@@ -730,11 +732,13 @@ function nyPid() {
 function personIndeks() {
   const ix = new Map();
   data.forEach(m => (m.familiemedlemmer || []).forEach(p => { if (p.pid) ix.set(p.pid, { p, nr: String(m.nr) }); }));
+  slaegtData.forEach(p => ix.set(p.pid, { p, nr: '', slaegt: true }));
   return ix;
 }
 function relLink(ix, pid) {
   const r = pid && ix.get(pid);
   if (!r) return '';
+  if (r.slaegt) return `<a href="stamtrae.html?top=${encodeURIComponent(pid)}" title="I Slægten (ikke medlem)">${escH(visPersonNavn(r.p))} 🌿</a>`;
   return `<a href="#" class="hjaelper-link" data-gaa-til="${escH(r.nr)}">${escH(visPersonNavn(r.p))}</a>`;
 }
 function relationerHtml(p, ix) {
@@ -773,6 +777,11 @@ function relEtiketter() {
   };
   personListe.forEach(p => tilfoej(p, aktivtNr, personListe));
   data.forEach(m => (m.familiemedlemmer || []).forEach(p => tilfoej(p, m.nr, m.familiemedlemmer)));
+  slaegtData.forEach(p => {
+    if (set.has(p.pid)) return; set.add(p.pid);
+    const aar = (p.foedselsdato || '').slice(0, 4);
+    rk.push({ pid: p.pid, tekst: `Slægten · ${visPersonNavn(p) || p.navn}${aar ? ' (f. ' + aar + ')' : ''}${p.status === 'afdød' ? ' 🕯️' : ''}` });
+  });
   rk.sort((a, b) => a.tekst.localeCompare(b.tekst, 'da', { numeric: true }));
   return rk;
 }
@@ -1603,9 +1612,9 @@ document.getElementById('grid').addEventListener('click', e => {
 function forbundneTilStamfar() {
   const kanter = new Map();
   const forbind = (a, b) => { if (!a || !b) return; (kanter.get(a) || kanter.set(a, new Set()).get(a)).add(b); (kanter.get(b) || kanter.set(b, new Set()).get(b)).add(a); };
-  data.forEach(m => (m.familiemedlemmer || []).forEach(p => {
+  [...data.flatMap(m => m.familiemedlemmer || []), ...slaegtData].forEach(p => {
     ['far_pid', 'mor_pid', 'bonus1_pid', 'bonus2_pid', 'partner_pid'].forEach(f => forbind(p.pid, p[f]));
-  }));
+  });
   const start = (data.find(m => String(m.nr) === '1')?.familiemedlemmer || []).map(p => p.pid).filter(Boolean);
   const set = new Set(start), koe = [...start];
   while (koe.length) { const x = koe.pop(); (kanter.get(x) || []).forEach(y => { if (!set.has(y)) { set.add(y); koe.push(y); } }); }
@@ -1648,9 +1657,9 @@ function renderSvaevere() {
   const forbundne = forbundneTilStamfar();
   // Personer med mindst én relation (som far/mor/bonus/partner – eller som andres far/mor osv.)
   const harRel = new Set();
-  data.forEach(m => (m.familiemedlemmer || []).forEach(p => {
+  [...data.flatMap(m => m.familiemedlemmer || []), ...slaegtData].forEach(p => {
     ['far_pid', 'mor_pid', 'bonus1_pid', 'bonus2_pid', 'partner_pid'].forEach(f => { if (p[f]) { harRel.add(p.pid); harRel.add(p[f]); } });
-  }));
+  });
   const rk = []; let alle = 0;
   data.forEach(m => (m.familiemedlemmer || []).forEach(p => {
     const navn = visPersonNavn(p) || p.navn || '';
@@ -3304,6 +3313,12 @@ async function initialiserSide() {
       if (!fd.nr) fd.nr = d.id;
       data.push(fd);
     });
+    // Slægten: personer, der aldrig har været medlemmer (olsenpost, type "slaegt")
+    try {
+      const s2 = await getDocs(query(collection(db, 'olsenpost'), where('type', '==', 'slaegt')));
+      slaegtData = [];
+      s2.forEach(d => { const x = d.data(); if (x.pid) slaegtData.push(x); });
+    } catch (e) { console.log('Kunne ikke hente Slægten:', e); }
     renderGrid();
     haandterGodkendFraLogin();
   } catch (err) {
