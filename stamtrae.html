@@ -306,6 +306,8 @@ function visPanel(pid) {
     p.far_pid ? `Far: ${rel(p.far_pid)}` : "", p.mor_pid ? `Mor: ${rel(p.mor_pid)}` : "",
     [p.bonus1_pid, p.bonus2_pid].filter(Boolean).map(b => `Bonusforælder: ${rel(b)}`).join("<br>"),
     pa ? `Partner: ${rel(pa)}` : "",
+    (() => { const s = [...P.keys()].filter(x => x !== pid && ((p.far_pid && P.get(x).p.far_pid === p.far_pid) || (p.mor_pid && P.get(x).p.mor_pid === p.mor_pid)));
+      return s.length ? `Søskende: ${s.map(rel).join(", ")}` : ""; })(),
     bio.length ? `Børn: ${bio.map(rel).join(", ")}` : "",
     bonus.length ? `Bonusbørn: ${bonus.map(rel).join(", ")}` : "",
     p.fortaelling ? `<div style="margin-top:.6rem;white-space:pre-line">${esc(p.fortaelling)}</div>` : ""
