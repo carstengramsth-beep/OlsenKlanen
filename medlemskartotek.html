@@ -1012,7 +1012,8 @@ function beregnPersonNr(husNr, personer, p) {
     for (let i = 0; i <= idx; i++) { tal++; while (brugte.has(tal)) tal++; }
     return `${husNr}-${tal}`;
   }
-  if (!erAktivPerson(p) || !p.bogstav) return String(husNr);
+  // Afdøde beholder deres personlige nummer (fx 28-A), så de kan findes og vælges
+  if (p.status === 'udmeldt' || !p.bogstav) return String(husNr);
   return `${husNr}-${p.bogstav}`;
 }
 

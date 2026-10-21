@@ -181,7 +181,7 @@ function personNr(rec) {
   const p = rec.p;
   if (p.fastNr) return String(p.fastNr);
   if (rec.kilde === "slaegt") return "";
-  if (p.bogstav && p.status !== "afdød" && p.status !== "udmeldt") return rec.nr + "-" + p.bogstav;
+  if (p.bogstav && p.status !== "udmeldt") return rec.nr + "-" + p.bogstav;
   return rec.nr;
 }
 function aarTekst(p) {
