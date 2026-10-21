@@ -31,3 +31,6 @@ Mange hilsner
 ---
 
 Noter til senere: evt. nævne søgefeltet på forsiden og Mærkedage (bryllupsdage). Sendes via OlsenPost/mail til alle, når Carsten godkender.
+
+**Klar som infomail:** `infomails/familietrae.json` (ikke i `infomails/index.json` endnu, så den vises ikke i Infoarkivet).
+Når Carsten siger "send": tilføj den i `infomails/index.json` som nr. 5 med dagens dato, gruppe "Nyt fra OlsenKlanen" – derefter OlsenPost → 📚 Informationer → send prøve → send til alle.

@@ -1,0 +1,47 @@
+{
+  "emne": "Nyt på olsenklanen.dk – familietræet er på vej 🌳",
+  "hilsen": "Kære alle i OlsenKlanen",
+  "afsnit": [
+    {
+      "type": "p",
+      "tekst": "Vi er i gang med at bygge et familietræ på olsenklanen.dk. Det viser, hvordan vi alle hænger sammen – med Agnes og Svend Aage Olsen øverst."
+    },
+    {
+      "type": "p",
+      "tekst": "Træet er ikke færdigt. Der mangler stadig mange personer, datoer og billeder. Men er du nysgerrig, er du meget velkommen til at kigge forbi."
+    },
+    {
+      "type": "h",
+      "tekst": "Sådan gør du"
+    },
+    {
+      "type": "nummerliste",
+      "punkter": [
+        "Log ind på olsenklanen.dk, som du plejer.",
+        "Tryk på »🌳 Stamtræ« på forsiden.",
+        "Tryk på »👤 Mit træ« for at se din egen gren.",
+        "Tryk på en person for at se mere."
+      ]
+    },
+    {
+      "type": "h",
+      "tekst": "Kan du hjælpe?"
+    },
+    {
+      "type": "liste",
+      "punkter": [
+        "En lille rød prik betyder, at der mangler noget om personen – fx fødselsdato eller billede.",
+        "Ved du noget, så tryk på personen og vælg »✏️ Foreslå en rettelse«. Alle forslag bliver læst, før de kommer på.",
+        "Har du gamle billeder eller papirer, så skriv til 5-Banden."
+      ]
+    },
+    {
+      "type": "p",
+      "tekst": "Vi glæder os til at høre jeres synspunkter."
+    }
+  ],
+  "slut": [
+    "Mange hilsner",
+    "5-Banden"
+  ]
+}
