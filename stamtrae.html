@@ -80,6 +80,9 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
 .op-link .mini{width:28px;height:28px;border-radius:50%;object-fit:cover;font-size:10px;line-height:24px;text-align:center;box-sizing:border-box;position:relative;display:inline-block}
 .op-link span.mini{border:2px dashed #e08a2b;background:#fff7ee;color:#c46f12}
 .op-link .mini .kam{position:absolute;right:-5px;bottom:-5px;font-size:9px;line-height:1}
+#trae{position:relative}
+.svigre{position:absolute;display:flex;align-items:stretch;gap:6px;z-index:2}
+.svigre-streger{position:absolute;left:0;top:0;pointer-events:none;overflow:visible;z-index:1}
 .mangler-felt{background:#fff1e0 !important;border-color:#e08a2b !important;box-shadow:0 0 0 1px #e08a2b}
 
 /* Personkort */
@@ -294,7 +297,7 @@ function foraeldreLink(p, pid) {
   const mini = x => { const q = P.get(x).p; const n = navnAf(q);
     return q.foto ? `<img class="mini" src="${esc(q.foto)}" alt="" title="${esc(n)}">`
       : `<span class="mini" title="${esc(n)} – billede mangler">${esc(n.split(/\s+/).map(y => y[0]).slice(0, 2).join("").toUpperCase())}<span class="kam">📷</span></span>`; };
-  return `<span class="op-link" data-op="${esc(far || mor)}" data-fra="${esc(pid)}" title="Vis ${esc(p.fornavn || "")}s forældre og familie"><span class="minis">${[far, mor].filter(Boolean).map(mini).join("")}</span>⬆ ${esc(navne)}</span>`;
+  return `<span class="op-link" data-op="${esc(far || mor)}" data-fra="${esc(pid)}" title="Vis ${esc(p.fornavn || "")}s forældre og familie">⬆ ${esc(navne)}</span>`;
 }
 function tegnEnhed(pids, besoegt, erBonus, erRod) {
   // En "enhed" = en person (eller et par) + deres børn
@@ -318,12 +321,52 @@ function tegnTrae(topPids) {
   const antal = besoegt.size;
   if (!html) { $("trae").innerHTML = '<div class="tom">Personen blev ikke fundet.</div>'; return; }
   $("trae").innerHTML = `<ul>${html}</ul>`;
+  placerSvigre();
   const navne = topPids.filter(p => P.has(p)).map(p => navnAf(P.get(p).p).split(" ")[0]).join(" og ");
   $("status").innerHTML = `Træet viser <b>${antal}</b> ${antal === 1 ? "person" : "personer"} fra <b>${esc(navne)}</b> og nedad. `
     + `Hele slægtstræet har lige nu <b>${SNR_ANTAL}</b> personer, der hænger sammen med Agnes og Svend Aage.`
     + (antal <= 2 ? `<br><span style="color:#a33">Der er endnu ikke skrevet børn ind under denne person. Relationer skrives ind i <a href="medlemskartotek.html">Medlemskartoteket</a> under ✏️ Rediger (far, mor, partner).</span>` : "");
   // Centrér vandret
   const l = $("lerred"); l.scrollLeft = Math.max(0, ($("trae").scrollWidth - l.clientWidth) / 2);
+}
+
+// ── Svigerforældre: tilløbnes egne forældre vises som kort ved siden af, med streg ned ──
+let _svTimer; window.addEventListener("resize", () => { clearTimeout(_svTimer); _svTimer = setTimeout(placerSvigre, 200); });
+function placerSvigre() {
+  const t = $("trae"); t.style.paddingRight = "";
+  t.querySelectorAll(".svigre, .svigre-streger").forEach(e => e.remove());
+  const R = el => { const a = el.getBoundingClientRect(), b = t.getBoundingClientRect(); return { x: a.left - b.left, y: a.top - b.top, w: a.width, h: a.height }; };
+  const optaget = [...t.querySelectorAll(".person")].map(R);
+  const streger = [];
+  t.querySelectorAll(".person.til").forEach(kort => {
+    const pid = kort.dataset.pid, p = P.get(pid)?.p; if (!p) return;
+    const foraeldre = [p.far_pid, p.mor_pid].filter(x => x && P.has(x) && !t.querySelector(`.person[data-pid="${x}"]`));
+    if (!foraeldre.length) return;
+    if (foraeldre.length === 1) { const pa = partnerAf(foraeldre[0]); if (pa && !t.querySelector(`.person[data-pid="${pa}"]`)) foraeldre.push(pa); }
+    const blok = document.createElement("div"); blok.className = "svigre";
+    blok.innerHTML = foraeldre.map(x => personKort(x, false)).join('<span class="gift">⚭</span>');
+    blok.querySelectorAll(".person").forEach(e => e.classList.add("til"));
+    t.appendChild(blok);
+    const k = R(kort), bw = blok.offsetWidth, bh = blok.offsetHeight;
+    // Samme højde som ægtefællens forældre (hvis de står i træet) – ellers én række over
+    const aegte = partnerAf(pid), ap = aegte && P.get(aegte)?.p;
+    const fk = ap && [ap.far_pid, ap.mor_pid].map(x => x && t.querySelector(`.person[data-pid="${x}"]`)).find(Boolean);
+    const y = fk ? R(fk).y : k.y - 44 - bh;
+    let x = k.x;
+    const ram = (a, b) => a.x < b.x + b.w + 12 && b.x < a.x + a.w + 12 && a.y < b.y + b.h + 8 && b.y < a.y + a.h + 8;
+    for (let n = 0; n < 200 && optaget.some(o => ram({ x, y, w: bw, h: bh }, o)); n++) x += 20;
+    blok.style.left = x + "px"; blok.style.top = y + "px";
+    optaget.push({ x, y, w: bw, h: bh });
+    const bundX = x + bw / 2, bundY = y + bh, midtY = k.y - 14, kortX = k.x + k.w / 2;
+    streger.push(`M${bundX} ${bundY} V${midtY} H${kortX} V${k.y}`);
+    const over = x + bw + 16 - t.scrollWidth; if (over > 0) t.style.paddingRight = (parseInt(t.style.paddingRight || 0) + over) + "px";
+  });
+  if (streger.length) {
+    const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    s.setAttribute("class", "svigre-streger"); s.setAttribute("width", t.scrollWidth); s.setAttribute("height", t.scrollHeight);
+    s.innerHTML = streger.map(d => `<path d="${d}" fill="none" stroke="var(--guld)" stroke-width="2" stroke-dasharray="5 3"/>`).join("");
+    t.appendChild(s);
+  }
 }
 
 // ── Personkort (panel) ──
