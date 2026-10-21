@@ -10,6 +10,7 @@
 - Hver ny side SKAL have en tydelig genvej til forsiden: et link "🏠 Forsiden" øverst på siden
   OG `<script src="forside-knap.js" defer></script>` (den runde knap nederst til venstre).
 - Ellers skal brugeren starte forfra hver gang. Det er ikke praktisk.
+- Tilføj også siden i søgningen på forsiden: en linje i `SIDER` i `soeg.js` (titel, adresse, kort tekst og søgeord).
 
 # Filer fra brugeren (referater o.l.) — kontrollér altid ved modtagelsen
 
