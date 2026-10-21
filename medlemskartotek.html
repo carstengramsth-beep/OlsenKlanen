@@ -300,6 +300,7 @@ body.kan-redigere .brev-knap{display:inline-block}
 .fjern-fejl-tekst{color:var(--fare);font-size:12px;margin-top:.6rem;display:none}
  
 /* HISTORISK PERSON */
+.mangler-felt{background:#fff1e0 !important;border-color:#e08a2b !important;box-shadow:0 0 0 1px #e08a2b}
 .status-knap{background:var(--hvid);border:1.5px solid var(--border);color:var(--tekst);padding:.4rem .9rem;border-radius:20px;font-size:13px;cursor:pointer;font-family:'Source Sans 3',sans-serif}
 .status-knap.aktiv{background:var(--gron,#2d5016);border-color:var(--gron,#2d5016);color:#fff}
 .status-tabel{width:100%;border-collapse:collapse;background:var(--hvid);font-size:13.5px;grid-column:1/-1}
@@ -1743,7 +1744,7 @@ function renderStatusListe() {
   };
   const antalMangler = rk.filter(x => mangler(x.p).length).length;
   if (statusFilter === 'afdød' && antalMangler) document.getElementById('antal-linje').textContent += ` · 🟠 ${antalMangler} mangler data`;
-  grid.innerHTML = opretKnap + `<table class="status-tabel"><thead><tr><th>Navn</th><th>Født</th>${visDato ? `<th>${statusFilter === 'afdød' ? 'Død' : 'Udmeldt'}</th><th>Alder</th>` : ''}<th>Husstand</th></tr></thead><tbody>
+  grid.innerHTML = opretKnap + `<table class="status-tabel"><thead><tr><th>Navn</th><th>Født</th>${visDato ? `<th>${statusFilter === 'afdød' ? 'Død' : 'Udmeldt'}</th><th>Alder</th>` : ''}<th>Husstand</th>${statusFilter === 'afdød' ? '<th>Bekræftet</th>' : ''}</tr></thead><tbody>
     ${rk.map(({ p, m, navn }) => {
       let alder = '';
       if (visDato && p.foedselsdato && p.status_dato) {
@@ -1754,7 +1755,9 @@ function renderStatusListe() {
       return `<tr><td>${p.foto ? `<img src="${p.foto}" style="width:22px;height:22px;border-radius:3px;object-fit:cover;vertical-align:middle;margin-right:6px">` : ''}<b>${escH(navn)}</b>${relationerHtml(p, _relIx)}${mgl.length ? `<div style="font-size:12px;color:#b8620b;margin-top:3px">🟠 Mangler: ${mgl.join(', ')}</div>` : ''}</td>
         <td>${p.foedselsdato ? formatDato(p.foedselsdato) : '—'}</td>
         ${visDato ? `<td>${p.status_dato ? formatDato(p.status_dato) : '—'}</td><td>${alder !== '' ? alder + ' år' : ''}</td>` : ''}
-        <td>${m ? `<a href="#" class="hjaelper-link" data-gaa-til="${escH(String(m.nr))}">nr. ${escH(String(m.nr))}</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">${escH(visKortNavn(m))}</span>` : `<a href="stamtrae.html?top=${encodeURIComponent(p.pid)}">🌿 Slægten</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">ikke medlem</span>${kanRet ? `<br><button type="button" class="status-knap" data-ret-afdod="${escH(p.pid)}" style="padding:.15rem .6rem;font-size:12px;margin-top:3px">✏️ Ret</button>` : ''}`}</td></tr>`;
+        <td>${m ? `<a href="#" class="hjaelper-link" data-gaa-til="${escH(String(m.nr))}">nr. ${escH(String(m.nr))}</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">${escH(visKortNavn(m))}</span>` : `<a href="stamtrae.html?top=${encodeURIComponent(p.pid)}">🌿 Slægten</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">ikke medlem</span>${kanRet ? `<br><button type="button" class="status-knap" data-ret-afdod="${escH(p.pid)}" style="padding:.15rem .6rem;font-size:12px;margin-top:3px">✏️ Ret</button>` : ''}`}</td>${statusFilter === 'afdød' ? `<td style="font-size:12px">${p.bekraeftet && p.bekraeftet.navn
+          ? `✅ Bekræftet af <b>${escH(p.bekraeftet.navn)}</b><br><span style="color:var(--tekst-lys)">${escH(formatDato(p.bekraeftet.dato))}</span>`
+          : `<span style="color:var(--tekst-lys)">⚪ Ikke bekræftet</span>`}${kanRet && !(p.bekraeftet && p.bekraeftet.navn) ? `<br><button type="button" class="status-knap aktiv" data-bekraeft="${escH(p.pid)}" style="padding:.15rem .6rem;font-size:12px;margin-top:3px">✓ Bekræft data</button>` : ''}</td>` : ''}</tr>`;
     }).join('')}</tbody></table>`;
 }
 function renderSvaevere() {
@@ -1817,6 +1820,8 @@ function aabnAfdod(pid) {
   document.getElementById('ad-gravfoto-vis').innerHTML = afdodGravFoto ? `<img src="${afdodGravFoto}" style="height:40px;border-radius:4px;vertical-align:middle">` : '';
   document.getElementById('afdod-status').textContent = '';
   document.getElementById('afdod-modal').style.display = 'flex';
+  markerManglendeFelter(document.getElementById('afdod-modal'));
+  document.getElementById('ad-foto').classList.toggle('mangler-felt', !afdodFoto);
 }
 const lukAfdod = () => document.getElementById('afdod-modal').style.display = 'none';
 document.getElementById('afdod-luk').onclick = lukAfdod;
@@ -1842,6 +1847,10 @@ document.getElementById('afdod-gem').onclick = async () => {
     foto: afdodFoto || '', grav_foto: afdodGravFoto || '', mindeord: g('ad-mindeord'), gravsted: g('ad-gravsted'), fortaelling: g('ad-fortaelling'),
     sidst_rettet: new Date().toISOString(), sidst_rettet_af: String(egetNr || (familieSession && familieSession.nr) || 'admin')
   };
+  // Er data ændret, skal de bekræftes igen
+  const gl = slaegtData.find(x => x.pid === pid) || {};
+  const nogle = x => JSON.stringify(['navn','foedselsdato','status_dato','far_pid','mor_pid','partner_pid','foto','grav_foto','mindeord','gravsted','fortaelling'].map(k => x[k] || ''));
+  if (!afdodPid || nogle(gl) !== nogle(ny)) ny.bekraeftet = null;
   st.textContent = '⏳ Gemmer…'; st.className = 'historisk-status-el';
   try {
     await setDoc(doc(db, 'olsenpost', 'slaegt_' + pid), ny, { merge: true });
@@ -1853,7 +1862,35 @@ document.getElementById('afdod-gem').onclick = async () => {
 document.getElementById('grid').addEventListener('click', e => {
   if (e.target.closest('#opret-afdod')) { aabnAfdod(null); return; }
   const r = e.target.closest('[data-ret-afdod]'); if (r) aabnAfdod(r.dataset.retAfdod);
+  const bk = e.target.closest('[data-bekraeft]'); if (bk) bekraeftAfdod(bk.dataset.bekraeft, bk);
 });
+// Hvem er logget ind? (fulde navn til bekræftelsen)
+function mitFuldeNavn() {
+  const nr = String(egetNr || (familieSession && familieSession.nr) || '').toUpperCase();
+  for (const m of data) for (const p of (m.familiemedlemmer || [])) {
+    let pn = ''; try { pn = String(beregnPersonNr(m.nr, m.familiemedlemmer, p)).toUpperCase(); } catch (e) {}
+    if (nr && pn === nr) return visPersonNavn(p);
+  }
+  try { return (sessionStorage.getItem('ok_navn') || localStorage.getItem('ok_navn') || '').trim() || 'Administrator'; } catch (e) { return 'Administrator'; }
+}
+async function bekraeftAfdod(pid, knap) {
+  const b = { navn: mitFuldeNavn(), nr: String(egetNr || (familieSession && familieSession.nr) || ''), dato: new Date().toISOString().slice(0, 10) };
+  knap.disabled = true; knap.textContent = '⏳';
+  try {
+    const s = slaegtData.find(x => x.pid === pid);
+    if (s) {
+      await setDoc(doc(db, 'olsenpost', 'slaegt_' + pid), { bekraeftet: b }, { merge: true });
+      s.bekraeftet = b;
+    } else {
+      const m = data.find(h => (h.familiemedlemmer || []).some(p => p.pid === pid));
+      if (!m) throw new Error('Personen blev ikke fundet');
+      const fm = m.familiemedlemmer.map(p => p.pid === pid ? { ...p, bekraeftet: b } : p);
+      await setDoc(doc(db, 'membres', String(m.nr)), { familiemedlemmer: fm }, { merge: true });
+      m.familiemedlemmer = fm;
+    }
+    renderGrid();
+  } catch (e) { knap.disabled = false; knap.textContent = '✓ Bekræft data'; alert('Kunne ikke gemme bekræftelsen: ' + (e.message || e)); }
+}
 
 function saetStatusFilter(v) {
   statusFilter = v;
@@ -2054,7 +2091,15 @@ function renderPersonEdit() {
       </div>` : ''}`}
     </div>`;
   }).join('');
+  markerManglendeFelter(el);
 }
+// Farv felter, hvor der mangler data (orange), så man kan se, hvad der skal udfyldes
+function markerManglendeFelter(rod) {
+  (rod || document).querySelectorAll('input[data-felt="foedselsdato"], input[data-relfelt="far_pid"], input[data-relfelt="mor_pid"], #ad-foedt, #ad-doed, #ad-far, #ad-mor, #ad-mindeord')
+    .forEach(i => i.classList.toggle('mangler-felt', !String(i.value || '').trim()));
+}
+document.addEventListener('input', e => { if (e.target.classList && (e.target.classList.contains('mangler-felt') || e.target.matches('#person-liste-edit input, #afdod-modal input, #afdod-modal textarea'))) markerManglendeFelter(e.target.closest('#person-liste-edit, #afdod-modal')); });
+document.addEventListener('change', e => { if (e.target.closest && e.target.closest('#person-liste-edit, #afdod-modal')) markerManglendeFelter(e.target.closest('#person-liste-edit, #afdod-modal')); });
  
 // ===== KOMITÉ-ÅR (chips) =====
 function komiteAarListe(raw){
@@ -2683,7 +2728,14 @@ async function gemData() {
   // og behold kun medlemmer der har et navn.
   const reneMedlemmer = personListe
     .map(p => ({ ...p, navn: visPersonNavn(p), pid: p.pid || nyPid() }))
-    .filter(p => p.navn.trim());
+    .filter(p => p.navn.trim())
+    .map(p => {
+      // Afdøde: rettes data, skal de bekræftes igen
+      if (!p.bekraeftet) return p;
+      const g = (tidl.familiemedlemmer || []).find(x => x.pid === p.pid) || {};
+      const k = x => JSON.stringify(['navn','foedselsdato','status','status_dato','far_pid','mor_pid','partner_pid','foto','grav_foto','mindeord','gravsted','gravsted_note'].map(f => x[f] || ''));
+      return k(g) === k(p) ? p : { ...p, bekraeftet: null };
+    });
  
   // GODKENDELSE: at gemme er IKKE en godkendelse. Er data ændret, skal husstanden godkende igen
   // (knappen "✓ Godkend medlemsdata"). Er intet ændret, bevares en eksisterende godkendelse.
@@ -3499,6 +3551,7 @@ async function initialiserSide() {
     } catch (e) { console.log('Kunne ikke hente Slægten:', e); }
     renderGrid();
     haandterGodkendFraLogin();
+    setTimeout(haandterDirekteRet, 300);
   } catch (err) {
     document.getElementById('grid').innerHTML =
       '<div class="ingen-resultater">⚠️ Kunne ikke hente medlemmer fra databasen. Tjek din internetforbindelse og genindlæs siden.</div>';
@@ -3506,6 +3559,14 @@ async function initialiserSide() {
 }
  
 // ── Kom fra login med ?godkend=NR: åbn, scroll til og fremhæv eget kort ──
+function haandterDirekteRet() {
+  try {
+    const q = new URLSearchParams(window.location.search);
+    const ad = q.get('ret_afdod'), rnr = q.get('rediger');
+    if (ad && slaegtData.some(x => x.pid === ad)) { saetStatusFilter('afdød'); aabnAfdod(ad); }
+    else if (rnr && data.some(m => sammeNr(m.nr, rnr)) && kanRedigere(rnr)) { gaaTilKort(rnr); aabneEditModal(rnr); }
+  } catch (e) { console.log(e); }
+}
 function haandterGodkendFraLogin() {
   let nr;
   try { nr = new URLSearchParams(window.location.search).get('godkend'); } catch(e) { return; }
