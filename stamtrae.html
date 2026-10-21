@@ -76,6 +76,10 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
 .hjaelp{margin-top:.6rem;padding:.55rem .7rem;background:#fff7ee;border:1px dashed #e08a2b;border-radius:8px;font-size:13px}
 .op-link{display:block;margin:5px auto 0;font-size:10.5px;font-weight:700;color:#8a5a00;background:#fff3c4;border:1px solid var(--guld);border-radius:10px;padding:2px 6px;cursor:pointer;line-height:1.25}
 .op-link:hover{background:#ffe48a}
+.op-link .minis{display:flex;justify-content:center;gap:4px;margin:2px 0 1px}
+.op-link .mini{width:28px;height:28px;border-radius:50%;object-fit:cover;font-size:10px;line-height:24px;text-align:center;box-sizing:border-box;position:relative;display:inline-block}
+.op-link span.mini{border:2px dashed #e08a2b;background:#fff7ee;color:#c46f12}
+.op-link .mini .kam{position:absolute;right:-5px;bottom:-5px;font-size:9px;line-height:1}
 .mangler-felt{background:#fff1e0 !important;border-color:#e08a2b !important;box-shadow:0 0 0 1px #e08a2b}
 
 /* Personkort */
@@ -287,7 +291,10 @@ function foraeldreLink(p, pid) {
   if (!far && !mor) return "";
   const fn = x => (P.get(x).p.fornavn || navnAf(P.get(x).p).split(" ")[0]);
   const navne = [far, mor].filter(Boolean).map(fn).join(" & ");
-  return `<span class="op-link" data-op="${esc(far || mor)}" data-fra="${esc(pid)}" title="Vis ${esc(p.fornavn || "")}s forældre og familie">⬆ ${esc(navne)}</span>`;
+  const mini = x => { const q = P.get(x).p; const n = navnAf(q);
+    return q.foto ? `<img class="mini" src="${esc(q.foto)}" alt="" title="${esc(n)}">`
+      : `<span class="mini" title="${esc(n)} – billede mangler">${esc(n.split(/\s+/).map(y => y[0]).slice(0, 2).join("").toUpperCase())}<span class="kam">📷</span></span>`; };
+  return `<span class="op-link" data-op="${esc(far || mor)}" data-fra="${esc(pid)}" title="Vis ${esc(p.fornavn || "")}s forældre og familie"><span class="minis">${[far, mor].filter(Boolean).map(mini).join("")}</span>⬆ ${esc(navne)}</span>`;
 }
 function tegnEnhed(pids, besoegt, erBonus, erRod) {
   // En "enhed" = en person (eller et par) + deres børn
