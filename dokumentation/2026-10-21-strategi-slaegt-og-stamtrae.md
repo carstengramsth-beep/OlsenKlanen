@@ -1,4 +1,4 @@
-# Strategi: Slægten, relationer og stamtræ (forslag – afventer Carstens godkendelse)
+# Strategi: Slægten, relationer og stamtræ (godkendt af Carsten 21. okt. 2026)
 
 21\. oktober 2026 · Claude Code på pc-1 sammen med Carsten
 
@@ -14,6 +14,19 @@
 
 Rækkefølge: 5 → 4 → 2+3 → 6 → 7 → 8.
 
+## Slægtsnummer (aftalt)
+- **Agnes og Svend Aage Olsen deler nr. 1** (som par).
+- Personer født efter dem tæller opad efter fødselsdato, ældste først: 2, 3, 4 …
+- Personer født før dem tæller nedad: −1 (født tættest på dem), −2, −3 …
+- Gælder **alle** i slægten: medlemmer, afdøde og ikke-medlemmer. Medlemsnummeret står ved siden af.
+- Nummeret **beregnes automatisk** (rykker, når nye personer kommer til). Relationer bruger altid `pid`, aldrig slægtsnummeret.
+- Vises som **"nr / antal"**, fx "1 / 208".
+- Personer uden kendt fødselsdato lægges sidst.
+
+## Medlemmer, der ikke er i slægt (løses senere)
+Ægtefæller, bonusbørn og "venner af huset". De fleste hænger på træet via en relation (partner til / bonusbarn af).
+Resten markeres som **"tilknyttet"** med henvisning, fx "ven af huset hos nr. 51".
+
 ## Allerede gjort (ufarligt)
 - Sikkerhedskopi af hele `membres` (47 husstande, 132 personer) i scratchpad på pc-1.
 - Hver person i `familiemedlemmer` har fået et fast, usynligt ID i feltet `pid` (fx `p3k9x…`). Intet andet er ændret.
@@ -23,3 +36,10 @@ Rækkefølge: 5 → 4 → 2+3 → 6 → 7 → 8.
 ## Eksempler fra Carsten
 Carsten → far Finn Gram, mor Birthe Haugaard; børn Sanne, Trine, René. Emma og Luna → Sanne og Nano.
 Rasmus er Tinas søn og Renés bonusbarn.
+
+## Status 21. okt. 2026 (trin 5 og 4 lavet)
+- Kartoteket har status-knapper: Alle husstande · Aktive · Afdøde · Udmeldte (liste med født/død/alder/husstand).
+- Hver person kan i Rediger have: Far, Mor, Bonusforælder (2 felter), Ægtefælle/partner — felterne `far_pid`, `mor_pid`, `bonus1_pid`, `bonus2_pid`, `partner_pid`.
+- Kortet viser relationer og udleder Børn/Bonusbørn automatisk. Partner vises begge veje.
+- Nye personer får automatisk `pid`.
+- Rettet gammel fejl: personer med rollen "ægtefælle" (husstand 8) blev ikke vist på kortet.
