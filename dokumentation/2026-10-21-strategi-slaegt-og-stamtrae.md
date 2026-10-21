@@ -81,3 +81,11 @@ Rasmus er Tinas søn og Renés bonusbarn.
 - Administratorer ser "✏️ Ret data" i personkortet i stamtræet: navn, født, status/død, fortælling og billede for personer i Slægten (gemmes i `olsenpost/slaegt_<pid>`). Billeder formindskes til maks. 800 px og lægges i `gamle_billeder/slaegt/`.
 - Kartotekspersoner: knappen sender til Medlemskartoteket.
 - Listen "🕯️ Afdøde" i kartoteket viser også afdøde i Slægten (🌿).
+
+## Afdøde-register (aftalt 21. okt.)
+- Afdøde, der er fælles for flere husstande (fx Carstens forældre, som også er søsterens), skal IKKE på et husstandskort, men i Slægten.
+- Kartoteket → 🕯️ Afdøde: knappen "➕ Opret afdød person (uden medlemskort)" og "✏️ Ret" ved Slægtens afdøde (kun administratorer).
+  Felter som Finns: navn, født, død, far/mor/partner, billede, mindeord, gravsted, foto af gravsted, fortælling. Gemmes i `olsenpost/slaegt_<pid>` (status "afdød"); billeder som data-URL (600/800 px).
+- Listen er sorteret efter fødselsdato (ældste først).
+- Mindelunden viser også Slægtens afdøde ("🌿 Fra Slægten"); alle medlemmer må skrive mindeord om dem.
+- Birthe Haugaard er markeret som afdød (datoer mangler endnu).
