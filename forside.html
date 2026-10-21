@@ -610,9 +610,38 @@ function alderPaa(foedAar, paaAar) {
 }
  
 // Hent alle personer fra alle husstande
+// Bryllupsdage: par med partner_pid + bryllup_dato (sat i Medlemskartoteket)
+let alleBryllupper = [];
+const BRYLLUP_NAVN = { 12.5: "kobberbryllup", 25: "sølvbryllup", 40: "rubinbryllup", 50: "guldbryllup", 60: "diamantbryllup", 65: "jernbryllup", 70: "platinbryllup", 75: "krondiamantbryllup" };
+function byggBryllupper(snap) {
+  const ix = new Map(); const liste = [], set = new Set();
+  snap.forEach(d => (d.data().familiemedlemmer || []).forEach(p => { if (p.pid) ix.set(p.pid, p); }));
+  for (const [pid, p] of ix) {
+    let partner = p.partner_pid && ix.get(p.partner_pid) ? p.partner_pid : null;
+    if (!partner) for (const [x, o] of ix) if (o.partner_pid === pid) { partner = x; break; }
+    if (!partner) continue;
+    const q = ix.get(partner);
+    const dato = p.bryllup_dato || q.bryllup_dato || "";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dato)) continue;
+    const nogle = [pid, partner].sort().join("|");
+    if (set.has(nogle)) continue; set.add(nogle);
+    // Kun par, hvor begge stadig er aktive
+    if ([p, q].some(x => x.status === "afdød" || x.status === "udmeldt")) continue;
+    const fn = x => (x.fornavn || (x.navn || "").trim().split(/\s+/)[0] || "").trim();
+    const [a, m, dd] = dato.split("-").map(Number);
+    liste.push({ navne: `${fn(p)} og ${fn(q)}`, aar: a, maaned: m, dag: dd });
+  }
+  return liste;
+}
+function bryllupTekst(antal) {
+  const n = BRYLLUP_NAVN[antal];
+  return `${antal} års bryllupsdag${n ? " – " + n : ""}`;
+}
+
 async function hentAllePersoner() {
   const personer = [];
   const snap = await getDocs(collection(db, "membres"));
+  try { alleBryllupper = byggBryllupper(snap); } catch(e) { alleBryllupper = []; }
   snap.forEach(docu => {
     const fam = docu.data();
     const hus = docu.id;
@@ -750,6 +779,22 @@ function renderFremhaevede(kommende) {
         <div class="fremh-tekst">${escHtmlF(k.fuldtNavn || k.navn)} fylder ${k.alder} år${stjerne}</div>
         ${kortKnap}${knap}
         <div class="fremh-tag tag-maerk">Mærkedag</div>
+      </div>` });
+  });
+  // Bryllupsdage (fra 3 dage siden til 45 dage frem)
+  alleBryllupper.forEach(b => {
+    let d = new Date(idag0.getFullYear(), b.maaned - 1, b.dag);
+    const fra = new Date(idag0); fra.setDate(fra.getDate() - 3);
+    if (d < fra) d = new Date(idag0.getFullYear() + 1, b.maaned - 1, b.dag);
+    const til = new Date(idag0); til.setDate(til.getDate() + 45);
+    if (d > til || d.getFullYear() <= b.aar) return;
+    const antal = d.getFullYear() - b.aar;
+    const verbum = d < idag0 ? "havde" : "har";
+    raekker.push({ dato: d, html: `
+      <div class="fremh-row">
+        <div class="fremh-dato">${d.getDate()}. ${MAANEDER[d.getMonth()]}</div>
+        <div class="fremh-tekst">💍 ${escHtmlF(b.navne)} ${verbum} ${bryllupTekst(antal)}</div>
+        <div class="fremh-tag tag-maerk">Bryllupsdag</div>
       </div>` });
   });
   // Arrangementer fra databasen (hentes i koerMaerkedage)
@@ -1156,6 +1201,11 @@ let foedselsdagsTekst = "";
       foedselsdagsTekst = idagsFoedselsdage
         .map(f => `🎂 I dag fylder ${f.navn} ${f.alder} år — Hurra og tillykke fra OlsenKlanen!`)
         .join('     ');
+    }
+    const idagsBryllupper = alleBryllupper.filter(b => b.maaned === idag.getMonth() + 1 && b.dag === idag.getDate() && idag.getFullYear() > b.aar);
+    if (idagsBryllupper.length) {
+      const t = idagsBryllupper.map(b => `💍 I dag har ${b.navne} ${bryllupTekst(idag.getFullYear() - b.aar)} — Hurra og tillykke fra OlsenKlanen!`).join('     ');
+      foedselsdagsTekst = foedselsdagsTekst ? foedselsdagsTekst + '     ' + t : t;
     }
  
     // 2) Kommende mærkedage → Fremhævede begivenheder
