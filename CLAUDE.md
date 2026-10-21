@@ -5,6 +5,12 @@
 - Forklar ét trin ad gangen. Undgå tekniske ord (fx GitHub-ord) eller forklar dem kort.
 - Bed ikke brugeren om at gøre ting i GitHub, med mindre det er helt nødvendigt.
 
+# Nye sider — altid genvej til forsiden
+
+- Hver ny side SKAL have en tydelig genvej til forsiden: et link "🏠 Forsiden" øverst på siden
+  OG `<script src="forside-knap.js" defer></script>` (den runde knap nederst til venstre).
+- Ellers skal brugeren starte forfra hver gang. Det er ikke praktisk.
+
 # Filer fra brugeren (referater o.l.) — kontrollér altid ved modtagelsen
 
 - Når brugeren sender en fil, så tjek straks, at filen passer til det, brugeren skriver

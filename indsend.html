@@ -57,10 +57,12 @@ textarea{width:100%;min-height:80px;font-family:inherit;font-size:16px;padding:.
 .filer a{color:var(--gron)}
 .thumbs{display:flex;flex-wrap:wrap;gap:6px;margin:.4rem 0}
 .thumbs img{height:90px;border-radius:4px;border:1px solid var(--border)}
+@media (max-width:600px){ header{padding-top:3.2rem !important} }
 </style>
 </head>
 <body>
-<header>
+<header style="position:relative">
+  <a href="forside.html" class="top-forside" style="position:absolute;left:16px;top:14px;color:#f5e6c8;text-decoration:none;border:1px solid #f5e6c8;padding:6px 12px;border-radius:6px;font-size:14px">🏠 Forsiden</a>
   <h1>📤 Send materiale til OlsenKlanen</h1>
   <p>Billeder, referater, blade og andre gamle papirer</p>
 </header>
