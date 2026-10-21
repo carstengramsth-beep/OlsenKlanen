@@ -77,6 +77,21 @@
     return PERSONER.filter(p => ord.every(o => norm(p.navn).split(/\s+/).some(n => n.startsWith(o)))).slice(0, 6);
   }
 
+  // ── Informationer (infomails/index.json) – anbefal den info, der svarer på spørgsmålet ──
+  let INFOS = null;
+  fetch("infomails/index.json?t=" + Date.now()).then(r => r.json()).then(l => { INFOS = l; }).catch(() => { INFOS = []; });
+  const FYLD = new Set(["ind","ud","op","ned","og","i","på","til","af","en","et","de","det","der","som","med","for","om","at","er","hvordan","hvor","hvad","jeg","man","kan","min","mit","den"]);
+  function findInfos(q) {
+    if (!INFOS) return [];
+    const ord = norm(q).split(/\s+/).filter(o => o.length >= 3 && !FYLD.has(o) && !/^\d+$/.test(o));
+    if (!ord.length) return [];
+    return INFOS.map(m => {
+      const t = norm([m.titel, m.rids, m.gruppe, m.soegeord].join(" "));
+      const point = ord.filter(o => t.includes(o) || (o.length > 4 && t.includes(o.slice(0, -1)))).length;
+      return { m, point };
+    }).filter(x => x.point).sort((a, b) => b.point - a.point || (b.m.nr || 0) - (a.m.nr || 0)).slice(0, 2).map(x => x.m);
+  }
+
   // ── Log af søgninger (så OlsenBanden kan se, hvad folk leder efter) ──
   const logget = new Set();
   function logSoegning(q, antal) {
@@ -92,7 +107,7 @@
   function find(q) {
     q = norm(q).trim();
     if (q.length < 2) return [];
-    const ord = q.split(/\s+/).filter(Boolean);
+    const ord = q.split(/\s+/).filter(o => o && !(typeof FYLD !== "undefined" && FYLD.has(o)));
     const aar = (q.match(/\b(19[6-9]\d|20[0-4]\d)\b/) || [])[1];
     const res = [];
     SIDER.forEach(s => {
@@ -151,12 +166,14 @@
           ${p.afdod ? `<a class="lille" href="mindelunden.html">🕯️ Mindelunden</a>` : ""}</span></div>`).join("");
         html += r.length ? `<div class="hej" style="margin-top:6px">Er det noget andet, du leder efter? Se også:</div>` : `<div class="hej" style="margin-top:6px;color:#5a5a40">Er det noget andet, du leder efter? Skriv et andet ord – eller spørg OlsenBanden i <a href="meddelelser.html" style="display:inline;padding:0;border:0;color:#2d5016;font-weight:bold">OlsenPost</a>.</div>`;
       }
+      const infos = findInfos(q);
+      if (infos.length) html += infos.map(m => `<a href="infoarkiv.html?vis=${encodeURIComponent(m.id)}"><span class="r-ikon">📚</span><span><span class="r-titel">Læs Info nr. ${esc(m.nr)}: ${esc(m.titel)}</span><br><span class="r-tekst">${esc(m.rids || "")} Du kan også få den på mail i OlsenPost → 📚 Informationer.</span></span></a>`).join("");
       html += r.length
         ? r.map(s => `<a href="${esc(s.u)}"><span class="r-ikon">${s.i}</span><span><span class="r-titel">${esc(s.t)}</span><br><span class="r-tekst">${esc(s.d)}</span></span></a>`).join("")
-        : (pers.length ? "" : `<div class="ingen">Ingen sider passer på "${esc(q)}". Prøv et andet ord – eller skriv til OlsenBanden i <a href="meddelelser.html" style="display:inline;padding:0;border:0;color:#2d5016;font-weight:bold">OlsenPost</a>.</div>`);
+        : (pers.length || infos.length ? "" : `<div class="ingen">Ingen sider passer på "${esc(q)}". Prøv et andet ord – eller skriv til OlsenBanden i <a href="meddelelser.html" style="display:inline;padding:0;border:0;color:#2d5016;font-weight:bold">OlsenPost</a>.</div>`);
       ud.innerHTML = html;
       clearTimeout(logTimer);
-      logTimer = setTimeout(() => logSoegning(q, r.length + pers.length), 2500);
+      logTimer = setTimeout(() => logSoegning(q, r.length + pers.length + infos.length), 2500);
     }
     felt.addEventListener("input", vis);
     felt.addEventListener("focus", () => hentPersoner());
