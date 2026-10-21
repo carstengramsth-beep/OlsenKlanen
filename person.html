@@ -167,15 +167,18 @@ function vis(pid) {
         <option value="soeskende">En søster eller bror</option>
         <option value="partner">Ægtefælle / partner</option>
       </select></label>
+      <label>Findes personen allerede?<select id="t-findes"><option value="ny">Nej – opret en ny person</option><option value="findes">Ja – vælg en, der findes i kartoteket/Slægten</option></select></label>
+      <label id="t-vaelg-lbl" style="display:none">Vælg personen<input id="t-vaelg" list="t-alle" placeholder="Skriv navn eller medlemsnr., fx 21-A"></label>
       <label id="t-rolle-lbl">${esc(n.split(" ")[0])} er barnets / forælderen er<select id="t-rolle"><option value="far">far</option><option value="mor">mor</option></select></label>
-      <label>Fornavn *<input id="t-fornavn"></label>
-      <label>Mellemnavn<input id="t-mellemnavn"></label>
-      <label>Efternavn<input id="t-efternavn"></label>
-      <label>Født<input type="date" id="t-foedt"></label>
-      <label>Status<select id="t-status"><option value="afdød">Afdød</option><option value="">Lever / ukendt</option></select></label>
-      <label>Død<input type="date" id="t-doed"></label>
+      <label class="ny-felt">Fornavn *<input id="t-fornavn"></label>
+      <label class="ny-felt">Mellemnavn<input id="t-mellemnavn"></label>
+      <label class="ny-felt">Efternavn<input id="t-efternavn"></label>
+      <label class="ny-felt">Født<input type="date" id="t-foedt"></label>
+      <label class="ny-felt">Status<select id="t-status"><option value="afdød">Afdød</option><option value="">Lever / ukendt</option></select></label>
+      <label class="ny-felt">Død<input type="date" id="t-doed"></label>
     </div>
-    <label class="hel">📖 Fortælling (det, du ved)<textarea id="t-fortaelling" rows="3"></textarea></label>
+    <datalist id="t-alle">${[...P.keys()].filter(x => x !== pid).map(x => `<option value="${esc(etiket(x))}"></option>`).join("")}</datalist>
+    <label class="hel ny-felt">📖 Fortælling (det, du ved)<textarea id="t-fortaelling" rows="3"></textarea></label>
     <div class="knapper"><button class="btn gron" id="t-gem">💾 Opret</button><button class="btn" id="t-luk">Annullér</button><span id="t-status-tekst" style="font-size:14px;align-self:center"></span></div>
     <div style="font-size:13px;color:var(--tekst-lys);margin-top:.5rem">Personen oprettes i Slægten og kobles på med det samme. Billede, mindeord og gravsted kan tilføjes bagefter med "✏️ Ret data" på det nye personkort.</div>
   </div>
@@ -207,10 +210,49 @@ function vis(pid) {
     const opdRolle = () => { const t = $("t-type").value; $("t-rolle-lbl").style.display = (t === "barn" || t === "foraelder") ? "" : "none";
       $("t-rolle-lbl").firstChild.textContent = t === "barn" ? n.split(" ")[0] + " er barnets " : "Den nye er " + n.split(" ")[0] + "s "; };
     $("t-type").onchange = opdRolle; opdRolle();
-    $("t-gem").onclick = () => opret(pid);
+    const opdFindes = () => { const f = $("t-findes").value === "findes";
+      $("t-vaelg-lbl").style.display = f ? "" : "none";
+      document.querySelectorAll("#tilfoej-kort .ny-felt").forEach(e => e.style.display = f ? "none" : "");
+      $("t-gem").textContent = f ? "🔗 Knyt sammen" : "💾 Opret"; };
+    $("t-findes").onchange = opdFindes; opdFindes();
+    $("t-gem").onclick = () => $("t-findes").value === "findes" ? knyt(pid) : opret(pid);
   }
 }
 
+function etiket(x) { const r = P.get(x); const nr = personNr(r); const f = (r.p.foedselsdato || "").slice(0, 4); return `${nr ? nr : "Slægten"} · ${navnAf(r.p)}${f ? " (f. " + f + ")" : ""}`; }
+function findEtiket(t) {
+  t = String(t || "").trim().toLowerCase(); if (!t) return null;
+  const alle = [...P.keys()];
+  const e = alle.find(x => etiket(x).toLowerCase() === t); if (e) return e;
+  const nr = alle.filter(x => etiket(x).toLowerCase().startsWith(t + " ·")); if (nr.length === 1) return nr[0];
+  const n = alle.filter(x => etiket(x).toLowerCase().includes(t)); return n.length === 1 ? n[0] : null;
+}
+// Knyt en person, der allerede findes, til denne person
+async function knyt(pid) {
+  const st = $("t-status-tekst");
+  const anden = findEtiket($("t-vaelg").value);
+  if (!anden) { st.textContent = "Personen blev ikke fundet – vælg fra listen."; return; }
+  if (anden === pid) { st.textContent = "Det er den samme person."; return; }
+  const type = $("t-type").value, rolle = $("t-rolle").value, cur = P.get(pid).p, oth = P.get(anden).p;
+  const fn = x => navnAf(x).split(" ")[0];
+  $("t-gem").disabled = true; st.textContent = "Gemmer …";
+  try {
+    if (type === "barn") await saetFelter(anden, { [rolle === "far" ? "far_pid" : "mor_pid"]: pid });
+    else if (type === "foraelder") await saetFelter(pid, { [rolle === "far" ? "far_pid" : "mor_pid"]: anden });
+    else if (type === "partner") await saetFelter(pid, { partner_pid: anden });
+    else if (type === "soeskende") {
+      // Søskende = samme forældre. Den, der har forældre, giver dem til den anden.
+      if (cur.far_pid || cur.mor_pid) {
+        const f = {}; if (cur.far_pid && !oth.far_pid) f.far_pid = cur.far_pid; if (cur.mor_pid && !oth.mor_pid) f.mor_pid = cur.mor_pid;
+        if (Object.keys(f).length) await saetFelter(anden, f);
+      } else if (oth.far_pid || oth.mor_pid) {
+        const f = {}; if (oth.far_pid) f.far_pid = oth.far_pid; if (oth.mor_pid) f.mor_pid = oth.mor_pid;
+        await saetFelter(pid, f);
+      } else { st.textContent = `Hverken ${fn(cur)} eller ${fn(oth)} har forældre registreret. Tilføj forældrene først – så bliver de søskende automatisk.`; $("t-gem").disabled = false; return; }
+    }
+    vis(pid);
+  } catch(e) { st.textContent = "Kunne ikke gemme: " + (e.message || e); $("t-gem").disabled = false; }
+}
 function nyPid() { let id; do { id = "p" + Math.random().toString(36).slice(2, 11).padEnd(9, "0"); } while (P.has(id)); return id; }
 
 // Sæt et felt på en eksisterende person (kartotek eller Slægten)
