@@ -49,7 +49,7 @@ fetch("infomails/index.json?t=" + Date.now()).then(r => r.json()).then(l => {
   liste.forEach(m => (grupper[m.gruppe || "Infomails"] = grupper[m.gruppe || "Infomails"] || []).push(m));
   document.getElementById("liste").innerHTML = Object.keys(grupper).map(g =>
     `<h2>${esc(g)}</h2>` + grupper[g].map(m =>
-      `<button class="mail-knap" data-id="${esc(m.id)}"><div class="dato"><b>Info nr. ${esc(m.nr)}</b> · ${esc(dato(m.dato))}</div><div class="titel">${esc(m.titel)}</div></button><div class="visning" id="vis-${esc(m.id)}" style="display:none"></div>`
+      `<button class="mail-knap" data-id="${esc(m.id)}"><div class="dato"><b>Info nr. ${esc(m.nr)}</b> · ${esc(dato(m.dato))}</div><div class="titel">${esc(m.titel)}</div>${m.rids ? `<div style="font-size:14px;color:#444;margin-top:2px;">${esc(m.rids)}</div>` : ""}</button><div class="visning" id="vis-${esc(m.id)}" style="display:none"></div>`
     ).join("")).join("") || "Der er ingen infomails endnu.";
   // Åbn direkte fra et link: infoarkiv.html?vis=<id>
   const vis = new URLSearchParams(location.search).get("vis");

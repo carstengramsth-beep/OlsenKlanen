@@ -34,3 +34,4 @@ Noter til senere: evt. nævne søgefeltet på forsiden og Mærkedage (bryllupsda
 
 **Klar som infomail:** `infomails/familietrae.json` (ikke i `infomails/index.json` endnu, så den vises ikke i Infoarkivet).
 Når Carsten siger "send": tilføj den i `infomails/index.json` som nr. 5 med dagens dato, gruppe "Nyt fra OlsenKlanen" – derefter OlsenPost → 📚 Informationer → send prøve → send til alle.
+Rids til index.json: "Familietræet på olsenklanen.dk er under udvikling: sådan finder du dit eget træ, hvad de røde prikker betyder, og hvordan du foreslår rettelser."
