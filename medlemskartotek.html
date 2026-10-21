@@ -760,6 +760,8 @@ function relationerHtml(p, ix) {
   if (bd && partner && relLink(ix, partner)) {
     const aar = aarSiden(bd);
     dele.push(`<span style="white-space:nowrap">⚭ Gift med ${relLink(ix, partner)} ${formatDato(bd)}${aar > 0 ? ' (' + aar + ' år)' : ''}</span>`);
+    const bb = p.bryllup_besked || (ix.get(partner) ? ix.get(partner).p.bryllup_besked : '');
+    if (bb) dele.push(`<span>💬 ${escH(bb)}</span>`);
   } else en('Partner', partner);
   const boern = [], bonus = [];
   for (const [pid, r] of ix) {
@@ -1097,6 +1099,8 @@ const BEGI_MED_UDDANNELSE = { student: 'Uddannelse og skole, fx STX fra Køge Gy
   'udlært': 'Fag og sted, fx tømrer hos Hansen Byg', eksamen: 'Uddannelse, fx cand.jur. fra Københavns Universitet',
   nyt_job: 'Stilling og arbejdsplads, fx sygeplejerske på Rigshospitalet' };
  
+// Bryllupsdage skrives nu som fast bryllupsdato ved partneren – systemet finder selv sølv/guld osv.
+const BRYLLUPS_TYPER = ['bryllupsdag', 'sølvbryllup', 'guldbryllup', 'diamantbryllup'];
 function begiLabel(type) { return BEGI_TYPE[type] || type; }
  
 // Sammenlign medlemsnumre uafhængigt af om de er tal eller tekst (46 vs "46")
@@ -1845,6 +1849,9 @@ function renderPersonEdit() {
           <label style="font-size:11.5px;color:var(--tekst-lys)">⚭ Bryllupsdato (med partneren)
             <input type="date" data-pi="${i}" data-felt="bryllup_dato" value="${escH(p.bryllup_dato || '')}" style="width:100%;border:1px solid var(--border);padding:.3rem .5rem;font-size:12.5px;font-family:'Source Sans 3',sans-serif;background:var(--hvid);border-radius:3px">
           </label>
+          <label style="font-size:11.5px;color:var(--tekst-lys);grid-column:1/-1">💬 Besked om bryllupsdagen (frivillig – vises på forsiden op til dagen)
+            <input type="text" data-pi="${i}" data-felt="bryllup_besked" value="${escH(p.bryllup_besked || '')}" placeholder="Fx: Morgenkaffe kl. 10 – alle er velkomne" style="width:100%;border:1px solid var(--border);padding:.3rem .5rem;font-size:12.5px;font-family:'Source Sans 3',sans-serif;background:var(--hvid);border-radius:3px">
+          </label>
         </div>
       </div>
       <div class="person-foto-sektion" style="margin-top:.5rem;padding-top:.5rem;border-top:1px dashed var(--border);display:flex;align-items:center;gap:10px">
@@ -1929,7 +1936,7 @@ function renderBegiEdit() {
   el.innerHTML = begiListe.map((b, i) => `
     <div class="begi-edit-rad">
       <select data-bi="${i}" data-felt="type">
-        ${Object.entries(BEGI_TYPE).map(([v,l]) =>
+        ${Object.entries(BEGI_TYPE).filter(([v]) => !BRYLLUPS_TYPER.includes(v) || b.type === v).map(([v,l]) =>
           `<option value="${v}" ${b.type===v?'selected':''}>${l}</option>`).join('')}
       </select>
       <input data-bi="${i}" data-felt="beskrivelse" placeholder="${BEGI_MED_UDDANNELSE[b.type] ? 'Hvem? fx Mille' : 'Kort beskrivelse'}" value="${b.beskrivelse||''}">
