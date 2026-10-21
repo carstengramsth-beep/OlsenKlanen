@@ -8,3 +8,5 @@
 - Navne: søgningen henter personer fra kartoteket og Slægten (REST) og svarer "👋 Hej <navn> – du søger efter Karin. Vi fandt: …" med links til medlemskort (`medlemskartotek.html?soeg=<fornavn>`), stamtræ og evt. Mindelunden.
 - **Log:** hver søgning (≥3 tegn, efter 2,5 sek. pause) gemmes i `olsenpost` med `type: "soegning"`, `soegt`, `antal` (resultater), `nr`, `navn`, `tid`.
   Når Carsten skriver "Tjek søgninger": hent dem via REST, vis især dem med `antal: "0"`, og foreslå nye søgeord i `soeg.js`.
+- **Dagligt tjek (planlagt opgave, kl. 7.49 dansk tid):** Claude på pc-1 henter søgningerne fra det seneste døgn og sender Carsten (8-B) en kort besked i OlsenPost (afsender "Claude (dagligt tjek)"). Ingen søgninger = ingen besked. Der rettes intet på siden uden Carstens OK.
+- Idé til senere: en rigtig "Spørg OlsenKlanen"-chatrobot (Claude via Firebase Functions). Afventer, om der kommer nok spørgsmål.
