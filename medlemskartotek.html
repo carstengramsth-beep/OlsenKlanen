@@ -831,6 +831,13 @@ function relationerHtml(p, ix) {
     else if (r.p.bonus1_pid === p.pid || r.p.bonus2_pid === p.pid) bonus.push(pid);
   }
   const sorter = arr => arr.sort((a, b) => String(ix.get(a).p.foedselsdato || '9').localeCompare(String(ix.get(b).p.foedselsdato || '9')));
+  // Søskende: samme far eller mor
+  const soesk = [];
+  for (const [pid, r] of ix) {
+    if (pid === p.pid) continue;
+    if ((p.far_pid && r.p.far_pid === p.far_pid) || (p.mor_pid && r.p.mor_pid === p.mor_pid)) soesk.push(pid);
+  }
+  if (soesk.length) dele.push(`<span>Søskende: ${sorter(soesk).map(b => relLink(ix, b)).join(', ')}</span>`);
   if (boern.length) dele.push(`<span>Børn: ${sorter(boern).map(b => relLink(ix, b)).join(', ')}</span>`);
   if (bonus.length) dele.push(`<span>Bonusbørn: ${sorter(bonus).map(b => relLink(ix, b)).join(', ')}</span>`);
   if (!dele.length) return '';

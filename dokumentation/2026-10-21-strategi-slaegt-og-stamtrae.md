@@ -89,3 +89,4 @@ Rasmus er Tinas søn og Renés bonusbarn.
 - Listen er sorteret efter fødselsdato (ældste først).
 - Mindelunden viser også Slægtens afdøde ("🌿 Fra Slægten"); alle medlemmer må skrive mindeord om dem.
 - Birthe Haugaard er markeret som afdød (datoer mangler endnu).
+- Søskende vises automatisk (samme far eller mor) på kartotekskort og i stamtræets personkort. Søskende til en afdød (fx farbror Valter til Svend Aage) kobles ved at give dem samme forældre (forældrene oprettes som afdøde i Slægten).
