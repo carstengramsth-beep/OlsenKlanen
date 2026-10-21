@@ -59,4 +59,4 @@ Rasmus er Tinas søn og Renés bonusbarn.
 - Oprettet: Gydda, Birthe Haugaard (Carstens mor, partner Finn Gram) og Inger – alle børn af Svend Aage og Agnes. Datoer mangler.
 - Kartoteket læser Slægten: personerne kan vælges i relationsfelterne ("Slægten · …"), vises med 🌿 og tæller med i svæver-beregningen.
 - Relationer lagt ind (Carstens oplysninger): Svend Aage ⚭ Agnes; Lise, Ib, Christian = børn af Svend Aage og Agnes; Carsten: mor Birthe; René+Tina: Asta-Elisabeth og Carl-Kristian; René: Thera.
-- Agnes og Svend Aage fik 7 børn: Gydda, Birthe, Lise, Ib, Christian, Inger + én ukendt (Egon?).
+- Agnes og Svend Aage fik 7 børn: Gydda, Birthe, Lise, Ib, Christian, Inger og Egon (bekræftet af Carsten – alle 7 er nu koblet på).
