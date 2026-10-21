@@ -45,6 +45,18 @@ main{max-width:900px;margin:0 auto;padding:1.2rem 1rem}
 .chip img,.chip .ini{width:26px;height:26px;border-radius:50%;object-fit:cover;background:var(--gron-pale);color:var(--gron);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .chip .prik{width:8px;height:8px;border-radius:50%;background:var(--roed)}
 .tom{color:var(--tekst-lys);font-size:14px;font-style:italic}
+.rel-rad{display:grid;grid-template-columns:170px 1fr auto;gap:.6rem;align-items:center;padding:.55rem 0;border-bottom:1px solid #eee5cc}
+.rel-titel{font-weight:600;color:var(--gron)}
+.rel-under{font-weight:400;font-size:13px;color:var(--tekst-lys)}
+.rel-knapper{display:flex;gap:.3rem;flex-wrap:wrap;justify-content:flex-end}
+.btn.lille{padding:.3rem .7rem;font-size:13px}
+.rel-editor{margin-top:.8rem;background:var(--guld-pale);border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem}
+.forslag-boks{background:#eef6e6;border:1px solid var(--gron-pale);border-radius:10px;padding:.6rem .9rem;margin-bottom:.6rem}
+.forslag{margin:.3rem 0;font-size:15px}
+.hjaelp{font-size:13px;color:var(--tekst-lys);margin-bottom:.5rem}
+.flere{margin-top:.5rem}.flere summary{cursor:pointer;color:var(--tekst-lys);font-size:14px;padding:.3rem 0}
+h3.sek{font-size:14px;color:var(--tekst-lys);margin:.8rem 0 .2rem;font-weight:600}
+@media (max-width:640px){.rel-rad{grid-template-columns:1fr}.rel-knapper{justify-content:flex-start}}
 .form-gitter{display:grid;grid-template-columns:1fr 1fr;gap:.5rem .8rem}
 .form-gitter label,.hel{display:block;font-size:13px;color:var(--tekst-lys)}
 .hel{margin-top:.5rem}
@@ -120,18 +132,43 @@ function gen(titel, pids) {
   return `<div class="gen"><div class="gen-titel">${titel}</div>${pids.length ? `<div class="chips">${pids.map(chip).join("")}</div>` : '<div class="tom">Ingen registreret endnu</div>'}</div>`;
 }
 
-function vis(pid) {
+// Hvem må rette? Administratorer – og medlemmer for personer i deres egen husstand
+const MIT_HUS = hent("ok_nr").split("-")[0];
+function kanRette(pid) { const r = P.get(pid); if (!r) return false; return ER_ADMIN || (r.kilde === "kartotek" && MIT_HUS && r.nr === MIT_HUS); }
+const fornavn = pid => navnAf(P.get(pid).p).split(" ")[0];
+const VOKSEN = new Set(["forælder", "ægtefælle", "ægtefælle / partner", "partner", "samlever"]);
+
+function relRad(titel, pids, knapper) {
+  return `<div class="rel-rad"><div class="rel-titel">${titel}</div><div class="rel-indhold">${pids.length ? `<div class="chips">${pids.map(chip).join("")}</div>` : '<span class="tom">Ikke valgt</span>'}</div><div class="rel-knapper">${knapper}</div></div>`;
+}
+
+function vis(pid, aabenRel) {
   const r = P.get(pid);
   if (!r) { $("main").innerHTML = '<div class="kort">Personen blev ikke fundet. <a href="stamtrae.html">Gå til stamtræet</a></div>'; return; }
-  const p = r.p, n = navnAf(p);
+  const p = r.p, n = navnAf(p), fn = n.split(" ")[0], ret = kanRette(pid);
   document.title = n + " – Personkort";
   const far = foraeldre(pid);
   const bedste = unik(far.flatMap(foraeldre));
   const olde = unik(bedste.flatMap(foraeldre));
   const b = boern(pid), bb = unik(b.flatMap(boern)), obb = unik(bb.flatMap(boern));
   const pa = partner(pid), mgl = manglerFor(p);
+  const pp = pa ? P.get(pa).p : null;
+  const bryllup = p.bryllup_dato || (pp && pp.bryllup_dato) || "";
+  const ptype = p.partner_type || (pp && pp.partner_pid === pid && pp.partner_type) || (bryllup ? "gift" : "");
   const alder = (() => { if (!p.foedselsdato) return ""; const f = new Date(p.foedselsdato), t = p.status === "afdød" ? new Date(p.status_dato || "") : new Date(); if (isNaN(t)) return ""; let a = t.getFullYear() - f.getFullYear(); if (t.getMonth() < f.getMonth() || (t.getMonth() === f.getMonth() && t.getDate() < f.getDate())) a--; return a; })();
   const retUrl = r.kilde === "kartotek" ? "medlemskartotek.html?rediger=" + encodeURIComponent(r.nr) : "medlemskartotek.html?ret_afdod=" + encodeURIComponent(pid);
+  const k = (txt, data, kl) => ret ? `<button class="btn lille ${kl || ""}" ${data}>${txt}</button>` : "";
+
+  // Forslag ud fra husstanden
+  const forslag = [];
+  if (ret && r.kilde === "kartotek") {
+    const hus = [...P.keys()].filter(x => x !== pid && P.get(x).kilde === "kartotek" && P.get(x).nr === r.nr && P.get(x).p.status !== "udmeldt");
+    const erVoksen = VOKSEN.has(String(p.rolle || "").toLowerCase());
+    const andreVoksne = hus.filter(x => VOKSEN.has(String(P.get(x).p.rolle || "").toLowerCase()) && !partner(x));
+    if (erVoksen && !pa && andreVoksne.length === 1) forslag.push(`<div class="forslag">💑 Er <b>${esc(fn)}</b> og <b>${esc(fornavn(andreVoksne[0]))}</b> et par? <button class="btn lille gron" data-forslag-par="${andreVoksne[0]}">Ja</button></div>`);
+    const boernUden = hus.filter(x => String(P.get(x).p.rolle || "").toLowerCase() === "barn" && !P.get(x).p.far_pid && !P.get(x).p.mor_pid);
+    if (erVoksen && boernUden.length) forslag.push(`<div class="forslag">👶 Er <b>${esc(fn)}</b> forælder til ${boernUden.map(x => "<b>" + esc(fornavn(x)) + "</b>").join(", ")}? <button class="btn lille gron" data-forslag-boern="far">Ja – far</button> <button class="btn lille gron" data-forslag-boern="mor">Ja – mor</button></div>`);
+  }
 
   $("main").innerHTML = `
   <div class="kort">
@@ -142,14 +179,12 @@ function vis(pid) {
         ${p.foedselsdato ? `<div class="linje">🎂 Født ${dato(p.foedselsdato)}</div>` : ""}
         ${p.status === "afdød" ? `<div class="linje">🕯️ Død ${dato(p.status_dato) || "(dato mangler)"}${alder !== "" ? ` · ${alder} år` : ""}</div>` : (alder !== "" ? `<div class="linje">${alder} år</div>` : "")}
         <div class="linje">${r.kilde === "kartotek" ? `📇 Medlemsnr. ${esc(personNr(r))} · ${esc(r.husNavn)}` : "🌿 I Slægten (ikke på et medlemskort)"}</div>
-        ${p.bryllup_dato && pa ? `<div class="linje">⚭ Gift ${dato(p.bryllup_dato)}</div>` : ""}
         ${p.bekraeftet && p.bekraeftet.navn ? `<div class="ok">✅ Data bekræftet af ${esc(p.bekraeftet.navn)} (${dato(p.bekraeftet.dato)})</div>` : ""}
         ${mgl.length ? `<div class="mangler">🔴 Mangler: ${esc(mgl.join(", "))}</div>` : ""}
         <div class="knapper">
-          ${ER_ADMIN || r.kilde === "kartotek" ? `<a class="btn gron" href="${retUrl}">✏️ Ret data</a>` : ""}
+          ${ER_ADMIN || ret ? `<a class="btn" href="${retUrl}">✏️ Ret data</a>` : ""}
           <a class="btn" href="stamtrae.html?top=${encodeURIComponent(pid)}">🌳 Vis i stamtræet</a>
           ${p.status === "afdød" ? `<a class="btn" href="mindelunden.html">🕯️ Mindelunden</a>` : ""}
-          ${ER_ADMIN ? `<button class="btn" id="vis-tilfoej">➕ Tilføj slægtning</button>` : ""}
         </div>
       </div>
     </div>
@@ -158,65 +193,164 @@ function vis(pid) {
     ${p.gravsted || p.grav_foto ? `<div class="felt-titel">🪦 Gravsted</div><div>${esc(p.gravsted || "")}${p.gravsted_note ? " – " + esc(p.gravsted_note) : ""}</div>${p.grav_foto ? `<img class="grav-foto" src="${esc(p.grav_foto)}" alt="Gravsted">` : ""}` : ""}
   </div>
 
-  <div class="kort" id="tilfoej-kort" style="display:none">
-    <h2>➕ Tilføj en slægtning til ${esc(n)}</h2>
-    <div class="form-gitter">
-      <label>Hvem er det?<select id="t-type">
-        <option value="barn">Et barn af ${esc(n.split(" ")[0])}</option>
-        <option value="foraelder">En forælder til ${esc(n.split(" ")[0])}</option>
-        <option value="soeskende">En søster eller bror</option>
-        <option value="partner">Ægtefælle / partner</option>
-      </select></label>
-      <label>Findes personen allerede?<select id="t-findes"><option value="ny">Nej – opret en ny person</option><option value="findes">Ja – vælg en, der findes i kartoteket/Slægten</option></select></label>
-      <label id="t-vaelg-lbl" style="display:none">Vælg personen<input id="t-vaelg" list="t-alle" placeholder="Skriv navn eller medlemsnr., fx 21-A"></label>
-      <label id="t-rolle-lbl">${esc(n.split(" ")[0])} er barnets / forælderen er<select id="t-rolle"><option value="far">far</option><option value="mor">mor</option></select></label>
-      <label class="ny-felt">Fornavn *<input id="t-fornavn"></label>
-      <label class="ny-felt">Mellemnavn<input id="t-mellemnavn"></label>
-      <label class="ny-felt">Efternavn<input id="t-efternavn"></label>
-      <label class="ny-felt">Født<input type="date" id="t-foedt"></label>
-      <label class="ny-felt">Status<select id="t-status"><option value="afdød">Afdød</option><option value="">Lever / ukendt</option></select></label>
-      <label class="ny-felt">Død<input type="date" id="t-doed"></label>
-    </div>
-    <datalist id="t-alle">${[...P.keys()].filter(x => x !== pid).map(x => `<option value="${esc(etiket(x))}"></option>`).join("")}</datalist>
-    <label class="hel ny-felt">📖 Fortælling (det, du ved)<textarea id="t-fortaelling" rows="3"></textarea></label>
-    <div class="knapper"><button class="btn gron" id="t-gem">💾 Opret</button><button class="btn" id="t-luk">Annullér</button><span id="t-status-tekst" style="font-size:14px;align-self:center"></span></div>
-    <div style="font-size:13px;color:var(--tekst-lys);margin-top:.5rem">Personen oprettes i Slægten og kobles på med det samme. Billede, mindeord og gravsted kan tilføjes bagefter med "✏️ Ret data" på det nye personkort.</div>
+  <div class="kort" id="relationer">
+    <h2>🔗 ${esc(fn)}s relationer</h2>
+    ${ret ? '<div class="hjaelp">Her vælger du de nærmeste relationer. Børnebørn, bedsteforældre osv. findes automatisk.</div>' : ""}
+    ${forslag.length ? `<div class="forslag-boks"><div class="gen-titel">💡 Forslag</div>${forslag.join("")}</div>` : ""}
+    ${relRad("Far", p.far_pid && P.has(p.far_pid) ? [p.far_pid] : [], (p.far_pid ? k("Skift", 'data-rel="far"') + k("✕", 'data-fjern="far"') : k("➕ Vælg far", 'data-rel="far"', "gron")))}
+    ${relRad("Mor", p.mor_pid && P.has(p.mor_pid) ? [p.mor_pid] : [], (p.mor_pid ? k("Skift", 'data-rel="mor"') + k("✕", 'data-fjern="mor"') : k("➕ Vælg mor", 'data-rel="mor"', "gron")))}
+    ${relRad(`Ægtefælle / partner${pa ? `<div class="rel-under">${ptype === "gift" ? "⚭ Gift" + (bryllup ? " " + dato(bryllup) : ' – <span style="color:var(--roed)">bryllupsdato mangler</span>') : (ptype === "samlever" ? "Samlevende" : (ptype === "kaereste" ? "Kærester" : ""))}</div>` : ""}`, pa ? [pa] : [], (pa ? k("Ret", 'data-rel="partner"') + k("✕", 'data-fjern="partner"') : k("➕ Vælg ægtefælle / partner", 'data-rel="partner"', "gron")))}
+    ${relRad("Børn", sorterAlder(b), k("➕ Tilføj barn", 'data-rel="barn"', "gron"))}
+    ${relRad("Søskende", sorterAlder(soeskende(pid)), k("➕ Tilføj søster/bror", 'data-rel="soeskende"', "gron"))}
+    <details class="flere"><summary>Flere relationer (bonusforældre / bonusbørn)</summary>
+      ${relRad("Bonusforældre", bonusForaeldre(pid), (bonusForaeldre(pid).length < 2 ? k("➕ Tilføj bonusforælder", 'data-rel="bonus"') : "") + (bonusForaeldre(pid).length ? k("✕ Fjern", 'data-fjern="bonus"') : ""))}
+      ${relRad("Bonusbørn", bonusBoern(pid), "")}
+    </details>
+    <div id="rel-editor" class="rel-editor" style="display:none"></div>
   </div>
 
   <div class="kort">
-    <h2>⬆️ Op i slægten</h2>
+    <h2>👪 ${esc(fn)}s nærmeste familie</h2>
+    <h3 class="sek">⬆️ Op i slægten</h3>
     ${gen("Forældre", far)}
-    ${bonusForaeldre(pid).length ? gen("Bonusforældre", bonusForaeldre(pid)) : ""}
     ${gen("Bedsteforældre", bedste)}
     ${olde.length ? gen("Oldeforældre", olde) : ""}
-  </div>
-  <div class="kort">
-    <h2>↔️ Ved siden af</h2>
+    <h3 class="sek">↔️ Ved siden af</h3>
     ${gen("Ægtefælle / partner", pa ? [pa] : [])}
     ${gen("Søskende", soeskende(pid))}
-  </div>
-  <div class="kort">
-    <h2>⬇️ Ned i slægten</h2>
+    <h3 class="sek">⬇️ Ned i slægten</h3>
     ${gen("Børn", b)}
-    ${bonusBoern(pid).length ? gen("Bonusbørn", bonusBoern(pid)) : ""}
     ${gen("Børnebørn", bb)}
     ${obb.length ? gen("Oldebørn", obb) : ""}
-  </div>`;
+  </div>
+  <datalist id="alle-pers">${[...P.keys()].filter(x => x !== pid).sort((a, c) => etiket(a).localeCompare(etiket(c), "da", { numeric: true })).map(x => `<option value="${esc(etiket(x))}"></option>`).join("")}</datalist>`;
 
-  const tk = $("vis-tilfoej");
-  if (tk) tk.onclick = () => { $("tilfoej-kort").style.display = "block"; $("tilfoej-kort").scrollIntoView({ behavior: "smooth" }); };
-  if ($("t-luk")) {
-    $("t-luk").onclick = () => $("tilfoej-kort").style.display = "none";
-    const opdRolle = () => { const t = $("t-type").value; $("t-rolle-lbl").style.display = (t === "barn" || t === "foraelder") ? "" : "none";
-      $("t-rolle-lbl").firstChild.textContent = t === "barn" ? n.split(" ")[0] + " er barnets " : "Den nye er " + n.split(" ")[0] + "s "; };
-    $("t-type").onchange = opdRolle; opdRolle();
-    const opdFindes = () => { const f = $("t-findes").value === "findes";
-      $("t-vaelg-lbl").style.display = f ? "" : "none";
-      document.querySelectorAll("#tilfoej-kort .ny-felt").forEach(e => e.style.display = f ? "none" : "");
-      $("t-gem").textContent = f ? "🔗 Knyt sammen" : "💾 Opret"; };
-    $("t-findes").onchange = opdFindes; opdFindes();
-    $("t-gem").onclick = () => $("t-findes").value === "findes" ? knyt(pid) : opret(pid);
+  $("relationer").addEventListener("click", e => {
+    const rl = e.target.closest("[data-rel]"); if (rl) return aabnEditor(pid, rl.dataset.rel);
+    const fj = e.target.closest("[data-fjern]"); if (fj) return fjern(pid, fj.dataset.fjern);
+    const fp = e.target.closest("[data-forslag-par]"); if (fp) return aabnEditor(pid, "partner", fp.dataset.forslagPar);
+    const fb = e.target.closest("[data-forslag-boern]"); if (fb) return forslagBoern(pid, fb.dataset.forslagBoern);
+  });
+  if (aabenRel) $("relationer").scrollIntoView({ behavior: "smooth" });
+}
+
+// ── Editor til én relation ──
+const REL_TITEL = { far: "far", mor: "mor", partner: "ægtefælle / partner", barn: "barn", soeskende: "søster eller bror", bonus: "bonusforælder" };
+function aabnEditor(pid, type, forvalgt) {
+  const ed = $("rel-editor"), fn = fornavn(pid), cur = P.get(pid).p;
+  const pa = partner(pid), pp = pa ? P.get(pa).p : null;
+  const harNu = type === "far" ? cur.far_pid : type === "mor" ? cur.mor_pid : type === "partner" ? pa : "";
+  const forPid = forvalgt || harNu || "";
+  ed.style.display = "block";
+  ed.innerHTML = `
+    <div class="gen-titel">${type === "barn" ? "➕ Tilføj et barn til " + esc(fn) : type === "soeskende" ? "➕ Tilføj en søster eller bror til " + esc(fn) : "Vælg " + esc(fn) + "s " + REL_TITEL[type]}</div>
+    <div class="form-gitter">
+      <label>Findes personen allerede?<select id="e-findes"><option value="findes">Ja – vælg fra kartoteket/Slægten</option><option value="ny">Nej – opret en ny person</option></select></label>
+      <label class="e-findes">Vælg personen<input id="e-vaelg" list="alle-pers" placeholder="Skriv navn eller medlemsnr., fx 22-B" value="${forPid ? esc(etiket(forPid)) : ""}"></label>
+      ${type === "barn" ? `<label>${esc(fn)} er barnets<select id="e-rolle"><option value="far">far</option><option value="mor">mor</option></select></label>` : ""}
+      ${type === "partner" ? `<label>Forhold<select id="e-ptype"><option value="gift">Gift</option><option value="samlever">Samlevende</option><option value="kaereste">Kærester</option></select></label>
+        <label id="e-bryllup-lbl">⚭ Bryllupsdato *<input type="date" id="e-bryllup" value="${esc(cur.bryllup_dato || (pp && pp.bryllup_dato) || "")}"></label>
+        <label id="e-besked-lbl" style="grid-column:1/-1">💬 Besked om bryllupsdagen (frivillig – vises på forsiden op til dagen)<input id="e-besked" placeholder="Fx: Morgenkaffe kl. 10 – alle er velkomne" value="${esc(cur.bryllup_besked || (pp && pp.bryllup_besked) || "")}"></label>` : ""}
+      <label class="e-ny">Fornavn *<input id="e-fornavn"></label>
+      <label class="e-ny">Mellemnavn<input id="e-mellemnavn"></label>
+      <label class="e-ny">Efternavn<input id="e-efternavn"></label>
+      <label class="e-ny">Født<input type="date" id="e-foedt"></label>
+      <label class="e-ny">Status<select id="e-status"><option value="">Lever / ukendt</option><option value="afdød">Afdød</option></select></label>
+      <label class="e-ny">Død<input type="date" id="e-doed"></label>
+    </div>
+    <div class="knapper"><button class="btn gron" id="e-gem">💾 Gem</button><button class="btn" id="e-luk">Annullér</button><span id="e-st" style="font-size:14px;align-self:center"></span></div>
+    <div class="hjaelp e-ny">En ny person oprettes i Slægten (ikke som medlem). Skal personen være medlem, så opret medlemmet i kartoteket først.</div>`;
+  const opd = () => { const ny = $("e-findes").value === "ny";
+    ed.querySelectorAll(".e-ny").forEach(x => x.style.display = ny ? "" : "none");
+    ed.querySelectorAll(".e-findes").forEach(x => x.style.display = ny ? "none" : ""); };
+  $("e-findes").onchange = opd; opd();
+  if (type === "partner") {
+    const pt = cur.partner_type || (pp && pp.partner_type) || ((cur.bryllup_dato || (pp && pp.bryllup_dato)) ? "gift" : "gift");
+    $("e-ptype").value = pt;
+    const opdB = () => { const g = $("e-ptype").value === "gift"; $("e-bryllup-lbl").style.display = g ? "" : "none"; $("e-besked-lbl").style.display = g ? "" : "none"; };
+    $("e-ptype").onchange = opdB; opdB();
   }
+  $("e-luk").onclick = () => { ed.style.display = "none"; };
+  $("e-gem").onclick = () => gemRelation(pid, type);
+  ed.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+async function gemRelation(pid, type) {
+  const st = $("e-st"), v = id => ($(id) ? $(id).value.trim() : "");
+  const cur = P.get(pid).p;
+  let anden;
+  if (v("e-findes") === "ny") {
+    if (!v("e-fornavn")) { st.textContent = "Fornavn mangler."; return; }
+    anden = null;
+  } else {
+    anden = findEtiket(v("e-vaelg"));
+    if (!anden) { st.textContent = "Personen blev ikke fundet – vælg fra listen."; return; }
+    if (anden === pid) { st.textContent = "Det er den samme person."; return; }
+  }
+  if (type === "partner" && v("e-ptype") === "gift" && !v("e-bryllup")) { st.textContent = "Skriv bryllupsdatoen – så kan mærkedagene regnes ud."; $("e-bryllup").focus(); return; }
+  if (type === "soeskende" && !cur.far_pid && !cur.mor_pid && (!anden || (!P.get(anden).p.far_pid && !P.get(anden).p.mor_pid))) {
+    st.textContent = `Søskende kobles via fælles forældre. Vælg først ${fornavn(pid)}s far eller mor.`; return;
+  }
+  $("e-gem").disabled = true; st.textContent = "Gemmer …";
+  try {
+    if (!anden) {
+      const ny = { type: "slaegt", til: [], pid: nyPid(), fornavn: v("e-fornavn"), mellemnavn: v("e-mellemnavn"), efternavn: v("e-efternavn"),
+        foedselsdato: v("e-foedt"), status: v("e-status"), status_dato: v("e-status") === "afdød" ? v("e-doed") : "",
+        fortaelling: "", foto: "", mindeord: "", gravsted: "", grav_foto: "", far_pid: "", mor_pid: "", partner_pid: "",
+        oprettet: new Date().toISOString().slice(0, 10), oprettet_af: hent("ok_nr") };
+      ny.navn = [ny.fornavn, ny.mellemnavn, ny.efternavn].filter(Boolean).join(" ");
+      await setDoc(doc(db, "olsenpost", "slaegt_" + ny.pid), ny);
+      P.set(ny.pid, { p: ny, nr: "", kilde: "slaegt", husNavn: "Slægten" });
+      anden = ny.pid;
+    }
+    const oth = P.get(anden).p;
+    if (type === "far" || type === "mor") await saetFelter(pid, { [type + "_pid"]: anden });
+    else if (type === "bonus") await saetFelter(pid, { [cur.bonus1_pid ? "bonus2_pid" : "bonus1_pid"]: anden });
+    else if (type === "barn") await saetFelter(anden, { [v("e-rolle") === "mor" ? "mor_pid" : "far_pid"]: pid });
+    else if (type === "partner") {
+      // Fjern en gammel partner-kobling, så der kun er én
+      const gl = partner(pid);
+      if (gl && gl !== anden && P.get(gl).p.partner_pid === pid) await saetFelter(gl, { partner_pid: "", partner_type: "", bryllup_dato: "" });
+      if (oth.partner_pid && oth.partner_pid !== pid) await saetFelter(anden, { partner_pid: "" });
+      const pt = v("e-ptype");
+      await saetFelter(pid, { partner_pid: anden, partner_type: pt, bryllup_dato: pt === "gift" ? v("e-bryllup") : "", bryllup_besked: pt === "gift" ? v("e-besked") : "" });
+      if (oth.bryllup_dato && pt === "gift" && oth.bryllup_dato !== v("e-bryllup")) await saetFelter(anden, { bryllup_dato: "" });
+    }
+    else if (type === "soeskende") {
+      if (cur.far_pid || cur.mor_pid) {
+        const f = {}; if (cur.far_pid && !oth.far_pid) f.far_pid = cur.far_pid; if (cur.mor_pid && !oth.mor_pid) f.mor_pid = cur.mor_pid;
+        if (Object.keys(f).length) await saetFelter(anden, f);
+      } else {
+        const f = {}; if (oth.far_pid) f.far_pid = oth.far_pid; if (oth.mor_pid) f.mor_pid = oth.mor_pid;
+        await saetFelter(pid, f);
+      }
+    }
+    vis(pid, true);
+  } catch(e) { st.textContent = "Kunne ikke gemme: " + (e.message || e); $("e-gem").disabled = false; }
+}
+
+async function fjern(pid, type) {
+  const cur = P.get(pid).p, fn = fornavn(pid);
+  if (type === "far" || type === "mor") {
+    if (!confirm(`Fjern ${fn}s ${type}?`)) return;
+    await saetFelter(pid, { [type + "_pid"]: "" });
+  } else if (type === "partner") {
+    const pa = partner(pid); if (!pa) return;
+    if (!confirm(`Fjern koblingen mellem ${fn} og ${fornavn(pa)}?`)) return;
+    if (cur.partner_pid) await saetFelter(pid, { partner_pid: "", partner_type: "", bryllup_dato: "" });
+    if (P.get(pa).p.partner_pid === pid) await saetFelter(pa, { partner_pid: "", partner_type: "", bryllup_dato: "" });
+  } else if (type === "bonus") {
+    if (!confirm(`Fjern ${fn}s bonusforældre?`)) return;
+    await saetFelter(pid, { bonus1_pid: "", bonus2_pid: "" });
+  }
+  vis(pid, true);
+}
+
+async function forslagBoern(pid, rolle) {
+  const r = P.get(pid);
+  const hus = [...P.keys()].filter(x => x !== pid && P.get(x).kilde === "kartotek" && P.get(x).nr === r.nr && String(P.get(x).p.rolle || "").toLowerCase() === "barn" && !P.get(x).p.far_pid && !P.get(x).p.mor_pid);
+  for (const x of hus) await saetFelter(x, { [rolle + "_pid"]: pid });
+  vis(pid, true);
 }
 
 function etiket(x) { const r = P.get(x); const nr = personNr(r); const f = (r.p.foedselsdato || "").slice(0, 4); return `${nr ? nr : "Slægten"} · ${navnAf(r.p)}${f ? " (f. " + f + ")" : ""}`; }
@@ -226,32 +360,6 @@ function findEtiket(t) {
   const e = alle.find(x => etiket(x).toLowerCase() === t); if (e) return e;
   const nr = alle.filter(x => etiket(x).toLowerCase().startsWith(t + " ·")); if (nr.length === 1) return nr[0];
   const n = alle.filter(x => etiket(x).toLowerCase().includes(t)); return n.length === 1 ? n[0] : null;
-}
-// Knyt en person, der allerede findes, til denne person
-async function knyt(pid) {
-  const st = $("t-status-tekst");
-  const anden = findEtiket($("t-vaelg").value);
-  if (!anden) { st.textContent = "Personen blev ikke fundet – vælg fra listen."; return; }
-  if (anden === pid) { st.textContent = "Det er den samme person."; return; }
-  const type = $("t-type").value, rolle = $("t-rolle").value, cur = P.get(pid).p, oth = P.get(anden).p;
-  const fn = x => navnAf(x).split(" ")[0];
-  $("t-gem").disabled = true; st.textContent = "Gemmer …";
-  try {
-    if (type === "barn") await saetFelter(anden, { [rolle === "far" ? "far_pid" : "mor_pid"]: pid });
-    else if (type === "foraelder") await saetFelter(pid, { [rolle === "far" ? "far_pid" : "mor_pid"]: anden });
-    else if (type === "partner") await saetFelter(pid, { partner_pid: anden });
-    else if (type === "soeskende") {
-      // Søskende = samme forældre. Den, der har forældre, giver dem til den anden.
-      if (cur.far_pid || cur.mor_pid) {
-        const f = {}; if (cur.far_pid && !oth.far_pid) f.far_pid = cur.far_pid; if (cur.mor_pid && !oth.mor_pid) f.mor_pid = cur.mor_pid;
-        if (Object.keys(f).length) await saetFelter(anden, f);
-      } else if (oth.far_pid || oth.mor_pid) {
-        const f = {}; if (oth.far_pid) f.far_pid = oth.far_pid; if (oth.mor_pid) f.mor_pid = oth.mor_pid;
-        await saetFelter(pid, f);
-      } else { st.textContent = `Hverken ${fn(cur)} eller ${fn(oth)} har forældre registreret. Tilføj forældrene først – så bliver de søskende automatisk.`; $("t-gem").disabled = false; return; }
-    }
-    vis(pid);
-  } catch(e) { st.textContent = "Kunne ikke gemme: " + (e.message || e); $("t-gem").disabled = false; }
 }
 function nyPid() { let id; do { id = "p" + Math.random().toString(36).slice(2, 11).padEnd(9, "0"); } while (P.has(id)); return id; }
 
@@ -265,34 +373,10 @@ async function saetFelter(pid, felter) {
   Object.assign(r.p, felter);
 }
 
-async function opret(pid) {
-  const st = $("t-status-tekst"), v = id => $(id).value.trim();
-  if (!v("t-fornavn")) { st.textContent = "Fornavn mangler."; return; }
-  const type = v("t-type"), rolle = $("t-rolle").value, cur = P.get(pid).p;
-  const ny = { type: "slaegt", til: [], pid: nyPid(), fornavn: v("t-fornavn"), mellemnavn: v("t-mellemnavn"), efternavn: v("t-efternavn"),
-    foedselsdato: v("t-foedt"), status: $("t-status").value, status_dato: $("t-status").value === "afdød" ? v("t-doed") : "",
-    fortaelling: v("t-fortaelling"), foto: "", mindeord: "", gravsted: "", grav_foto: "", far_pid: "", mor_pid: "", partner_pid: "",
-    oprettet: new Date().toISOString().slice(0, 10), oprettet_af: hent("ok_nr") };
-  ny.navn = [ny.fornavn, ny.mellemnavn, ny.efternavn].filter(Boolean).join(" ");
-  if (type === "barn") ny[rolle === "far" ? "far_pid" : "mor_pid"] = pid;
-  if (type === "partner") ny.partner_pid = pid;
-  if (type === "soeskende") {
-    if (!cur.far_pid && !cur.mor_pid) { st.textContent = "Opret først forældrene – søskende kobles via fælles forældre."; return; }
-    ny.far_pid = cur.far_pid || ""; ny.mor_pid = cur.mor_pid || "";
-  }
-  if (type === "foraelder" && cur[rolle === "far" ? "far_pid" : "mor_pid"]) { st.textContent = `${navnAf(cur).split(" ")[0]} har allerede en ${rolle} registreret.`; return; }
-  $("t-gem").disabled = true; st.textContent = "Gemmer …";
-  try {
-    await setDoc(doc(db, "olsenpost", "slaegt_" + ny.pid), ny);
-    P.set(ny.pid, { p: ny, nr: "", kilde: "slaegt", husNavn: "Slægten" });
-    if (type === "foraelder") await saetFelter(pid, { [rolle === "far" ? "far_pid" : "mor_pid"]: ny.pid });
-    vis(pid);
-  } catch(e) { st.textContent = "Kunne ikke gemme: " + (e.message || e); $("t-gem").disabled = false; }
-}
-
 try {
   await hentData();
-  vis(new URLSearchParams(location.search).get("pid"));
+  const q = new URLSearchParams(location.search);
+  vis(q.get("pid"), q.get("rel") === "1");
 } catch(e) { $("main").innerHTML = '<div class="kort">Kunne ikke hente data: ' + esc(e.message || e) + '</div>'; }
 </script>
 <script src="forside-knap.js" defer></script>
