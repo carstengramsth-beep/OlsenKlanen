@@ -612,6 +612,29 @@ body.kan-redigere .historisk-btn-wrapper{display:none}
   </div>
 </div>
 
+<div id="egen-modal" class="historisk-overlay" style="display:none;z-index:2000">
+  <div class="historisk-boks" style="max-width:520px">
+    <div class="historisk-hoved">
+      <div class="historisk-titel" id="egen-titel">🏠 Flyt til eget medlemskab</div>
+      <button class="historisk-luk-x" id="egen-luk">×</button>
+    </div>
+    <div class="historisk-krop">
+      <p id="egen-tekst" style="font-size:14px;margin-bottom:.8rem"></p>
+      <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--tekst-lys);margin-bottom:.3rem">👪 Familien beholdes – vælg forældre</div>
+      <div class="ef-2">
+        <div class="ef"><label>Far</label><select id="egen-far"></select></div>
+        <div class="ef"><label>Mor</label><select id="egen-mor"></select></div>
+      </div>
+      <div style="font-size:12px;color:var(--tekst-lys);margin-top:.3rem">Relationerne (forældre, søskende, egne børn) følger med, fordi personen beholder sit faste ID. Bagefter åbnes det nye kort, så adresse, mail og telefon kan skrives ind.</div>
+    </div>
+    <div class="historisk-fod">
+      <button class="historisk-gem" id="egen-gem">🏠 Opret eget medlemskab</button>
+      <button class="historisk-annuller" id="egen-annuller">Annullér</button>
+      <span class="historisk-status-el" id="egen-status"></span>
+    </div>
+  </div>
+</div>
+
 <div id="afdod-modal" class="historisk-overlay" style="display:none">
   <div class="historisk-boks" style="max-width:620px">
     <div class="historisk-hoved">
@@ -1985,6 +2008,7 @@ function renderPersonEdit() {
         <span style="font-size:12px;font-weight:700;color:var(--gron);background:var(--gron-pale);padding:3px 10px;border-radius:4px;white-space:nowrap;margin-right:6px">Medlemsnummer: ${medlemsNr}</span>
         <button class="person-slet" data-slet="${i}">×</button>
       </div>
+      ${document.body.classList.contains('kan-redigere') && p.pid && visPersonNavn(p) && nuvStatus === 'aktiv' && !(nytMedlemNr && sammeNr(aktivtNr, nytMedlemNr)) ? `<div style="margin:-.2rem 0 .5rem"><button type="button" class="tilfoej-knap" data-eget-medlemskab="${i}" title="Fx når et barn bliver voksen og flytter hjemmefra">🏠 Flyt til eget medlemskab</button></div>` : ''}
       <div class="person-edit-felter">
         <input data-pi="${i}" data-felt="fornavn"    placeholder="Fornavn"    value="${p.fornavn||''}">
         <input data-pi="${i}" data-felt="mellemnavn" placeholder="Mellemnavn" value="${p.mellemnavn||''}">
@@ -2268,6 +2292,8 @@ document.getElementById('foto-crop-brug').addEventListener('click', () => {
  
 // Event delegation
 document.getElementById('person-liste-edit').addEventListener('click', e => {
+  const em = e.target.closest('[data-eget-medlemskab]');
+  if (em) { aabnEgetMedlemskab(+em.dataset.egetMedlemskab); return; }
   const s = e.target.closest('[data-slet]');
   if (s) { personListe.splice(+s.dataset.slet, 1); renderPersonEdit(); markDirty(); return; }
  
@@ -3106,6 +3132,73 @@ document.getElementById('login-knap').addEventListener('click', () => {
 });
 document.getElementById('admin-log-ud').addEventListener('click', () => signOut(auth));
  
+// ── FLYT EN PERSON TIL EGET MEDLEMSKAB (fx barn, der bliver voksen) ──
+// Personen beholder sit pid, så alle relationer følger med. Far/mor sættes, hvis de mangler.
+let egenIdx = null;
+function aabnEgetMedlemskab(i) {
+  if (editDirty) { alert('Gem først ændringerne på kortet (💾 Gem rettelse). Prøv så igen.'); return; }
+  const p = personListe[i]; egenIdx = i;
+  const tal = data.map(m => parseInt(String(m.nr), 10)).filter(n => n > 0 && n < 996);
+  const nytNr = String((tal.length ? Math.max(...tal) : 0) + 1);
+  document.getElementById('egen-titel').textContent = `🏠 ${visPersonNavn(p)} – eget medlemskab`;
+  document.getElementById('egen-tekst').innerHTML = `<b>${escH(visPersonNavn(p))}</b> flyttes fra husstand nr. ${escH(aktivtNr)} til et nyt medlemskab: <b>nr. ${nytNr}</b> (medlemsnummer ${nytNr}-A).<br>Den gamle husstand beholder alle andre.`;
+  // Forældre: brug dem, der er sat – ellers husstandens voksne
+  const voksne = personListe.filter(x => x !== p && x.pid && x.rolle !== 'barn' && erAktivPerson(x));
+  _relEtiketter = relEtiketter();
+  const valg = (valgt) => '<option value="">— ingen —</option>' + _relEtiketter.filter(r => r.pid !== p.pid).map(r => `<option value="${r.pid}" ${r.pid === valgt ? 'selected' : ''}>${escH(r.tekst)}</option>`).join('');
+  document.getElementById('egen-far').innerHTML = valg(p.far_pid || (voksne[0] && !p.mor_pid ? '' : ''));
+  document.getElementById('egen-mor').innerHTML = valg(p.mor_pid || '');
+  // Forslag: hvis ingen forældre er sat, foreslå husstandens to voksne
+  if (!p.far_pid && !p.mor_pid && voksne.length) {
+    document.getElementById('egen-far').value = voksne[0] ? voksne[0].pid : '';
+    document.getElementById('egen-mor').value = voksne[1] ? voksne[1].pid : '';
+  }
+  document.getElementById('egen-gem').dataset.nr = nytNr;
+  document.getElementById('egen-status').textContent = '';
+  document.getElementById('egen-modal').style.display = 'flex';
+}
+const lukEgen = () => document.getElementById('egen-modal').style.display = 'none';
+document.getElementById('egen-luk').onclick = lukEgen;
+document.getElementById('egen-annuller').onclick = lukEgen;
+document.getElementById('egen-gem').onclick = async () => {
+  const st = document.getElementById('egen-status');
+  const p = personListe[egenIdx]; const gammelNr = String(aktivtNr);
+  const nytNr = document.getElementById('egen-gem').dataset.nr;
+  if (data.some(m => sammeNr(m.nr, nytNr))) { st.textContent = 'Nummeret er taget – luk og prøv igen.'; st.className = 'historisk-status-el fejl'; return; }
+  const far = document.getElementById('egen-far').value, mor = document.getElementById('egen-mor').value;
+  const gammel = data.find(m => sammeNr(m.nr, gammelNr));
+  const flyttet = { ...p, rolle: 'forælder', bogstav: 'A', far_pid: far, mor_pid: mor, flyttet_fra: gammelNr, flyttet_dato: new Date().toISOString().slice(0, 10) };
+  delete flyttet.fastNr; delete flyttet.dataansvarlig;
+  flyttet.dataansvarlig = true;
+  const nyHus = migrerFamilie({
+    nr: nytNr, kode: 'Olsen-' + nytNr, vej: '', postnummer: '', by: '', tlf: p.mobil || '', email: p.email || '',
+    fornavn: p.fornavn || '', efternavn: p.efternavn || '',
+    familiemedlemmer: [flyttet], begivenheder: [], oprettet: new Date().toISOString().slice(0, 10), oprettet_fra: gammelNr,
+    sidstRedigeret: new Date().toISOString(), sidstRedigeretAf: String(egetNr || 'admin')
+  });
+  const resten = (gammel.familiemedlemmer || []).filter(x => x.pid !== p.pid);
+  st.textContent = '⏳ Opretter…'; st.className = 'historisk-status-el';
+  try {
+    await setDoc(doc(db, 'membres', nytNr), nyHus);
+    await setDoc(doc(db, 'membres', gammelNr), { familiemedlemmer: resten, sidstRedigeret: new Date().toISOString() }, { merge: true });
+    gammel.familiemedlemmer = resten;
+    data.push(nyHus);
+    try {
+      await addDoc(collection(db, 'olsenpost'), {
+        fra_nr: '8-B', fra_navn: 'Medlemskartoteket (automatisk)', til: NR_POSTANSVARLIGE, til_navne: NR_POSTANSVARLIGE,
+        tekst: `🏠 ${visPersonNavn(p)} er flyttet fra husstand nr. ${gammelNr} til eget medlemskab nr. ${nytNr} (medlemsnummer ${nytNr}-A).\nKode: Olsen-${nytNr}. Husk at sende velkomstbrev og skrive adresse ind.`,
+        type: 'besked', sendt: new Date(), sendt_lokal: Date.now(), set_af: [], svar: []
+      });
+    } catch (e) {}
+    lukEgen();
+    editDirty = false;
+    editModal.classList.remove('vis');
+    renderGrid();
+    aabneEditModal(nytNr);
+    document.getElementById('edit-modal-titel').textContent = `🏠 Nyt medlemskab — nr. ${nytNr} (skriv adresse, mail og telefon)`;
+  } catch (e) { st.textContent = '✗ Kunne ikke gemme: ' + (e.message || e); st.className = 'historisk-status-el fejl'; }
+};
+
 // ── OPRET NYT MEDLEM (OlsenBanden) ──
 // Næste ledige nummer = højeste husstandsnummer + 1 (gæstenumrene 996–999 tæller ikke med).
 // Medlemmet gemmes først, når der trykkes "Gem". Bagefter tilbydes velkomstbrevet.
