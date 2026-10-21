@@ -68,6 +68,8 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
 .aar{font-size:11px;color:var(--tekst-lys);margin-top:2px}
 .snr{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--gron);color:#fff;font-size:9.5px;padding:1px 6px;border-radius:8px;white-space:nowrap}
 .person.til .snr{background:var(--guld)}
+.mangler-prik{position:absolute;top:5px;right:5px;width:10px;height:10px;border-radius:50%;background:#d0312d;box-shadow:0 0 0 2px #fff}
+.mangler-felt{background:#fff1e0 !important;border-color:#e08a2b !important;box-shadow:0 0 0 1px #e08a2b}
 
 /* Personkort */
 .panel-baggrund{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:300;padding:1rem}
@@ -252,12 +254,23 @@ function beregnSlaegtsnumre() {
 
 // ── Tegn træet ──
 let mitPid = null;
+// Hvad mangler vi at vide om personen? (rød prik i træet)
+function manglerFor(p) {
+  const m = [];
+  if (!p.foedselsdato) m.push("født");
+  if (p.status === "afdød" && !p.status_dato) m.push("død");
+  if (!p.foto) m.push("billede");
+  if (!p.far_pid && !p.mor_pid) m.push("forældre");
+  if (p.status === "afdød" && !String(p.mindeord || p.fortaelling || "").trim()) m.push("mindeord/fortælling");
+  if (p.status === "afdød" && !(p.bekraeftet && p.bekraeftet.navn)) m.push("bekræftelse af data");
+  return m;
+}
 function personKort(pid, tilloeben) {
   const r = P.get(pid); const p = r.p; const navn = navnAf(p);
   const initialer = navn.split(/\s+/).map(x => x[0]).slice(0, 2).join("").toUpperCase();
   const snr = SNR.has(pid) ? `<span class="snr">${SNR.get(pid)} / ${SNR_ANTAL}</span>` : "";
   return `<div class="person${tilloeben ? " til" : ""}${p.status === "afdød" ? " afdod" : ""}${pid === mitPid ? " mig" : ""}" data-pid="${pid}" title="${esc(navn)}">
-    ${snr}${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="">` : `<div class="foto">${esc(initialer)}</div>`}
+    ${snr}${manglerFor(p).length ? `<span class="mangler-prik" title="Mangler: ${esc(manglerFor(p).join(", "))}"></span>` : ""}${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="">` : `<div class="foto">${esc(initialer)}</div>`}
     <div class="navn">${esc(navn)}</div><div class="aar">${esc(aarTekst(p))}</div></div>`;
 }
 function tegnEnhed(pids, besoegt, erBonus, erRod) {
@@ -310,7 +323,9 @@ function visPanel(pid) {
       return s.length ? `Søskende: ${s.map(rel).join(", ")}` : ""; })(),
     bio.length ? `Børn: ${bio.map(rel).join(", ")}` : "",
     bonus.length ? `Bonusbørn: ${bonus.map(rel).join(", ")}` : "",
-    p.fortaelling ? `<div style="margin-top:.6rem;white-space:pre-line">${esc(p.fortaelling)}</div>` : ""
+    p.fortaelling ? `<div style="margin-top:.6rem;white-space:pre-line">${esc(p.fortaelling)}</div>` : "",
+    p.bekraeftet && p.bekraeftet.navn ? `✅ Data bekræftet af ${esc(p.bekraeftet.navn)} (${esc(datoTekst(p.bekraeftet.dato))})` : "",
+    manglerFor(p).length ? `<div style="margin-top:.5rem;color:#d0312d;font-size:13px">🔴 Mangler: ${esc(manglerFor(p).join(", "))}</div>` : ""
   ].filter(Boolean);
   const initialer = navn.split(/\s+/).map(x => x[0]).slice(0, 2).join("").toUpperCase();
   $("panel-krop").innerHTML = `${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="">` : `<div class="foto">${esc(initialer)}</div>`}
@@ -326,7 +341,8 @@ function visPanel(pid) {
 $("p-luk").onclick = () => $("panel-bg").style.display = "none";
 $("p-ret").onclick = () => {
   const r = P.get(panelPid);
-  if (r.kilde === "kartotek") { location.href = "medlemskartotek.html"; return; }
+  if (r.kilde === "kartotek") { location.href = "medlemskartotek.html?rediger=" + encodeURIComponent(r.nr); return; }
+  if (r.p.status === "afdød") { location.href = "medlemskartotek.html?ret_afdod=" + encodeURIComponent(panelPid); return; }
   const p = r.p;
   $("r-fornavn").value = p.fornavn || ""; $("r-mellemnavn").value = p.mellemnavn || ""; $("r-efternavn").value = p.efternavn || "";
   $("r-foedt").value = p.foedselsdato || ""; $("r-status").value = p.status === "afdød" ? "afdød" : "";
@@ -334,6 +350,8 @@ $("p-ret").onclick = () => {
   $("r-status-tekst").textContent = "";
   $("forslag-boks").style.display = "none";
   $("ret-boks").style.display = "block";
+  ["r-foedt", "r-fortaelling"].forEach(id => $(id).classList.toggle("mangler-felt", !$(id).value.trim()));
+  $("r-foto").classList.toggle("mangler-felt", !p.foto);
   $("ret-boks").scrollIntoView({ behavior: "smooth", block: "nearest" });
 };
 $("r-annuller").onclick = () => $("ret-boks").style.display = "none";
