@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Årsregnskab 2015 · OlsenKlanen</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; padding-bottom: 50px; }
+.topbar { background: #2d5016; color: #f5e6a8; padding: 16px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.topbar h1 { font-size: 20px; font-weight: normal; }
+.topbar .hjem { color: #f5e6a8; text-decoration: none; padding: 6px 16px; border: 1px solid #f5e6a8; border-radius: 4px; font-size: 14px; }
+.topbar .hjem:hover { background: #f5e6a8; color: #2d5016; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 30px 20px; }
+.ark { background: #fff; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 32px 30px; }
+.ark-titel { text-align: center; font-size: 22px; color: #2d5016; margin-bottom: 4px; }
+.ark-undertitel { text-align: center; font-size: 17px; color: #444; margin-bottom: 26px; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+.afsnit-titel td { font-weight: bold; font-size: 16px; color: #2d5016; padding: 18px 0 8px; border-bottom: 2px solid #d8c98a; }
+.afsnit-titel.foerste td { padding-top: 0; }
+tbody td { padding: 4px 0; }
+.tekst { color: #333; }
+.tal { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; padding-left: 18px; color: #333; }
+.aar-hoved td { font-weight: bold; color: #2d5016; padding-bottom: 6px; }
+.aar-hoved .tal { text-align: right; }
+.ialt td { font-weight: bold; border-top: 1px solid #aaa; padding-top: 6px; }
+.resultat td { font-weight: bold; font-size: 15.5px; padding-top: 10px; }
+.minus { color: #a33; }
+.plus { color: #2d6a2d; }
+.signatur { display: flex; justify-content: space-between; margin-top: 30px; padding-top: 16px; border-top: 1px solid #ddd; font-style: italic; font-size: 14px; color: #555; flex-wrap: wrap; gap: 8px; }
+.note { max-width: 760px; margin: 18px auto 0; padding: 0 20px; font-size: 13px; color: #888; font-style: italic; text-align: center; }
+@media (max-width: 600px) { .ark { padding: 22px 16px; } table { font-size: 13px; } }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>📊 Årsregnskab 2015</h1>
+  <a class="hjem" href="aarbogen.html">← Årbogen</a>
+</div>
+<div class="wrap">
+  <div class="ark">
+    <div class="ark-titel">OlsenKlanen</div>
+    <div class="ark-undertitel">Årsregnskab 1/1 – 31/12 2015 (med 2014 til sammenligning)</div>
+    <table>
+      <tr class="aar-hoved"><td></td><td class="tal">2015</td><td class="tal">2014</td></tr>
+      <tr class="afsnit-titel foerste"><td colspan="3">Indtægter</td></tr>
+      <tr><td class="tekst">Kontingenter</td><td class="tal">5.550,00</td><td class="tal">5.550,00</td></tr>
+      <tr><td class="tekst">Deltagerbetaling skovtur</td><td class="tal">8.450,00</td><td class="tal">9.075,00</td></tr>
+      <tr><td class="tekst">Betalt forplejning fredag til søndag</td><td class="tal">3.480,00</td><td class="tal">3.495,00</td></tr>
+      <tr><td class="tekst">Salg af drikkevarer m.v.</td><td class="tal">3.968,00</td><td class="tal">3.762,00</td></tr>
+      <tr><td class="tekst">Salg af returvarer, pant, renter m.v.</td><td class="tal">1.790,00</td><td class="tal">1.600,00</td></tr>
+      <tr><td class="tekst">Manglende kontingent for 2014/15</td><td class="tal">0,00</td><td class="tal">0,00</td></tr>
+      <tr class="ialt"><td>I alt</td><td class="tal">23.238,00</td><td class="tal">23.482,00</td></tr>
+      <tr class="afsnit-titel"><td colspan="3">Udgifter</td></tr>
+      <tr><td class="tekst">Småudgifter, papir, hjemmeside, mm.</td><td class="tal">250,00</td><td class="tal">285,00</td></tr>
+      <tr><td class="tekst">Porto, gebyr mm.</td><td class="tal">890,00</td><td class="tal">800,00</td></tr>
+      <tr><td class="tekst">Leje af hus inkl. el og varme</td><td class="tal">8.326,00</td><td class="tal">8.000,00</td></tr>
+      <tr><td class="tekst">Madvarer, øl, vand, vin og kørsel mm.</td><td class="tal">8.785,00</td><td class="tal">9.965,00</td></tr>
+      <tr><td class="tekst">Rengøring</td><td class="tal">2.000,00</td><td class="tal">1.800,00</td></tr>
+      <tr><td class="tekst">Gave, jubilæum, begravelse, osv.</td><td class="tal">1.020,00</td><td class="tal">530,00</td></tr>
+      <tr class="ialt"><td>I alt</td><td class="tal">21.271,00</td><td class="tal">21.380,00</td></tr>
+      <tr class="resultat"><td>Årsresultat</td><td class="tal plus">1.967,00 +</td><td class="tal plus">2.102,00 +</td></tr>
+      <tr class="afsnit-titel"><td colspan="3">Aktiver</td></tr>
+      <tr><td class="tekst">Kassebeholdning</td><td class="tal">500,00</td><td class="tal">500,00</td></tr>
+      <tr><td class="tekst">Indestående på giro 31/12</td><td class="tal">24.142,00</td><td class="tal">18.831,00</td></tr>
+      <tr><td class="tekst">Depositum hus 2016/17</td><td class="tal">1.000,00</td><td class="tal">2.000,00</td></tr>
+      <tr><td class="tekst">Frimærker</td><td class="tal">56,00</td><td class="tal">0,00</td></tr>
+      <tr class="ialt"><td>I alt</td><td class="tal">25.698,00</td><td class="tal">21.331,00</td></tr>
+      <tr class="afsnit-titel"><td colspan="3">Passiver</td></tr>
+      <tr><td class="tekst">Egenkapital primo</td><td class="tal">21.331,00</td><td class="tal">18.479,00</td></tr>
+      <tr><td class="tekst">Overskud / underskud</td><td class="tal plus">1.967,00 +</td><td class="tal plus">2.102,00 +</td></tr>
+      <tr><td class="tekst">Egenkapital ultimo</td><td class="tal">23.298,00</td><td class="tal">20.219,00</td></tr>
+      <tr><td class="tekst">Forudbetalt kontingent</td><td class="tal">2.400,00</td><td class="tal">750,00</td></tr>
+      <tr class="ialt"><td>I alt</td><td class="tal">25.698,00</td><td class="tal">21.331,00</td></tr>
+    </table>
+    <div class="signatur">
+      <span>Kolonien Bjerre Strand · 04-06-2016</span>
+      <span>Tommy Vormslev Olsen</span>
+    </div>
+  </div>
+</div>
+<div class="note">
+  Fra Bent Westergaard-Hansens gamle pc (sendt oktober 2026). Tallene er gengivet som i filen. Bemærk: i kolonnen for 2014 passer egenkapitalen ikke helt med summen af aktiver.
+</div>
+<style>.til-forsiden{position:fixed;left:14px;bottom:14px;z-index:150;background:#2d5016;color:#f5e6a8;font-family:Georgia,"Times New Roman",serif;font-size:14px;text-decoration:none;padding:9px 16px;border-radius:24px;border:1px solid #f5e6a8;box-shadow:0 2px 8px rgba(0,0,0,.3);}.til-forsiden:hover{background:#3a6020;}@media print{.til-forsiden{display:none;}}</style>
+<a class="til-forsiden" href="forside.html">← Forsiden</a>
+<script src="forside-knap.js" defer></script>
+</body>
+</html>
