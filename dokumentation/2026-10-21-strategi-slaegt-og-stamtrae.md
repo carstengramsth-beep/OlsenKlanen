@@ -121,3 +121,4 @@ Rasmus er Tinas søn og Renés bonusbarn.
 - 💡 Forslag ud fra husstanden: "Er X og Y et par?" og "Er X forælder til A, B?" (Ja – far / Ja – mor).
 - Hvem må: administratorer – og medlemmer for personer i egen husstand.
 - Kartotekets Rediger: relationsfelterne er erstattet af en oversigt + knappen "🔗 Vælg relationer …" (til personkortet). "🏠 Flyt til eget medlemskab" vises kun ved børn.
+- Medlemskortet: tydelig knap "🔗 Relationer" ved hver person (åbner personkortet med relationerne: `person.html?pid=…&rel=1`).
