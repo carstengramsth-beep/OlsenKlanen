@@ -36,6 +36,57 @@
   ];
 
   const norm = s => String(s || "").toLowerCase().normalize("NFC");
+  const hent = n => { try { return (sessionStorage.getItem(n) || localStorage.getItem(n) || "").trim(); } catch (e) { return ""; } };
+  const MIT_NAVN = hent("ok_navn").split(/\s+/)[0] || "";
+  const MIT_NR = hent("ok_nr");
+
+  // ── Personer fra kartoteket og Slægten (hentes én gang, når man begynder at skrive) ──
+  const KEY = "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU";
+  const BASE = "https://firestore.googleapis.com/v1/projects/olsenklanen-familieside/databases/(default)/documents";
+  let PERSONER = null, henter = null;
+  const vaerdi = x => { if (!x) return ""; const [k, v] = Object.entries(x)[0]; if (k === "mapValue") { const o = {}; Object.entries(v.fields || {}).forEach(([a, b]) => o[a] = vaerdi(b)); return o; } if (k === "arrayValue") return (v.values || []).map(vaerdi); return v; };
+  function hentPersoner() {
+    if (henter) return henter;
+    henter = (async () => {
+      const liste = [];
+      try {
+        const r = await fetch(`${BASE}/membres?pageSize=300&key=${KEY}`).then(x => x.json());
+        (r.documents || []).forEach(d => {
+          const h = vaerdi({ mapValue: d }); const nr = String(h.nr || d.name.split("/").pop());
+          (h.familiemedlemmer || []).forEach(p => {
+            const navn = [p.fornavn, p.mellemnavn, p.efternavn].filter(Boolean).join(" ").trim() || p.navn || "";
+            if (!navn) return;
+            const pnr = p.fastNr || (p.bogstav && p.status !== "afdød" && p.status !== "udmeldt" ? nr + "-" + p.bogstav : nr);
+            liste.push({ navn, nr, pnr, pid: p.pid, afdod: p.status === "afdød", kilde: "kartotek" });
+          });
+        });
+        const q = { structuredQuery: { from: [{ collectionId: "olsenpost" }], where: { fieldFilter: { field: { fieldPath: "type" }, op: "EQUAL", value: { stringValue: "slaegt" } } } } };
+        const r2 = await fetch(`${BASE}:runQuery?key=${KEY}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(q) }).then(x => x.json());
+        (r2 || []).forEach(x => { if (!x.document) return; const p = vaerdi({ mapValue: x.document });
+          liste.push({ navn: p.navn || p.fornavn || "", pid: p.pid, afdod: p.status === "afdød", kilde: "slaegt" }); });
+      } catch (e) { console.log("Søgning: kunne ikke hente personer", e); }
+      PERSONER = liste;
+      return liste;
+    })();
+    return henter;
+  }
+  function findPersoner(q) {
+    if (!PERSONER) return [];
+    const ord = norm(q).split(/\s+/).filter(o => o.length >= 2 && !/^\d+$/.test(o));
+    if (!ord.length) return [];
+    return PERSONER.filter(p => ord.every(o => norm(p.navn).split(/\s+/).some(n => n.startsWith(o)))).slice(0, 6);
+  }
+
+  // ── Log af søgninger (så OlsenBanden kan se, hvad folk leder efter) ──
+  const logget = new Set();
+  function logSoegning(q, antal) {
+    q = norm(q).trim();
+    if (q.length < 3 || logget.has(q)) return;
+    logget.add(q);
+    const felter = { type: "soegning", til: [], soegt: q, antal: String(antal), nr: MIT_NR, navn: hent("ok_navn"), tid: new Date().toISOString() };
+    const body = { fields: Object.fromEntries(Object.entries(felter).map(([k, v]) => [k, Array.isArray(v) ? { arrayValue: {} } : { stringValue: v }])) };
+    fetch(`${BASE}/olsenpost?key=${KEY}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).catch(() => {});
+  }
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
   function find(q) {
@@ -74,20 +125,41 @@
         #soeg-resultat .r-titel{font-weight:bold;color:#2d5016}
         #soeg-resultat .r-tekst{font-size:13px;color:#5a5a40}
         #soeg-resultat .ingen{font-size:14px;color:#5a5a40;padding:8px 4px}
+        #soeg-resultat .hej{font-size:14px;color:#2d5016;padding:8px 4px 4px}
+        #soeg-resultat .person-svar{display:flex;gap:10px;align-items:flex-start;padding:8px 6px;border-bottom:1px solid #f0ead8}
+        #soeg-resultat a.lille{display:inline-block;padding:2px 8px;margin:4px 6px 0 0;border:1px solid #c8b98a;border-radius:12px;font-size:13px;color:#2d5016;text-decoration:none}
       </style>
       <div class="soeg-titel">🔎 Hvad leder du efter?</div>
       <input id="soeg-felt" type="search" autocomplete="off" placeholder="Skriv fx kontakt, referat 2017, bryllup, stamtræ …">
       <div id="soeg-resultat"></div>`;
     mid.insertBefore(boks, mid.firstChild);
     const felt = boks.querySelector("#soeg-felt"), ud = boks.querySelector("#soeg-resultat");
-    felt.addEventListener("input", () => {
+    let logTimer = null;
+    async function vis() {
       const q = felt.value;
       if (norm(q).trim().length < 2) { ud.innerHTML = ""; return; }
+      if (!PERSONER) { hentPersoner().then(() => { if (felt.value === q) vis(); }); }
       const r = find(q);
-      ud.innerHTML = r.length
+      const pers = findPersoner(q);
+      let html = "";
+      if (pers.length) {
+        const fornavn = q.trim().split(/\s+/)[0];
+        html += `<div class="hej">👋 Hej${MIT_NAVN ? " " + esc(MIT_NAVN) : ""} – du søger efter <b>${esc(fornavn.charAt(0).toUpperCase() + fornavn.slice(1))}</b>. Vi fandt ${pers.length === 1 ? "denne person" : "disse personer"}:</div>`;
+        html += pers.map(p => `<div class="person-svar"><span class="r-ikon">${p.afdod ? "🕯️" : "👤"}</span><span><span class="r-titel">${esc(p.navn)}</span>${p.pnr ? ` <span class="r-tekst">(medl.nr. ${esc(p.pnr)})</span>` : p.kilde === "slaegt" ? ` <span class="r-tekst">(i Slægten)</span>` : ""}<br>
+          ${p.kilde === "kartotek" ? `<a class="lille" href="medlemskartotek.html?soeg=${encodeURIComponent(p.navn.split(" ")[0])}">📇 Se medlemskortet</a>` : ""}
+          ${p.pid ? `<a class="lille" href="stamtrae.html?top=${encodeURIComponent(p.pid)}">🌳 Se i stamtræet</a>` : ""}
+          ${p.afdod ? `<a class="lille" href="mindelunden.html">🕯️ Mindelunden</a>` : ""}</span></div>`).join("");
+        html += r.length ? `<div class="hej" style="margin-top:6px">Er det noget andet, du leder efter? Se også:</div>` : `<div class="hej" style="margin-top:6px;color:#5a5a40">Er det noget andet, du leder efter? Skriv et andet ord – eller spørg OlsenBanden i <a href="meddelelser.html" style="display:inline;padding:0;border:0;color:#2d5016;font-weight:bold">OlsenPost</a>.</div>`;
+      }
+      html += r.length
         ? r.map(s => `<a href="${esc(s.u)}"><span class="r-ikon">${s.i}</span><span><span class="r-titel">${esc(s.t)}</span><br><span class="r-tekst">${esc(s.d)}</span></span></a>`).join("")
-        : `<div class="ingen">Ingen sider passer på "${esc(q)}". Prøv et andet ord – eller skriv til OlsenBanden i <a href="meddelelser.html" style="display:inline;padding:0;border:0;color:#2d5016;font-weight:bold">OlsenPost</a>.</div>`;
-    });
+        : (pers.length ? "" : `<div class="ingen">Ingen sider passer på "${esc(q)}". Prøv et andet ord – eller skriv til OlsenBanden i <a href="meddelelser.html" style="display:inline;padding:0;border:0;color:#2d5016;font-weight:bold">OlsenPost</a>.</div>`);
+      ud.innerHTML = html;
+      clearTimeout(logTimer);
+      logTimer = setTimeout(() => logSoegning(q, r.length + pers.length), 2500);
+    }
+    felt.addEventListener("input", vis);
+    felt.addEventListener("focus", () => hentPersoner());
     felt.addEventListener("keydown", e => { if (e.key === "Enter") { const a = ud.querySelector("a"); if (a) location.href = a.getAttribute("href"); } });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", byg); else byg();

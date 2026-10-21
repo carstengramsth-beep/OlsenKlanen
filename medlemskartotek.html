@@ -3549,6 +3549,7 @@ async function initialiserSide() {
       slaegtData = [];
       s2.forEach(d => { const x = d.data(); if (x.pid) slaegtData.push(x); });
     } catch (e) { console.log('Kunne ikke hente Slægten:', e); }
+    try { const sq = new URLSearchParams(location.search).get('soeg'); if (sq) { soegeTekst = sq; document.getElementById('soege').value = sq; } } catch (e) {}
     renderGrid();
     haandterGodkendFraLogin();
     setTimeout(haandterDirekteRet, 300);
