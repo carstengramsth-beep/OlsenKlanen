@@ -113,3 +113,11 @@ Rasmus er Tinas søn og Renés bonusbarn.
 - Krav: kortet skal være gemt først.
 - Afdøde beholder deres personlige nummer (fx Egon 28-A, Lilli 28-B) i kartotek, relationsvalg, stamtræ, personkort og søgning (`beregnPersonNr`: kun udmeldte mister bogstavet). Login er uændret – afdøde kan ikke logge ind. Lagt ind: Egon ⚭ Lilli; Kurt (22-B): far Egon, mor Lilli.
 - Personkortet: "➕ Tilføj slægtning" kan nu også KNYTTE en person, der allerede findes ("Findes personen allerede? → Ja"): barn (sætter barnets far/mor), forælder, partner, søster/bror (den, der har forældre, giver dem til den anden). Svar på Kurts spørgsmål om at tilknytte sin søster uden at oprette nyt medlemskab.
+
+## Relationer – ny metode (aftalt med Carsten 21. okt.)
+- ÉT sted: personkortet (`person.html?pid=…&rel=1`) → "🔗 <navn>s relationer". Man vælger kun far, mor, ægtefælle/partner, børn og søskende (+ bonus under "Flere relationer"). Alt andet udledes.
+- Hver relation: "➕ Vælg / Skift / ✕". Editoren: "Findes personen allerede?" (søg navn/medlemsnr.) eller "opret ny" (i Slægten).
+- Ægtefælle/partner: Forhold = Gift / Samlevende / Kærester (`partner_type`). Gift kræver bryllupsdato (`bryllup_dato`) + frivillig `bryllup_besked`. Der er kun én partner-kobling ad gangen.
+- 💡 Forslag ud fra husstanden: "Er X og Y et par?" og "Er X forælder til A, B?" (Ja – far / Ja – mor).
+- Hvem må: administratorer – og medlemmer for personer i egen husstand.
+- Kartotekets Rediger: relationsfelterne er erstattet af en oversigt + knappen "🔗 Vælg relationer …" (til personkortet). "🏠 Flyt til eget medlemskab" vises kun ved børn.
