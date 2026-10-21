@@ -20,3 +20,14 @@ Bent sendte 466 filer (ca. 530 MB) via `indsend.html`. De ligger i lageret under
 - Billeder fra 2023–2025: kun døde genveje.
 
 Ikke brugt: genveje, links, Google-søgninger, bankkvitteringer, dubletter. Ca. 175 gamle mails (htm) fra 2015–2017 er ikke gennemgået.
+
+## Bents svar (21. okt. kl. 17.32) – lagt ind samme aften
+
+- **34 billeder fra skovturen 2017** (fotos af Nina og Lene, må gerne bruges) er lagt i `fotovaeg/2017/`
+  (mest under "Konkurrencer, leg og hygge": drager, dragetjek på diget, Højer Sluse; desuden grill, tag-selv-bord, morgenmad, kaffebord).
+  Billedtekst i metadata: "… (foto: Nina)". Fravalgt: dubletter, IMG_7202 (næsten som 7201) og 9.png (opslag på dør).
+- **4 gamle billeder** lagt i Gamle billeder (`gamle_billeder`), nu med billedtekst (nyt felt `tekst`, vises på siden):
+  fotoboks på Brønshøj Kro (Ib og Bents far + historien om Svend V. Olsen), Zoologisk Have (Christian, Vibeke, Kurt, Bent),
+  Risvangen 17 (Kenneth, Jesper, Anders, Karin, Agnes, Svend, Bent) og en albumside fra samme ferie.
+- **Fællesfoto.jpg**: Bent ved ikke, hvor det stammer fra → ikke lagt op. Spørg Carsten, om han kender stedet.
+- Erindringer: Bent skriver mere først. Billeder 2023–2025: Bent lægger dem selv ind via indsend.html.
