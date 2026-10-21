@@ -143,6 +143,7 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
     </div>
     <div class="panel-fod">
       <button class="btn gron" id="p-herfra">🌳 Vis træ herfra</button>
+      <a class="btn" id="p-personkort" href="#">👤 Fuldt personkort</a>
       <a class="btn" id="p-kort" href="#">📇 Medlemskort</a>
       <button class="btn gron" id="p-ret" style="display:none">✏️ Ret data</button>
       <button class="btn" id="p-forslag">✏️ Foreslå en rettelse</button>
@@ -330,6 +331,7 @@ function visPanel(pid) {
   const initialer = navn.split(/\s+/).map(x => x[0]).slice(0, 2).join("").toUpperCase();
   $("panel-krop").innerHTML = `${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="">` : `<div class="foto">${esc(initialer)}</div>`}
     <h2>${esc(navn)}</h2>${linjer.map(l => `<div class="linje">${l}</div>`).join("")}<div style="clear:both"></div>`;
+  $("p-personkort").href = "person.html?pid=" + encodeURIComponent(pid);
   $("p-kort").style.display = r.kilde === "kartotek" ? "" : "none";
   $("p-ret").style.display = erAdmin ? "" : "none";
   $("p-ret").textContent = r.kilde === "kartotek" ? "✏️ Ret i kartoteket" : "✏️ Ret data";

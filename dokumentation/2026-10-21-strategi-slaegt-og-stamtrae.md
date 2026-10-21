@@ -98,3 +98,10 @@ Rasmus er Tinas søn og Renés bonusbarn.
 - "✏️ Ret" i stamtræet åbner direkte: kartotekspersoner → `medlemskartotek.html?rediger=<nr>`; afdøde i Slægten → `medlemskartotek.html?ret_afdod=<pid>`.
 - Tomme felter farves orange (født, far, mor, død, mindeord, billede) i redigering.
 - Afdøde skal bekræftes: kolonnen "Bekræftet" i Afdøde-listen med knappen "✓ Bekræft data" (administratorer). Gemmes som `bekraeftet: { navn, nr, dato }` på personen (membres eller olsenpost/slaegt_<pid>). Rettes data bagefter, nulstilles bekræftelsen.
+
+## Personkort (person.html?pid=…) – 21. okt.
+- Ny side med alle data om én person (billede, datoer, medlemsnr./Slægten, bryllup, bekræftelse, mangler, mindeord, fortælling, gravsted) og hele familien op og ned: forældre, bonusforældre, bedsteforældre, oldeforældre · partner, søskende · børn, bonusbørn, børnebørn, oldebørn. Alle navne kan trykkes på (går til deres personkort); rød prik = mangler data.
+- "➕ Tilføj slægtning" (administratorer): barn / forælder / søster-bror / partner. Oprettes i Slægten (`olsenpost/slaegt_<pid>`) og kobles på. Ved "forælder" sættes `far_pid`/`mor_pid` på personen (også på kartotekspersoner via `membres`).
+- Links: navne i Afdøde-/status-listerne og 👤 ved hver person på husstandskortene, "👤 Fuldt personkort" i stamtræet, og "👤 Personkort" i søgningen.
+- Afdød-formularen i kartoteket har nu også "Status: Afdød / Lever" (til levende i Slægten).
+- Testoprettelse af "Søren Wormslev Olsen" var KUN testdata (ikke gemt).

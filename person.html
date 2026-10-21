@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Personkort – OlsenKlanen</title>
+<script>
+// Kun for medlemmer
+try {
+  const hent = n => sessionStorage.getItem(n) || localStorage.getItem(n) || "";
+  if (!(hent("ok_niveau") || hent("ok_navn") || hent("ok_nr"))) window.location.href = "login.html?videre=stamtrae.html";
+} catch(e) {}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--gron:#2d5016;--gron-lys:#4a7c2a;--gron-pale:#c8e6b0;--guld:#c8952a;--guld-lys:#f5e6c8;--guld-pale:#fdf8ee;--tekst:#1a1a0e;--tekst-lys:#5a5a40;--border:#d4c9a0;--baggrund:#fffde0;--roed:#d0312d}
+body{font-family:'Source Sans 3',sans-serif;background:var(--baggrund);color:var(--tekst);min-height:100vh;padding-bottom:5rem;font-size:16px;line-height:1.5}
+header{background:var(--gron);color:#fff;text-align:center;padding:1.4rem 1rem 1.6rem;border-bottom:3px solid var(--guld);position:relative}
+header h1{font-family:'Playfair Display',serif;font-weight:500;font-size:1.8rem}
+header p{color:var(--gron-pale)}
+.top-forside{position:absolute;left:16px;top:14px;color:#f5e6c8;text-decoration:none;border:1px solid #f5e6c8;padding:6px 12px;border-radius:6px;font-size:14px}
+@media (max-width:600px){header{padding-top:3.2rem}}
+main{max-width:900px;margin:0 auto;padding:1.2rem 1rem}
+.kort{background:#fff;border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.3rem;margin-bottom:1rem}
+.kort h2{font-family:'Playfair Display',serif;font-weight:500;color:var(--gron);font-size:1.25rem;margin-bottom:.6rem}
+.hoved{display:flex;gap:1.2rem;align-items:flex-start;flex-wrap:wrap}
+.foto{width:130px;height:130px;border-radius:12px;object-fit:cover;background:var(--gron-pale);color:var(--gron);font-size:40px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.navn{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--gron);line-height:1.2}
+.linje{margin:.15rem 0}
+.mangler{color:var(--roed);font-size:14px;margin-top:.4rem}
+.ok{color:var(--gron);font-size:14px;margin-top:.4rem}
+.knapper{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem}
+.btn{font-family:inherit;font-size:14px;border:none;border-radius:8px;padding:.55rem 1rem;cursor:pointer;font-weight:600;background:#e8e2d0;color:var(--gron);text-decoration:none;display:inline-block}
+.btn.gron{background:var(--gron);color:#fff}
+.felt-titel{font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--tekst-lys);margin-top:.7rem}
+.tekst{white-space:pre-line}
+.grav-foto{max-width:220px;border-radius:8px;margin-top:.4rem}
+.gen{margin:.3rem 0 .9rem}
+.gen-titel{font-weight:600;color:var(--gron);margin-bottom:.3rem}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.chip{display:inline-flex;align-items:center;gap:.4rem;background:var(--guld-pale);border:1px solid var(--border);border-radius:20px;padding:.25rem .7rem .25rem .3rem;text-decoration:none;color:var(--tekst);font-size:14px}
+.chip:hover{background:var(--guld-lys)}
+.chip img,.chip .ini{width:26px;height:26px;border-radius:50%;object-fit:cover;background:var(--gron-pale);color:var(--gron);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.chip .prik{width:8px;height:8px;border-radius:50%;background:var(--roed)}
+.tom{color:var(--tekst-lys);font-size:14px;font-style:italic}
+.form-gitter{display:grid;grid-template-columns:1fr 1fr;gap:.5rem .8rem}
+.form-gitter label,.hel{display:block;font-size:13px;color:var(--tekst-lys)}
+.hel{margin-top:.5rem}
+.form-gitter input,.form-gitter select,.hel textarea{width:100%;margin-top:2px;padding:.45rem .55rem;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:15px;background:#fff}
+@media (max-width:600px){.form-gitter{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <a href="forside.html" class="top-forside">🏠 Forsiden</a>
+  <h1>👤 Personkort</h1>
+  <p>Alle data og hele familien – op og ned</p>
+</header>
+<main id="main"><div class="kort">Henter …</div></main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, getDoc, setDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const app = initializeApp({ apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU", authDomain: "olsenklanen-familieside.firebaseapp.com", projectId: "olsenklanen-familieside", storageBucket: "olsenklanen-familieside.firebasestorage.app", messagingSenderId: "640843662410", appId: "1:640843662410:web:e749b77ec9271e75c4d2b3" });
+const db = getFirestore(app);
+const $ = id => document.getElementById(id);
+const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const hent = n => { try { return (sessionStorage.getItem(n) || localStorage.getItem(n) || "").trim(); } catch(e) { return ""; } };
+const ER_ADMIN = hent("ok_niveau").toLowerCase() === "admin";
+
+const P = new Map();   // pid → { p, nr, kilde, husNavn }
+const navnAf = p => [p.fornavn, p.mellemnavn, p.efternavn].filter(x => x && String(x).trim()).join(" ").trim() || (p.navn || "").trim();
+const mdr = ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"];
+const dato = iso => { const m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${+m[3]}. ${mdr[+m[2] - 1]} ${m[1]}` : ""; };
+const ini = n => n.split(/\s+/).map(x => x[0]).slice(0, 2).join("").toUpperCase();
+function personNr(r) { const p = r.p; if (p.fastNr) return String(p.fastNr); if (r.kilde !== "kartotek") return ""; return p.bogstav && p.status !== "afdød" && p.status !== "udmeldt" ? r.nr + "-" + p.bogstav : r.nr; }
+function manglerFor(p) {
+  const m = [];
+  if (!p.foedselsdato) m.push("født");
+  if (p.status === "afdød" && !p.status_dato) m.push("død");
+  if (!p.foto) m.push("billede");
+  if (!p.far_pid && !p.mor_pid) m.push("forældre");
+  if (p.status === "afdød" && !String(p.mindeord || p.fortaelling || "").trim()) m.push("mindeord/fortælling");
+  if (p.status === "afdød" && !(p.bekraeftet && p.bekraeftet.navn)) m.push("bekræftelse af data");
+  return m;
+}
+
+async function hentData() {
+  P.clear();
+  const snap = await getDocs(collection(db, "membres"));
+  snap.forEach(d => { const h = d.data(); const nr = String(h.nr || d.id);
+    const husNavn = (h.familiemedlemmer || []).map(x => x.fornavn || navnAf(x).split(" ")[0]).filter(Boolean).join(" & ");
+    (h.familiemedlemmer || []).forEach(p => { if (p.pid && navnAf(p)) P.set(p.pid, { p, nr, kilde: "kartotek", husNavn }); }); });
+  try {
+    const s2 = await getDocs(query(collection(db, "olsenpost"), where("type", "==", "slaegt")));
+    s2.forEach(d => { const p = d.data(); if (p.pid && navnAf(p)) P.set(p.pid, { p, nr: "", kilde: "slaegt", husNavn: "Slægten" }); });
+  } catch(e) {}
+}
+
+// ── Relationer ──
+const foraeldre = pid => { const p = P.get(pid)?.p; return p ? [p.far_pid, p.mor_pid].filter(x => x && P.has(x)) : []; };
+const bonusForaeldre = pid => { const p = P.get(pid)?.p; return p ? [p.bonus1_pid, p.bonus2_pid].filter(x => x && P.has(x)) : []; };
+const boern = pid => [...P.keys()].filter(x => { const q = P.get(x).p; return q.far_pid === pid || q.mor_pid === pid; });
+const bonusBoern = pid => [...P.keys()].filter(x => { const q = P.get(x).p; return q.bonus1_pid === pid || q.bonus2_pid === pid; });
+function partner(pid) { const p = P.get(pid)?.p; if (p?.partner_pid && P.has(p.partner_pid)) return p.partner_pid; for (const [x, r] of P) if (r.p.partner_pid === pid) return x; return null; }
+function soeskende(pid) { const p = P.get(pid)?.p; if (!p) return []; return [...P.keys()].filter(x => x !== pid && ((p.far_pid && P.get(x).p.far_pid === p.far_pid) || (p.mor_pid && P.get(x).p.mor_pid === p.mor_pid))); }
+const unik = a => [...new Set(a)];
+const sorterAlder = a => a.sort((x, y) => String(P.get(x).p.foedselsdato || "9999").localeCompare(String(P.get(y).p.foedselsdato || "9999")));
+
+function chip(pid) {
+  const r = P.get(pid); if (!r) return ""; const p = r.p; const n = navnAf(p);
+  const f = (p.foedselsdato || "").slice(0, 4), d = p.status === "afdød" ? (p.status_dato || "").slice(0, 4) : "";
+  const aar = f || d ? ` <span style="color:var(--tekst-lys)">${f}${d ? "–" + d : ""}</span>` : "";
+  return `<a class="chip" href="person.html?pid=${encodeURIComponent(pid)}">${p.foto ? `<img src="${esc(p.foto)}" alt="">` : `<span class="ini">${esc(ini(n))}</span>`}${esc(n)}${p.status === "afdød" ? " 🕯️" : ""}${aar}${manglerFor(p).length ? '<span class="prik" title="Mangler data"></span>' : ""}</a>`;
+}
+function gen(titel, pids) {
+  pids = sorterAlder(unik(pids));
+  return `<div class="gen"><div class="gen-titel">${titel}</div>${pids.length ? `<div class="chips">${pids.map(chip).join("")}</div>` : '<div class="tom">Ingen registreret endnu</div>'}</div>`;
+}
+
+function vis(pid) {
+  const r = P.get(pid);
+  if (!r) { $("main").innerHTML = '<div class="kort">Personen blev ikke fundet. <a href="stamtrae.html">Gå til stamtræet</a></div>'; return; }
+  const p = r.p, n = navnAf(p);
+  document.title = n + " – Personkort";
+  const far = foraeldre(pid);
+  const bedste = unik(far.flatMap(foraeldre));
+  const olde = unik(bedste.flatMap(foraeldre));
+  const b = boern(pid), bb = unik(b.flatMap(boern)), obb = unik(bb.flatMap(boern));
+  const pa = partner(pid), mgl = manglerFor(p);
+  const alder = (() => { if (!p.foedselsdato) return ""; const f = new Date(p.foedselsdato), t = p.status === "afdød" ? new Date(p.status_dato || "") : new Date(); if (isNaN(t)) return ""; let a = t.getFullYear() - f.getFullYear(); if (t.getMonth() < f.getMonth() || (t.getMonth() === f.getMonth() && t.getDate() < f.getDate())) a--; return a; })();
+  const retUrl = r.kilde === "kartotek" ? "medlemskartotek.html?rediger=" + encodeURIComponent(r.nr) : "medlemskartotek.html?ret_afdod=" + encodeURIComponent(pid);
+
+  $("main").innerHTML = `
+  <div class="kort">
+    <div class="hoved">
+      ${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="">` : `<div class="foto">${esc(ini(n))}</div>`}
+      <div style="flex:1;min-width:240px">
+        <div class="navn">${esc(n)}${p.status === "afdød" ? " 🕯️" : ""}</div>
+        ${p.foedselsdato ? `<div class="linje">🎂 Født ${dato(p.foedselsdato)}</div>` : ""}
+        ${p.status === "afdød" ? `<div class="linje">🕯️ Død ${dato(p.status_dato) || "(dato mangler)"}${alder !== "" ? ` · ${alder} år` : ""}</div>` : (alder !== "" ? `<div class="linje">${alder} år</div>` : "")}
+        <div class="linje">${r.kilde === "kartotek" ? `📇 Medlemsnr. ${esc(personNr(r))} · ${esc(r.husNavn)}` : "🌿 I Slægten (ikke på et medlemskort)"}</div>
+        ${p.bryllup_dato && pa ? `<div class="linje">⚭ Gift ${dato(p.bryllup_dato)}</div>` : ""}
+        ${p.bekraeftet && p.bekraeftet.navn ? `<div class="ok">✅ Data bekræftet af ${esc(p.bekraeftet.navn)} (${dato(p.bekraeftet.dato)})</div>` : ""}
+        ${mgl.length ? `<div class="mangler">🔴 Mangler: ${esc(mgl.join(", "))}</div>` : ""}
+        <div class="knapper">
+          ${ER_ADMIN || r.kilde === "kartotek" ? `<a class="btn gron" href="${retUrl}">✏️ Ret data</a>` : ""}
+          <a class="btn" href="stamtrae.html?top=${encodeURIComponent(pid)}">🌳 Vis i stamtræet</a>
+          ${p.status === "afdød" ? `<a class="btn" href="mindelunden.html">🕯️ Mindelunden</a>` : ""}
+          ${ER_ADMIN ? `<button class="btn" id="vis-tilfoej">➕ Tilføj slægtning</button>` : ""}
+        </div>
+      </div>
+    </div>
+    ${p.mindeord ? `<div class="felt-titel">🕯️ Mindeord</div><div class="tekst">${esc(p.mindeord)}</div>` : ""}
+    ${p.fortaelling ? `<div class="felt-titel">📖 Fortælling</div><div class="tekst">${esc(p.fortaelling)}</div>` : ""}
+    ${p.gravsted || p.grav_foto ? `<div class="felt-titel">🪦 Gravsted</div><div>${esc(p.gravsted || "")}${p.gravsted_note ? " – " + esc(p.gravsted_note) : ""}</div>${p.grav_foto ? `<img class="grav-foto" src="${esc(p.grav_foto)}" alt="Gravsted">` : ""}` : ""}
+  </div>
+
+  <div class="kort" id="tilfoej-kort" style="display:none">
+    <h2>➕ Tilføj en slægtning til ${esc(n)}</h2>
+    <div class="form-gitter">
+      <label>Hvem er det?<select id="t-type">
+        <option value="barn">Et barn af ${esc(n.split(" ")[0])}</option>
+        <option value="foraelder">En forælder til ${esc(n.split(" ")[0])}</option>
+        <option value="soeskende">En søster eller bror</option>
+        <option value="partner">Ægtefælle / partner</option>
+      </select></label>
+      <label id="t-rolle-lbl">${esc(n.split(" ")[0])} er barnets / forælderen er<select id="t-rolle"><option value="far">far</option><option value="mor">mor</option></select></label>
+      <label>Fornavn *<input id="t-fornavn"></label>
+      <label>Mellemnavn<input id="t-mellemnavn"></label>
+      <label>Efternavn<input id="t-efternavn"></label>
+      <label>Født<input type="date" id="t-foedt"></label>
+      <label>Status<select id="t-status"><option value="afdød">Afdød</option><option value="">Lever / ukendt</option></select></label>
+      <label>Død<input type="date" id="t-doed"></label>
+    </div>
+    <label class="hel">📖 Fortælling (det, du ved)<textarea id="t-fortaelling" rows="3"></textarea></label>
+    <div class="knapper"><button class="btn gron" id="t-gem">💾 Opret</button><button class="btn" id="t-luk">Annullér</button><span id="t-status-tekst" style="font-size:14px;align-self:center"></span></div>
+    <div style="font-size:13px;color:var(--tekst-lys);margin-top:.5rem">Personen oprettes i Slægten og kobles på med det samme. Billede, mindeord og gravsted kan tilføjes bagefter med "✏️ Ret data" på det nye personkort.</div>
+  </div>
+
+  <div class="kort">
+    <h2>⬆️ Op i slægten</h2>
+    ${gen("Forældre", far)}
+    ${bonusForaeldre(pid).length ? gen("Bonusforældre", bonusForaeldre(pid)) : ""}
+    ${gen("Bedsteforældre", bedste)}
+    ${olde.length ? gen("Oldeforældre", olde) : ""}
+  </div>
+  <div class="kort">
+    <h2>↔️ Ved siden af</h2>
+    ${gen("Ægtefælle / partner", pa ? [pa] : [])}
+    ${gen("Søskende", soeskende(pid))}
+  </div>
+  <div class="kort">
+    <h2>⬇️ Ned i slægten</h2>
+    ${gen("Børn", b)}
+    ${bonusBoern(pid).length ? gen("Bonusbørn", bonusBoern(pid)) : ""}
+    ${gen("Børnebørn", bb)}
+    ${obb.length ? gen("Oldebørn", obb) : ""}
+  </div>`;
+
+  const tk = $("vis-tilfoej");
+  if (tk) tk.onclick = () => { $("tilfoej-kort").style.display = "block"; $("tilfoej-kort").scrollIntoView({ behavior: "smooth" }); };
+  if ($("t-luk")) {
+    $("t-luk").onclick = () => $("tilfoej-kort").style.display = "none";
+    const opdRolle = () => { const t = $("t-type").value; $("t-rolle-lbl").style.display = (t === "barn" || t === "foraelder") ? "" : "none";
+      $("t-rolle-lbl").firstChild.textContent = t === "barn" ? n.split(" ")[0] + " er barnets " : "Den nye er " + n.split(" ")[0] + "s "; };
+    $("t-type").onchange = opdRolle; opdRolle();
+    $("t-gem").onclick = () => opret(pid);
+  }
+}
+
+function nyPid() { let id; do { id = "p" + Math.random().toString(36).slice(2, 11).padEnd(9, "0"); } while (P.has(id)); return id; }
+
+// Sæt et felt på en eksisterende person (kartotek eller Slægten)
+async function saetFelter(pid, felter) {
+  const r = P.get(pid);
+  if (r.kilde === "slaegt") { await setDoc(doc(db, "olsenpost", "slaegt_" + pid), felter, { merge: true }); Object.assign(r.p, felter); return; }
+  const s = await getDoc(doc(db, "membres", r.nr));
+  const fm = (s.data().familiemedlemmer || []).map(x => x.pid === pid ? { ...x, ...felter } : x);
+  await setDoc(doc(db, "membres", r.nr), { familiemedlemmer: fm }, { merge: true });
+  Object.assign(r.p, felter);
+}
+
+async function opret(pid) {
+  const st = $("t-status-tekst"), v = id => $(id).value.trim();
+  if (!v("t-fornavn")) { st.textContent = "Fornavn mangler."; return; }
+  const type = v("t-type"), rolle = $("t-rolle").value, cur = P.get(pid).p;
+  const ny = { type: "slaegt", til: [], pid: nyPid(), fornavn: v("t-fornavn"), mellemnavn: v("t-mellemnavn"), efternavn: v("t-efternavn"),
+    foedselsdato: v("t-foedt"), status: $("t-status").value, status_dato: $("t-status").value === "afdød" ? v("t-doed") : "",
+    fortaelling: v("t-fortaelling"), foto: "", mindeord: "", gravsted: "", grav_foto: "", far_pid: "", mor_pid: "", partner_pid: "",
+    oprettet: new Date().toISOString().slice(0, 10), oprettet_af: hent("ok_nr") };
+  ny.navn = [ny.fornavn, ny.mellemnavn, ny.efternavn].filter(Boolean).join(" ");
+  if (type === "barn") ny[rolle === "far" ? "far_pid" : "mor_pid"] = pid;
+  if (type === "partner") ny.partner_pid = pid;
+  if (type === "soeskende") {
+    if (!cur.far_pid && !cur.mor_pid) { st.textContent = "Opret først forældrene – søskende kobles via fælles forældre."; return; }
+    ny.far_pid = cur.far_pid || ""; ny.mor_pid = cur.mor_pid || "";
+  }
+  if (type === "foraelder" && cur[rolle === "far" ? "far_pid" : "mor_pid"]) { st.textContent = `${navnAf(cur).split(" ")[0]} har allerede en ${rolle} registreret.`; return; }
+  $("t-gem").disabled = true; st.textContent = "Gemmer …";
+  try {
+    await setDoc(doc(db, "olsenpost", "slaegt_" + ny.pid), ny);
+    P.set(ny.pid, { p: ny, nr: "", kilde: "slaegt", husNavn: "Slægten" });
+    if (type === "foraelder") await saetFelter(pid, { [rolle === "far" ? "far_pid" : "mor_pid"]: ny.pid });
+    vis(pid);
+  } catch(e) { st.textContent = "Kunne ikke gemme: " + (e.message || e); $("t-gem").disabled = false; }
+}
+
+try {
+  await hentData();
+  vis(new URLSearchParams(location.search).get("pid"));
+} catch(e) { $("main").innerHTML = '<div class="kort">Kunne ikke hente data: ' + esc(e.message || e) + '</div>'; }
+</script>
+<script src="forside-knap.js" defer></script>
+</body>
+</html>
