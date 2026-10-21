@@ -90,3 +90,5 @@ Rasmus er Tinas søn og Renés bonusbarn.
 - Mindelunden viser også Slægtens afdøde ("🌿 Fra Slægten"); alle medlemmer må skrive mindeord om dem.
 - Birthe Haugaard er markeret som afdød (datoer mangler endnu).
 - Søskende vises automatisk (samme far eller mor) på kartotekskort og i stamtræets personkort. Søskende til en afdød (fx farbror Valter til Svend Aage) kobles ved at give dem samme forældre (forældrene oprettes som afdøde i Slægten).
+- Afdøde-listen viser "🟠 Mangler: født, død, billede, forældre, mindeord/fortælling" ved hver person, og antallet øverst. Idé (Carsten): opret personer, vi ved findes, med det samme – prikken viser, hvad der skal findes.
+- Oprettet i Slægten: Christian P.T. Olsen (efternavn gættet ud fra "Christian P.T. O." i MyHeritage – skal tjekkes) ⚭ Larsine Larsen = Svend Aages forældre; Valter (stavemåde usikker), bror til Svend Aage – boede i Costa Rica, datteren gift med Costa Ricas præsident.
