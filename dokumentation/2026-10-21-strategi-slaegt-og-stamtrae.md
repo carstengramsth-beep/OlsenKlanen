@@ -45,3 +45,11 @@ Rasmus er Tinas søn og Renés bonusbarn.
 - Rettet gammel fejl: personer med rollen "ægtefælle" (husstand 8) blev ikke vist på kortet.
 - Relationsfelterne er nu søgefelter: skriv personligt medlemsnr. (fx 8-B) eller navn, eller vælg fra listen.
 - Ny knap **🧩 Svævere**: alle, der ikke hænger sammen med Agnes og Svend Aage (husstand 1) via far/mor/bonus/partner. Kolonnen "Mangler" viser "Ingen relationer endnu" eller "Ikke forbundet til Agnes og Svend Aage". Ved start: 130 svævere af 132.
+
+## Stamtræ (første udgave, 21. okt.)
+- Ny side `stamtrae.html` (kun medlemmer). Læser relationer fra `membres` (og senere `olsenpost` type "slaegt").
+- Start: Agnes og Svend Aage. Knapper: "Hele træet", "Mit træ" (starter ved egen far/mor), søg + "Vis træ herfra" (`?top=<pid>`).
+- Partnere står ved siden af (gul = tilløben), bonusbørn med stiplet ramme. Slægtsnr. "n / N" på dem, der hænger sammen med Agnes og Svend Aage.
+- Links: forsiden (🌳 Stamtræ) og kartoteket (🌳 Se stamtræet).
+- Relationer lagt ind efter Carstens oplysninger: Carsten (far Finn, partner Elisabeth); Sanne, Trine, René (far Carsten); Sanne ⚭ Nano; René ⚭ Tina; Emma og Luna (mor Sanne, far Nano); Rasmus (mor Tina, bonusforælder René).
+- Mangler: Carstens mor Birthe (data kommer). Asta-Elisabeth (nr. 17) er ikke koblet – spørg Carsten.
