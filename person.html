@@ -287,6 +287,18 @@ async function gemRelation(pid, type) {
     if (!anden) { st.textContent = "Personen blev ikke fundet – vælg fra listen."; return; }
     if (anden === pid) { st.textContent = "Det er den samme person."; return; }
   }
+  // Spærre mod umulige relationer (fx at ægtefællen vælges som far)
+  if (anden) {
+    const fnA = fornavn(anden), fnC = fornavn(pid);
+    const efterkommere = (x, set = new Set()) => { boern(x).forEach(c => { if (!set.has(c)) { set.add(c); efterkommere(c, set); } }); return set; };
+    const forfaedre = (x, set = new Set()) => { foraeldre(x).forEach(c => { if (!set.has(c)) { set.add(c); forfaedre(c, set); } }); return set; };
+    if ((type === "far" || type === "mor" || type === "bonus") && (anden === partner(pid) || efterkommere(pid).has(anden))) {
+      st.textContent = `${fnA} kan ikke være ${fnC}s ${REL_TITEL[type]} – ${fnA} er ${fnC}s ${anden === partner(pid) ? "ægtefælle/partner" : "barn eller efterkommer"}.`; return; }
+    if (type === "barn" && (anden === partner(pid) || forfaedre(pid).has(anden))) {
+      st.textContent = `${fnA} kan ikke være ${fnC}s barn – ${fnA} er ${fnC}s ${anden === partner(pid) ? "ægtefælle/partner" : "forælder eller forfader"}.`; return; }
+    if (type === "partner" && (efterkommere(pid).has(anden) || forfaedre(pid).has(anden) || soeskende(pid).includes(anden))) {
+      st.textContent = `${fnA} kan ikke være ${fnC}s ægtefælle – de er i familie (forælder, barn eller søskende).`; return; }
+  }
   if (type === "partner" && v("e-ptype") === "gift" && !v("e-bryllup")) { st.textContent = "Skriv bryllupsdatoen – så kan mærkedagene regnes ud."; $("e-bryllup").focus(); return; }
   if (type === "soeskende" && !cur.far_pid && !cur.mor_pid && (!anden || (!P.get(anden).p.far_pid && !P.get(anden).p.mor_pid))) {
     st.textContent = `Søskende kobles via fælles forældre. Vælg først ${fornavn(pid)}s far eller mor.`; return;

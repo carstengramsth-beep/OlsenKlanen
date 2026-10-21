@@ -122,3 +122,4 @@ Rasmus er Tinas søn og Renés bonusbarn.
 - Hvem må: administratorer – og medlemmer for personer i egen husstand.
 - Kartotekets Rediger: relationsfelterne er erstattet af en oversigt + knappen "🔗 Vælg relationer …" (til personkortet). "🏠 Flyt til eget medlemskab" vises kun ved børn.
 - Medlemskortet: tydelig knap "🔗 Relationer" ved hver person (åbner personkortet med relationerne: `person.html?pid=…&rel=1`).
+- Spærre i personkortets relationer: ægtefælle/efterkommer kan ikke vælges som far/mor/bonus; ægtefælle/forfader ikke som barn; forælder/barn/søskende ikke som ægtefælle. (Rettet fejl: Elisabeth havde Carsten som far – fjernet 21. okt.)
