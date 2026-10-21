@@ -74,3 +74,4 @@ Rasmus er Tinas søn og Renés bonusbarn.
 - Flyttet fra husstandens Begivenheder: nr. 8 Elisabeth og Carsten 1972-09-23 (fra diamantbryllup 2032), nr. 23 Richard og Karin 1970-01-17 (fra diamantbryllup 2030), nr. 29 Steen og Lise 1988-07-02, nr. 46 Anders og Mie 2013-08-03. Partner-relationer sat for de tre sidste. Begivenhederne er ikke slettet.
 - Kortet viser "💍 Næste mærkedag: <type> <dato>" (tin 10, kobber 12½, sølv 25, perle 30, rubin 40, guld 50, diamant 60, jern 65, platin 70).
 - Mærkedage-siden (`foedselsdage.html`, oversigt + "Frem i tiden") regner runde bryllupsdage ud fra `bryllup_dato`. Gamle bryllups-begivenheder springes over for husstande, der har en fast bryllupsdato (ingen dobbelte).
+- Begivenhedskalenderen på Mærkedage-siden viser alle par med fast bryllupsdato hvert år ("54 års bryllupsdag"), og mærkebryllupper fremhævet (fx Kobberbryllup 12½ år).

@@ -585,6 +585,21 @@ function byggKalender() {
     });
   });
  
+  // Bryllupsdage (fast bryllupsdato fra kartoteket) – mærkebryllupper fremhæves
+  const iAar = new Date().getFullYear();
+  try {
+    bryllupsPar().forEach(x => {
+      const d = parseDato(x.dato);
+      if (!d || d.aar >= iAar) return;
+      const n = iAar - d.aar;
+      efterMnd[d.mnd].push({ bryllup: true, dag: d.dag, navn: x.navn, tekst: BRYLLUP_NAVN[n] ? BRYLLUP_NAVN[n] : n + ' års bryllupsdag', rund: !!BRYLLUP_NAVN[n], besked: x.besked });
+      // Kobberbryllup 12½ år efter
+      let km = d.mnd + 6, ka = d.aar + 12;
+      if (km > 12) { km -= 12; ka++; }
+      if (ka === iAar) efterMnd[km].push({ bryllup: true, dag: Math.min(d.dag, new Date(iAar, km, 0).getDate()), navn: x.navn, tekst: 'Kobberbryllup (12½ år)', rund: true });
+    });
+  } catch(e) { console.log('Bryllupsdage i kalenderen:', e); }
+
   let html = '';
   let antalBegivenheder = 0;
   for (let mnd = 1; mnd <= 12; mnd++) {
@@ -594,6 +609,15 @@ function byggKalender() {
     html += `<div class="month"><div class="month-title">${MAANEDER[mnd-1].charAt(0).toUpperCase() + MAANEDER[mnd-1].slice(1)}</div>`;
  
     efterMnd[mnd].forEach(p => {
+      if (p.bryllup) {
+        antalBegivenheder++;
+        html += `<div class="event ${p.rund ? 'milestone' : ''}">
+        <div class="event-date">${p.dag}. ${MAANEDER[mnd-1].substr(0, 3)}</div>
+        <div class="event-name">💍 ${escN(p.navn)}</div>
+        <div class="event-extra">${escN(p.tekst)}${p.besked ? ' — ' + escN(p.besked) : ''}</div>
+      </div>`;
+        return;
+      }
       const rund = erRund(p.alder);
       antalBegivenheder++;
       html += `<div class="event ${rund ? 'milestone' : ''}">
