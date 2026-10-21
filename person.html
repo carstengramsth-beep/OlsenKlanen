@@ -173,7 +173,7 @@ function vis(pid, aabenRel) {
   $("main").innerHTML = `
   <div class="kort">
     <div class="hoved">
-      ${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="">` : `<div class="foto">${esc(ini(n))}</div>`}
+      ${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="" data-stort="${esc(n)}" title="Tryk for at se billedet stort">` : `<div class="foto">${esc(ini(n))}</div>`}
       <div style="flex:1;min-width:240px">
         <div class="navn">${esc(n)}${p.status === "afdød" ? " 🕯️" : ""}</div>
         ${p.tidligere_navne ? `<div class="linje">📝 Tidligere navne: ${esc(p.tidligere_navne)}</div>` : ""}
@@ -191,7 +191,7 @@ function vis(pid, aabenRel) {
     </div>
     ${p.mindeord ? `<div class="felt-titel">🕯️ Mindeord</div><div class="tekst">${esc(p.mindeord)}</div>` : ""}
     ${p.fortaelling ? `<div class="felt-titel">📖 Fortælling</div><div class="tekst">${esc(p.fortaelling)}</div>` : ""}
-    ${p.gravsted || p.grav_foto ? `<div class="felt-titel">🪦 Gravsted</div><div>${esc(p.gravsted || "")}${p.gravsted_note ? " – " + esc(p.gravsted_note) : ""}</div>${p.grav_foto ? `<img class="grav-foto" src="${esc(p.grav_foto)}" alt="Gravsted">` : ""}` : ""}
+    ${p.gravsted || p.grav_foto ? `<div class="felt-titel">🪦 Gravsted</div><div>${esc(p.gravsted || "")}${p.gravsted_note ? " – " + esc(p.gravsted_note) : ""}</div>${p.grav_foto ? `<img class="grav-foto" src="${esc(p.grav_foto)}" alt="Gravsted" data-stort="Gravsted – ${esc(n)}" title="Tryk for at se billedet stort">` : ""}` : ""}
   </div>
 
   <div class="kort" id="relationer">
@@ -393,5 +393,6 @@ try {
 } catch(e) { $("main").innerHTML = '<div class="kort">Kunne ikke hente data: ' + esc(e.message || e) + '</div>'; }
 </script>
 <script src="forside-knap.js" defer></script>
+<script src="stort-billede.js" defer></script>
 </body>
 </html>

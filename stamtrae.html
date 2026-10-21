@@ -77,7 +77,7 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
 .panel-krop{padding:1.2rem 1.3rem}
 .panel h2{font-family:'Playfair Display',serif;font-weight:500;color:var(--gron);font-size:1.35rem;margin-bottom:.4rem}
 .panel .linje{font-size:14px;margin:.25rem 0}
-.panel .foto{width:90px;height:90px;line-height:90px;font-size:28px;float:right;margin:0 0 .5rem .8rem}
+.panel .foto{width:120px;height:120px;line-height:120px;font-size:28px;float:right;margin:0 0 .5rem .8rem}
 .panel-fod{display:flex;gap:.5rem;flex-wrap:wrap;padding:.8rem 1.3rem;background:var(--guld-pale);border-top:1px solid var(--border)}
 .ret-gitter{display:grid;grid-template-columns:1fr 1fr;gap:.5rem .7rem}
 .ret-gitter label,.ret-hel{display:block;font-size:12px;color:var(--tekst-lys)}
@@ -330,7 +330,7 @@ function visPanel(pid) {
     manglerFor(p).length ? `<div style="margin-top:.5rem;color:#d0312d;font-size:13px">🔴 Mangler: ${esc(manglerFor(p).join(", "))}</div>` : ""
   ].filter(Boolean);
   const initialer = navn.split(/\s+/).map(x => x[0]).slice(0, 2).join("").toUpperCase();
-  $("panel-krop").innerHTML = `${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="">` : `<div class="foto">${esc(initialer)}</div>`}
+  $("panel-krop").innerHTML = `${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="" data-stort="${esc(navnAf(p))}" title="Tryk for at se billedet stort">` : `<div class="foto">${esc(initialer)}</div>`}
     <h2>${esc(navn)}</h2>${linjer.map(l => `<div class="linje">${l}</div>`).join("")}<div style="clear:both"></div>`;
   $("p-personkort").href = "person.html?pid=" + encodeURIComponent(pid);
   $("p-kort").style.display = r.kilde === "kartotek" ? "" : "none";
@@ -479,5 +479,6 @@ try {
 }
 </script>
 <script src="forside-knap.js" defer></script>
+<script src="stort-billede.js" defer></script>
 </body>
 </html>
