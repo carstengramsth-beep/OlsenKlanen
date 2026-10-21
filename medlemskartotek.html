@@ -1490,7 +1490,7 @@ function byggPersonGruppe(personer, label, husstandsNr, boernStart, voksenBogsta
             ${p.foto ? `<img src="${p.foto}" class="person-foto-mini" style="width:26px;height:26px;border-radius:4px;object-fit:cover;flex-shrink:0;cursor:zoom-in">` : ''}
             <span style="background:var(--guld-lys);color:var(--tekst);padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700">${personNr}</span>
             <span class="person-navn">${visPersonNavn(p)}</span>
-            ${p.pid ? `<a href="person.html?pid=${encodeURIComponent(p.pid)}" title="Se alle data og hele familien" style="font-size:12px;text-decoration:none" onclick="event.stopPropagation()">👤</a>` : ''}
+            ${p.pid ? `<a href="person.html?pid=${encodeURIComponent(p.pid)}&rel=1" title="Se og vælg nære relationer" onclick="event.stopPropagation()" style="margin-left:auto;font-size:12px;font-weight:600;text-decoration:none;color:#fff;background:var(--gron,#2d5016);padding:3px 10px;border-radius:12px;white-space:nowrap">🔗 Relationer</a>` : ''}
             ${statusBadge}
           </div>
           <div class="person-detaljer">
