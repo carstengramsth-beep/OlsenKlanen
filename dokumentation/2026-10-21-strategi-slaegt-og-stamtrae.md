@@ -60,3 +60,9 @@ Rasmus er Tinas søn og Renés bonusbarn.
 - Kartoteket læser Slægten: personerne kan vælges i relationsfelterne ("Slægten · …"), vises med 🌿 og tæller med i svæver-beregningen.
 - Relationer lagt ind (Carstens oplysninger): Svend Aage ⚭ Agnes; Lise, Ib, Christian = børn af Svend Aage og Agnes; Carsten: mor Birthe; René+Tina: Asta-Elisabeth og Carl-Kristian; René: Thera.
 - Agnes og Svend Aage fik 7 børn: Gydda, Birthe, Lise, Ib, Christian, Inger og Egon (bekræftet af Carsten – alle 7 er nu koblet på).
+
+## Forslag til rettelser (aftalt med Carsten)
+- Personkortet i stamtræet har knappen "✏️ Foreslå en rettelse". Forslag gemmes i `olsenpost` med `type: "slaegt_forslag"`, `status: "ny"`, `pid`, `person`, `tekst`, `afsender`, `tid`. Træet ændres ikke.
+- Når Carsten skriver "Tjek forslag til stamtræet": hent forslagene via REST, gennemgå dem ét ad gangen med Carsten, læg kun det godkendte ind, og sæt `status` til "godkendt" eller "afvist".
+- MyHeritage-data lægges for sig som "ikke bekræftet" (afventer GEDCOM-fil). Spurgt: Birthes fulde navn (Haugaard eller Vormslev?) og om Gydda skal hedde Gram Pedersen.
+- Karin Gram Lund (23-B) koblet som datter af Finn og Birthe.
