@@ -74,6 +74,8 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
 .panel .foto.uden{line-height:normal;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:30px}
 .panel .foto.uden small{font-size:11px;font-weight:700;margin-top:4px}
 .hjaelp{margin-top:.6rem;padding:.55rem .7rem;background:#fff7ee;border:1px dashed #e08a2b;border-radius:8px;font-size:13px}
+.op-link{display:block;margin:5px auto 0;font-size:10.5px;font-weight:700;color:#8a5a00;background:#fff3c4;border:1px solid var(--guld);border-radius:10px;padding:2px 6px;cursor:pointer;line-height:1.25}
+.op-link:hover{background:#ffe48a}
 .mangler-felt{background:#fff1e0 !important;border-color:#e08a2b !important;box-shadow:0 0 0 1px #e08a2b}
 
 /* Personkort */
@@ -277,7 +279,15 @@ function personKort(pid, tilloeben) {
   const snr = SNR.has(pid) ? `<span class="snr">${SNR.get(pid)} / ${SNR_ANTAL}</span>` : "";
   return `<div class="person${tilloeben ? " til" : ""}${p.status === "afdød" ? " afdod" : ""}${pid === mitPid ? " mig" : ""}" data-pid="${pid}" title="${esc(navn)}">
     ${snr}${manglerFor(p).length ? `<span class="mangler-prik" title="Mangler: ${esc(manglerFor(p).join(", "))}"></span>` : ""}${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="">` : `<div class="foto uden" title="Billede mangler">${esc(initialer)}<span class="kam">📷</span></div>`}
-    <div class="navn">${esc(navn)}</div><div class="aar">${esc(aarTekst(p))}</div></div>`;
+    <div class="navn">${esc(navn)}</div><div class="aar">${esc(aarTekst(p))}</div>${tilloeben ? foraeldreLink(p, pid) : ""}</div>`;
+}
+// Tilløbne: vis et link op til deres egne forældre (fx svigerforældre)
+function foraeldreLink(p, pid) {
+  const far = P.has(p.far_pid) ? p.far_pid : "", mor = P.has(p.mor_pid) ? p.mor_pid : "";
+  if (!far && !mor) return "";
+  const fn = x => (P.get(x).p.fornavn || navnAf(P.get(x).p).split(" ")[0]);
+  const navne = [far, mor].filter(Boolean).map(fn).join(" & ");
+  return `<span class="op-link" data-op="${esc(far || mor)}" data-fra="${esc(pid)}" title="Vis ${esc(p.fornavn || "")}s forældre og familie">⬆ ${esc(navne)}</span>`;
 }
 function tegnEnhed(pids, besoegt, erBonus, erRod) {
   // En "enhed" = en person (eller et par) + deres børn
@@ -431,7 +441,11 @@ $("forslag-send").onclick = async () => {
 };
 $("panel-bg").addEventListener("click", e => { if (e.target.id === "panel-bg") $("panel-bg").style.display = "none"; });
 $("p-herfra").onclick = () => { $("panel-bg").style.display = "none"; visFra([panelPid]); };
-$("trae").addEventListener("click", e => { const k = e.target.closest(".person"); if (k) visPanel(k.dataset.pid); });
+$("trae").addEventListener("click", e => {
+  const op = e.target.closest(".op-link");
+  if (op) { visFra([op.dataset.op]); setTimeout(() => { const k = document.querySelector(`.person[data-pid="${op.dataset.fra}"]`); if (k) { k.classList.add("fremhaev"); k.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" }); } }, 50); return; }
+  const k = e.target.closest(".person"); if (k) visPanel(k.dataset.pid);
+});
 
 // ── Valg af top ──
 function etiket(pid) { const r = P.get(pid); const nr = personNr(r); const f = (r.p.foedselsdato || "").slice(0, 4); return `${nr ? nr + " · " : ""}${navnAf(r.p)}${f ? " (f. " + f + ")" : ""}`; }
