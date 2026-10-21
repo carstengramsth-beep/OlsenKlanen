@@ -357,6 +357,28 @@ function parNavn(h, reserve) {
 
 function escN(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
+// Par med fast bryllupsdato: [{ navn, dato, nr, besked }]
+function bryllupsPar() {
+  const ix = new Map(), nrAf = new Map();
+  alleHusstande.forEach(h => (h.familiemedlemmer || []).forEach(p => { if (p.pid) { ix.set(p.pid, p); nrAf.set(p.pid, h.nr); } }));
+  const ud = [], set = new Set();
+  for (const [pid, p] of ix) {
+    let partner = p.partner_pid && ix.get(p.partner_pid) ? p.partner_pid : null;
+    if (!partner) for (const [x, o] of ix) if (o.partner_pid === pid) { partner = x; break; }
+    if (!partner) continue;
+    const q = ix.get(partner), dato = p.bryllup_dato || q.bryllup_dato;
+    if (!dato) continue;
+    const k = [pid, partner].sort().join('|');
+    if (set.has(k)) continue; set.add(k);
+    if ([p, q].some(x => x.status === 'afdød' || x.status === 'udmeldt')) continue;
+    const navn = x => String(x.navn || ((x.fornavn || '') + ' ' + (x.efternavn || ''))).trim();
+    const n1 = navn(p), n2 = navn(q), e1 = n1.split(/\s+/).pop(), e2 = n2.split(/\s+/).pop();
+    const parNavn = e1 && e1 === e2 ? n1.split(/\s+/)[0] + ' & ' + n2.split(/\s+/)[0] + ' ' + e1 : n1 + ' & ' + n2;
+    ud.push({ navn: parNavn, dato, nr: nrAf.get(pid), besked: (p.bryllup_besked || q.bryllup_besked || '').trim() });
+  }
+  return ud;
+}
+
 function maerkedageFor(aar) {
   const liste = [];
   // 1) Runde fødselsdage
@@ -365,6 +387,18 @@ function maerkedageFor(aar) {
     if (!d) return;
     const alder = aar - d.aar;
     if (RUNDE_ALDRE.includes(alder)) liste.push({ mnd: d.mnd, dag: d.dag, navn: p.fuldtNavn || (p.fornavn + ' ' + p.efternavn), hvad: '🎉 fylder ' + alder + ' år', nr: p.husstandsNr, slags: 'a' + alder });
+  });
+  // 2a) Bryllupsdage fra kartoteket (fast bryllupsdato ved partneren – sat i Medlemskartoteket)
+  const par = bryllupsPar();
+  const husMedPar = new Set(par.map(x => String(x.nr)));
+  par.forEach(x => {
+    const d = parseDato(x.dato);
+    if (!d || d.aar >= aar) return;
+    const n = aar - d.aar;
+    if (BRYLLUP_NAVN[n]) liste.push({ mnd: d.mnd, dag: d.dag, navn: x.navn, hvad: BRYLLUP_NAVN[n] + ' · gift ' + d.aar, nr: x.nr, besked: x.besked, slags: BRYLLUP_SLAGS[n] });
+    let km = d.mnd + 6, ka = d.aar + 12;
+    if (km > 12) { km -= 12; ka++; }
+    if (ka === aar) liste.push({ mnd: km, dag: Math.min(d.dag, new Date(aar, km, 0).getDate()), navn: x.navn, hvad: 'Kobberbryllup (12½ år) · gift ' + d.aar, nr: x.nr, slags: 'kobber' });
   });
   // 2) Begivenheder fra husstandene
   alleHusstande.forEach(h => {
@@ -377,6 +411,8 @@ function maerkedageFor(aar) {
       // Konfirmation, student, udlært, eksamen og nyt job handler om én person: navnet står i "beskrivelse"
       const personlig = ['konfirmation', 'student', 'udlært', 'eksamen', 'nyt_job'].includes(b.type) && (b.beskrivelse || '').trim();
       const bryllup = b.type === 'bryllupsdag' || ['soelv', 'guld', 'diamant', 'kobber'].includes(BEGI_SLAGS[b.type]);
+      // Har husstanden en fast bryllupsdato i kartoteket, regnes bryllupsdagene ud derfra (ingen dobbelte)
+      if (bryllup && husMedPar.has(String(h.nr))) return;
       const hvem = personlig ? b.beskrivelse.trim() : bryllup ? parNavn(h, husNavn) : husNavn;
       const besk = [personlig ? '' : (b.beskrivelse || '').trim(), (b.uddannelse || '').trim(), (b.besked || '').trim()].filter(Boolean).join(' — ');
       if (b.type === 'bryllupsdag' && d.aar < aar) {
@@ -465,7 +501,7 @@ function byggNaesteAar() {
     <div class="mk-forklaring">${['tin','kobber','soelv','perle','rubin','guld','diamant','jern','platin','konf','bryllup','student','udlaert','eksamen','job','skovtur','andet'].map(k => '<span class="mk mk-' + k + (valgtSlags === k ? ' valgt' : '') + '" onclick="vaelgSlags(\'' + k + '\')" title="Tryk for at se alle frem i tiden">' + (k === 'bryllup' ? HJERTER + ' Bryllup ' + HJERTER : MAERKE_TEKST[k]) + tal(k) + '</span>').join('')}</div>
     <div style="display:inline-block;background:#2d5016;color:#fff;border-radius:8px;padding:8px 16px;margin:4px 0 8px;font-size:16px;"><b>I alt ${iAlt} begivenheder</b> i oversigten ${foerste}–${sidste} <span style="opacity:.8;font-size:13px;">(alle farverne lagt sammen)</span></div>
     <div style="font-size:13px;margin-bottom:6px;">👆 Tryk på en farve for at se alle af den slags de næste ${FREM_ANTAL_AAR + 2} år. Tallet i hver farve er antallet i de år.</div>
-    Mangler en mærkedag? Skriv den ind som "Begivenhed" på familiens kort i <a href="medlemskartotek.html" style="color:#2d5016;font-weight:bold;">Medlemskartoteket</a>. Bryllupsdage skrives ind som "Bryllupsdag" med selve bryllupsdatoen.</div>`;
+    Mangler en mærkedag? Skriv den ind som "Begivenhed" på familiens kort i <a href="medlemskartotek.html" style="color:#2d5016;font-weight:bold;">Medlemskartoteket</a>. Bryllupsdage skrives ind som "⚭ Bryllupsdato" ved partneren (under ✏️ Rediger) – så regnes sølv-, guld- og diamantbryllup osv. ud automatisk.</div>`;
   if (valgtSlags) {
     // Overblik over én slags (fx alle der fylder 50) — de næste år
     const tekst = MAERKE_TEKST[valgtSlags] || (valgtSlags.slice(1) + ' år');

@@ -612,7 +612,7 @@ function alderPaa(foedAar, paaAar) {
 // Hent alle personer fra alle husstande
 // Bryllupsdage: par med partner_pid + bryllup_dato (sat i Medlemskartoteket)
 let alleBryllupper = [];
-const BRYLLUP_NAVN = { 12.5: "kobberbryllup", 25: "sølvbryllup", 40: "rubinbryllup", 50: "guldbryllup", 60: "diamantbryllup", 65: "jernbryllup", 70: "platinbryllup", 75: "krondiamantbryllup" };
+const BRYLLUP_NAVN = { 10: "tinbryllup", 25: "sølvbryllup", 30: "perlebryllup", 40: "rubinbryllup", 50: "guldbryllup", 60: "diamantbryllup", 65: "jernbryllup", 70: "platinbryllup" };
 function byggBryllupper(snap) {
   const ix = new Map(); const liste = [], set = new Set();
   snap.forEach(d => (d.data().familiemedlemmer || []).forEach(p => { if (p.pid) ix.set(p.pid, p); }));

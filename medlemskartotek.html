@@ -734,6 +734,22 @@ function aarSiden(iso) {
   if (isNaN(d)) return 0;
   return n.getFullYear() - d.getFullYear() - ((n.getMonth() < d.getMonth() || (n.getMonth() === d.getMonth() && n.getDate() < d.getDate())) ? 1 : 0);
 }
+// Standard-bryllupsdage (samme som på Mærkedage-siden)
+const MAERKE_BRYLLUP = [[10, 'Tinbryllup'], [12.5, 'Kobberbryllup'], [25, 'Sølvbryllup'], [30, 'Perlebryllup'], [40, 'Rubinbryllup'],
+  [50, 'Guldbryllup'], [60, 'Diamantbryllup'], [65, 'Jernbryllup'], [70, 'Platinbryllup']];
+function naesteMaerkebryllup(iso) {
+  const [a, m, d] = String(iso).split('-').map(Number);
+  if (!a || !m || !d) return null;
+  const idag = new Date(); idag.setHours(0, 0, 0, 0);
+  for (const [aar, navn] of MAERKE_BRYLLUP) {
+    let ma = a + Math.floor(aar), mm = m + (aar % 1 ? 6 : 0);
+    if (mm > 12) { mm -= 12; ma++; }
+    const dag = Math.min(d, new Date(ma, mm, 0).getDate());
+    const dato = new Date(ma, mm - 1, dag);
+    if (dato >= idag) return { navn: navn + ' (' + String(aar).replace('.5', '½') + ' år)', dato: `${ma}-${String(mm).padStart(2, '0')}-${String(dag).padStart(2, '0')}` };
+  }
+  return null;
+}
 function personIndeks() {
   const ix = new Map();
   data.forEach(m => (m.familiemedlemmer || []).forEach(p => { if (p.pid) ix.set(p.pid, { p, nr: String(m.nr) }); }));
@@ -760,6 +776,8 @@ function relationerHtml(p, ix) {
   if (bd && partner && relLink(ix, partner)) {
     const aar = aarSiden(bd);
     dele.push(`<span style="white-space:nowrap">⚭ Gift med ${relLink(ix, partner)} ${formatDato(bd)}${aar > 0 ? ' (' + aar + ' år)' : ''}</span>`);
+    const nm = naesteMaerkebryllup(bd);
+    if (nm) dele.push(`<span style="white-space:nowrap">💍 Næste mærkedag: <b>${nm.navn}</b> ${formatDato(nm.dato)}</span>`);
     const bb = p.bryllup_besked || (ix.get(partner) ? ix.get(partner).p.bryllup_besked : '');
     if (bb) dele.push(`<span>💬 ${escH(bb)}</span>`);
   } else en('Partner', partner);
