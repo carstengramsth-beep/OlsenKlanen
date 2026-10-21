@@ -111,3 +111,4 @@ Rasmus er Tinas søn og Renés bonusbarn.
 - Dialogen viser det nye nummer (næste ledige) og lader én vælge Far/Mor (forslag: husstandens to voksne, hvis intet er sat).
 - Personen flyttes med samme `pid` (alle relationer følger med) til en ny husstand `membres/<nyt nr>` som forælder med bogstav A (`<nr>-A`), kode `Olsen-<nr>`, `flyttet_fra`, `oprettet_fra`. Fjernes fra den gamle husstand. De 5 postansvarlige får en besked. Det nye kort åbnes, så adresse/mail/telefon kan skrives ind.
 - Krav: kortet skal være gemt først.
+- Afdøde beholder deres personlige nummer (fx Egon 28-A, Lilli 28-B) i kartotek, relationsvalg, stamtræ, personkort og søgning (`beregnPersonNr`: kun udmeldte mister bogstavet). Login er uændret – afdøde kan ikke logge ind. Lagt ind: Egon ⚭ Lilli; Kurt (22-B): far Egon, mor Lilli.

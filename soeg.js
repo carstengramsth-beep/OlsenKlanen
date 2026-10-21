@@ -57,7 +57,7 @@
           (h.familiemedlemmer || []).forEach(p => {
             const navn = [p.fornavn, p.mellemnavn, p.efternavn].filter(Boolean).join(" ").trim() || p.navn || "";
             if (!navn) return;
-            const pnr = p.fastNr || (p.bogstav && p.status !== "afdød" && p.status !== "udmeldt" ? nr + "-" + p.bogstav : nr);
+            const pnr = p.fastNr || (p.bogstav && p.status !== "udmeldt" ? nr + "-" + p.bogstav : nr);
             liste.push({ navn, nr, pnr, pid: p.pid, afdod: p.status === "afdød", kilde: "kartotek" });
           });
         });
