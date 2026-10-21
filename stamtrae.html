@@ -54,14 +54,14 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
 .trae li.bonus > .enhed{outline:2px dashed var(--linje);outline-offset:4px;border-radius:12px}
 .bonus-maerke{font-size:10.5px;color:var(--tekst-lys);margin-bottom:2px}
 
-.enhed{display:inline-flex;align-items:center;gap:6px;position:relative}
-.gift{font-size:15px;color:var(--guld)}
-.person{width:118px;background:#fff;border:2px solid var(--gron);border-radius:10px;padding:6px 5px 7px;cursor:pointer;transition:transform .12s,box-shadow .12s;position:relative}
+.enhed{display:inline-flex;align-items:stretch;gap:6px;position:relative}
+.gift{font-size:15px;color:var(--guld);align-self:center}
+.person{width:118px;min-height:128px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;background:#fff;border:2px solid var(--gron);border-radius:10px;padding:6px 5px 7px;cursor:pointer;transition:transform .12s,box-shadow .12s;position:relative}
 .person:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.12)}
 .person.til{border-color:var(--guld);background:var(--guld-pale)}
 .person.afdod{opacity:.85}
 .person.afdod .navn::after{content:' 🕯️'}
-.person.fremhaev{box-shadow:0 0 0 4px #f1c40f}
+.person.fremhaev{box-shadow:0 0 0 3px #f1c40f}
 .person.mig{box-shadow:0 0 0 3px var(--lilla)}
 .foto{width:54px;height:54px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 4px;background:var(--gron-pale);color:var(--gron);font-weight:700;font-size:18px;line-height:54px;text-align:center}
 .navn{font-size:12.5px;font-weight:600;line-height:1.2;color:var(--tekst)}
