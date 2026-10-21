@@ -635,7 +635,7 @@ function byggBryllupper(snap) {
 }
 function bryllupTekst(antal) {
   const n = BRYLLUP_NAVN[antal];
-  return `${antal} års bryllupsdag${n ? " – " + n : ""}`;
+  return n ? `${n} (${antal} år)` : `${antal} års bryllupsdag`;
 }
 
 async function hentAllePersoner() {
@@ -789,6 +789,7 @@ function renderFremhaevede(kommende) {
     const til = new Date(idag0); til.setDate(til.getDate() + 45);
     if (d > til || d.getFullYear() <= b.aar) return;
     const antal = d.getFullYear() - b.aar;
+    if (!BRYLLUP_NAVN[antal]) return;   // kun mærkebryllupper
     const verbum = d < idag0 ? "havde" : "har";
     raekker.push({ dato: d, html: `
       <div class="fremh-row">
@@ -1202,7 +1203,7 @@ let foedselsdagsTekst = "";
         .map(f => `🎂 I dag fylder ${f.navn} ${f.alder} år — Hurra og tillykke fra OlsenKlanen!`)
         .join('     ');
     }
-    const idagsBryllupper = alleBryllupper.filter(b => b.maaned === idag.getMonth() + 1 && b.dag === idag.getDate() && idag.getFullYear() > b.aar);
+    const idagsBryllupper = alleBryllupper.filter(b => b.maaned === idag.getMonth() + 1 && b.dag === idag.getDate() && BRYLLUP_NAVN[idag.getFullYear() - b.aar]);
     if (idagsBryllupper.length) {
       const t = idagsBryllupper.map(b => `💍 I dag har ${b.navne} ${bryllupTekst(idag.getFullYear() - b.aar)} — Hurra og tillykke fra OlsenKlanen!`).join('     ');
       foedselsdagsTekst = foedselsdagsTekst ? foedselsdagsTekst + '     ' + t : t;

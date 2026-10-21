@@ -592,7 +592,8 @@ function byggKalender() {
       const d = parseDato(x.dato);
       if (!d || d.aar >= iAar) return;
       const n = iAar - d.aar;
-      efterMnd[d.mnd].push({ bryllup: true, dag: d.dag, navn: x.navn, tekst: BRYLLUP_NAVN[n] ? BRYLLUP_NAVN[n] : n + ' års bryllupsdag', rund: !!BRYLLUP_NAVN[n], besked: x.besked });
+      // Kun mærkebryllupper (tin, sølv, guld osv.) kommer i kalenderen
+      if (BRYLLUP_NAVN[n]) efterMnd[d.mnd].push({ bryllup: true, dag: d.dag, navn: x.navn, tekst: BRYLLUP_NAVN[n], rund: true, besked: x.besked });
       // Kobberbryllup 12½ år efter
       let km = d.mnd + 6, ka = d.aar + 12;
       if (km > 12) { km -= 12; ka++; }
