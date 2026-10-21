@@ -611,6 +611,45 @@ body.kan-redigere .historisk-btn-wrapper{display:none}
   </div>
 </div>
 
+<div id="afdod-modal" class="historisk-overlay" style="display:none">
+  <div class="historisk-boks" style="max-width:620px">
+    <div class="historisk-hoved">
+      <div class="historisk-titel" id="afdod-titel">🕯️ Afdød person</div>
+      <button class="historisk-luk-x" id="afdod-luk">×</button>
+    </div>
+    <div class="historisk-krop">
+      <div style="font-size:12px;color:var(--tekst-lys);margin-bottom:.6rem">Til afdøde, der ikke står på et medlemskort (fx forældre, der er fælles for flere husstande). Personen kommer med i Mindelunden og i stamtræet.</div>
+      <div class="ef-3">
+        <div class="ef"><label>Fornavn *</label><input type="text" id="ad-fornavn"></div>
+        <div class="ef"><label>Mellemnavn</label><input type="text" id="ad-mellemnavn"></div>
+        <div class="ef"><label>Efternavn</label><input type="text" id="ad-efternavn"></div>
+      </div>
+      <div class="ef-2">
+        <div class="ef"><label>Født</label><input type="date" id="ad-foedt"></div>
+        <div class="ef"><label>Død</label><input type="date" id="ad-doed"></div>
+      </div>
+      <div class="ef-3">
+        <div class="ef"><label>Far</label><input list="rel-personer" id="ad-far" placeholder="Medlemsnr. eller navn"></div>
+        <div class="ef"><label>Mor</label><input list="rel-personer" id="ad-mor" placeholder="Medlemsnr. eller navn"></div>
+        <div class="ef"><label>Ægtefælle / partner</label><input list="rel-personer" id="ad-partner" placeholder="Medlemsnr. eller navn"></div>
+      </div>
+      <div class="ef"><label>📷 Billede</label><input type="file" accept="image/*" id="ad-foto"> <span id="ad-foto-vis"></span></div>
+      <div class="ef"><label>🕯️ Mindeord</label><textarea id="ad-mindeord" rows="3"></textarea></div>
+      <div class="ef-2">
+        <div class="ef"><label>🪦 Gravsted</label><input type="text" id="ad-gravsted" placeholder="Fx Søndermark Kirkegård, Frederiksberg"></div>
+        <div class="ef"><label>Foto af gravstedet</label><input type="file" accept="image/*" id="ad-gravfoto"> <span id="ad-gravfoto-vis"></span></div>
+      </div>
+      <div class="ef"><label>📖 Fortælling</label><textarea id="ad-fortaelling" rows="4" placeholder="Livshistorie, hvor personen boede, arbejde, sjove historier …"></textarea></div>
+    </div>
+    <div class="historisk-fod">
+      <button class="historisk-gem" id="afdod-gem">💾 Gem</button>
+      <button class="historisk-annuller" id="afdod-annuller">Annullér</button>
+      <span class="historisk-status-el" id="afdod-status"></span>
+    </div>
+  </div>
+</div>
+<datalist id="rel-personer"></datalist>
+
 <div id="historisk-modal" class="historisk-overlay" style="display:none">
   <div class="historisk-boks">
     <div class="historisk-hoved">
@@ -1680,9 +1719,11 @@ function renderStatusListe() {
   rk.sort((a, b) => String(a.p.foedselsdato || '9999').localeCompare(String(b.p.foedselsdato || '9999')));
   const navne = { aktiv: 'aktive personer', 'afdød': 'afdøde', udmeldt: 'udmeldte' };
   document.getElementById('antal-linje').textContent = `${rk.length} ${navne[statusFilter]}`;
-  if (!rk.length) { grid.innerHTML = '<div class="ingen-resultater">Ingen personer med denne status.</div>'; return; }
+  if (!rk.length && statusFilter !== 'afdød') { grid.innerHTML = '<div class="ingen-resultater">Ingen personer med denne status.</div>'; return; }
   const visDato = statusFilter !== 'aktiv';
-  grid.innerHTML = `<table class="status-tabel"><thead><tr><th>Navn</th><th>Født</th>${visDato ? `<th>${statusFilter === 'afdød' ? 'Død' : 'Udmeldt'}</th><th>Alder</th>` : ''}<th>Husstand</th></tr></thead><tbody>
+  const kanRet = document.body.classList.contains('kan-redigere');
+  const opretKnap = (statusFilter === 'afdød' && kanRet) ? `<div style="grid-column:1/-1;margin-bottom:.6rem"><button type="button" class="status-knap aktiv" id="opret-afdod">➕ Opret afdød person (uden medlemskort)</button></div>` : '';
+  grid.innerHTML = opretKnap + `<table class="status-tabel"><thead><tr><th>Navn</th><th>Født</th>${visDato ? `<th>${statusFilter === 'afdød' ? 'Død' : 'Udmeldt'}</th><th>Alder</th>` : ''}<th>Husstand</th></tr></thead><tbody>
     ${rk.map(({ p, m, navn }) => {
       let alder = '';
       if (visDato && p.foedselsdato && p.status_dato) {
@@ -1692,7 +1733,7 @@ function renderStatusListe() {
       return `<tr><td>${p.foto ? `<img src="${p.foto}" style="width:22px;height:22px;border-radius:3px;object-fit:cover;vertical-align:middle;margin-right:6px">` : ''}<b>${escH(navn)}</b>${relationerHtml(p, _relIx)}</td>
         <td>${p.foedselsdato ? formatDato(p.foedselsdato) : '—'}</td>
         ${visDato ? `<td>${p.status_dato ? formatDato(p.status_dato) : '—'}</td><td>${alder !== '' ? alder + ' år' : ''}</td>` : ''}
-        <td>${m ? `<a href="#" class="hjaelper-link" data-gaa-til="${escH(String(m.nr))}">nr. ${escH(String(m.nr))}</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">${escH(visKortNavn(m))}</span>` : `<a href="stamtrae.html?top=${encodeURIComponent(p.pid)}">🌿 Slægten</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">ikke medlem</span>`}</td></tr>`;
+        <td>${m ? `<a href="#" class="hjaelper-link" data-gaa-til="${escH(String(m.nr))}">nr. ${escH(String(m.nr))}</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">${escH(visKortNavn(m))}</span>` : `<a href="stamtrae.html?top=${encodeURIComponent(p.pid)}">🌿 Slægten</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">ikke medlem</span>${kanRet ? `<br><button type="button" class="status-knap" data-ret-afdod="${escH(p.pid)}" style="padding:.15rem .6rem;font-size:12px;margin-top:3px">✏️ Ret</button>` : ''}`}</td></tr>`;
     }).join('')}</tbody></table>`;
 }
 function renderSvaevere() {
@@ -1727,6 +1768,72 @@ function renderSvaevere() {
       <td><a href="#" class="hjaelper-link" data-gaa-til="${escH(String(m.nr))}">nr. ${escH(String(m.nr))}</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">${escH(visKortNavn(m))}</span></td></tr>`).join('')}
     </tbody></table>`;
 }
+// ── AFDØD PERSON UDEN MEDLEMSKORT (gemmes i Slægten: olsenpost/slaegt_<pid>) ──
+let afdodPid = null, afdodFoto = null, afdodGravFoto = null;
+function relEtiketterFrisk() { const gem = personListe; personListe = []; _relEtiketter = relEtiketter(); personListe = gem;
+  document.getElementById('rel-personer').innerHTML = _relEtiketter.map(r => `<option value="${escH(r.tekst)}"></option>`).join(''); }
+function billedeTilData(fil, maks) {
+  return new Promise((ok, fejl) => {
+    const img = new Image(), url = URL.createObjectURL(fil);
+    img.onload = () => { const f = Math.min(1, maks / Math.max(img.width, img.height)); const c = document.createElement('canvas');
+      c.width = Math.round(img.width * f); c.height = Math.round(img.height * f); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url); ok(c.toDataURL('image/jpeg', 0.82)); };
+    img.onerror = () => fejl(new Error('Kunne ikke læse billedet')); img.src = url;
+  });
+}
+function aabnAfdod(pid) {
+  relEtiketterFrisk();
+  const p = pid ? (slaegtData.find(x => x.pid === pid) || {}) : {};
+  afdodPid = pid || null; afdodFoto = p.foto || ''; afdodGravFoto = p.grav_foto || '';
+  const v = (id, x) => document.getElementById(id).value = x || '';
+  document.getElementById('afdod-titel').textContent = pid ? '🕯️ Ret ' + (visPersonNavn(p) || p.navn || '') : '🕯️ Opret afdød person';
+  v('ad-fornavn', p.fornavn); v('ad-mellemnavn', p.mellemnavn); v('ad-efternavn', p.efternavn);
+  v('ad-foedt', p.foedselsdato); v('ad-doed', p.status_dato);
+  v('ad-far', relTekst(p.far_pid)); v('ad-mor', relTekst(p.mor_pid)); v('ad-partner', relTekst(p.partner_pid));
+  v('ad-mindeord', p.mindeord); v('ad-gravsted', p.gravsted); v('ad-fortaelling', p.fortaelling);
+  document.getElementById('ad-foto').value = ''; document.getElementById('ad-gravfoto').value = '';
+  document.getElementById('ad-foto-vis').innerHTML = afdodFoto ? `<img src="${afdodFoto}" style="height:40px;border-radius:4px;vertical-align:middle">` : '';
+  document.getElementById('ad-gravfoto-vis').innerHTML = afdodGravFoto ? `<img src="${afdodGravFoto}" style="height:40px;border-radius:4px;vertical-align:middle">` : '';
+  document.getElementById('afdod-status').textContent = '';
+  document.getElementById('afdod-modal').style.display = 'flex';
+}
+const lukAfdod = () => document.getElementById('afdod-modal').style.display = 'none';
+document.getElementById('afdod-luk').onclick = lukAfdod;
+document.getElementById('afdod-annuller').onclick = lukAfdod;
+document.getElementById('ad-foto').onchange = async e => { if (e.target.files[0]) { afdodFoto = await billedeTilData(e.target.files[0], 600); document.getElementById('ad-foto-vis').innerHTML = `<img src="${afdodFoto}" style="height:40px;border-radius:4px;vertical-align:middle">`; } };
+document.getElementById('ad-gravfoto').onchange = async e => { if (e.target.files[0]) { afdodGravFoto = await billedeTilData(e.target.files[0], 800); document.getElementById('ad-gravfoto-vis').innerHTML = `<img src="${afdodGravFoto}" style="height:40px;border-radius:4px;vertical-align:middle">`; } };
+document.getElementById('afdod-gem').onclick = async () => {
+  const st = document.getElementById('afdod-status');
+  const g = id => document.getElementById(id).value.trim();
+  if (!g('ad-fornavn')) { st.textContent = 'Fornavn mangler.'; st.className = 'historisk-status-el fejl'; return; }
+  const rel = {};
+  for (const [id, felt] of [['ad-far', 'far_pid'], ['ad-mor', 'mor_pid'], ['ad-partner', 'partner_pid']]) {
+    const pid = relFind(g(id));
+    if (pid === null) { st.textContent = 'Kunne ikke finde: ' + g(id); st.className = 'historisk-status-el fejl'; return; }
+    rel[felt] = pid;
+  }
+  const pid = afdodPid || nyPid();
+  const ny = {
+    type: 'slaegt', til: [], pid,
+    fornavn: g('ad-fornavn'), mellemnavn: g('ad-mellemnavn'), efternavn: g('ad-efternavn'),
+    navn: [g('ad-fornavn'), g('ad-mellemnavn'), g('ad-efternavn')].filter(Boolean).join(' '),
+    foedselsdato: g('ad-foedt'), status: 'afdød', status_dato: g('ad-doed'), ...rel,
+    foto: afdodFoto || '', grav_foto: afdodGravFoto || '', mindeord: g('ad-mindeord'), gravsted: g('ad-gravsted'), fortaelling: g('ad-fortaelling'),
+    sidst_rettet: new Date().toISOString(), sidst_rettet_af: String(egetNr || (familieSession && familieSession.nr) || 'admin')
+  };
+  st.textContent = '⏳ Gemmer…'; st.className = 'historisk-status-el';
+  try {
+    await setDoc(doc(db, 'olsenpost', 'slaegt_' + pid), ny, { merge: true });
+    const i = slaegtData.findIndex(x => x.pid === pid);
+    if (i >= 0) slaegtData[i] = { ...slaegtData[i], ...ny }; else slaegtData.push(ny);
+    lukAfdod(); renderGrid();
+  } catch (e) { st.textContent = '✗ Kunne ikke gemme: ' + (e.message || e); st.className = 'historisk-status-el fejl'; }
+};
+document.getElementById('grid').addEventListener('click', e => {
+  if (e.target.closest('#opret-afdod')) { aabnAfdod(null); return; }
+  const r = e.target.closest('[data-ret-afdod]'); if (r) aabnAfdod(r.dataset.retAfdod);
+});
+
 function saetStatusFilter(v) {
   statusFilter = v;
   document.querySelectorAll('[data-status-filter]').forEach(b => b.classList.toggle('aktiv', b.dataset.statusFilter === v));

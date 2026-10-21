@@ -258,7 +258,7 @@ body {
 <script type="module">
 import { initializeApp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, serverTimestamp }
+import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, serverTimestamp, query, where }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -287,6 +287,7 @@ function husstandsAf(nr) {
 // Familien omkring den afdøde (samme husstand) + administratorer må skrive omtale
 function maaSkriveOmtale(afdoedHusstandsNr) {
   if (!MIT_NR) return false;
+  if (afdoedHusstandsNr === 'Slægten') return true;   // fælles slægtninge: alle medlemmer må skrive
   if (MIT_NIVEAU === 'admin') return true;
   return husstandsAf(MIT_NR) === husstandsAf(afdoedHusstandsNr);
 }
@@ -375,7 +376,7 @@ function mindekortHtml(p) {
         </div>` : ''}
         ${omtalerHtml}
         ${omtaleFormHtml}
-        ${p.husstandsNr ? `<div class="mindekort-husstand">Data fra husstand nr. ${p.husstandsNr}</div>` : ''}
+        ${p.husstandsNr === 'Slægten' ? `<div class="mindekort-husstand">🌿 Fra Slægten (fælles slægtning)</div>` : (p.husstandsNr ? `<div class="mindekort-husstand">Data fra husstand nr. ${p.husstandsNr}</div>` : '')}
       </div>
     </div>`;
 }
@@ -422,6 +423,12 @@ async function hentAfdoede() {
         }
       });
     });
+
+    // Afdøde uden medlemskort (Slægten)
+    try {
+      const s2 = await getDocs(query(collection(db, 'olsenpost'), where('type', '==', 'slaegt')));
+      s2.forEach(d => { const p = d.data(); if (p.status === 'afdød') afdoede.push({ ...p, husstandsNr: 'Slægten', husstandsNavn: 'Slægten' }); });
+    } catch (e) { console.log('Kunne ikke hente Slægten:', e); }
 
     if (!afdoede.length) {
       indhold.innerHTML = '<div class="tom-besked">Der er endnu ingen registrerede i Mindelunden.<br>Når et medlem markeres som "Afdød" i Medlemskartoteket, vises de her.</div>';
