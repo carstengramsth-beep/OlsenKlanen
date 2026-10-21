@@ -395,7 +395,8 @@ function maerkedageFor(aar) {
   const husMedPar = new Set(par.map(x => String(x.nr)));
   par.forEach(x => {
     const d = parseDato(x.dato);
-    if (!d || d.aar >= aar) return;
+    if (d && d.aar === aar) { liste.push({ mnd: d.mnd, dag: d.dag, navn: x.navn, hvad: '💒 Bryllup', nr: x.nr, besked: x.besked, slags: 'bryllup' }); return; }
+    if (!d || d.aar > aar) return;
     const n = aar - d.aar;
     if (BRYLLUP_NAVN[n]) liste.push({ mnd: d.mnd, dag: d.dag, navn: x.navn, hvad: BRYLLUP_NAVN[n] + ' · gift ' + d.aar, nr: x.nr, besked: x.besked, slags: BRYLLUP_SLAGS[n] });
     let km = d.mnd + 6, ka = d.aar + 12;
@@ -592,7 +593,8 @@ function byggKalender() {
   try {
     bryllupsPar().forEach(x => {
       const d = parseDato(x.dato);
-      if (!d || d.aar >= iAar) return;
+      if (d && d.aar === iAar) { efterMnd[d.mnd].push({ bryllup: true, dag: d.dag, navn: x.navn, tekst: '💒 Bryllup', rund: true, besked: x.besked }); return; }
+      if (!d || d.aar > iAar) return;
       const n = iAar - d.aar;
       // Kun mærkebryllupper (tin, sølv, guld osv.) kommer i kalenderen
       if (BRYLLUP_NAVN[n]) efterMnd[d.mnd].push({ bryllup: true, dag: d.dag, navn: x.navn, tekst: BRYLLUP_NAVN[n], rund: true, besked: x.besked });

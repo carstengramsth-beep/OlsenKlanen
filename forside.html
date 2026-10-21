@@ -787,6 +787,17 @@ function renderFremhaevede(kommende) {
     const fra = new Date(idag0); fra.setDate(fra.getDate() - 3);
     if (d < fra) d = new Date(idag0.getFullYear() + 1, b.maaned - 1, b.dag);
     const til = new Date(idag0); til.setDate(til.getDate() + 45);
+    // Selve brylluppet (datoen er i år eller ude i fremtiden)
+    const bryllup = new Date(b.aar, b.maaned - 1, b.dag);
+    if (bryllup >= fra && bryllup <= til) {
+      raekker.push({ dato: bryllup, html: `
+      <div class="fremh-row">
+        <div class="fremh-dato">${bryllup.getDate()}. ${MAANEDER[bryllup.getMonth()]}</div>
+        <div class="fremh-tekst">💒 ${escHtmlF(b.navne)} ${bryllup < idag0 ? "blev gift" : "bliver gift"}${b.besked && bryllup >= idag0 ? `<div style="font-size:.9em;color:#5a5a40;margin-top:2px">💬 ${escHtmlF(b.besked)}</div>` : ""}</div>
+        <div class="fremh-tag tag-maerk">Bryllup</div>
+      </div>` });
+      return;
+    }
     if (d > til || d.getFullYear() <= b.aar) return;
     const antal = d.getFullYear() - b.aar;
     if (!BRYLLUP_NAVN[antal]) return;   // kun mærkebryllupper
@@ -1203,9 +1214,11 @@ let foedselsdagsTekst = "";
         .map(f => `🎂 I dag fylder ${f.navn} ${f.alder} år — Hurra og tillykke fra OlsenKlanen!`)
         .join('     ');
     }
-    const idagsBryllupper = alleBryllupper.filter(b => b.maaned === idag.getMonth() + 1 && b.dag === idag.getDate() && BRYLLUP_NAVN[idag.getFullYear() - b.aar]);
+    const idagsBryllupper = alleBryllupper.filter(b => b.maaned === idag.getMonth() + 1 && b.dag === idag.getDate() && (idag.getFullYear() === b.aar || BRYLLUP_NAVN[idag.getFullYear() - b.aar]));
     if (idagsBryllupper.length) {
-      const t = idagsBryllupper.map(b => `💍 I dag har ${b.navne} ${bryllupTekst(idag.getFullYear() - b.aar)} — Hurra og tillykke fra OlsenKlanen!`).join('     ');
+      const t = idagsBryllupper.map(b => idag.getFullYear() === b.aar
+        ? `💒 I dag bliver ${b.navne} gift — Hurra og tillykke fra OlsenKlanen!`
+        : `💍 I dag har ${b.navne} ${bryllupTekst(idag.getFullYear() - b.aar)} — Hurra og tillykke fra OlsenKlanen!`).join('     ');
       foedselsdagsTekst = foedselsdagsTekst ? foedselsdagsTekst + '     ' + t : t;
     }
  

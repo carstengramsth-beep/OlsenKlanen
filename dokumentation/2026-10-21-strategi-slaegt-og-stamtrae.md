@@ -75,3 +75,4 @@ Rasmus er Tinas søn og Renés bonusbarn.
 - Kortet viser "💍 Næste mærkedag: <type> <dato>" (tin 10, kobber 12½, sølv 25, perle 30, rubin 40, guld 50, diamant 60, jern 65, platin 70).
 - Mærkedage-siden (`foedselsdage.html`, oversigt + "Frem i tiden") regner runde bryllupsdage ud fra `bryllup_dato`. Gamle bryllups-begivenheder springes over for husstande, der har en fast bryllupsdato (ingen dobbelte).
 - Begivenhedskalenderen på Mærkedage-siden viser KUN mærkebryllupper (fx Kobberbryllup 12½ år) – aftalt med Carsten. Det samme gælder forsiden (liste og bånd).
+- Kommende bryllup: ligger `bryllup_dato` i fremtiden, vises det som "💒 Bryllup" (kort, forside-liste og bånd, Mærkedage-kalender og "Frem i tiden"). Bagefter regnes mærkebryllupper ud fra datoen.
