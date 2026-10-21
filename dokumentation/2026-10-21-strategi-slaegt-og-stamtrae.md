@@ -53,3 +53,10 @@ Rasmus er Tinas søn og Renés bonusbarn.
 - Links: forsiden (🌳 Stamtræ) og kartoteket (🌳 Se stamtræet).
 - Relationer lagt ind efter Carstens oplysninger: Carsten (far Finn, partner Elisabeth); Sanne, Trine, René (far Carsten); Sanne ⚭ Nano; René ⚭ Tina; Emma og Luna (mor Sanne, far Nano); Rasmus (mor Tina, bonusforælder René).
 - Mangler: Carstens mor Birthe (data kommer). Asta-Elisabeth (nr. 17) er ikke koblet – spørg Carsten.
+
+## Slægten startet (21. okt.)
+- Personer i Slægten gemmes i `olsenpost` med `type: "slaegt"`, dok-id `slaegt_<pid>`, `til: []` (vises ikke som post). Felter som i kartoteket + `fortaelling`.
+- Oprettet: Gydda, Birthe Haugaard (Carstens mor, partner Finn Gram) og Inger – alle børn af Svend Aage og Agnes. Datoer mangler.
+- Kartoteket læser Slægten: personerne kan vælges i relationsfelterne ("Slægten · …"), vises med 🌿 og tæller med i svæver-beregningen.
+- Relationer lagt ind (Carstens oplysninger): Svend Aage ⚭ Agnes; Lise, Ib, Christian = børn af Svend Aage og Agnes; Carsten: mor Birthe; René+Tina: Asta-Elisabeth og Carl-Kristian; René: Thera.
+- Agnes og Svend Aage fik 7 børn: Gydda, Birthe, Lise, Ib, Christian, Inger + én ukendt (Egon?).
