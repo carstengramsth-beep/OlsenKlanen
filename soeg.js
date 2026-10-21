@@ -58,13 +58,13 @@
             const navn = [p.fornavn, p.mellemnavn, p.efternavn].filter(Boolean).join(" ").trim() || p.navn || "";
             if (!navn) return;
             const pnr = p.fastNr || (p.bogstav && p.status !== "udmeldt" ? nr + "-" + p.bogstav : nr);
-            liste.push({ navn, nr, pnr, pid: p.pid, afdod: p.status === "afdød", kilde: "kartotek" });
+            liste.push({ navn, tidl: p.tidligere_navne || "", nr, pnr, pid: p.pid, afdod: p.status === "afdød", kilde: "kartotek" });
           });
         });
         const q = { structuredQuery: { from: [{ collectionId: "olsenpost" }], where: { fieldFilter: { field: { fieldPath: "type" }, op: "EQUAL", value: { stringValue: "slaegt" } } } } };
         const r2 = await fetch(`${BASE}:runQuery?key=${KEY}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(q) }).then(x => x.json());
         (r2 || []).forEach(x => { if (!x.document) return; const p = vaerdi({ mapValue: x.document });
-          liste.push({ navn: p.navn || p.fornavn || "", pid: p.pid, afdod: p.status === "afdød", kilde: "slaegt" }); });
+          liste.push({ navn: p.navn || p.fornavn || "", tidl: p.tidligere_navne || "", pid: p.pid, afdod: p.status === "afdød", kilde: "slaegt" }); });
       } catch (e) { console.log("Søgning: kunne ikke hente personer", e); }
       PERSONER = liste;
       return liste;
@@ -75,7 +75,7 @@
     if (!PERSONER) return [];
     const ord = norm(q).split(/\s+/).filter(o => o.length >= 2 && !/^\d+$/.test(o));
     if (!ord.length) return [];
-    return PERSONER.filter(p => ord.every(o => norm(p.navn).split(/\s+/).some(n => n.startsWith(o)))).slice(0, 6);
+    return PERSONER.filter(p => ord.every(o => norm(p.navn + " " + (p.tidl || "")).split(/[\s,·\/()]+/).some(n => n.startsWith(o)))).slice(0, 6);
   }
 
   // ── Informationer (infomails/index.json) – anbefal den info, der svarer på spørgsmålet ──
@@ -161,7 +161,7 @@
       if (pers.length) {
         const fornavn = q.trim().split(/\s+/)[0];
         html += `<div class="hej">👋 Hej${MIT_NAVN ? " " + esc(MIT_NAVN) : ""} – du søger efter <b>${esc(fornavn.charAt(0).toUpperCase() + fornavn.slice(1))}</b>. Vi fandt ${pers.length === 1 ? "denne person" : "disse personer"}:</div>`;
-        html += pers.map(p => `<div class="person-svar"><span class="r-ikon">${p.afdod ? "🕯️" : "👤"}</span><span><span class="r-titel">${esc(p.navn)}</span>${p.pnr ? ` <span class="r-tekst">(medl.nr. ${esc(p.pnr)})</span>` : p.kilde === "slaegt" ? ` <span class="r-tekst">(i Slægten)</span>` : ""}<br>
+        html += pers.map(p => `<div class="person-svar"><span class="r-ikon">${p.afdod ? "🕯️" : "👤"}</span><span><span class="r-titel">${esc(p.navn)}</span>${p.tidl ? ` <span class="r-tekst">(${esc(p.tidl)})</span>` : ""}${p.pnr ? ` <span class="r-tekst">(medl.nr. ${esc(p.pnr)})</span>` : p.kilde === "slaegt" ? ` <span class="r-tekst">(i Slægten)</span>` : ""}<br>
           ${p.kilde === "kartotek" ? `<a class="lille" href="medlemskartotek.html?soeg=${encodeURIComponent(p.navn.split(" ")[0])}">📇 Se medlemskortet</a>` : ""}
           ${p.pid ? `<a class="lille" href="person.html?pid=${encodeURIComponent(p.pid)}">👤 Personkort</a>` : ""}
           ${p.pid ? `<a class="lille" href="stamtrae.html?top=${encodeURIComponent(p.pid)}">🌳 Se i stamtræet</a>` : ""}

@@ -313,6 +313,7 @@ function visPanel(pid) {
   const { bio, bonus } = boernAf([pid]);
   const pa = partnerAf(pid);
   const linjer = [
+    p.tidligere_navne ? `📝 Tidligere navne: ${esc(p.tidligere_navne)}` : "",
     p.foedselsdato ? `🎂 Født ${datoTekst(p.foedselsdato)}` : "",
     p.status === "afdød" ? `🕯️ Død ${datoTekst(p.status_dato) || ""}` : "",
     personNr(r) ? `📇 Medlemsnr. ${esc(personNr(r))}${r.husNavn ? " · " + esc(r.husNavn) : ""}` : (r.kilde === "slaegt" ? "🌿 I Slægten (ikke medlem)" : ""),

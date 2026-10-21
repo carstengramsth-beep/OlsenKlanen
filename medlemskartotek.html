@@ -648,6 +648,7 @@ body.kan-redigere .historisk-btn-wrapper{display:none}
         <div class="ef"><label>Mellemnavn</label><input type="text" id="ad-mellemnavn"></div>
         <div class="ef"><label>Efternavn</label><input type="text" id="ad-efternavn"></div>
       </div>
+      <div class="ef"><label>Tidligere navne / fødenavn</label><input type="text" id="ad-tidligere" placeholder="Fx født Nielsen"></div>
       <div class="ef-2">
         <div class="ef"><label>Født</label><input type="date" id="ad-foedt"></div>
         <div class="ef"><label>Død</label><input type="date" id="ad-doed"></div>
@@ -1526,7 +1527,7 @@ function renderGrid() {
         visAdresse(m).toLowerCase().includes(q) ||
         (m.tlf || '').includes(q) ||
         (m.email || '').toLowerCase().includes(q) ||
-        (m.familiemedlemmer || []).some(p => p.navn.toLowerCase().includes(q))
+        (m.familiemedlemmer || []).some(p => (String(p.navn || '') + ' ' + String(p.tidligere_navne || '')).toLowerCase().includes(q))
       );
     })
     .sort((a, b) => +a.nr - +b.nr);
@@ -1837,7 +1838,7 @@ function aabnAfdod(pid) {
   afdodPid = pid || null; afdodFoto = p.foto || ''; afdodGravFoto = p.grav_foto || '';
   const v = (id, x) => document.getElementById(id).value = x || '';
   document.getElementById('afdod-titel').textContent = pid ? '🕯️ Ret ' + (visPersonNavn(p) || p.navn || '') : '🕯️ Opret afdød person';
-  v('ad-fornavn', p.fornavn); v('ad-mellemnavn', p.mellemnavn); v('ad-efternavn', p.efternavn);
+  v('ad-fornavn', p.fornavn); v('ad-mellemnavn', p.mellemnavn); v('ad-efternavn', p.efternavn); v('ad-tidligere', p.tidligere_navne);
   v('ad-foedt', p.foedselsdato); v('ad-doed', p.status_dato);
   document.getElementById('ad-status').value = (pid && p.status !== 'afdød') ? '' : 'afdød';
   v('ad-far', relTekst(p.far_pid)); v('ad-mor', relTekst(p.mor_pid)); v('ad-partner', relTekst(p.partner_pid));
@@ -1870,6 +1871,7 @@ document.getElementById('afdod-gem').onclick = async () => {
     type: 'slaegt', til: [], pid,
     fornavn: g('ad-fornavn'), mellemnavn: g('ad-mellemnavn'), efternavn: g('ad-efternavn'),
     navn: [g('ad-fornavn'), g('ad-mellemnavn'), g('ad-efternavn')].filter(Boolean).join(' '),
+    tidligere_navne: g('ad-tidligere'),
     foedselsdato: g('ad-foedt'), status: document.getElementById('ad-status').value, status_dato: document.getElementById('ad-status').value === 'afdød' ? g('ad-doed') : '', ...rel,
     foto: afdodFoto || '', grav_foto: afdodGravFoto || '', mindeord: g('ad-mindeord'), gravsted: g('ad-gravsted'), fortaelling: g('ad-fortaelling'),
     sidst_rettet: new Date().toISOString(), sidst_rettet_af: String(egetNr || (familieSession && familieSession.nr) || 'admin')
@@ -2024,6 +2026,7 @@ function renderPersonEdit() {
         <input data-pi="${i}" data-felt="foedselsdato" type="date" title="Fødselsdato" value="${p.foedselsdato||''}">
         <input data-pi="${i}" data-felt="mobil"        placeholder="Mobil"        value="${p.mobil||''}">
         <input class="fuld" data-pi="${i}" data-felt="email" placeholder="Email" value="${p.email||''}">
+        <input class="fuld" data-pi="${i}" data-felt="tidligere_navne" placeholder="Tidligere navne / fødenavn (fx født Nielsen)" title="Tidligere navne – så personen også kan findes under det gamle navn" value="${escH(p.tidligere_navne||'')}">
       </div>
       <div class="person-status-felter" style="margin-top:.5rem;padding-top:.5rem;border-top:1px dashed var(--border);display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
         <div>
