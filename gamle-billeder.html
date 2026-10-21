@@ -219,6 +219,7 @@ async function tegnGalleri(){
         <button type="button" class="slet-billede-knap" onclick="sletBillede('${b.id}','${b.storage_sti}')" title="Slet billede">🗑</button>
         <img src="${url}" onclick="visStort('${url}')" loading="lazy">
         <div class="billede-krop">
+          ${b.tekst ? `<div class="billede-tekst" style="font-size:14px;margin-bottom:.4rem;white-space:pre-line">${escHtml(b.tekst)}</div>` : ""}
           <div class="billede-uploader">Lagt op af ${escHtml(b.uploadet_af_navn||"ukendt")} · ${tidTekst(b.uploadet)}</div>
           <div class="kommentarer" id="kom-${b.id}">${kommentarHtml}</div>
           <div class="kommentar-form">
