@@ -108,9 +108,16 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
 <div class="panel-baggrund" id="panel-bg">
   <div class="panel">
     <div class="panel-krop" id="panel-krop"></div>
+    <div class="panel-krop" id="forslag-boks" style="display:none;border-top:1px solid var(--border)">
+      <div style="font-weight:600;color:var(--gron);margin-bottom:.4rem">✏️ Dit forslag om <span id="forslag-navn"></span></div>
+      <textarea id="forslag-tekst" rows="4" style="width:100%;font-family:inherit;font-size:14px;padding:.5rem;border:1px solid var(--border);border-radius:6px" placeholder="Fx: Født 3. maj 1931 i Odense. Gift med … Datter af …"></textarea>
+      <div style="font-size:12px;color:var(--tekst-lys);margin:.3rem 0 .5rem">Træet ændres ikke med det samme. Forslaget bliver gennemgået, før det lægges ind.</div>
+      <button class="btn gron" id="forslag-send">Send forslag</button> <span id="forslag-status" style="font-size:13px;margin-left:.5rem"></span>
+    </div>
     <div class="panel-fod">
       <button class="btn gron" id="p-herfra">🌳 Vis træ herfra</button>
       <a class="btn" id="p-kort" href="#">📇 Medlemskort</a>
+      <button class="btn" id="p-forslag">✏️ Foreslå en rettelse</button>
       <button class="btn" id="p-luk" style="margin-left:auto">Luk</button>
     </div>
   </div>
@@ -118,7 +125,7 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -279,9 +286,30 @@ function visPanel(pid) {
     <h2>${esc(navn)}</h2>${linjer.map(l => `<div class="linje">${l}</div>`).join("")}<div style="clear:both"></div>`;
   $("p-kort").style.display = r.kilde === "kartotek" ? "" : "none";
   $("p-kort").href = "medlemskartotek.html";
+  $("forslag-boks").style.display = "none";
   $("panel-bg").style.display = "flex";
 }
 $("p-luk").onclick = () => $("panel-bg").style.display = "none";
+$("p-forslag").onclick = () => {
+  $("forslag-boks").style.display = "block";
+  $("forslag-navn").textContent = navnAf(P.get(panelPid).p);
+  $("forslag-status").textContent = ""; $("forslag-tekst").focus();
+};
+$("forslag-send").onclick = async () => {
+  const tekst = $("forslag-tekst").value.trim();
+  if (tekst.length < 3) { $("forslag-status").textContent = "Skriv dit forslag først."; return; }
+  $("forslag-send").disabled = true; $("forslag-status").textContent = "Sender …";
+  try {
+    await addDoc(collection(db, "olsenpost"), {
+      type: "slaegt_forslag", til: [], status: "ny",
+      pid: panelPid, person: navnAf(P.get(panelPid).p), tekst,
+      afsender: hent("ok_nr"), afsender_navn: hent("ok_navn"), tid: new Date().toISOString()
+    });
+    $("forslag-status").textContent = "✅ Tak! Dit forslag er modtaget.";
+    $("forslag-tekst").value = "";
+  } catch(e) { $("forslag-status").textContent = "Kunne ikke sende: " + (e.message || e); }
+  $("forslag-send").disabled = false;
+};
 $("panel-bg").addEventListener("click", e => { if (e.target.id === "panel-bg") $("panel-bg").style.display = "none"; });
 $("p-herfra").onclick = () => { $("panel-bg").style.display = "none"; visFra([panelPid]); };
 $("trae").addEventListener("click", e => { const k = e.target.closest(".person"); if (k) visPanel(k.dataset.pid); });
