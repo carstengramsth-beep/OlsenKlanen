@@ -64,6 +64,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .mk-a95  { background: #5f6b73; }
 .mk-a100 { background: linear-gradient(90deg, #e74c3c, #f39c12, #27ae60, #2980b9, #8e44ad); }
 .mk-konf    { background: #fff; color: #1e3a8a; border: 2px solid #1e3a8a; text-shadow: none; }
+.halv { font-size: .7em; }
 .mk-bryllup { background: #fff0f4; color: #b0102c; border: 1px solid #e8a0b0; text-shadow: none; }
 .mk-forklaring .mk { cursor: pointer; }
 .mk-forklaring .mk.valgt { outline: 3px solid #2d5016; outline-offset: 2px; }
@@ -355,7 +356,8 @@ function parNavn(h, reserve) {
   return navn.join(' & ');
 }
 
-function escN(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+// "½" vises med mindre skrift (fx Kobberbryllup 12½ år)
+function escN(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/½/g, '<span class="halv">½</span>'); }
 
 // Par med fast bryllupsdato: [{ navn, dato, nr, besked }]
 function bryllupsPar() {

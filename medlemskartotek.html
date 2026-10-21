@@ -746,7 +746,7 @@ function naesteMaerkebryllup(iso) {
     if (mm > 12) { mm -= 12; ma++; }
     const dag = Math.min(d, new Date(ma, mm, 0).getDate());
     const dato = new Date(ma, mm - 1, dag);
-    if (dato >= idag) return { navn: navn + ' (' + String(aar).replace('.5', '½') + ' år)', dato: `${ma}-${String(mm).padStart(2, '0')}-${String(dag).padStart(2, '0')}` };
+    if (dato >= idag) return { navn: navn + ' (' + String(aar).replace('.5', '<span style="font-size:.7em">½</span>') + ' år)', dato: `${ma}-${String(mm).padStart(2, '0')}-${String(dag).padStart(2, '0')}` };
   }
   return null;
 }
