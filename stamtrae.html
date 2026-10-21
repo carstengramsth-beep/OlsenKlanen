@@ -69,6 +69,11 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
 .snr{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--gron);color:#fff;font-size:9.5px;padding:1px 6px;border-radius:8px;white-space:nowrap}
 .person.til .snr{background:var(--guld)}
 .mangler-prik{position:absolute;top:5px;right:5px;width:10px;height:10px;border-radius:50%;background:#d0312d;box-shadow:0 0 0 2px #fff}
+.foto.uden{border:2px dashed #e08a2b;background:#fff7ee;color:#c46f12;position:relative;box-sizing:border-box;line-height:50px}
+.foto.uden .kam{position:absolute;right:-6px;bottom:-4px;font-size:15px;line-height:1}
+.panel .foto.uden{line-height:normal;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:30px}
+.panel .foto.uden small{font-size:11px;font-weight:700;margin-top:4px}
+.hjaelp{margin-top:.6rem;padding:.55rem .7rem;background:#fff7ee;border:1px dashed #e08a2b;border-radius:8px;font-size:13px}
 .mangler-felt{background:#fff1e0 !important;border-color:#e08a2b !important;box-shadow:0 0 0 1px #e08a2b}
 
 /* Personkort */
@@ -271,7 +276,7 @@ function personKort(pid, tilloeben) {
   const initialer = navn.split(/\s+/).map(x => x[0]).slice(0, 2).join("").toUpperCase();
   const snr = SNR.has(pid) ? `<span class="snr">${SNR.get(pid)} / ${SNR_ANTAL}</span>` : "";
   return `<div class="person${tilloeben ? " til" : ""}${p.status === "afdød" ? " afdod" : ""}${pid === mitPid ? " mig" : ""}" data-pid="${pid}" title="${esc(navn)}">
-    ${snr}${manglerFor(p).length ? `<span class="mangler-prik" title="Mangler: ${esc(manglerFor(p).join(", "))}"></span>` : ""}${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="">` : `<div class="foto">${esc(initialer)}</div>`}
+    ${snr}${manglerFor(p).length ? `<span class="mangler-prik" title="Mangler: ${esc(manglerFor(p).join(", "))}"></span>` : ""}${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="">` : `<div class="foto uden" title="Billede mangler">${esc(initialer)}<span class="kam">📷</span></div>`}
     <div class="navn">${esc(navn)}</div><div class="aar">${esc(aarTekst(p))}</div></div>`;
 }
 function tegnEnhed(pids, besoegt, erBonus, erRod) {
@@ -327,10 +332,10 @@ function visPanel(pid) {
     bonus.length ? `Bonusbørn: ${bonus.map(rel).join(", ")}` : "",
     p.fortaelling ? `<div style="margin-top:.6rem;white-space:pre-line">${esc(p.fortaelling)}</div>` : "",
     p.bekraeftet && p.bekraeftet.navn ? `✅ Data bekræftet af ${esc(p.bekraeftet.navn)} (${esc(datoTekst(p.bekraeftet.dato))})` : "",
-    manglerFor(p).length ? `<div style="margin-top:.5rem;color:#d0312d;font-size:13px">🔴 Mangler: ${esc(manglerFor(p).join(", "))}</div>` : ""
+    manglerFor(p).length ? `<div style="margin-top:.5rem;color:#d0312d;font-size:13px">🔴 Mangler: ${esc(manglerFor(p).join(", "))}</div><div class="hjaelp">🙏 <b>Hjælp med at gøre ${esc((p.fornavn || navn).split(" ")[0])} færdig.</b> Har du et billede eller kender du datoerne? Så tryk på en af <b>✏️-knapperne</b> herunder – eller send det til 5-Banden.</div>` : ""
   ].filter(Boolean);
   const initialer = navn.split(/\s+/).map(x => x[0]).slice(0, 2).join("").toUpperCase();
-  $("panel-krop").innerHTML = `${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="" data-stort="${esc(navnAf(p))}" title="Tryk for at se billedet stort">` : `<div class="foto">${esc(initialer)}</div>`}
+  $("panel-krop").innerHTML = `${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="" data-stort="${esc(navnAf(p))}" title="Tryk for at se billedet stort">` : `<div class="foto uden">📷<small>Billede mangler</small></div>`}
     <h2>${esc(navn)}</h2>${linjer.map(l => `<div class="linje">${l}</div>`).join("")}<div style="clear:both"></div>`;
   $("p-personkort").href = "person.html?pid=" + encodeURIComponent(pid);
   $("p-kort").style.display = r.kilde === "kartotek" ? "" : "none";

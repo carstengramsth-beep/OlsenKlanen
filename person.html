@@ -29,6 +29,9 @@ main{max-width:900px;margin:0 auto;padding:1.2rem 1rem}
 .foto{width:130px;height:130px;border-radius:12px;object-fit:cover;background:var(--gron-pale);color:var(--gron);font-size:40px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .navn{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--gron);line-height:1.2}
 .linje{margin:.15rem 0}
+.foto.uden{border:2px dashed #e08a2b;background:#fff7ee;color:#c46f12;flex-direction:column;font-size:36px}
+.foto.uden small{font-size:12px;font-weight:700;margin-top:4px}
+.hjaelp{margin-top:.5rem;padding:.55rem .7rem;background:#fff7ee;border:1px dashed #e08a2b;border-radius:8px;font-size:14px}
 .mangler{color:var(--roed);font-size:14px;margin-top:.4rem}
 .ok{color:var(--gron);font-size:14px;margin-top:.4rem}
 .knapper{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem}
@@ -173,7 +176,7 @@ function vis(pid, aabenRel) {
   $("main").innerHTML = `
   <div class="kort">
     <div class="hoved">
-      ${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="" data-stort="${esc(n)}" title="Tryk for at se billedet stort">` : `<div class="foto">${esc(ini(n))}</div>`}
+      ${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="" data-stort="${esc(n)}" title="Tryk for at se billedet stort">` : `<div class="foto uden">📷<small>Billede mangler</small></div>`}
       <div style="flex:1;min-width:240px">
         <div class="navn">${esc(n)}${p.status === "afdød" ? " 🕯️" : ""}</div>
         ${p.tidligere_navne ? `<div class="linje">📝 Tidligere navne: ${esc(p.tidligere_navne)}</div>` : ""}
@@ -181,7 +184,7 @@ function vis(pid, aabenRel) {
         ${p.status === "afdød" ? `<div class="linje">🕯️ Død ${dato(p.status_dato) || "(dato mangler)"}${alder !== "" ? ` · ${alder} år` : ""}</div>` : (alder !== "" ? `<div class="linje">${alder} år</div>` : "")}
         <div class="linje">${r.kilde === "kartotek" ? `📇 Medlemsnr. ${esc(personNr(r))} · ${esc(r.husNavn)}` : "🌿 I Slægten (ikke på et medlemskort)"}</div>
         ${p.bekraeftet && p.bekraeftet.navn ? `<div class="ok">✅ Data bekræftet af ${esc(p.bekraeftet.navn)} (${dato(p.bekraeftet.dato)})</div>` : ""}
-        ${mgl.length ? `<div class="mangler">🔴 Mangler: ${esc(mgl.join(", "))}</div>` : ""}
+        ${mgl.length ? `<div class="mangler">🔴 Mangler: ${esc(mgl.join(", "))}</div><div class="hjaelp">🙏 <b>Hjælp med at gøre ${esc((p.fornavn || n).split(" ")[0])} færdig.</b> Har du et billede eller kender du datoerne? Så tryk <b>✏️ Ret data</b> herunder – eller send det til 5-Banden.</div>` : ""}
         <div class="knapper">
           ${ER_ADMIN || ret ? `<a class="btn" href="${retUrl}">✏️ Ret data</a>` : ""}
           <a class="btn" href="stamtrae.html?top=${encodeURIComponent(pid)}">🌳 Vis i stamtræet</a>
