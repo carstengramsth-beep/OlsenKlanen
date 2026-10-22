@@ -950,7 +950,7 @@ async function tegnInformationer(){
         <button type="button" class="knap lille" onclick="visInfo('${enc(m.id)}')">📖 Læs</button>
         ${ER_POSTANSVARLIG ? `
         <button type="button" class="knap lille" onclick="sendInfomail('${enc(m.id)}','prove')">🧪 Prøve til mig selv</button>
-        <button type="button" class="knap lille" style="background:#8b1e1e;" onclick="sendInfomail('${enc(m.id)}','alle')">📨 Send til alle</button>` : `
+        ${alle.length ? "" : `<button type="button" class="knap lille" style="background:#8b1e1e;" onclick="sendInfomail('${enc(m.id)}','alle')">📨 Send til alle</button>`}` : `
 `}
       </div>
       ${!ER_POSTANSVARLIG ? `<div style="margin-top:8px;background:#f5f1e8;border-radius:8px;padding:8px 10px;">
@@ -1008,10 +1008,24 @@ window.sendInfomail = async function(id, maade){
     if (!confirm("Vil du sende Info nr. " + meta.nr + " til " + modtager.navn + " (" + modtager.email + ")?")) return;
   }
   if (maade === "alle") {
+    // Stop for dobbelt-afsendelse: er den allerede sendt (eller på vej) til alle?
+    if (window._infoSender) { infoStatus("fejl", "Vent – " + "Info nr. " + meta.nr + " er ved at blive sendt."); return; }
+    try {
+      const snap = await getDocs(query(collection(db, "olsenpost_mail"), where("type", "==", "infomail")));
+      const tidl = [];
+      snap.forEach(d => { const x = d.data(); if (x.skabelon === id && !x.prove && !x.enkelt && x.status !== "fejl" && x.status !== "annulleret") tidl.push(x); });
+      if (tidl.length) {
+        const sidst = Math.max(...tidl.map(x => x.sendt_lokal || 0));
+        const hvornaar = sidst ? new Date(sidst).toLocaleString("da-DK", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "";
+        alert("Info nr. " + meta.nr + " er allerede sendt til alle" + (hvornaar ? " (" + hvornaar + ")" : "") + ".\n\nDen bliver ikke sendt igen, så ingen får den to gange.\n\nSkal ét medlem have den igen, så brug »Send til det valgte medlem«.");
+        return;
+      }
+    } catch(e) { console.log("Dublet-tjek:", e); }
     const antal = new Set(alleModtagere.map(m => String(m.email || "").trim().toLowerCase()).filter(x => x.includes("@"))).size;
     if (!confirm("Vil du sende Info nr. " + meta.nr + " til alle medlemmer med mail (ca. " + antal + ") nu?")) return;
   }
   const navn = "Info nr. " + meta.nr;
+  if (maade === "alle") window._infoSender = true;
   try {
     const ref = await addDoc(collection(db, "olsenpost_mail"), {
       type: "infomail", status: "afventer", skabelon: id, info_nr: meta.nr || null,
@@ -1031,6 +1045,7 @@ window.sendInfomail = async function(id, maade){
     });
   } catch(e) {
     console.log("Infomail fejlede:", e);
+    window._infoSender = false;
     infoStatus("fejl", "Det lykkedes ikke. Har du bekræftet din PIN-kode? Prøv igen.");
   }
 };
