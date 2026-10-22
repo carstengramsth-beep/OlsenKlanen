@@ -181,6 +181,7 @@ try {
     <button class="knap lille" onclick="visFane('indbakke')">Vis de nye mails</button>
   </div>
 
+  <div id="logget-ind-som" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#eef5e6;border:1px solid #cfe0bd;border-radius:8px;padding:8px 12px;margin:0 0 12px;font-size:15px;"></div>
   <div class="faner">
     <button class="fane aktiv" id="fane-send" onclick="visFane('send')">📨 Send mail til medlem</button>
     <button class="fane" id="fane-indbakke" onclick="visFane('indbakke')">🆕 Nye mails <span class="badge" id="badge-ny" style="display:none">0</span></button>
@@ -479,6 +480,13 @@ function hent(n){ return sessionStorage.getItem(n) || localStorage.getItem(n) ||
 const MIT_NR   = hent("ok_nr");
 const MIT_NAVN = hent("ok_navn") || ("Medlem " + MIT_NR);
 const ER_POSTANSVARLIG = POSTANSVARLIGE.includes(MIT_NR);
+// Vis tydeligt, hvem siden tror man er (fx hvis en anden i husstanden har logget ind på samme computer)
+try {
+  const li = document.getElementById("logget-ind-som");
+  if (li) li.innerHTML = `👤 Du er logget ind som <b>${String(MIT_NR || "?").replace(/[<>&]/g, "")} ${String(MIT_NAVN || "").replace(/[<>&]/g, "")}</b>`
+    + (ER_POSTANSVARLIG ? ` <span style="color:#2d5016;">· postansvarlig</span>` : "")
+    + ` <a href="login.html?videre=meddelelser.html" onclick="try{sessionStorage.clear();localStorage.removeItem('ok_nr');localStorage.removeItem('ok_navn');localStorage.removeItem('ok_niveau');}catch(e){}" style="margin-left:auto;background:#fff;border:1px solid #2d5016;color:#2d5016;border-radius:6px;padding:4px 10px;text-decoration:none;font-weight:bold;">Ikke dig? Log ind igen</a>`;
+} catch(e) {}
 
 // Fane og besked fra linket, fx fra den gule post-linje: meddelelser.html?fane=intern&ny=<id>
 const START_PARAM = new URLSearchParams(window.location.search);
