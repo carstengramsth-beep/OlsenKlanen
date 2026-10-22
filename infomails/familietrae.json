@@ -8,7 +8,11 @@
     },
     {
       "type": "p",
-      "tekst": "I dag viser hele træet 50 personer. Det er en god start – men når træet er færdigt, vil det sandsynligvis omfatte mere end 100 personer. Så der er stadig et stykke vej, før vi når i mål. Du er meget velkommen til at følge med i udviklingen."
+      "tekst": "I dag viser hele træet 50 personer. Det er en god start – men når træet er færdigt, vil det sandsynligvis omfatte mere end 100 personer. Så der er stadig et stykke vej, før vi når i mål."
+    },
+    {
+      "type": "p",
+      "tekst": "Log ind, kom med og følg udviklingen af familietræet. Der kommer mange ændringer, før vi er helt i mål – og det er sjovt at gå på opdagelse i."
     },
     {
       "type": "p",
@@ -40,6 +44,7 @@
       "punkter": [
         "En rød prik betyder, at der mangler noget om personen – fx fødselsdato, billede eller forældre.",
         "En orange stiplet ring med 📷 betyder, at vi mangler et billede.",
+        "Læg gerne et personligt billede ind af dig selv og din familie – på de pladser i træet, hvor der står »📷 Billede mangler«. Tryk på personen og vælg »✏️ Ret data«.",
         "Tryk på personen og vælg »✏️ Ret data« – eller »✏️ Foreslå en rettelse«.",
         "Tjek især din egen familie: er alle børn, ægtefæller og forældre med? Står der rigtige fødselsdatoer?",
         "Har nogen været gift før, kan det også skrives ind (tidligere ægtefælle)."
