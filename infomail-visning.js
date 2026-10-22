@@ -20,7 +20,7 @@
       else if (a.type === "tip") dele.push(`<p style="background:#fff8e1;border-left:4px solid #b8860b;padding:8px 12px;margin:0 0 14px;">${e(a.tekst)}</p>`);
     });
     dele.push(`<p style="margin:18px 0 0;">${(data.slut || []).map(e).join("<br>")}</p>`);
-    dele.push(`<div style="border-top:1px solid #d8cfae;margin-top:22px;padding-top:8px;font-size:12px;color:#8a7a3f;font-style:italic;">Familieforeningen OlsenKlanen · olsenklanen.dk<br>${e(window.INFOMAIL_FODLINJE)}</div>`);
+    dele.push(`<div style="border-top:1px solid #d8cfae;margin-top:22px;padding-top:8px;font-size:12px;color:#8a7a3f;font-style:italic;">Familieforeningen OlsenKlanen · olsenklanen.dk<br>${e(window.INFOMAIL_FODLINJE)}${meta && meta.beklagelse ? `<br><span style="color:#b8860b;font-weight:bold;">${e(meta.beklagelse)}</span>` : ""}</div>`);
     const hoved = visHoved ? `<div style="font-size:13px;color:#666;border-bottom:1px solid #eee;padding-bottom:8px;margin-bottom:14px;"><b>Fra:</b> OlsenKlanen &lt;post@olsenklanen.dk&gt;<br><b>Emne:</b> ${meta && meta.nr ? "Info nr. " + e(meta.nr) + " – " : ""}${e(data.emne)}</div>` : "";
     return `<div style="background:#f5f1e8;padding:16px;font-family:Georgia,serif;color:#2c3e1f;line-height:1.55;"><div style="max-width:600px;margin:0 auto;background:#fff;padding:20px;">${hoved}${nrLinje}${noteLinje}${dele.join("")}</div></div>`;
   };
