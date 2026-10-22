@@ -6,7 +6,7 @@
 <title>OlsenKlanen · Familieside</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; padding-bottom: 44px; }
+body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; padding-bottom: 64px; }
 .topbar { background: #2d5016; color: #f5e6a8; padding: 16px 30px; display: flex; justify-content: space-between; align-items: center; }
 .topbar h1 { font-size: 22px; font-weight: normal; }
 .topbar .user { display: flex; align-items: center; gap: 14px; font-style: italic; font-size: 15px; }
@@ -133,7 +133,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
   right: 0;
   background: #FFD700;
   border-top: 2px solid #c8a800;
-  padding: 10px 0;
+  padding: 12px 0;
   overflow: hidden;
   z-index: 999;
   white-space: nowrap;
@@ -141,11 +141,11 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .nyhedsbaand-tekst {
   display: inline-block;
   font-family: 'Segoe UI', Arial, sans-serif;
-  font-size: 16px;
-  font-weight: 400;
+  font-size: 23px;
+  font-weight: 600;
   color: #000;
   letter-spacing: 0.3px;
-  animation: baand 30s linear infinite;
+  animation: baand 60s linear infinite;
 }
 @keyframes baand {
   0%   { transform: translateX(100vw); }
@@ -1366,7 +1366,12 @@ window.byggBaand = function byggBaand() {
   BAAND_BESKEDER.filter(b => idag <= b.til).forEach(b => { tekst += b.tekst + "     "; });
   if (vejr) tekst += vejr + "     ";
   nyheder.forEach(n => { tekst += "★  " + n + "     "; });
-  if (tekst) document.getElementById("baand-tekst").textContent = tekst;
+  if (tekst) {
+    const el = document.getElementById("baand-tekst");
+    el.textContent = tekst;
+    // Rolig, ens fart uanset hvor lang teksten er (ca. 90 punkter i sekundet)
+    requestAnimationFrame(() => { const s = Math.max(25, Math.round((el.scrollWidth + window.innerWidth) / 90)); el.style.animationDuration = s + "s"; });
+  }
 };
  
 fetch("https://api.open-meteo.com/v1/forecast?latitude=55.68&longitude=12.57&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FCopenhagen&forecast_days=1")
