@@ -536,14 +536,15 @@ async function pinOk(){
   if (!u) return false;
   try { const r = await u.getIdTokenResult(); return !!(r.claims.postansvarlig && r.claims.medlemsnr === MIT_NR); } catch(e) { return false; }
 }
-window.sikrePin = function(){
+window.sikrePin = function(altid, hvad){
   return new Promise(async svar => {
-    if (await pinOk()) return svar(true);
+    if (!altid && await pinOk()) return svar(true);
     const bg = document.createElement("div");
     bg.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px";
     bg.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:380px;width:100%;padding:18px 20px;border-top:5px solid #c89e3c;font-family:inherit">
       <div style="font-size:18px;font-weight:bold;color:#2d5016;margin-bottom:6px">🔒 Skriv din PIN-kode</div>
-      <div style="font-size:14px;margin-bottom:10px">Du er logget ind som <b>${escHtml(MIT_NR)} ${escHtml(MIT_NAVN)}</b>. For en sikkerheds skyld skal du skrive din PIN-kode, før du sender. Det skal kun gøres én gang.</div>
+      ${hvad ? `<div style="font-size:15px;background:#fff8d6;border:1px solid #e0a800;border-radius:8px;padding:8px 10px;margin-bottom:10px">${hvad}</div>` : ""}
+      <div style="font-size:14px;margin-bottom:10px">Du sender som <b>${escHtml(MIT_NR)} ${escHtml(MIT_NAVN)}</b>. Skriv din PIN-kode for at bekræfte, at det er dig.</div>
       <input type="password" id="pin-hurtig" class="felt" autocomplete="off" inputmode="numeric" style="width:100%;font-size:18px;margin:0 0 10px">
       <div id="pin-hurtig-st" style="font-size:14px;color:#8b1e1e;min-height:18px;margin-bottom:8px"></div>
       <div style="display:flex;gap:8px"><button class="knap" id="pin-hurtig-ok">🔓 Bekræft og send</button><button class="knap" id="pin-hurtig-nej" style="background:#888">Annullér</button></div></div>`;
@@ -899,7 +900,7 @@ function infoStatus(type, t){ const st = document.getElementById("info-status");
 
 async function tegnInformationer(){
   document.getElementById("info-intro").innerHTML = ER_POSTANSVARLIG
-    ? "Her ligger alle informationer, nummereret og dateret. Tryk på <b>📖 Læs</b> for at se mailen. Når du trykker send, bliver du bedt om din PIN-kode (kun første gang). Send gerne en prøve til dig selv først. (Medlemmer kan selv bestille en information på mail – den sendes automatisk til den mail, der står på deres familie.)"
+    ? "Her ligger alle informationer, nummereret og dateret. Tryk på <b>📖 Læs</b> for at se mailen. Ved »Send til alle« skal du altid bekræfte med din PIN-kode, og den kan kun sendes til alle én gang. Send gerne en prøve til dig selv først. (Medlemmer kan selv bestille en information på mail – den sendes automatisk til den mail, der står på deres familie.)"
     : "Her kan du læse alle informationer, der er sendt til hele OlsenKlanen. Vil du have en af dem på mail, så skriv din mail og tryk på <b>📩 Send den til min mail</b>.";
   const el = document.getElementById("info-liste");
   try {
@@ -930,7 +931,7 @@ async function tegnInformationer(){
           <button type="button" class="knap lille" onclick="sendInfomail('${enc(m.id)}','prove')">🧪 Prøve til mig selv</button>
           <button type="button" class="knap" style="background:#8b1e1e;" onclick="sendInfomail('${enc(m.id)}','alle')">📨 Send til alle</button>
         </div></div>`).join("")}
-      <div style="font-size:13px;color:#666;">Når du trykker »Send til alle«, bliver du bedt om din PIN-kode (kun første gang). Når den er sendt til alle, forsvinder den herfra.</div>
+      <div style="font-size:13px;color:#666;">Når du trykker »Send til alle«, skal du altid skrive din PIN-kode. Den sendes kun én gang – bagefter forsvinder den herfra.</div>
     </div>`;
   } else if (andenISammeHus && liste.some(m => m.klar)) {
     klarEl.innerHTML = `<div style="border:2px solid #e0a800;background:#fff8d6;border-radius:10px;padding:10px 14px;margin:6px 0 16px;font-size:15px;">
@@ -993,7 +994,6 @@ window.visInfo = async function(id, aabn){
 
 window.sendInfomail = async function(id, maade){
   if (!ER_POSTANSVARLIG) { infoStatus("fejl", "Kun de 5 postansvarlige kan sende informationer."); return; }
-  if (!(await sikrePin())) { infoStatus("fejl", "Afsendelsen blev ikke gennemført – PIN-koden mangler."); return; }
   const meta = (infoListe || []).find(x => x.id === id) || {};
   let data;
   try { data = await hentInfo(id); } catch(e) { infoStatus("fejl", "Kunne ikke hente informationen."); return; }
@@ -1022,8 +1022,8 @@ window.sendInfomail = async function(id, maade){
       }
     } catch(e) { console.log("Dublet-tjek:", e); }
     const antal = new Set(alleModtagere.map(m => String(m.email || "").trim().toLowerCase()).filter(x => x.includes("@"))).size;
-    if (!confirm("Vil du sende Info nr. " + meta.nr + " til alle medlemmer med mail (ca. " + antal + ") nu?")) return;
-  }
+    if (!(await sikrePin(true, "📨 <b>Info nr. " + escHtml(meta.nr) + "</b> sendes til <b>alle " + antal + " medlemmer</b> med mail – én gang."))) { infoStatus("fejl", "Ikke sendt."); return; }
+  } else if (!(await sikrePin(false))) { infoStatus("fejl", "Ikke sendt – PIN-koden mangler."); return; }
   const navn = "Info nr. " + meta.nr;
   if (maade === "alle") window._infoSender = true;
   try {
