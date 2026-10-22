@@ -33,6 +33,12 @@
       ]
     },
     {
+      "type": "billede",
+      "billede": "billeder/vejledning/familietrae-1-navigation-stamtrae.png",
+      "bredde": 240,
+      "tekst": "Navigationen på forsiden – Stamtræ er det gule felt (nr. 9 fra toppen)."
+    },
+    {
       "type": "tip",
       "tekst": "Har du svært ved at logge ind, så skriv til os på post@olsenklanen.dk – adressen står også nederst på siden, hvor du logger ind. Du får svar fra en af ugens postansvarlige."
     },
