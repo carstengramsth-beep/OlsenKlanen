@@ -567,6 +567,45 @@ window.sikrePin = function(altid, hvad){
   });
 };
 
+// Boks med valgknapper (bruges ved rundsendelse). Svarer med nøglen for den valgte knap.
+window.vaelgBoks = function(titel, tekst, knapper){
+  return new Promise(svar => {
+    const bg = document.createElement("div");
+    bg.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px";
+    bg.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:440px;width:100%;padding:18px 20px;border-top:5px solid #c89e3c">
+      <div style="font-size:18px;font-weight:bold;color:#2d5016;margin-bottom:8px">${titel}</div>
+      <div style="font-size:15px;line-height:1.5;margin-bottom:14px">${tekst}</div>
+      <div style="display:flex;flex-direction:column;gap:8px">${knapper.map(([k, t, farve]) => `<button class="knap" data-k="${k}" style="background:${farve};width:100%">${t}</button>`).join("")}</div></div>`;
+    document.body.appendChild(bg);
+    bg.querySelectorAll("[data-k]").forEach(b => b.onclick = () => { bg.remove(); svar(b.dataset.k); });
+  });
+};
+// "Send med rettelser": skriv hvad der skal rettes → intern besked til de 5. Rettelsen laves som en ny udgave.
+async function rettelseOenske(meta){
+  const tekst = prompt("Hvad skal rettes i Info nr. " + meta.nr + "?\n\nSkriv det her. De 5 postansvarlige får en besked, og den rettede udgave lægges i »📮 Klar til afsendelse« med »(rettet)« i emnet.");
+  if (!tekst || !tekst.trim()) { infoStatus("ok", "Ikke sendt."); return; }
+  try {
+    await addDoc(collection(db, "olsenpost"), { type: "besked", til: POSTANSVARLIGE, til_navne: POSTANSVARLIGE, fra_nr: MIT_NR, fra_navn: MIT_NAVN,
+      sendt_lokal: Date.now(), set_af: [], svar: [], tekst: "✏️ Rettelse ønsket til Info nr. " + meta.nr + " (" + (meta.titel || "") + "):\n\n" + tekst.trim() + "\n\nDen rettede udgave lægges i »📮 Klar til afsendelse«, før den sendes igen." });
+    infoStatus("ok", "✅ Rettelsen er sendt til de 5 postansvarlige. Info nr. " + meta.nr + " er ikke sendt igen.");
+  } catch(e) { infoStatus("fejl", "Kunne ikke sende rettelsen. Prøv igen."); }
+}
+// Stor boks, der viser, at rundsendelsen er på vej – så ingen trykker igen
+function fremdriftBoks(navn, antal){
+  const bg = document.createElement("div");
+  bg.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px";
+  bg.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:420px;width:100%;padding:22px;text-align:center;border-top:5px solid #2d5016">
+    <div id="fd-ikon" style="font-size:42px">📨</div>
+    <div id="fd-titel" style="font-size:19px;font-weight:bold;color:#2d5016;margin:6px 0">${escHtml(navn)} er på vej</div>
+    <div id="fd-tekst" style="font-size:15px;line-height:1.5">Den bliver sendt til ${antal} medlemmer – én gang.<br>Det tager op til 5 minutter. <b>Tryk ikke igen.</b><br>Du må gerne lukke siden.</div>
+    <button class="knap" id="fd-ok" style="margin-top:14px;display:none">OK</button></div>`;
+  document.body.appendChild(bg);
+  bg.querySelector("#fd-ok").onclick = () => bg.remove();
+  return {
+    status(ikon, titel, tekst, faerdig){ bg.querySelector("#fd-ikon").textContent = ikon; bg.querySelector("#fd-titel").textContent = titel; bg.querySelector("#fd-tekst").innerHTML = tekst; if (faerdig) bg.querySelector("#fd-ok").style.display = "inline-block"; }
+  };
+}
+
 // EmailJS initialisering — bruges til at sende rigtige mails
 // Public key sættes her når EmailJS er oprettet
 const EMAILJS_PUBLIC_KEY = "76jQOeDv73Qw2zgmU";
@@ -920,7 +959,7 @@ async function tegnInformationer(){
   // 📮 Klar til afsendelse: informationer, der er gjort klar, men ikke sendt til alle endnu
   const klarEl = document.getElementById("info-klar");
   const andenISammeHus = !ER_POSTANSVARLIG && POSTANSVARLIGE.find(x => MIT_NR && x.split("-")[0] === MIT_NR.split("-")[0]);
-  const klar = liste.filter(m => m.klar && !(sendtLog[m.id] || []).some(x => x.status === "sendt" && !x.prove && !x.enkelt));
+  const klar = liste.filter(m => m.klar && !(sendtLog[m.id] || []).some(x => !x.prove && !x.enkelt && x.status !== "fejl" && x.status !== "annulleret"));
   if (ER_POSTANSVARLIG && klar.length) {
     klarEl.innerHTML = `<div style="border:3px solid #e0a800;background:#fff8d6;border-radius:10px;padding:12px 14px;margin:6px 0 16px;">
       <div style="font-size:18px;font-weight:bold;color:#7a5a00;margin-bottom:6px;">📮 Klar til afsendelse</div>
@@ -939,7 +978,9 @@ async function tegnInformationer(){
   } else klarEl.innerHTML = "";
   el.innerHTML = liste.map(m => {
     const log = (sendtLog[m.id] || []).filter(x => x.status === "sendt" && !x.prove);
+    const paaVejNu = (sendtLog[m.id] || []).some(x => !x.prove && !x.enkelt && (x.status === "afventer" || x.status === "sender"));
     const alle = log.filter(x => !x.enkelt), enkelte = log.filter(x => x.enkelt);
+    if (m.sendt_foer && !alle.length) alle.push({ sendt_lokal: new Date(m.sendt_foer + "T12:00:00").getTime(), antal_sendt: "før systemet" });
     const logTekst = ER_POSTANSVARLIG ? (alle.length ? "✅ Sendt til alle " + alle.map(x => infoDato(new Date(x.sendt_lokal).toISOString()) + " (" + (x.antal_sendt || 0) + ")").join(", ") : "Ikke sendt til alle endnu")
       + (enkelte.length ? " · sendt enkeltvis til: " + enkelte.map(x => escHtml(x.til_navn || "")).join(", ") : "") : "";
     return `<div class="info-punkt" data-id="${enc(m.id)}" style="border:1px solid #ddd;border-radius:8px;padding:12px 14px;margin:10px 0;background:#fff;">
@@ -951,7 +992,7 @@ async function tegnInformationer(){
         <button type="button" class="knap lille" onclick="visInfo('${enc(m.id)}')">📖 Læs</button>
         ${ER_POSTANSVARLIG ? `
         <button type="button" class="knap lille" onclick="sendInfomail('${enc(m.id)}','prove')">🧪 Prøve til mig selv</button>
-        ${alle.length ? "" : `<button type="button" class="knap lille" style="background:#8b1e1e;" onclick="sendInfomail('${enc(m.id)}','alle')">📨 Send til alle</button>`}` : `
+        ${paaVejNu ? `<span style="align-self:center;font-weight:bold;color:#2d5016">📨 På vej ud nu …</span>` : alle.length ? `<button type="button" class="knap lille" style="background:#888;" onclick="sendInfomail('${enc(m.id)}','alle')">🔁 Send igen / med rettelser …</button>` : `<button type="button" class="knap lille" style="background:#8b1e1e;" onclick="sendInfomail('${enc(m.id)}','alle')">📨 Send til alle</button>`}` : `
 `}
       </div>
       ${!ER_POSTANSVARLIG ? `<div style="margin-top:8px;background:#f5f1e8;border-radius:8px;padding:8px 10px;">
@@ -1008,21 +1049,28 @@ window.sendInfomail = async function(id, maade){
     if (!confirm("Vil du sende Info nr. " + meta.nr + " til " + modtager.navn + " (" + modtager.email + ")?")) return;
   }
   if (maade === "alle") {
-    // Stop for dobbelt-afsendelse: er den allerede sendt (eller på vej) til alle?
-    if (window._infoSender) { infoStatus("fejl", "Vent – " + "Info nr. " + meta.nr + " er ved at blive sendt."); return; }
+    // ── Fast procedure for rundsendelse: kun én gang, med tydelig besked ──
+    if (window._infoSender) { infoStatus("fejl", "Vent – Info nr. " + meta.nr + " er ved at blive sendt."); return; }
+    let tidl = [];
     try {
       const snap = await getDocs(query(collection(db, "olsenpost_mail"), where("type", "==", "infomail")));
-      const tidl = [];
       snap.forEach(d => { const x = d.data(); if (x.skabelon === id && !x.prove && !x.enkelt && x.status !== "fejl" && x.status !== "annulleret") tidl.push(x); });
-      if (tidl.length) {
-        const sidst = Math.max(...tidl.map(x => x.sendt_lokal || 0));
-        const hvornaar = sidst ? new Date(sidst).toLocaleString("da-DK", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "";
-        alert("Info nr. " + meta.nr + " er allerede sendt til alle" + (hvornaar ? " (" + hvornaar + ")" : "") + ".\n\nDen bliver ikke sendt igen, så ingen får den to gange.\n\nSkal ét medlem have den igen, så brug »Send til det valgte medlem«.");
-        return;
-      }
-    } catch(e) { console.log("Dublet-tjek:", e); }
+    } catch(e) { infoStatus("fejl", "Kunne ikke tjekke, om den er sendt før. Prøv igen om lidt."); return; }
+    if (meta.sendt_foer) tidl.push({ status: "sendt", sendt_lokal: new Date(meta.sendt_foer + "T12:00:00").getTime(), antal_sendt: "alle (før systemet)" });
+    const kl = t => new Date(t).toLocaleString("da-DK", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+    const paaVej = tidl.filter(x => x.status === "afventer" || x.status === "sender");
+    if (paaVej.length) { await vaelgBoks("📨 Den er allerede på vej", "Info nr. " + escHtml(meta.nr) + " er sat til afsendelse " + kl(paaVej[0].sendt_lokal) + " og er på vej ud nu. Der skal ikke trykkes igen.", [["ok", "OK", "#2d5016"]]); return; }
+    if (tidl.length) {
+      const sendt = tidl.sort((a, b) => (a.sendt_lokal || 0) - (b.sendt_lokal || 0));
+      const valg = await vaelgBoks("⚠️ Denne besked er tidligere rundsendt",
+        "Info nr. " + escHtml(meta.nr) + " er sendt til alle:<br>" + sendt.map(x => "• " + kl(x.sendt_lokal) + " (" + (x.antal_sendt || "?") + " medlemmer)").join("<br>") + "<br><br>Hvad vil du?",
+        [["nej", "Annullér – send ikke", "#2d5016"], ["ret", "✏️ Send med rettelser", "#b8860b"], ["igen", "🔁 Send den igen til alle", "#8b1e1e"]]);
+      if (valg === "ret") { await rettelseOenske(meta); return; }
+      if (valg !== "igen") { infoStatus("ok", "Ikke sendt."); return; }
+      window._gensend = true;
+    }
     const antal = new Set(alleModtagere.map(m => String(m.email || "").trim().toLowerCase()).filter(x => x.includes("@"))).size;
-    if (!(await sikrePin(true, "📨 <b>Info nr. " + escHtml(meta.nr) + "</b> sendes til <b>alle " + antal + " medlemmer</b> med mail – én gang."))) { infoStatus("fejl", "Ikke sendt."); return; }
+    if (!(await sikrePin(true, (window._gensend ? "🔁 <b style='color:#8b1e1e'>IGEN:</b> " : "📨 ") + "<b>Info nr. " + escHtml(meta.nr) + "</b> sendes til <b>alle " + antal + " medlemmer</b> med mail – én gang."))) { window._gensend = false; infoStatus("fejl", "Ikke sendt."); return; }
   } else if (!(await sikrePin(false))) { infoStatus("fejl", "Ikke sendt – PIN-koden mangler."); return; }
   const navn = "Info nr. " + meta.nr;
   if (maade === "alle") window._infoSender = true;
@@ -1032,13 +1080,19 @@ window.sendInfomail = async function(id, maade){
       fra_nr: MIT_NR, fra_navn: MIT_NAVN, fra_email: egen,
       til_nr: modtager ? modtager.nr : "", til_navn: prove ? "Prøve til " + egen : modtager ? modtager.navn : "Alle medlemmer med egen mail",
       til_email: prove ? egen : modtager ? String(modtager.email).trim() : "",
-      prove, enkelt: !!modtager, emne: data.emne || "", tekst: navn + ": " + (data.emne || ""),
+      prove, enkelt: !!modtager, gensendt: maade === "alle" && !!window._gensend, emne: data.emne || "", tekst: navn + ": " + (data.emne || ""),
       sendt: serverTimestamp(), sendt_lokal: Date.now(),
       besvaret: false, besvaret_af: null, besvaret_tid: null
     });
     infoStatus("ok", "✅ " + navn + " er sat i kø. Den bliver sendt inden for 5 minutter …");
+    window._gensend = false;
+    const fd = maade === "alle" ? fremdriftBoks(navn, new Set(alleModtagere.map(m => String(m.email || "").trim().toLowerCase()).filter(x => x.includes("@"))).size) : null;
+    if (maade === "alle") tegnInformationer();
     onSnapshot(doc(db, "olsenpost_mail", ref.id), s => {
       const d = s.data() || {};
+      if (fd && d.status === "sender") fd.status("📨", "Sender " + navn + " nu …", "Tryk ikke igen. Du må gerne lukke siden.");
+      if (fd && d.status === "sendt") { window._infoSender = false; fd.status("✅", navn + " er sendt", "Sendt til " + (d.antal_sendt || 0) + " medlemmer – én gang." + (d.antal_fejl ? "<br>" + d.antal_fejl + " kunne ikke sendes." : ""), true); }
+      if (fd && d.status === "fejl") { window._infoSender = false; fd.status("⚠️", "Det kunne ikke sendes", escHtml(d.mail_fejl || "ukendt fejl"), true); }
       if (d.status === "sender") infoStatus("ok", "📨 Sender " + navn + " nu …");
       if (d.status === "sendt") { infoStatus("ok", prove ? "✅ Prøven er sendt til " + egen + ". Se din indbakke." : modtager ? "✅ " + navn + " er sendt til " + modtager.navn + "." : "✅ " + navn + " er sendt til " + (d.antal_sendt || 0) + " medlemmer." + (d.antal_fejl ? " " + d.antal_fejl + " kunne ikke sendes." : "")); tegnInformationer(); }
       if (d.status === "fejl") infoStatus("fejl", "Det kunne ikke sendes: " + (d.mail_fejl || "ukendt fejl"));
