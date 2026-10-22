@@ -11,6 +11,10 @@
       "tekst": "I dag viser hele træet 50 personer. Det er en god start – men der er stadig et stykke vej, før vi når i mål. Du er meget velkommen til at følge med i udviklingen."
     },
     {
+      "type": "p",
+      "tekst": "Træet og alle familiedata kan kun ses af registrerede medlemmer af OlsenKlanen. Man skal logge ind for at se dem."
+    },
+    {
       "type": "h",
       "tekst": "Sådan ser du træet"
     },
@@ -22,6 +26,10 @@
         "Tryk på »👤 Mit træ« for at se din egen gren.",
         "Tryk på en person for at se mere – og tryk på billedet for at se det stort."
       ]
+    },
+    {
+      "type": "tip",
+      "tekst": "Har du svært ved at logge ind, så skriv til os på post@olsenklanen.dk – adressen står også nederst på siden, hvor du logger ind. Du får svar fra en af ugens postansvarlige."
     },
     {
       "type": "h",
