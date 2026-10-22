@@ -1,47 +1,73 @@
 {
-  "emne": "Nyt på olsenklanen.dk – familietræet er på vej 🌳",
+  "emne": "Familietræet er ved at blive bygget – hjælp os med at gøre det færdigt 🌳",
   "hilsen": "Kære alle i OlsenKlanen",
   "afsnit": [
     {
       "type": "p",
-      "tekst": "Vi er i gang med at bygge et familietræ på olsenklanen.dk. Det viser, hvordan vi alle hænger sammen – med Agnes og Svend Aage Olsen øverst."
+      "tekst": "Vi er i fuld gang med at bygge OlsenKlanens familietræ på olsenklanen.dk. Træet viser, hvordan vi alle hænger sammen – med Agnes og Svend Aage Olsen øverst."
     },
     {
       "type": "p",
-      "tekst": "Træet er ikke færdigt. Der mangler stadig mange personer, datoer og billeder. Men er du nysgerrig, er du meget velkommen til at kigge forbi."
+      "tekst": "I dag viser hele træet 50 personer. Det er en god start – men når træet er færdigt, vil det sandsynligvis omfatte mere end 100 personer. Så der er stadig et stykke vej, før vi når i mål."
+    },
+    {
+      "type": "p",
+      "tekst": "Log ind, kom med og følg udviklingen af familietræet. Der kommer mange ændringer, før vi er helt i mål – og det er sjovt at gå på opdagelse i."
+    },
+    {
+      "type": "p",
+      "tekst": "Træet og alle familiedata kan kun ses af registrerede medlemmer af OlsenKlanen. Man skal logge ind for at se dem."
     },
     {
       "type": "h",
-      "tekst": "Sådan gør du"
+      "tekst": "Sådan ser du træet"
     },
     {
       "type": "nummerliste",
       "punkter": [
-        "Log ind på olsenklanen.dk, som du plejer.",
-        "Tryk på »🌳 Stamtræ« på forsiden.",
-        "Tryk på »👤 Mit træ« for at se din egen gren.",
-        "Tryk på en person for at se mere."
+        "Log ind på olsenklanen.dk med dit medlemsnummer og din kode, som du plejer.",
+        "Nu er du på forsiden – med opslagstavlen og navigationen (menuen med de mange felter).",
+        "Find »🌳 Stamtræ« i navigationen. Det er det niende felt fra toppen (lige under »Historier«).",
+        "Tryk på »Stamtræ« – og en hel verden åbner sig.",
+        "Tryk på »👤 Mit træ« for at se din egen gren. Tryk på en person for at se mere, og på billedet for at se det stort."
       ]
     },
     {
+      "type": "billede",
+      "billede": "billeder/vejledning/familietrae-1-navigation-stamtrae.png",
+      "bredde": 240,
+      "tekst": "Navigationen på forsiden – Stamtræ er det gule felt (nr. 9 fra toppen)."
+    },
+    {
+      "type": "tip",
+      "tekst": "Har du svært ved at logge ind, så skriv til os på post@olsenklanen.dk – adressen står også nederst på siden, hvor du logger ind. Du får svar fra en af ugens postansvarlige."
+    },
+    {
       "type": "h",
-      "tekst": "Kan du hjælpe?"
+      "tekst": "Sådan kan du hjælpe"
     },
     {
       "type": "liste",
       "punkter": [
-        "En lille rød prik betyder, at der mangler noget om personen – fx fødselsdato eller billede.",
-        "Ved du noget, så tryk på personen og vælg »✏️ Foreslå en rettelse«. Alle forslag bliver læst, før de kommer på.",
-        "Har du gamle billeder eller papirer, så skriv til 5-Banden."
+        "En rød prik betyder, at der mangler noget om personen – fx fødselsdato, billede eller forældre.",
+        "En orange stiplet ring med 📷 betyder, at vi mangler et billede. Læg gerne et personligt billede ind af dig selv og din familie dér.",
+        "Uanset om det er et billede eller en dato: tryk på personen og vælg »✏️ Ret data« – eller »✏️ Foreslå en rettelse«.",
+        "Tjek især din egen familie: er alle børn, ægtefæller og forældre med? Står der rigtige fødselsdatoer?",
+        "Har nogen været gift før, kan det også skrives ind (tidligere ægtefælle)."
       ]
     },
     {
+      "type": "tip",
+      "tekst": "Har du svært ved at få dine data skrevet ind, så send dem til mig i OlsenPost (til 8-B Carsten). Skriv navne, fødselsdatoer og hvem der er gift med hvem – så hjælper jeg med at få træet på plads."
+    },
+    {
       "type": "p",
-      "tekst": "Vi glæder os til at høre jeres synspunkter."
+      "tekst": "Jo flere der hjælper, jo hurtigere bliver træet færdigt. Tak for hjælpen!"
     }
   ],
   "slut": [
     "Mange hilsner",
-    "5-Banden"
+    "Carsten Gram (8-B)",
+    "på vegne af 5-Banden"
   ]
 }
