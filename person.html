@@ -237,6 +237,7 @@ function vis(pid, aabenRel) {
     <h3 class="sek">↔️ Ved siden af</h3>
     ${gen("Ægtefælle / partner", pa ? [pa] : [])}
     ${tidligere(pid).length ? gen("Tidligere ægtefælle / partner", tidligere(pid).map(t => t.pid)) : ""}
+    ${(() => { const tl = tidligere(pid).map(t => t.pid); const m = unik(b.flatMap(x => foraeldre(x))).filter(x => x !== pid && x !== pa && !tl.includes(x)); return m.length ? gen("Forælder til fælles børn", m) : ""; })()}
     ${gen("Søskende", soeskende(pid))}
     <h3 class="sek">⬇️ Ned i slægten</h3>
     ${gen("Børn", b)}
