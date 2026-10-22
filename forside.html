@@ -36,7 +36,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .mid { display: flex; flex-direction: column; gap: 16px; }
 .billede-boks { position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
 .billede-boks img { width: 100%; height: auto; display: block; }
-.billede-tekst { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.7)); color: #fff; padding: 20px 16px 12px; display: flex; justify-content: space-between; font-style: italic; }
+.billede-tekst { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.7)); color: #fff; padding: 20px 16px 12px; display: flex; justify-content: space-between; font-style: italic; pointer-events: none; }
 .fremh-boks { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
 .fremh-header { background: #2d5016; color: #c89e3c; padding: 10px 16px; font-weight: bold; font-size: 14px; letter-spacing: 1px; }
 .fremh-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid #f0ead8; }
@@ -281,10 +281,10 @@ try {
  
   <main class="mid">
     <div class="billede-boks">
-      <img src="billeder/IMG-0033-A.jpg" alt="Hele OlsenKlanen samlet — Skovtur 2026">
+      <img src="billeder/IMG-0033-A.jpg" alt="Hele OlsenKlanen samlet — Skovtur 2026" data-stort="Hele klanen samlet — Skovtur 2026, Eriksminde i Rørvig" title="Tryk for at se billedet stort og zoome ind">
       <div class="billede-tekst">
         <span>Hele klanen samlet — Skovtur 2026, Eriksminde i Rørvig</span>
-        <span>Maj 2026</span>
+        <span>🔍 Tryk og zoom ind · Maj 2026</span>
       </div>
     </div>
  
@@ -1515,6 +1515,7 @@ window.byggKalender();
 <script type="module" src="besoegstaeller.js"></script>
 <script src="soeg.js" defer></script>
 <script type="module" src="familieopkald.js"></script>
+<script src="stort-billede.js" defer></script>
 </body>
 </html>
  
