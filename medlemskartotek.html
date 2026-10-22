@@ -1842,6 +1842,7 @@ function aabnAfdod(pid) {
   v('ad-foedt', p.foedselsdato); v('ad-doed', p.status_dato);
   document.getElementById('ad-status').value = (pid && p.status !== 'afdød') ? '' : 'afdød';
   v('ad-far', relTekst(p.far_pid)); v('ad-mor', relTekst(p.mor_pid)); v('ad-partner', relTekst(p.partner_pid));
+  window._afdodRelStart = { 'ad-far': document.getElementById('ad-far').value, 'ad-mor': document.getElementById('ad-mor').value, 'ad-partner': document.getElementById('ad-partner').value };
   v('ad-mindeord', p.mindeord); v('ad-gravsted', p.gravsted); v('ad-fortaelling', p.fortaelling);
   document.getElementById('ad-foto').value = ''; document.getElementById('ad-gravfoto').value = '';
   document.getElementById('ad-foto-vis').innerHTML = afdodFoto ? `<img src="${afdodFoto}" style="height:40px;border-radius:4px;vertical-align:middle">` : '';
@@ -1862,6 +1863,8 @@ document.getElementById('afdod-gem').onclick = async () => {
   if (!g('ad-fornavn')) { st.textContent = 'Fornavn mangler.'; st.className = 'historisk-status-el fejl'; return; }
   const rel = {};
   for (const [id, felt] of [['ad-far', 'far_pid'], ['ad-mor', 'mor_pid'], ['ad-partner', 'partner_pid']]) {
+    // Uændret felt: rør ikke ved relationen (så en gammel, åben boks ikke overskriver nyere rettelser)
+    if (afdodPid && (window._afdodRelStart || {})[id] === g(id)) continue;
     const pid = relFind(g(id));
     if (pid === null) { st.textContent = 'Kunne ikke finde: ' + g(id); st.className = 'historisk-status-el fejl'; return; }
     rel[felt] = pid;
@@ -1879,7 +1882,7 @@ document.getElementById('afdod-gem').onclick = async () => {
   // Er data ændret, skal de bekræftes igen
   const gl = slaegtData.find(x => x.pid === pid) || {};
   const nogle = x => JSON.stringify(['navn','foedselsdato','status_dato','far_pid','mor_pid','partner_pid','foto','grav_foto','mindeord','gravsted','fortaelling'].map(k => x[k] || ''));
-  if (!afdodPid || nogle(gl) !== nogle(ny)) ny.bekraeftet = null;
+  if (!afdodPid || nogle(gl) !== nogle({ ...gl, ...ny })) ny.bekraeftet = null;
   st.textContent = '⏳ Gemmer…'; st.className = 'historisk-status-el';
   try {
     await setDoc(doc(db, 'olsenpost', 'slaegt_' + pid), ny, { merge: true });
