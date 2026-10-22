@@ -2,3 +2,11 @@ node_modules/
 package-lock.json
 .claude/
 *_export.json
+
+# Personoplysninger må aldrig ligge i repoet (det er offentligt)
+*.csv
+*.xlsx
+membres_*.json
+alle_personer*
+afvigelser*
+byg_membres_fra_pdf.js
