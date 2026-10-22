@@ -306,6 +306,7 @@ try {
       <h2>📚 Informationer til hele OlsenKlanen</h2>
       <p id="info-intro" style="margin:0 0 8px;"></p>
       <div class="status" id="info-status" style="display:none;"></div>
+      <div id="info-klar"></div>
       <div id="info-liste"><div class="indlaeser">Henter informationer …</div></div>
     </div>
   </div>
@@ -871,6 +872,26 @@ async function tegnInformationer(){
   const medMail = alleModtagere.filter(m => String(m.email || "").includes("@"));
   const minMail = String((alleModtagere.find(m => m.nr === MIT_NR) || {}).email || "").split("/")[0].trim();
   const liste = [...infoListe].sort((a, b) => (b.nr || 0) - (a.nr || 0));
+  // 📮 Klar til afsendelse: informationer, der er gjort klar, men ikke sendt til alle endnu
+  const klarEl = document.getElementById("info-klar");
+  const andenISammeHus = !ER_POSTANSVARLIG && POSTANSVARLIGE.find(x => MIT_NR && x.split("-")[0] === MIT_NR.split("-")[0]);
+  const klar = liste.filter(m => m.klar && !(sendtLog[m.id] || []).some(x => x.status === "sendt" && !x.prove && !x.enkelt));
+  if (ER_POSTANSVARLIG && klar.length) {
+    klarEl.innerHTML = `<div style="border:3px solid #e0a800;background:#fff8d6;border-radius:10px;padding:12px 14px;margin:6px 0 16px;">
+      <div style="font-size:18px;font-weight:bold;color:#7a5a00;margin-bottom:6px;">📮 Klar til afsendelse</div>
+      ${klar.map(m => `<div style="background:#fff;border-radius:8px;padding:10px 12px;margin:8px 0;">
+        <div style="font-weight:bold;color:#2d5016;">Info nr. ${escHtml(m.nr)} – ${escHtml(m.titel)}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          <button type="button" class="knap lille" onclick="visInfo('${enc(m.id)}');document.getElementById('info-vis-${enc(m.id)}').scrollIntoView({behavior:'smooth'})">📖 Læs</button>
+          <button type="button" class="knap lille" onclick="sendInfomail('${enc(m.id)}','prove')">🧪 Prøve til mig selv</button>
+          <button type="button" class="knap" style="background:#8b1e1e;" onclick="sendInfomail('${enc(m.id)}','alle')">📨 Send til alle</button>
+        </div></div>`).join("")}
+      <div style="font-size:13px;color:#666;">Husk at bekræfte din PIN-kode øverst på siden først. Når den er sendt til alle, forsvinder den herfra.</div>
+    </div>`;
+  } else if (andenISammeHus && liste.some(m => m.klar)) {
+    klarEl.innerHTML = `<div style="border:2px solid #e0a800;background:#fff8d6;border-radius:10px;padding:10px 14px;margin:6px 0 16px;font-size:15px;">
+      📮 Der ligger en information klar til afsendelse. Du er logget ind som <b>${escHtml(MIT_NR)}</b>. For at sende den skal du logge ud og logge ind som <b>${escHtml(andenISammeHus)}</b>.</div>`;
+  } else klarEl.innerHTML = "";
   el.innerHTML = liste.map(m => {
     const log = (sendtLog[m.id] || []).filter(x => x.status === "sendt" && !x.prove);
     const alle = log.filter(x => !x.enkelt), enkelte = log.filter(x => x.enkelt);
