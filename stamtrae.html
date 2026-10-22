@@ -123,6 +123,7 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
     <span><i class="prik til"></i> Tilløben (partner)</span>
     <span><i class="prik bonus"></i> Bonusbarn</span>
     <span>⚮ Tidligere ægtefælle</span>
+    <span>&amp; Fælles børn</span>
     <span>🕯️ Afdød</span>
     <span>Tryk på en person for at se mere</span>
   </div>
@@ -315,14 +316,20 @@ function tegnEnhed(pids, besoegt, erBonus, erRod, forholdMaerke) {
   // Tidligere ægtefæller/partnere står til venstre med ⚮
   const tidl = tidligereAf(pids[0]).filter(p => !besoegt.has(p));
   tidl.forEach(p => besoegt.add(p));
+  // Andre forældre til fælles børn (hverken gift eller tidligere gift) – fx når forholdet er uafklaret
+  const medf = [];
+  boernAf([pids[0]]).bio.forEach(b => { const q = P.get(b).p; const an = q.far_pid === pids[0] ? q.mor_pid : q.far_pid;
+    if (an && P.has(an) && !pids.includes(an) && !tidl.includes(an) && !besoegt.has(an) && !medf.includes(an)) medf.push(an); });
+  medf.forEach(p => besoegt.add(p));
   // Den første er slægt; en partner, der ikke selv er barn i træet, er "tilløben"
-  const kort = tidl.map(p => personKort(p, true) + '<span class="gift" title="Tidligere ægtefælle / partner">⚮</span>').join("")
+  const kort = medf.map(p => personKort(p, true) + '<span class="gift" title="Forældre til fælles børn">&amp;</span>').join("")
+    + tidl.map(p => personKort(p, true) + '<span class="gift" title="Tidligere ægtefælle / partner">⚮</span>').join("")
     + pids.map((p, i) => personKort(p, i > 0 && !(erRod && stamPids.includes(p)))).join('<span class="gift">⚭</span>');
-  const { bio, bonus } = boernAf([...pids, ...tidl]);
+  const { bio, bonus } = boernAf([...pids, ...tidl, ...medf]);
   // Børn fra et tidligere forhold får et lille mærke
   const nu = pids[1], hoved = pids[0];
   const maerke = b => { const q = P.get(b).p; const anden = q.far_pid === hoved ? q.mor_pid : q.far_pid;
-    if (!tidl.length && !nu) return "";
+    if (tidl.length + medf.length + (nu ? 1 : 0) < 2 && !(nu && !anden)) return "";
     if (anden && anden !== nu && P.has(anden) && anden !== hoved) return "med " + (P.get(anden).p.fornavn || navnAf(P.get(anden).p).split(" ")[0]);
     if (!anden && nu) return (q.far_pid === hoved ? "mor" : "far") + " ikke valgt";
     return ""; };
