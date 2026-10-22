@@ -1353,10 +1353,16 @@ function logUd() {
 let nyheder = [];
 let vejr = "";
  
+// Faste beskeder i båndet – vises til og med datoen "til"
+const BAAND_BESKEDER = [
+  { tekst: "📮 Ved en fejl er Info nr. 5 rundsendt 3 gange – OlsenPost beklager ulejligheden.", til: "2026-10-29" }
+];
 window.byggBaand = function byggBaand() {
   let tekst = "";
   // Fødselsdag FØRST — det er det festlige
   if (window.OLSEN_FOEDSELSDAG) tekst += window.OLSEN_FOEDSELSDAG + "     ";
+  const idag = new Date().toISOString().slice(0, 10);
+  BAAND_BESKEDER.filter(b => idag <= b.til).forEach(b => { tekst += b.tekst + "     "; });
   if (vejr) tekst += vejr + "     ";
   nyheder.forEach(n => { tekst += "★  " + n + "     "; });
   if (tekst) document.getElementById("baand-tekst").textContent = tekst;
