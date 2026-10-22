@@ -27,13 +27,35 @@
       "functions/**",
       "*.docx",
       "*.pdf",
-      ".git/**"
+      ".git/**",
+      "**/*.csv",
+      "**/*.xlsx",
+      "**/membres_*.json",
+      "**/alle_personer*",
+      "**/afvigelser*",
+      "byg_membres_fra_pdf.js",
+      "export_membres.js",
+      "export_personer_csv.js",
+      "import_manglende.js",
+      "ret_esther.js",
+      "lav_excel.js",
+      "*.py",
+      "package.json",
+      ".gitignore",
+      ".github/**",
+      "**/node_modules/**",
+      "CLAUDE.md",
+      "STATUS.md",
+      "README.md"
     ],
     "headers": [
       {
         "source": "**/*.html",
         "headers": [
-          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
         ]
       }
     ]

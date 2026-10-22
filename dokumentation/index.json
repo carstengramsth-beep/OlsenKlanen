@@ -1,5 +1,11 @@
 [
   {
+    "fil": "2026-10-22-sikkerhed-personoplysninger.md",
+    "dato": "2026-10-22",
+    "titel": "Sikkerhed: personoplysninger fjernet fra repoet + status på databasen",
+    "af": "Claude Code (web)"
+  },
+  {
     "fil": "2026-10-22-procedure-rundsendelse.md",
     "dato": "2026-10-22",
     "titel": "Procedure: Rundsendelse af en information – kun én gang",
