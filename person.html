@@ -119,6 +119,19 @@ const foraeldre = pid => { const p = P.get(pid)?.p; return p ? [p.far_pid, p.mor
 const bonusForaeldre = pid => { const p = P.get(pid)?.p; return p ? [p.bonus1_pid, p.bonus2_pid].filter(x => x && P.has(x)) : []; };
 const boern = pid => [...P.keys()].filter(x => { const q = P.get(x).p; return q.far_pid === pid || q.mor_pid === pid; });
 const bonusBoern = pid => [...P.keys()].filter(x => { const q = P.get(x).p; return q.bonus1_pid === pid || q.bonus2_pid === pid; });
+// Tidligere ægtefæller/partnere – gemmes som liste på den ene af de to; læses begge veje
+function tidligere(pid) {
+  const ud = [], set = new Set();
+  const p = P.get(pid)?.p; if (!p) return ud;
+  (p.tidligere_partnere || []).forEach(t => { if (t && t.pid && P.has(t.pid) && !set.has(t.pid)) { set.add(t.pid); ud.push({ ...t, ejer: pid }); } });
+  for (const [x, r] of P) (r.p.tidligere_partnere || []).forEach(t => { if (t && t.pid === pid && !set.has(x)) { set.add(x); ud.push({ ...t, pid: x, ejer: x }); } });
+  return ud;
+}
+function tidlTekst(t) {
+  const f = { gift: "⚭ Gift", samlever: "Samlevende", kaereste: "Kærester" }[t.type] || "";
+  const slut = { skilt: "skilt", død: "død", slut: "gået fra hinanden" }[t.slut] || "";
+  return [f && (f + (t.fra ? " " + esc(t.fra) : "")), slut && (slut + (t.til ? " " + esc(t.til) : ""))].filter(Boolean).join(" · ");
+}
 function partner(pid) { const p = P.get(pid)?.p; if (p?.partner_pid && P.has(p.partner_pid)) return p.partner_pid; for (const [x, r] of P) if (r.p.partner_pid === pid) return x; return null; }
 function soeskende(pid) { const p = P.get(pid)?.p; if (!p) return []; return [...P.keys()].filter(x => x !== pid && ((p.far_pid && P.get(x).p.far_pid === p.far_pid) || (p.mor_pid && P.get(x).p.mor_pid === p.mor_pid))); }
 const unik = a => [...new Set(a)];
@@ -204,6 +217,8 @@ function vis(pid, aabenRel) {
     ${relRad("Far", p.far_pid && P.has(p.far_pid) ? [p.far_pid] : [], (p.far_pid ? k("Skift", 'data-rel="far"') + k("✕", 'data-fjern="far"') : k("➕ Vælg far", 'data-rel="far"', "gron")))}
     ${relRad("Mor", p.mor_pid && P.has(p.mor_pid) ? [p.mor_pid] : [], (p.mor_pid ? k("Skift", 'data-rel="mor"') + k("✕", 'data-fjern="mor"') : k("➕ Vælg mor", 'data-rel="mor"', "gron")))}
     ${relRad(`Ægtefælle / partner${pa ? `<div class="rel-under">${ptype === "gift" ? "⚭ Gift" + (bryllup ? " " + dato(bryllup) : ' – <span style="color:var(--roed)">bryllupsdato mangler</span>') : (ptype === "samlever" ? "Samlevende" : (ptype === "kaereste" ? "Kærester" : ""))}</div>` : ""}`, pa ? [pa] : [], (pa ? k("Ret", 'data-rel="partner"') + k("✕", 'data-fjern="partner"') : k("➕ Vælg ægtefælle / partner", 'data-rel="partner"', "gron")))}
+    ${(() => { const tl = tidligere(pid);
+      return `<div class="rel-rad"><div class="rel-titel">Tidligere ægtefælle / partner</div><div class="rel-indhold">${tl.length ? tl.map(t => `<div style="margin:2px 0"><div class="chips" style="display:inline-flex">${chip(t.pid)}</div> <span class="rel-under" style="display:inline">${tidlTekst(t)}</span> ${k("✕", `data-fjern-tidl="${esc(t.pid)}"`)}</div>`).join("") : '<span class="tom">Ingen</span>'}</div><div class="rel-knapper">${k("➕ Tilføj tidligere", 'data-rel="tidligere"')}</div></div>`; })()}
     ${relRad("Børn", sorterAlder(b), k("➕ Tilføj barn", 'data-rel="barn"', "gron"))}
     ${relRad("Søskende", sorterAlder(soeskende(pid)), k("➕ Tilføj søster/bror", 'data-rel="soeskende"', "gron"))}
     <details class="flere"><summary>Flere relationer (bonusforældre / bonusbørn)</summary>
@@ -221,6 +236,7 @@ function vis(pid, aabenRel) {
     ${olde.length ? gen("Oldeforældre", olde) : ""}
     <h3 class="sek">↔️ Ved siden af</h3>
     ${gen("Ægtefælle / partner", pa ? [pa] : [])}
+    ${tidligere(pid).length ? gen("Tidligere ægtefælle / partner", tidligere(pid).map(t => t.pid)) : ""}
     ${gen("Søskende", soeskende(pid))}
     <h3 class="sek">⬇️ Ned i slægten</h3>
     ${gen("Børn", b)}
@@ -231,6 +247,7 @@ function vis(pid, aabenRel) {
 
   $("relationer").addEventListener("click", e => {
     const rl = e.target.closest("[data-rel]"); if (rl) return aabnEditor(pid, rl.dataset.rel);
+    const ft = e.target.closest("[data-fjern-tidl]"); if (ft) return fjernTidl(pid, ft.dataset.fjernTidl);
     const fj = e.target.closest("[data-fjern]"); if (fj) return fjern(pid, fj.dataset.fjern);
     const fp = e.target.closest("[data-forslag-par]"); if (fp) return aabnEditor(pid, "partner", fp.dataset.forslagPar);
     const fb = e.target.closest("[data-forslag-boern]"); if (fb) return forslagBoern(pid, fb.dataset.forslagBoern);
@@ -239,7 +256,7 @@ function vis(pid, aabenRel) {
 }
 
 // ── Editor til én relation ──
-const REL_TITEL = { far: "far", mor: "mor", partner: "ægtefælle / partner", barn: "barn", soeskende: "søster eller bror", bonus: "bonusforælder" };
+const REL_TITEL = { tidligere: "tidligere ægtefælle / partner", far: "far", mor: "mor", partner: "ægtefælle / partner", barn: "barn", soeskende: "søster eller bror", bonus: "bonusforælder" };
 function aabnEditor(pid, type, forvalgt) {
   const ed = $("rel-editor"), fn = fornavn(pid), cur = P.get(pid).p;
   const pa = partner(pid), pp = pa ? P.get(pa).p : null;
@@ -255,6 +272,10 @@ function aabnEditor(pid, type, forvalgt) {
       ${type === "partner" ? `<label>Forhold<select id="e-ptype"><option value="gift">Gift</option><option value="samlever">Samlevende</option><option value="kaereste">Kærester</option></select></label>
         <label id="e-bryllup-lbl">⚭ Bryllupsdato *<input type="date" id="e-bryllup" value="${esc(cur.bryllup_dato || (pp && pp.bryllup_dato) || "")}"></label>
         <label id="e-besked-lbl" style="grid-column:1/-1">💬 Besked om bryllupsdagen (frivillig – vises på forsiden op til dagen)<input id="e-besked" placeholder="Fx: Morgenkaffe kl. 10 – alle er velkomne" value="${esc(cur.bryllup_besked || (pp && pp.bryllup_besked) || "")}"></label>` : ""}
+      ${type === "tidligere" ? `<label>Forhold<select id="e-ptype"><option value="gift">Gift</option><option value="samlever">Samlevende</option><option value="kaereste">Kærester</option></select></label>
+        <label>Gift / sammen fra (dato eller år – frivillig)<input id="e-fra" placeholder="Fx 1945"></label>
+        <label>Hvordan sluttede det?<select id="e-slut"><option value="skilt">Skilt</option><option value="slut">Gået fra hinanden</option><option value="død">Ægtefællen døde</option><option value="">Ved ikke</option></select></label>
+        <label>Hvornår sluttede det? (frivillig)<input id="e-til" placeholder="Fx 1960"></label>` : ""}
       <label class="e-ny">Fornavn *<input id="e-fornavn"></label>
       <label class="e-ny">Mellemnavn<input id="e-mellemnavn"></label>
       <label class="e-ny">Efternavn<input id="e-efternavn"></label>
@@ -300,7 +321,8 @@ async function gemRelation(pid, type) {
       st.textContent = `${fnA} kan ikke være ${fnC}s ${REL_TITEL[type]} – ${fnA} er ${fnC}s ${anden === partner(pid) ? "ægtefælle/partner" : "barn eller efterkommer"}.`; return; }
     if (type === "barn" && (anden === partner(pid) || forfaedre(pid).has(anden))) {
       st.textContent = `${fnA} kan ikke være ${fnC}s barn – ${fnA} er ${fnC}s ${anden === partner(pid) ? "ægtefælle/partner" : "forælder eller forfader"}.`; return; }
-    if (type === "partner" && (efterkommere(pid).has(anden) || forfaedre(pid).has(anden) || soeskende(pid).includes(anden))) {
+    if (type === "tidligere" && anden === partner(pid)) { st.textContent = `${fnA} er ${fnC}s nuværende ægtefælle/partner. Fjern først den kobling.`; return; }
+    if ((type === "partner" || type === "tidligere") && (efterkommere(pid).has(anden) || forfaedre(pid).has(anden) || soeskende(pid).includes(anden))) {
       st.textContent = `${fnA} kan ikke være ${fnC}s ægtefælle – de er i familie (forælder, barn eller søskende).`; return; }
   }
   if (type === "partner" && v("e-ptype") === "gift" && !v("e-bryllup")) { st.textContent = "Skriv bryllupsdatoen – så kan mærkedagene regnes ud."; $("e-bryllup").focus(); return; }
@@ -326,11 +348,23 @@ async function gemRelation(pid, type) {
     else if (type === "partner") {
       // Fjern en gammel partner-kobling, så der kun er én
       const gl = partner(pid);
+      if (gl && gl !== anden && confirm(`Skal ${fornavn(gl)} gemmes som ${fornavn(pid)}s tidligere ægtefælle/partner?`)) {
+        const l = (cur.tidligere_partnere || []).filter(t => t && t.pid !== gl);
+        l.push({ pid: gl, type: cur.partner_type || P.get(gl).p.partner_type || "gift", fra: (cur.bryllup_dato || P.get(gl).p.bryllup_dato || "").slice(0, 10), slut: "", til: "" });
+        await saetFelter(pid, { tidligere_partnere: l });
+      }
       if (gl && gl !== anden && P.get(gl).p.partner_pid === pid) await saetFelter(gl, { partner_pid: "", partner_type: "", bryllup_dato: "" });
       if (oth.partner_pid && oth.partner_pid !== pid) await saetFelter(anden, { partner_pid: "" });
       const pt = v("e-ptype");
       await saetFelter(pid, { partner_pid: anden, partner_type: pt, bryllup_dato: pt === "gift" ? v("e-bryllup") : "", bryllup_besked: pt === "gift" ? v("e-besked") : "" });
       if (oth.bryllup_dato && pt === "gift" && oth.bryllup_dato !== v("e-bryllup")) await saetFelter(anden, { bryllup_dato: "" });
+    }
+    else if (type === "tidligere") {
+      const liste = (cur.tidligere_partnere || []).filter(t => t && t.pid !== anden);
+      liste.push({ pid: anden, type: v("e-ptype"), fra: v("e-fra"), slut: v("e-slut"), til: v("e-til") });
+      await saetFelter(pid, { tidligere_partnere: liste });
+      // Står den samme kobling også hos den anden, fjernes den der (så den kun findes ét sted)
+      if ((oth.tidligere_partnere || []).some(t => t && t.pid === pid)) await saetFelter(anden, { tidligere_partnere: oth.tidligere_partnere.filter(t => t && t.pid !== pid) });
     }
     else if (type === "soeskende") {
       if (cur.far_pid || cur.mor_pid) {
@@ -358,6 +392,15 @@ async function fjern(pid, type) {
   } else if (type === "bonus") {
     if (!confirm(`Fjern ${fn}s bonusforældre?`)) return;
     await saetFelter(pid, { bonus1_pid: "", bonus2_pid: "" });
+  }
+  vis(pid, true);
+}
+
+async function fjernTidl(pid, anden) {
+  if (!confirm(`Fjern ${fornavn(anden)} som tidligere ægtefælle/partner til ${fornavn(pid)}?`)) return;
+  for (const [a, b] of [[pid, anden], [anden, pid]]) {
+    const l = P.get(a).p.tidligere_partnere || [];
+    if (l.some(t => t && t.pid === b)) await saetFelter(a, { tidligere_partnere: l.filter(t => t && t.pid !== b) });
   }
   vis(pid, true);
 }

@@ -122,6 +122,7 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
     <span><i class="prik"></i> Slægt</span>
     <span><i class="prik til"></i> Tilløben (partner)</span>
     <span><i class="prik bonus"></i> Bonusbarn</span>
+    <span>⚮ Tidligere ægtefælle</span>
     <span>🕯️ Afdød</span>
     <span>Tryk på en person for at se mere</span>
   </div>
@@ -238,6 +239,12 @@ function boernAf(pids) {
   const sorter = a => a.sort((x, y) => String(P.get(x).p.foedselsdato || "9999").localeCompare(String(P.get(y).p.foedselsdato || "9999")));
   return { bio: sorter(bio), bonus: sorter(bonus) };
 }
+function tidligereAf(pid) {
+  const ud = [], p = P.get(pid)?.p; if (!p) return ud;
+  (p.tidligere_partnere || []).forEach(t => { if (t && P.has(t.pid) && !ud.includes(t.pid)) ud.push(t.pid); });
+  for (const [x, r] of P) (r.p.tidligere_partnere || []).forEach(t => { if (t && t.pid === pid && !ud.includes(x)) ud.push(x); });
+  return ud;
+}
 function partnerAf(pid) {
   const r = P.get(pid); if (!r) return null;
   if (r.p.partner_pid && P.has(r.p.partner_pid)) return r.p.partner_pid;
@@ -251,7 +258,7 @@ function beregnSlaegtsnumre() {
   // Alle, der hænger sammen med Agnes og Svend Aage
   const nab = new Map();
   const forbind = (a, b) => { if (!a || !b || !P.has(a) || !P.has(b)) return; (nab.get(a) || nab.set(a, new Set()).get(a)).add(b); (nab.get(b) || nab.set(b, new Set()).get(b)).add(a); };
-  for (const [pid, r] of P) ["far_pid","mor_pid","bonus1_pid","bonus2_pid","partner_pid"].forEach(f => forbind(pid, r.p[f]));
+  for (const [pid, r] of P) { ["far_pid","mor_pid","bonus1_pid","bonus2_pid","partner_pid"].forEach(f => forbind(pid, r.p[f])); (r.p.tidligere_partnere || []).forEach(t => t && forbind(pid, t.pid)); }
   const set = new Set(stamPids), koe = [...stamPids];
   while (koe.length) { const x = koe.pop(); (nab.get(x) || []).forEach(y => { if (!set.has(y)) { set.add(y); koe.push(y); } }); }
   SNR_ANTAL = set.size;
@@ -299,21 +306,32 @@ function foraeldreLink(p, pid) {
       : `<span class="mini" title="${esc(n)} – billede mangler">${esc(n.split(/\s+/).map(y => y[0]).slice(0, 2).join("").toUpperCase())}<span class="kam">📷</span></span>`; };
   return `<span class="op-link" data-op="${esc(far || mor)}" data-fra="${esc(pid)}" title="Vis ${esc(p.fornavn || "")}s forældre og familie">⬆ ${esc(navne)}</span>`;
 }
-function tegnEnhed(pids, besoegt, erBonus, erRod) {
+function tegnEnhed(pids, besoegt, erBonus, erRod, forholdMaerke) {
   // En "enhed" = en person (eller et par) + deres børn
   pids = pids.filter(p => P.has(p) && !besoegt.has(p));
   if (!pids.length) return "";
   if (pids.length === 1) { const pa = partnerAf(pids[0]); if (pa && !besoegt.has(pa)) pids.push(pa); }
   pids.forEach(p => besoegt.add(p));
+  // Tidligere ægtefæller/partnere står til venstre med ⚮
+  const tidl = tidligereAf(pids[0]).filter(p => !besoegt.has(p));
+  tidl.forEach(p => besoegt.add(p));
   // Den første er slægt; en partner, der ikke selv er barn i træet, er "tilløben"
-  const kort = pids.map((p, i) => personKort(p, i > 0 && !(erRod && stamPids.includes(p)))).join('<span class="gift">⚭</span>');
-  const { bio, bonus } = boernAf(pids);
+  const kort = tidl.map(p => personKort(p, true) + '<span class="gift" title="Tidligere ægtefælle / partner">⚮</span>').join("")
+    + pids.map((p, i) => personKort(p, i > 0 && !(erRod && stamPids.includes(p)))).join('<span class="gift">⚭</span>');
+  const { bio, bonus } = boernAf([...pids, ...tidl]);
+  // Børn fra et tidligere forhold får et lille mærke
+  const nu = pids[1], hoved = pids[0];
+  const maerke = b => { const q = P.get(b).p; const anden = q.far_pid === hoved ? q.mor_pid : q.far_pid;
+    if (!tidl.length && !nu) return "";
+    if (anden && anden !== nu && P.has(anden) && anden !== hoved) return "med " + (P.get(anden).p.fornavn || navnAf(P.get(anden).p).split(" ")[0]);
+    if (!anden && nu) return (q.far_pid === hoved ? "mor" : "far") + " ikke valgt";
+    return ""; };
   const born = [
     ...bio.filter(b => !besoegt.has(b)).map(b => ({ b, bonus: false })),
     ...bonus.filter(b => !besoegt.has(b) && !bio.includes(b)).map(b => ({ b, bonus: true }))
   ];
-  const under = born.map(x => tegnEnhed([x.b], besoegt, x.bonus, false)).filter(Boolean);
-  return `<li class="${erBonus ? "bonus" : ""}">${erBonus ? '<div class="bonus-maerke">bonusbarn</div>' : ""}<div class="enhed">${kort}</div>${under.length ? `<ul>${under.join("")}</ul>` : ""}</li>`;
+  const under = born.map(x => tegnEnhed([x.b], besoegt, x.bonus, false, x.bonus ? "" : maerke(x.b))).filter(Boolean);
+  return `<li class="${erBonus ? "bonus" : ""}">${erBonus ? '<div class="bonus-maerke">bonusbarn</div>' : ""}${forholdMaerke ? `<div class="bonus-maerke">${esc(forholdMaerke)}</div>` : ""}<div class="enhed">${kort}</div>${under.length ? `<ul>${under.join("")}</ul>` : ""}</li>`;
 }
 function tegnTrae(topPids) {
   const besoegt = new Set();
