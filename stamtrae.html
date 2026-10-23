@@ -399,14 +399,14 @@ let panelPid = null;
 function visPanel(pid) {
   const r = P.get(pid); if (!r) return; const p = r.p; panelPid = pid;
   const navn = navnAf(p);
-  const rel = pidX => P.has(pidX) ? esc(navnAf(P.get(pidX).p)) : "";
+  const rel = pidX => { if (!P.has(pidX)) return ""; const rr = P.get(pidX), nn = personNr(rr); return esc(navnAf(rr.p)) + (nn && rr.p.status !== "afdød" ? ` <span style="font-size:12px;color:#777">(medl.nr. ${esc(nn)})</span>` : ""); };
   const { bio, bonus } = boernAf([pid]);
   const pa = partnerAf(pid);
   const linjer = [
     p.tidligere_navne ? `📝 Tidligere navne: ${esc(p.tidligere_navne)}` : "",
     p.foedselsdato ? `🎂 Født ${datoTekst(p.foedselsdato)}` : "",
     p.status === "afdød" ? `🕯️ Død ${datoTekst(p.status_dato) || ""}` : "",
-    personNr(r) ? `📇 Medlemsnr. ${esc(personNr(r))}${r.husNavn ? " · " + esc(r.husNavn) : ""}` : (r.kilde === "slaegt" ? "🌿 I Slægten (ikke medlem)" : ""),
+    personNr(r) ? `📇 Medlemsnr. ${esc(personNr(r))}${r.husNavn ? " · " + esc(r.husNavn) : ""}` : (r.kilde === "slaegt" ? (p.tidligere_husstand ? `🌿 I Slægten · tidl. husstand nr. ${esc(p.tidligere_husstand)}` : "🌿 I Slægten (ikke medlem)") : ""),
     SNR.has(pid) ? `🌳 Slægtsnr. ${SNR.get(pid)} / ${SNR_ANTAL}` : "",
     p.far_pid ? `Far: ${rel(p.far_pid)}` : "", p.mor_pid ? `Mor: ${rel(p.mor_pid)}` : "",
     [p.bonus1_pid, p.bonus2_pid].filter(Boolean).map(b => `Bonusforælder: ${rel(b)}`).join("<br>"),

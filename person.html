@@ -141,7 +141,7 @@ function chip(pid) {
   const r = P.get(pid); if (!r) return ""; const p = r.p; const n = navnAf(p);
   const f = (p.foedselsdato || "").slice(0, 4), d = p.status === "afdød" ? (p.status_dato || "").slice(0, 4) : "";
   const aar = f || d ? ` <span style="color:var(--tekst-lys)">${f}${d ? "–" + d : ""}</span>` : "";
-  return `<a class="chip" href="person.html?pid=${encodeURIComponent(pid)}">${p.foto ? `<img src="${esc(p.foto)}" alt="">` : `<span class="ini">${esc(ini(n))}</span>`}${esc(n)}${p.status === "afdød" ? " 🕯️" : ""}${aar}${manglerFor(p).length ? '<span class="prik" title="Mangler data"></span>' : ""}</a>`;
+  return `<a class="chip" href="person.html?pid=${encodeURIComponent(pid)}">${p.foto ? `<img src="${esc(p.foto)}" alt="">` : `<span class="ini">${esc(ini(n))}</span>`}${esc(n)}${p.status === "afdød" ? " 🕯️" : (personNr(r) ? ` <span style="font-size:11px;color:var(--tekst-lys)">· ${esc(personNr(r))}</span>` : "")}${aar}${manglerFor(p).length ? '<span class="prik" title="Mangler data"></span>' : ""}</a>`;
 }
 function gen(titel, pids) {
   pids = sorterAlder(unik(pids));
@@ -195,7 +195,7 @@ function vis(pid, aabenRel) {
         ${p.tidligere_navne ? `<div class="linje">📝 Tidligere navne: ${esc(p.tidligere_navne)}</div>` : ""}
         ${p.foedselsdato ? `<div class="linje">🎂 Født ${dato(p.foedselsdato)}</div>` : ""}
         ${p.status === "afdød" ? `<div class="linje">🕯️ Død ${dato(p.status_dato) || "(dato mangler)"}${alder !== "" ? ` · ${alder} år` : ""}</div>` : (alder !== "" ? `<div class="linje">${alder} år</div>` : "")}
-        <div class="linje">${r.kilde === "kartotek" ? `📇 Medlemsnr. ${esc(personNr(r))} · ${esc(r.husNavn)}` : "🌿 I Slægten (ikke på et medlemskort)"}</div>
+        <div class="linje">${r.kilde === "kartotek" ? `📇 Medlemsnr. ${esc(personNr(r))} · ${esc(r.husNavn)}` : (p.tidligere_husstand ? "🌿 I Slægten · tidligere husstand nr. " + esc(p.tidligere_husstand) : "🌿 I Slægten (ikke på et medlemskort)")}</div>
         ${p.bekraeftet && p.bekraeftet.navn ? `<div class="ok">✅ Data bekræftet af ${esc(p.bekraeftet.navn)} (${dato(p.bekraeftet.dato)})</div>` : ""}
         ${mgl.length ? `<div class="mangler">🔴 Mangler: ${esc(mgl.join(", "))}</div><div class="hjaelp">🙏 <b>Hjælp med at gøre ${esc((p.fornavn || n).split(" ")[0])} færdig.</b> Har du et billede eller kender du datoerne? Så tryk <b>✏️ Ret data</b> herunder – eller send det til 5-Banden.</div>` : ""}
         <div class="knapper">

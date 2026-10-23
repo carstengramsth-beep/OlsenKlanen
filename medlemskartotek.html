@@ -817,7 +817,7 @@ function naesteMaerkebryllup(iso) {
 }
 function personIndeks() {
   const ix = new Map();
-  data.forEach(m => (m.familiemedlemmer || []).forEach(p => { if (p.pid) ix.set(p.pid, { p, nr: String(m.nr) }); }));
+  data.forEach(m => (m.familiemedlemmer || []).forEach(p => { if (p.pid) { let pnr = ''; try { pnr = String(beregnPersonNr(m.nr, m.familiemedlemmer, p)); } catch (e) {} ix.set(p.pid, { p, nr: String(m.nr), pnr }); } }));
   slaegtData.forEach(p => ix.set(p.pid, { p, nr: '', slaegt: true }));
   return ix;
 }
@@ -825,7 +825,7 @@ function relLink(ix, pid) {
   const r = pid && ix.get(pid);
   if (!r) return '';
   if (r.slaegt) return `<a href="stamtrae.html?top=${encodeURIComponent(pid)}" title="I Slægten (ikke medlem)">${escH(visPersonNavn(r.p))} 🌿</a>`;
-  return `<a href="#" class="hjaelper-link" data-gaa-til="${escH(r.nr)}">${escH(visPersonNavn(r.p))}</a>`;
+  return `<a href="#" class="hjaelper-link" data-gaa-til="${escH(r.nr)}">${escH(visPersonNavn(r.p))}</a>${r.p.status !== 'afdød' && r.pnr ? ` <span style="font-size:11px;color:var(--tekst-lys)">(medl.nr. ${escH(r.pnr)})</span>` : ''}`;
 }
 function relationerHtml(p, ix) {
   if (!p.pid || !ix) return '';
