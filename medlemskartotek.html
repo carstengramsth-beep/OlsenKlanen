@@ -718,7 +718,7 @@ body.kan-redigere .historisk-btn-wrapper{display:none}
   <div class="status-knapper" id="status-knapper" style="display:flex;gap:6px;flex-wrap:wrap;margin:-.4rem 0 1rem">
     <button type="button" data-status-filter="alle" class="status-knap aktiv">Alle husstande</button>
     <button type="button" data-status-filter="aktiv" class="status-knap">🟢 Aktive</button>
-    <button type="button" data-status-filter="afdød" class="status-knap">🕯️ Afdøde</button>
+    <button type="button" data-status-filter="afdød" class="status-knap">🕯️ Gået i forvejen</button>
     <button type="button" data-status-filter="udmeldt" class="status-knap">Udmeldte</button>
     <button type="button" data-status-filter="svaever" class="status-knap" title="Personer, der endnu ikke hænger sammen med Agnes og Svend Aage i stamtræet">🧩 Svævere</button>
     <a href="stamtrae.html" class="status-knap" style="text-decoration:none;margin-left:auto">🌳 Se stamtræet</a>
@@ -1769,7 +1769,7 @@ function renderStatusListe() {
     rk.push({ p, m: null, navn });
   });
   rk.sort((a, b) => String(a.p.foedselsdato || '9999').localeCompare(String(b.p.foedselsdato || '9999')));
-  const navne = { aktiv: 'aktive personer', 'afdød': 'afdøde', udmeldt: 'udmeldte' };
+  const navne = { aktiv: 'aktive personer', 'afdød': 'personer, der er gået i forvejen', udmeldt: 'udmeldte' };
   document.getElementById('antal-linje').textContent = `${rk.length} ${navne[statusFilter]}`;
   if (!rk.length && statusFilter !== 'afdød') { grid.innerHTML = '<div class="ingen-resultater">Ingen personer med denne status.</div>'; return; }
   const visDato = statusFilter !== 'aktiv';
@@ -1789,7 +1789,8 @@ function renderStatusListe() {
   const antalMangler = rk.filter(x => mangler(x.p).length).length;
   if (statusFilter === 'afdød' && antalMangler) document.getElementById('antal-linje').textContent += ` · 🟠 ${antalMangler} mangler data`;
   const SN = slaegtsnumre();
-  grid.innerHTML = opretKnap + `<table class="status-tabel"><thead><tr><th title="Slægtsnummer – efter fødselsdato. Agnes og Svend Aage = 1">Slægtsnr.</th><th>Navn</th><th>Født</th>${visDato ? `<th>${statusFilter === 'afdød' ? 'Død' : 'Udmeldt'}</th><th>Alder</th>` : ''}<th>Husstand</th>${statusFilter === 'afdød' ? '<th>Bekræftet</th>' : ''}</tr></thead><tbody>
+  const overskrift = statusFilter === 'afdød' ? `<h2 style="grid-column:1/-1;font-family:'Playfair Display',serif;font-weight:500;color:var(--gron,#2d5016);margin:.2rem 0 .6rem">🕯️ Slægten – dem der er gået i forvejen</h2>` : '';
+  grid.innerHTML = overskrift + opretKnap + `<table class="status-tabel"><thead><tr><th title="Slægtsnummer – efter fødselsdato. Agnes og Svend Aage = 1">Slægtsnr.</th><th>Navn</th><th>Født</th>${visDato ? `<th>${statusFilter === 'afdød' ? 'Død' : 'Udmeldt'}</th><th>Alder</th>` : ''}<th>Husstand</th>${statusFilter === 'afdød' ? '<th>Bekræftet</th>' : ''}</tr></thead><tbody>
     ${rk.map(({ p, m, navn }) => {
       let alder = '';
       if (visDato && p.foedselsdato && p.status_dato) {
