@@ -1725,11 +1725,28 @@ function forbundneTilStamfar() {
   const forbind = (a, b) => { if (!a || !b) return; (kanter.get(a) || kanter.set(a, new Set()).get(a)).add(b); (kanter.get(b) || kanter.set(b, new Set()).get(b)).add(a); };
   [...data.flatMap(m => m.familiemedlemmer || []), ...slaegtData].forEach(p => {
     ['far_pid', 'mor_pid', 'bonus1_pid', 'bonus2_pid', 'partner_pid'].forEach(f => forbind(p.pid, p[f]));
+    (p.tidligere_partnere || []).forEach(t => t && forbind(p.pid, t.pid));
   });
   const start = (data.find(m => String(m.nr) === '1')?.familiemedlemmer || []).map(p => p.pid).filter(Boolean);
   const set = new Set(start), koe = [...start];
   while (koe.length) { const x = koe.pop(); (kanter.get(x) || []).forEach(y => { if (!set.has(y)) { set.add(y); koe.push(y); } }); }
   return set;
+}
+// Slægtsnummer (samme regel som i stamtræet): Agnes og Svend Aage = 1; født efter dem 2, 3 …; født før −1, −2 …
+function slaegtsnumre() {
+  const forb = forbundneTilStamfar();
+  const alle = new Map([...data.flatMap(m => m.familiemedlemmer || []), ...slaegtData].filter(p => p.pid).map(p => [p.pid, p]));
+  const stam = (data.find(m => String(m.nr) === '1')?.familiemedlemmer || []).map(p => p.pid).filter(Boolean);
+  const dato = pid => (alle.get(pid) || {}).foedselsdato || '';
+  const sd = stam.map(dato).filter(Boolean).sort(); const foerst = sd[0] || '1900-01-01', sidst = sd[sd.length - 1] || foerst;
+  const andre = [...forb].filter(p => alle.has(p) && !stam.includes(p));
+  const efter = andre.filter(p => dato(p) && dato(p) > sidst).sort((a, b) => dato(a).localeCompare(dato(b)));
+  const foer = andre.filter(p => dato(p) && dato(p) < foerst).sort((a, b) => dato(b).localeCompare(dato(a)));
+  const ukendt = andre.filter(p => !dato(p) || (dato(p) >= foerst && dato(p) <= sidst));
+  const N = new Map(); stam.forEach(p => N.set(p, 1));
+  [...efter, ...ukendt].forEach((p, i) => N.set(p, i + 2)); foer.forEach((p, i) => N.set(p, -(i + 1)));
+  N.antal = [...forb].filter(p => alle.has(p)).length;
+  return N;
 }
 function renderStatusListe() {
   const grid = document.getElementById('grid');
@@ -1771,7 +1788,8 @@ function renderStatusListe() {
   };
   const antalMangler = rk.filter(x => mangler(x.p).length).length;
   if (statusFilter === 'afdød' && antalMangler) document.getElementById('antal-linje').textContent += ` · 🟠 ${antalMangler} mangler data`;
-  grid.innerHTML = opretKnap + `<table class="status-tabel"><thead><tr><th>Navn</th><th>Født</th>${visDato ? `<th>${statusFilter === 'afdød' ? 'Død' : 'Udmeldt'}</th><th>Alder</th>` : ''}<th>Husstand</th>${statusFilter === 'afdød' ? '<th>Bekræftet</th>' : ''}</tr></thead><tbody>
+  const SN = slaegtsnumre();
+  grid.innerHTML = opretKnap + `<table class="status-tabel"><thead><tr><th title="Slægtsnummer – efter fødselsdato. Agnes og Svend Aage = 1">Slægtsnr.</th><th>Navn</th><th>Født</th>${visDato ? `<th>${statusFilter === 'afdød' ? 'Død' : 'Udmeldt'}</th><th>Alder</th>` : ''}<th>Husstand</th>${statusFilter === 'afdød' ? '<th>Bekræftet</th>' : ''}</tr></thead><tbody>
     ${rk.map(({ p, m, navn }) => {
       let alder = '';
       if (visDato && p.foedselsdato && p.status_dato) {
@@ -1779,10 +1797,10 @@ function renderStatusListe() {
         alder = d.getFullYear() - f.getFullYear() - ((d.getMonth() < f.getMonth() || (d.getMonth() === f.getMonth() && d.getDate() < f.getDate())) ? 1 : 0);
       }
       const mgl = mangler(p);
-      return `<tr><td>${p.foto ? `<img src="${p.foto}" style="width:22px;height:22px;border-radius:3px;object-fit:cover;vertical-align:middle;margin-right:6px">` : ''}<a href="person.html?pid=${encodeURIComponent(p.pid || '')}" style="color:inherit"><b>${escH(navn)}</b></a> <a href="person.html?pid=${encodeURIComponent(p.pid || '')}" title="Se alle data og hele familien" style="font-size:12px;text-decoration:none">👤 Personkort</a>${relationerHtml(p, _relIx)}${mgl.length ? `<div style="font-size:12px;color:#b8620b;margin-top:3px">🟠 Mangler: ${mgl.join(', ')}</div>` : ''}</td>
+      return `<tr><td style="text-align:center;white-space:nowrap">${SN.has(p.pid) ? `<b>${SN.get(p.pid)}</b><span style="font-size:11px;color:var(--tekst-lys)"> / ${SN.antal}</span>` : '<span style="font-size:11px;color:var(--tekst-lys)" title="Hænger endnu ikke sammen med Agnes og Svend Aage i træet">–</span>'}</td><td>${p.foto ? `<img src="${p.foto}" style="width:22px;height:22px;border-radius:3px;object-fit:cover;vertical-align:middle;margin-right:6px">` : ''}<a href="person.html?pid=${encodeURIComponent(p.pid || '')}" style="color:inherit"><b>${escH(navn)}</b></a> <a href="person.html?pid=${encodeURIComponent(p.pid || '')}" title="Se alle data og hele familien" style="font-size:12px;text-decoration:none">👤 Personkort</a>${relationerHtml(p, _relIx)}${mgl.length ? `<div style="font-size:12px;color:#b8620b;margin-top:3px">🟠 Mangler: ${mgl.join(', ')}</div>` : ''}</td>
         <td>${p.foedselsdato ? formatDato(p.foedselsdato) : '—'}</td>
         ${visDato ? `<td>${p.status_dato ? formatDato(p.status_dato) : '—'}</td><td>${alder !== '' ? alder + ' år' : ''}</td>` : ''}
-        <td>${m ? `<a href="#" class="hjaelper-link" data-gaa-til="${escH(String(m.nr))}">nr. ${escH(String(m.nr))}</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">${escH(visKortNavn(m))}</span>` : `<a href="stamtrae.html?top=${encodeURIComponent(p.pid)}">🌿 Slægten</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">ikke medlem</span>${kanRet ? `<br><button type="button" class="status-knap" data-ret-afdod="${escH(p.pid)}" style="padding:.15rem .6rem;font-size:12px;margin-top:3px">✏️ Ret</button>` : ''}`}</td>${statusFilter === 'afdød' ? `<td style="font-size:12px">${p.bekraeftet && p.bekraeftet.navn
+        <td>${m ? `<a href="#" class="hjaelper-link" data-gaa-til="${escH(String(m.nr))}">nr. ${escH(String(m.nr))}</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">${escH(visKortNavn(m))}</span>` : `<a href="stamtrae.html?top=${encodeURIComponent(p.pid)}">🌿 Slægten</a><br><span style="font-size:11.5px;color:var(--tekst-lys)">${p.tidligere_husstand ? 'tidl. husstand nr. ' + escH(p.tidligere_husstand) : 'ikke medlem'}</span>${kanRet ? `<br><button type="button" class="status-knap" data-ret-afdod="${escH(p.pid)}" style="padding:.15rem .6rem;font-size:12px;margin-top:3px">✏️ Ret</button>` : ''}`}</td>${statusFilter === 'afdød' ? `<td style="font-size:12px">${p.bekraeftet && p.bekraeftet.navn
           ? `✅ Bekræftet af <b>${escH(p.bekraeftet.navn)}</b><br><span style="color:var(--tekst-lys)">${escH(formatDato(p.bekraeftet.dato))}</span>`
           : `<span style="color:var(--tekst-lys)">⚪ Ikke bekræftet</span>`}${kanRet && !(p.bekraeftet && p.bekraeftet.navn) ? `<br><button type="button" class="status-knap aktiv" data-bekraeft="${escH(p.pid)}" style="padding:.15rem .6rem;font-size:12px;margin-top:3px">✓ Bekræft data</button>` : ''}</td>` : ''}</tr>`;
     }).join('')}</tbody></table>`;
