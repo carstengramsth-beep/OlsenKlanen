@@ -331,7 +331,8 @@ function beregnAlder(foedselsdato, doedsdato) {
 
 function mindekortHtml(p) {
   const navn = visPersonNavn(p) || '(Navn mangler)';
-  const noegle = personNoegle(p.husstandsNr, navn);
+  // Flyttet til Slægten? Så bruges den gamle husstand, så mindeordene følger med
+  const noegle = personNoegle(p.tidligere_husstand || p.husstandsNr, navn);
   const alder = beregnAlder(p.foedselsdato, p.status_dato);
   const fotoHtml = p.foto
     ? `<img src="${p.foto}" alt="${navn}">`
@@ -352,11 +353,11 @@ function mindekortHtml(p) {
         </div>`).join('')}</div>`
     : '';
 
-  const kanSkrive = maaSkriveOmtale(p.husstandsNr);
+  const kanSkrive = maaSkriveOmtale(p.tidligere_husstand || p.husstandsNr);
   const omtaleFormHtml = kanSkrive
     ? `<div class="omtale-form" data-noegle="${noegle}">
         <textarea class="omtale-input" placeholder="Skriv nogle ord til minde om ${navn}…"></textarea>
-        <button type="button" class="omtale-knap" data-noegle="${noegle}" data-husstand="${p.husstandsNr}" data-navn="${enc(navn)}">💬 Tilføj mindeord</button>
+        <button type="button" class="omtale-knap" data-noegle="${noegle}" data-husstand="${p.tidligere_husstand || p.husstandsNr}" data-navn="${enc(navn)}">💬 Tilføj mindeord</button>
         <div class="omtale-status" data-status="${noegle}"></div>
       </div>`
     : '';
@@ -376,7 +377,7 @@ function mindekortHtml(p) {
         </div>` : ''}
         ${omtalerHtml}
         ${omtaleFormHtml}
-        ${p.husstandsNr === 'Slægten' ? `<div class="mindekort-husstand">🌿 Fra Slægten (fælles slægtning)</div>` : (p.husstandsNr ? `<div class="mindekort-husstand">Data fra husstand nr. ${p.husstandsNr}</div>` : '')}
+        ${p.tidligere_husstand ? `<div class="mindekort-husstand">Data fra husstand nr. ${p.tidligere_husstand}</div>` : p.husstandsNr === 'Slægten' ? `<div class="mindekort-husstand">🌿 Fra Slægten (fælles slægtning)</div>` : (p.husstandsNr ? `<div class="mindekort-husstand">Data fra husstand nr. ${p.husstandsNr}</div>` : '')}
       </div>
     </div>`;
 }
