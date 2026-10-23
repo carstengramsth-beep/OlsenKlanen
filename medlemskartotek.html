@@ -1916,7 +1916,9 @@ async function bekraeftAfdod(pid, knap) {
     } else {
       const m = data.find(h => (h.familiemedlemmer || []).some(p => p.pid === pid));
       if (!m) throw new Error('Personen blev ikke fundet');
-      const fm = m.familiemedlemmer.map(p => p.pid === pid ? { ...p, bekraeftet: b } : p);
+      let nyeste = m.familiemedlemmer;
+      try { const s = await getDoc(doc(db, 'membres', String(m.nr))); if (s.exists()) nyeste = s.data().familiemedlemmer || nyeste; } catch (e) {}
+      const fm = nyeste.map(p => p.pid === pid ? { ...p, bekraeftet: b } : p);
       await setDoc(doc(db, 'membres', String(m.nr)), { familiemedlemmer: fm }, { merge: true });
       m.familiemedlemmer = fm;
     }
@@ -2763,6 +2765,22 @@ async function gemData() {
       return k(g) === k(p) ? p : { ...p, bekraeftet: null };
     });
  
+  // Nyere relationer fra databasen må ikke overskrives af en boks, der blev åbnet før de blev lavet:
+  // er et relationsfelt ikke rørt i boksen, bruges den nyeste værdi fra databasen.
+  try {
+    const s = await getDoc(doc(db, 'membres', gammelNr));
+    if (s.exists()) {
+      const frisk = s.data().familiemedlemmer || [];
+      const REL = ['far_pid','mor_pid','partner_pid','partner_type','bryllup_dato','bryllup_besked','bonus1_pid','bonus2_pid','tidligere_partnere','tidligere_navne','foto'];
+      const ens = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+      reneMedlemmer.forEach(p => {
+        const g = (tidl.familiemedlemmer || []).find(x => x.pid === p.pid) || {};
+        const fr = frisk.find(x => x.pid === p.pid); if (!fr) return;
+        REL.forEach(k => { if (ens(p[k], g[k]) && !ens(fr[k], g[k])) { if (fr[k] === undefined) delete p[k]; else p[k] = fr[k]; } });
+      });
+    }
+  } catch (e) { console.log('Frisk-tjek:', e); }
+
   // GODKENDELSE: at gemme er IKKE en godkendelse. Er data ændret, skal husstanden godkende igen
   // (knappen "✓ Godkend medlemsdata"). Er intet ændret, bevares en eksisterende godkendelse.
   const _nyNoegle = godkendNoegle({ vej, postnummer, by, tlf: document.getElementById('ef-tlf').value, email: document.getElementById('ef-email').value, familiemedlemmer: reneMedlemmer });
