@@ -1309,7 +1309,7 @@ window.nulstilAlleIntern = function(){
 /* ════════ SEND RIGTIG MAIL via EmailJS ════════ */
 window.sendMail = async function(){
    if (!ER_POSTANSVARLIG) { alert("Kun postansvarlige kan sende mails til medlemmer."); return; }
-   if (!auth.currentUser) { alert("Bekræft din PIN-kode øverst på siden først."); return; }
+   if (window._mailSender) { alert("Vent – mailen er ved at blive sendt. Tryk ikke igen."); return; }
   const emne = document.getElementById("emne").value.trim();
   const personligTekst = document.getElementById("tekst-mail").value.trim();
   const inkluderKnap = document.getElementById("inkluder-velkomstbrev");
@@ -1325,7 +1325,27 @@ window.sendMail = async function(){
   if (!emne)            { vis(statusEl, "fejl", "Skriv et emne."); return; }
   if (!tekst)           { vis(statusEl, "fejl", "Skriv en besked, eller vedlæg velkomstbrevet."); return; }
 
-  knap.disabled = true;
+  // ── Sikker afsendelse: kun én gang ──
+  window._mailSender = true; knap.disabled = true;
+  const antalModt = [...valgteMail.values()].filter(d => d.email).length;
+  // Er den samme mail (samme emne) sendt til nogen af modtagerne inden for de sidste 7 dage?
+  try {
+    const snap = await getDocs(query(collection(db, "olsenpost_mail"), where("emne", "==", emne)));
+    const valgteAdr = new Set([...valgteMail.values()].map(d => String(d.email || "").trim().toLowerCase()));
+    const tidl = []; snap.forEach(d => { const x = d.data(); if ((x.sendt_lokal || 0) > Date.now() - 7 * 864e5 && valgteAdr.has(String(x.til_email || "").trim().toLowerCase())) tidl.push(x); });
+    if (tidl.length) {
+      const sidst = new Date(Math.max(...tidl.map(x => x.sendt_lokal || 0))).toLocaleString("da-DK", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+      const valg = await vaelgBoks("⚠️ Denne mail er sendt før", "En mail med emnet <b>»" + escHtml(emne) + "«</b> er allerede sendt til <b>" + tidl.length + "</b> af de valgte modtagere (senest " + sidst + ").<br><br>Hvad vil du?",
+        [["nej", "Annullér – send ikke", "#2d5016"], ["ret", "✏️ Jeg vil rette den først", "#b8860b"], ["igen", "🔁 Send den igen", "#8b1e1e"]]);
+      if (valg !== "igen") { window._mailSender = false; knap.disabled = false; vis(statusEl, "ok", valg === "ret" ? "Ret teksten, og tryk send igen." : "Ikke sendt."); return; }
+    }
+  } catch(e) { console.log("Dublet-tjek (mail):", e); }
+  // PIN: altid ved mere end 3 modtagere (rundsendelse), ellers kun hvis man ikke er bekræftet
+  if (!(await sikrePin(antalModt > 3, antalModt > 3 ? "📨 <b>»" + escHtml(emne) + "«</b> sendes til <b>" + antalModt + " modtagere</b> – én gang." : ""))) {
+    window._mailSender = false; knap.disabled = false; vis(statusEl, "fejl", "Ikke sendt – PIN-koden mangler."); return;
+  }
+  const fd = fremdriftBoks("Mailen", antalModt);
+  fd.status("📨", "Mailen er modtaget til afsendelse", "Den sendes nu til " + antalModt + " modtager" + (antalModt === 1 ? "" : "e") + " – én gang.<br><b>Tryk ikke igen.</b>");
   vis(statusEl, "ok", "⏳ Sender mail …");
 
   const erVelkomst = velkomstTilstand && inkluderVelkomst;
@@ -1349,7 +1369,8 @@ window.sendMail = async function(){
       vis(statusEl, "ok", "⏳ Sender mail …");
     } catch(e) {
       console.log("Vedhæft-fejl:", e);
-      knap.disabled = false;
+      knap.disabled = false; window._mailSender = false;
+      fd.status("⚠️", "Ikke sendt", "Billedet kunne ikke lægges op. Prøv igen.", true);
       vis(statusEl, "fejl", "Kunne ikke lægge billedet op. Prøv igen.");
       return;
     }
@@ -1408,7 +1429,9 @@ window.sendMail = async function(){
       console.log("Mail-fejl til", email, e);
       fejl++;
     }
+    fd.status("📨", "Sender …", "Sendt til " + (sendt + fejl) + " af " + antalModt + ".<br><b>Tryk ikke igen, og luk ikke siden.</b>");
   }
+  fd.status(fejl ? "⚠️" : "✅", fejl ? "Delvist sendt" : "Mailen er sendt", "Sendt til " + sendt + " modtager" + (sendt === 1 ? "" : "e") + " – én gang." + (fejl ? "<br>" + fejl + " kunne ikke sendes." : ""), true);
 
   if (EMAILJS_PUBLIC_KEY === "INDSÆT_PUBLIC_KEY_HER") {
     vis(statusEl, "ok", `📋 Besked gemt til ${sendt} modtager${sendt===1?'':'e'} — EmailJS skal opsættes for at sende rigtig mail.`);
@@ -1427,7 +1450,7 @@ window.sendMail = async function(){
   valgteMail.clear(); tegnValgte("mail");
   document.querySelectorAll('#modtager-liste-mail input').forEach(cb => cb.checked = false);
   ryddKladde();
-  knap.disabled = false;
+  knap.disabled = false; window._mailSender = false;
   if (document.getElementById("omr-sendt").style.display !== "none") tegnSendt();
 };
 

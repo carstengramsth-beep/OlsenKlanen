@@ -26,3 +26,8 @@ Gælder for de 5 postansvarlige. Aftalt med Carsten 22. okt. 2026.
 
 ## Baggrund
 Info nr. 5 blev sendt tre gange, fordi der ikke var tydelig besked om, at den var på vej. Serveren (functions) opdateres ikke automatisk, så sikringen ligger i `meddelelser.html`.
+
+## Tilføjet 23. okt.: Almindelig mail (»Send mail til medlem«)
+- Ved tryk på send kommer straks en stor boks: **»Mailen er modtaget til afsendelse«** → »Sender … 3 af 45« → **»✅ Mailen er sendt – én gang«**. Man kan ikke trykke igen imens.
+- Mere end 3 modtagere = rundsendelse → **PIN-kode hver gang**.
+- Er en mail med **samme emne** sendt til nogen af modtagerne inden for 7 dage: **»⚠️ Denne mail er sendt før«** → Annullér / Ret først / Send igen.
