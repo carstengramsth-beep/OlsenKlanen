@@ -3677,7 +3677,7 @@ async function initialiserSide() {
     try {
       const s2 = await getDocs(query(collection(db, 'olsenpost'), where('type', '==', 'slaegt')));
       slaegtData = [];
-      s2.forEach(d => { const x = d.data(); if (x.pid) slaegtData.push(x); });
+      s2.forEach(d => { const x = d.data(); if (x.pid && x.lag !== 'udkast') slaegtData.push(x); });   // udkast 2 (ubekræftet) vises kun i stamtræet
     } catch (e) { console.log('Kunne ikke hente Slægten:', e); }
     try { const sq = new URLSearchParams(location.search).get('soeg'); if (sq) { soegeTekst = sq; document.getElementById('soege').value = sq; } } catch (e) {}
     renderGrid();

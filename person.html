@@ -110,7 +110,8 @@ async function hentData() {
     (h.familiemedlemmer || []).forEach(p => { if (p.pid && navnAf(p)) P.set(p.pid, { p, nr, kilde: "kartotek", husNavn }); }); });
   try {
     const s2 = await getDocs(query(collection(db, "olsenpost"), where("type", "==", "slaegt")));
-    s2.forEach(d => { const p = d.data(); if (p.pid && navnAf(p)) P.set(p.pid, { p, nr: "", kilde: "slaegt", husNavn: "Slægten" }); });
+    const _q = new URLSearchParams(location.search), _vis = _q.get("pid"), _ud = _q.get("udkast") === "1";
+    s2.forEach(d => { const p = d.data(); if (p.lag === "udkast" && !_ud && p.pid !== _vis) return; if (p.pid && navnAf(p)) P.set(p.pid, { p, nr: "", kilde: "slaegt", husNavn: "Slægten" }); });
   } catch(e) {}
 }
 
@@ -192,6 +193,7 @@ function vis(pid, aabenRel) {
       ${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="" data-stort="${esc(n)}" title="Tryk for at se billedet stort">` : `<div class="foto uden">📷<small>Billede mangler</small></div>`}
       <div style="flex:1;min-width:240px">
         <div class="navn">${esc(n)}${p.status === "afdød" ? " 🕯️" : ""}</div>
+        ${p.lag === "udkast" ? `<div class="linje" style="background:#f6f0fb;border:1px dashed #7b4fa0;border-radius:8px;padding:5px 9px;color:#5a2f80">🧪 Udkast 2 – ikke bekræftet. ${esc(p.kilde || "")}</div>` : ""}
         ${p.tidligere_navne ? `<div class="linje">📝 Tidligere navne: ${esc(p.tidligere_navne)}</div>` : ""}
         ${p.foedselsdato ? `<div class="linje">🎂 Født ${dato(p.foedselsdato)}</div>` : ""}
         ${p.status === "afdød" ? `<div class="linje">🕯️ Død ${dato(p.status_dato) || "(dato mangler)"}${alder !== "" ? ` · ${alder} år` : ""}</div>` : (alder !== "" ? `<div class="linje">${alder} år</div>` : "")}
