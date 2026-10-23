@@ -63,7 +63,7 @@
         });
         const q = { structuredQuery: { from: [{ collectionId: "olsenpost" }], where: { fieldFilter: { field: { fieldPath: "type" }, op: "EQUAL", value: { stringValue: "slaegt" } } } } };
         const r2 = await fetch(`${BASE}:runQuery?key=${KEY}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(q) }).then(x => x.json());
-        (r2 || []).forEach(x => { if (!x.document) return; const p = vaerdi({ mapValue: x.document });
+        (r2 || []).forEach(x => { if (!x.document) return; const p = vaerdi({ mapValue: x.document }); if (p.lag === "udkast") return;
           liste.push({ navn: p.navn || p.fornavn || "", tidl: p.tidligere_navne || "", pid: p.pid, afdod: p.status === "afdød", kilde: "slaegt" }); });
       } catch (e) { console.log("Søgning: kunne ikke hente personer", e); }
       PERSONER = liste;

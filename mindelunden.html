@@ -428,7 +428,7 @@ async function hentAfdoede() {
     // Afdøde uden medlemskort (Slægten)
     try {
       const s2 = await getDocs(query(collection(db, 'olsenpost'), where('type', '==', 'slaegt')));
-      s2.forEach(d => { const p = d.data(); if (p.status === 'afdød') afdoede.push({ ...p, husstandsNr: 'Slægten', husstandsNavn: 'Slægten' }); });
+      s2.forEach(d => { const p = d.data(); if (p.status === 'afdød' && p.lag !== 'udkast') afdoede.push({ ...p, husstandsNr: 'Slægten', husstandsNavn: 'Slægten' }); });
     } catch (e) { console.log('Kunne ikke hente Slægten:', e); }
 
     if (!afdoede.length) {
