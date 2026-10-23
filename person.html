@@ -88,7 +88,7 @@ const ER_ADMIN = hent("ok_niveau").toLowerCase() === "admin";
 const P = new Map();   // pid → { p, nr, kilde, husNavn }
 const navnAf = p => [p.fornavn, p.mellemnavn, p.efternavn].filter(x => x && String(x).trim()).join(" ").trim() || (p.navn || "").trim();
 const mdr = ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"];
-const dato = iso => { const m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${+m[3]}. ${mdr[+m[2] - 1]} ${m[1]}` : ""; };
+const dato = iso => { const m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${+m[3]}. ${mdr[+m[2] - 1]} ${m[1]}` : (/^\d{4}$/.test(String(iso || "")) ? String(iso) + " (kun årstal)" : ""); };
 const ini = n => n.split(/\s+/).map(x => x[0]).slice(0, 2).join("").toUpperCase();
 function personNr(r) { const p = r.p; if (p.fastNr) return String(p.fastNr); if (r.kilde !== "kartotek") return ""; return p.bogstav && p.status !== "udmeldt" ? r.nr + "-" + p.bogstav : r.nr; }
 function manglerFor(p) {
