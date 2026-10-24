@@ -41,7 +41,7 @@ Samlet: Christine Jespersen = vores Kristine. Søren (Walter) Peter Vormslev Ols
 
 ## Åbne spørgsmål om personer (ikke datoer)
 - **Svend Aages brødre:** Kurt nævner Einer og en gas-aflæser fra Bellahøj (mail 24. okt. 2026). Carsten kan ikke huske Einers rolle. Ingen af dem er lagt ind.
-- **Walter:** stavemåde og datteren, der var gift med Costa Ricas præsident.
+- **Walter:** stavemåde. Datteren: Carsten mener (usikkert), at hun hed **Karen**, var gift med Costa Ricas præsident, og at hendes søn også blev præsident. Det passer med **Karen Olsen Beck** (f. 31. jan. 1930 i København, gift med præsident José Figueres Ferrer, mor til præsident José María Figueres Olsen – kilde: lex.dk). Men ingen kilde nævner endnu hendes far. Hypotese – Karen er IKKE lagt ind som person.
 - ✅ **Kurts billede »Dalby – Jans konfirmation«** (Gamle billeder): Agnes og Svend Aage med deres 7 børn. Bekræftet af Carsten (efter aftale med Kurt) 24. okt. 2026. Tekst lagt på billedet. Rækkefølgen fra venstre (Carsten er ret sikker): Gydda, Inger, Egon, Agnes, Christian, Svend Aage, Ib, Lise, Birthe.
   - ❓ **Stedet er åbent:** filnavnet siger Dalby (Jans konfirmation). Carsten tror, det er Risvangen 17 i Brønshøj. Venter på reaktion fra Kurt/familien.
 
