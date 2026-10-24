@@ -27,9 +27,11 @@ Kilde: Renés MyHeritage-data (zip) sammenholdt med vores data. Kun afdøde.
 
 | Person | Hvad | René / MyHeritage | Vores data | Vores kilde | Status |
 |---|---|---|---|---|---|
-| Birthe Haugaard | Fødselsår | 26. juni 1924 | 26. juni 1925 | Karins mail 22. okt. 2026 (»født 26. juni 1925 – døde 11. juli 2014«) | Stærk kilde – venter på Carstens OK |
+| Birthe Haugaard | Fødselsår | 26. juni 1924 | 26. juni 1925 | Karins mail 22. okt. 2026 (»født 26. juni 1925 – døde 11. juli 2014«) | ✅ Afklaret af Carsten 24. okt. 2026 – vores data er rigtige |
 | Agnes Olsen (f. Sejersen) | Dødsår | 1986 (Bispebjerg Hospital) | 7. juni 1987 | Carstens eget MyHeritage-træ (ses i Record Match-mail 21. okt. 2026). Intet dokument endnu | Åben – mangler dokument (fx gravsted eller dødsattest) |
-| Betty Marie Nielsen | Dødsår | 1996 | 11. nov. 1998 | Elisabeth + gravstenen | Stærk kilde – venter på Carstens OK |
+| Betty Marie Nielsen | Dødsår | 1996 | 11. nov. 1998 | Elisabeth + gravstenen | ✅ Afklaret af Carsten 24. okt. 2026 – vores data er rigtige |
+
+**Beslutning 24. okt. 2026 (Carsten):** Birthe og Betty er afklaret. Agnes er stadig åben – Carsten leder efter et svar.
 
 Ingen afvigelse: Svend Aage (morfar) 25. jan. 1900 – 4. apr. 1996 og Erland 19. jan. 1915 – 2003 passer i begge.
 Bemærk: Karins mail handler om Birthe og Finn (mor og far) – ikke om mormor og morfar.
