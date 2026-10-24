@@ -42,7 +42,7 @@ Samlet: Christine Jespersen = vores Kristine. Søren (Walter) Peter Vormslev Ols
 ## Åbne spørgsmål om personer (ikke datoer)
 - **Svend Aages brødre:** Kurt nævner Einer og en gas-aflæser fra Bellahøj (mail 24. okt. 2026). Carsten kan ikke huske Einers rolle. Ingen af dem er lagt ind.
 - **Walter:** stavemåde og datteren, der var gift med Costa Ricas præsident.
-- ✅ **Kurts billede »Dalby – Jans konfirmation«** (Gamle billeder): Agnes og Svend Aage med deres 7 børn. Bekræftet af Carsten (efter aftale med Kurt) 24. okt. 2026. Tekst lagt på billedet. Åbent: hvem der står hvor.
+- ✅ **Kurts billede »Dalby – Jans konfirmation«** (Gamle billeder): Agnes og Svend Aage med deres 7 børn. Bekræftet af Carsten (efter aftale med Kurt) 24. okt. 2026. Tekst lagt på billedet. Rækkefølgen fra venstre (Carsten er ret sikker): Gydda, Inger, Egon, Agnes, Christian, Svend Aage, Ib, Lise, Birthe.
 
 Den levende liste står altid under »❓ Spørgsmål« på stamtræet. Denne fil er et øjebliksbillede.
 Bed Claude om en ny afvigelsesliste, når der er kommet nye data.
