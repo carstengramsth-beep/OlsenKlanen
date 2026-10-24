@@ -39,5 +39,10 @@ Bemærk: Karins mail handler om Birthe og Finn (mor og far) – ikke om mormor o
 Samlet: Christine Jespersen = vores Kristine. Søren (Walter) Peter Vormslev Olsen = vores Walter
 (Svends storebror, boede i Costa Rica) – fik datoerne 1894–2000 fra René.
 
+## Åbne spørgsmål om personer (ikke datoer)
+- **Svend Aages brødre:** Kurt nævner Einer og en gas-aflæser fra Bellahøj (mail 24. okt. 2026). Carsten kan ikke huske Einers rolle. Ingen af dem er lagt ind.
+- **Walter:** stavemåde og datteren, der var gift med Costa Ricas præsident.
+- **Kurts billede »Dalby – Jans konfirmation«** (Gamle billeder, 24. okt. 2026): Hvem er på billedet? Gæt: Agnes og Svend Aage med deres 7 børn – IKKE bekræftet.
+
 Den levende liste står altid under »❓ Spørgsmål« på stamtræet. Denne fil er et øjebliksbillede.
 Bed Claude om en ny afvigelsesliste, når der er kommet nye data.
