@@ -51,6 +51,16 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
 .trae li:first-child::after{border-radius:6px 0 0 0}
 .trae ul ul::before{content:'';position:absolute;top:0;left:50%;border-left:2px solid var(--linje);width:0;height:22px}
 .trae > ul{padding-top:0}
+.trae > ul.skov{gap:28px;align-items:flex-start}
+.trae > ul.skov > li::before,.trae > ul.skov > li::after{display:none}
+.trae > ul.skov > li{padding-top:0}
+.periode-raekke{display:inline-flex;gap:6px;flex-wrap:wrap}
+.btn.periode small{font-weight:400;opacity:.75;margin-left:4px}
+.btn.periode.valgt{background:var(--gron);color:#fff}
+.person.ref{border-style:dotted;background:#fafafa;opacity:.9;min-height:0;padding:8px 6px}
+.person.ref .navn{font-weight:500;font-size:12px}
+.fortsaet{display:inline-block;margin-top:6px;font-size:11px;font-weight:700;color:#5a2f80;background:#f6f0fb;border:1px solid #c9b3dd;border-radius:10px;padding:2px 8px;cursor:pointer}
+.fastnr{font-size:10.5px;color:#555;margin-top:2px;letter-spacing:.3px}
 .trae li.bonus > .enhed{outline:2px dashed var(--linje);outline-offset:4px;border-radius:12px}
 .bonus-maerke{font-size:10.5px;color:var(--tekst-lys);margin-bottom:2px}
 
@@ -116,7 +126,12 @@ body.udkast-tilstand .lerred{background:repeating-linear-gradient(45deg,transpar
   <input list="alle-personer" id="find" placeholder="Find en person (navn eller medlemsnr., fx 8-B)">
   <datalist id="alle-personer"></datalist>
   <button class="btn gron" id="vis-herfra">Vis træ herfra</button>
-  <button class="btn" id="hele">🌳 Hele træet (Agnes og Svend Aage)</button>
+  <span class="periode-raekke" id="perioder">
+    <button class="btn periode" data-periode="hele" title="Hele træet – ca. 1540 til i dag">🌳 Hele træet <small>ca. 1540 – i dag</small></button>
+    <button class="btn periode" data-periode="1" title="Fra Agnes og Svend Aage (1900) til i dag">Træ 1 <small>1900 – i dag</small></button>
+    <button class="btn periode" data-periode="2" title="1777 – 1899">Træ 2 <small>1777 – 1899</small></button>
+    <button class="btn periode" data-periode="3" title="ca. 1540 – 1776">Træ 3 <small>ca. 1540 – 1776</small></button>
+  </span>
   <button class="btn" id="mit">👤 Mit træ</button>
   <button class="btn" id="udkast-knap" title="Udkast 1 = bekræftet træ · Udkast 2 = forventet træ med ubekræftede oplysninger (fx fra MyHeritage)">🧪 Udkast 2 (forventet)</button>
 </div>
@@ -300,7 +315,7 @@ function personKort(pid, tilloeben) {
   const snr = SNR.has(pid) ? `<span class="snr">${SNR.get(pid)} / ${SNR_ANTAL}</span>` : "";
   return `<div class="person${p.lag === "udkast" ? " udkast" : ""}${tilloeben ? " til" : ""}${p.status === "afdød" ? " afdod" : ""}${pid === mitPid ? " mig" : ""}" data-pid="${pid}" title="${esc(navn)}">
     ${snr}${manglerFor(p).length ? `<span class="mangler-prik" title="Mangler: ${esc(manglerFor(p).join(", "))}"></span>` : ""}${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="">` : `<div class="foto uden" title="Billede mangler">${esc(initialer)}<span class="kam">📷</span></div>`}
-    <div class="navn">${esc(navn)}</div><div class="aar">${esc(aarTekst(p))}</div>${tilloeben ? foraeldreLink(p, pid) : ""}</div>`;
+    <div class="navn">${esc(navn)}</div><div class="aar">${esc(aarTekst(p))}</div>${fastNr(r) ? `<div class="fastnr">${esc(fastNr(r))}</div>` : ""}${tilloeben ? foraeldreLink(p, pid) : ""}</div>`;
 }
 // Tilløbne: vis et link op til deres egne forældre (fx svigerforældre)
 function foraeldreLink(p, pid) {
@@ -312,6 +327,43 @@ function foraeldreLink(p, pid) {
     return q.foto ? `<img class="mini" src="${esc(q.foto)}" alt="" title="${esc(n)}">`
       : `<span class="mini" title="${esc(n)} – billede mangler">${esc(n.split(/\s+/).map(y => y[0]).slice(0, 2).join("").toUpperCase())}<span class="kam">📷</span></span>`; };
   return `<span class="op-link" data-op="${esc(far || mor)}" data-fra="${esc(pid)}" title="Vis ${esc(p.fornavn || "")}s forældre og familie">⬆ ${esc(navne)}</span>`;
+}
+// Fast nummer: medlemmer beholder husstandsnummeret (fx 8-A); fjerne relationer, der aldrig har været medlemmer, har FR-1, FR-2 …
+function fastNr(r) {
+  if (!r) return "";
+  if (r.kilde === "kartotek") return personNr(r);
+  const p = r.p;
+  if (p.tidligere_husstand) return String(p.tidligere_husstand) + (p.bogstav ? "-" + p.bogstav : "") + " (tidl.)";
+  return p.fr_nr || "";
+}
+// Anslået fødselsår (bruges til perioderne): eget år – ellers ud fra børn, forældre og ægtefælle
+const EST = new Map();
+function estimer() {
+  EST.clear();
+  for (const [pid, r] of P) { const y = parseInt(String(r.p.foedselsdato || "").slice(0, 4)); if (y) EST.set(pid, y); else { const d = parseInt(String(r.p.status_dato || "").slice(0, 4)); if (d) EST.set(pid, d - 60); } }
+  for (let runde = 0; runde < 12; runde++) for (const [pid, r] of P) {
+    if (EST.has(pid)) continue;
+    const v = [];
+    boernAf([pid]).bio.forEach(b => EST.has(b) && v.push(EST.get(b) - 30));
+    [r.p.far_pid, r.p.mor_pid].forEach(x => EST.has(x) && v.push(EST.get(x) + 30));
+    const pa = partnerAf(pid); if (pa && EST.has(pa)) v.push(EST.get(pa));
+    if (v.length) EST.set(pid, Math.round(v.reduce((a, b) => a + b, 0) / v.length));
+  }
+}
+// Periode: 1 = 1900 – i dag, 2 = 1777 – 1899, 3 = ca. 1540 – 1776
+const periodeNr = pid => { const y = EST.get(pid); if (y == null) return null; return y < 1777 ? 3 : y < 1900 ? 2 : 1; };
+let PERIODE = null;   // null = intet snit; ellers 1, 2 eller 3
+const harForaeldre = pid => { const q = P.get(pid)?.p; return !!q && [q.far_pid, q.mor_pid].some(x => x && P.has(x)); };
+function rodderFor(periode) {
+  const kand = [...P.keys()].filter(x => {
+    if (periode && periodeNr(x) !== periode) return false;
+    const q = P.get(x).p, fo = [q.far_pid, q.mor_pid].filter(y => y && P.has(y));
+    if (periode ? fo.some(y => (periodeNr(y) ?? periode) === periode) : fo.length) return false;
+    const pa = partnerAf(x);   // indgift uden egne forældre: vises hos ægtefællens familie
+    if (!fo.length && pa && harForaeldre(pa)) return false;
+    return true;
+  });
+  return kand.sort((a, b) => (EST.get(a) ?? 9999) - (EST.get(b) ?? 9999));
 }
 function tegnEnhed(pids, besoegt, erBonus, erRod, forholdMaerke) {
   // En "enhed" = en person (eller et par) + deres børn
@@ -340,20 +392,30 @@ function tegnEnhed(pids, besoegt, erBonus, erRod, forholdMaerke) {
     if (!anden && nu) return (q.far_pid === hoved ? "mor" : "far") + " ikke valgt";
     return ""; };
   const born = [
-    ...bio.filter(b => !besoegt.has(b)).map(b => ({ b, bonus: false })),
-    ...bonus.filter(b => !besoegt.has(b) && !bio.includes(b)).map(b => ({ b, bonus: true }))
+    ...bio.map(b => ({ b, bonus: false })),
+    ...bonus.filter(b => !bio.includes(b)).map(b => ({ b, bonus: true }))
   ];
-  const under = born.map(x => tegnEnhed([x.b], besoegt, x.bonus, false, x.bonus ? "" : maerke(x.b))).filter(Boolean);
+  const under = born.map(x => {
+    // Allerede vist et andet sted: vis en henvisning, så familien aldrig springes over
+    if (besoegt.has(x.b)) return `<li><div class="enhed"><div class="person ref" data-pid="${x.b}" title="Vises et andet sted i træet – tryk for at se personen"><div class="navn">↪ ${esc(navnAf(P.get(x.b).p))}</div><div class="aar">vises et andet sted i træet</div></div></div></li>`;
+    // Periodesnit: barnet hører til en senere periode → vis barnet (familien deles ikke), men fortsæt i næste træ
+    const pn = periodeNr(x.b);
+    if (PERIODE && pn && pn < PERIODE) {
+      besoegt.add(x.b); const pa = partnerAf(x.b); const par = pa && !besoegt.has(pa) ? pa : null; if (par) besoegt.add(par);
+      return `<li>${maerke(x.b) ? `<div class="bonus-maerke">${esc(maerke(x.b))}</div>` : ""}<div class="enhed">${personKort(x.b, false)}${par ? '<span class="gift">⚭</span>' + personKort(par, true) : ""}</div><div class="fortsaet" data-periode="${pn}">↓ fortsætter i Træ ${pn}</div></li>`;
+    }
+    return tegnEnhed([x.b], besoegt, x.bonus, false, x.bonus ? "" : maerke(x.b));
+  }).filter(Boolean);
   return `<li class="${erBonus ? "bonus" : ""}">${erBonus ? '<div class="bonus-maerke">bonusbarn</div>' : ""}${forholdMaerke ? `<div class="bonus-maerke">${esc(forholdMaerke)}</div>` : ""}<div class="enhed">${kort}</div>${under.length ? `<ul>${under.join("")}</ul>` : ""}</li>`;
 }
-function tegnTrae(topPids) {
+function tegnTrae(topPids, skov) {
   const besoegt = new Set();
-  const html = tegnEnhed(topPids, besoegt, false, true);
+  const html = skov ? skov.map(r => tegnEnhed([r], besoegt, false, true)).join("") : tegnEnhed(topPids, besoegt, false, true);
   const antal = besoegt.size;
   if (!html) { $("trae").innerHTML = '<div class="tom">Personen blev ikke fundet.</div>'; return; }
-  $("trae").innerHTML = `<ul>${html}</ul>`;
+  $("trae").innerHTML = `<ul${skov ? ' class="skov"' : ""}>${html}</ul>`;
   placerSvigre();
-  const navne = topPids.filter(p => P.has(p)).map(p => navnAf(P.get(p).p).split(" ")[0]).join(" og ");
+  const navne = skov ? (PERIODE ? `perioden ${({ 1: "1900 – i dag", 2: "1777 – 1899", 3: "ca. 1540 – 1776" })[PERIODE]}` : "hele træet") : topPids.filter(p => P.has(p)).map(p => navnAf(P.get(p).p).split(" ")[0]).join(" og ");
   $("status").innerHTML = (UDKAST ? `<div style="background:#f6f0fb;border:1px dashed #7b4fa0;border-radius:8px;padding:8px 12px;margin-bottom:8px;color:#5a2f80">🧪 <b>Udkast 2 – det forventede træ.</b> Stiplede lilla kort er <b>ikke bekræftede</b> (fx fra MyHeritage). Når en person er bekræftet, trykker en administrator »✅ Godkend« – så flytter personen til udkast 1.</div>` : "") + `Træet viser <b>${antal}</b> ${antal === 1 ? "person" : "personer"} fra <b>${esc(navne)}</b> og nedad. `
     + `Hele slægtstræet har lige nu <b>${SNR_ANTAL}</b> personer, der hænger sammen med Agnes og Svend Aage.`
     + (antal <= 2 ? `<br><span style="color:#a33">Der er endnu ikke skrevet børn ind under denne person. Relationer skrives ind i <a href="medlemskartotek.html">Medlemskartoteket</a> under ✏️ Rediger (far, mor, partner).</span>` : "");
@@ -415,6 +477,9 @@ function visPanel(pid) {
     p.status === "afdød" ? `🕯️ Død ${datoTekst(p.status_dato) || ""}` : "",
     personNr(r) ? `📇 Medlemsnr. ${esc(personNr(r))}${r.husNavn ? " · " + esc(r.husNavn) : ""}` : (r.kilde === "slaegt" ? (p.tidligere_husstand ? `🌿 I Slægten · tidl. husstand nr. ${esc(p.tidligere_husstand)}` : "🌿 I Slægten (ikke medlem)") : ""),
     SNR.has(pid) ? `🌳 Slægtsnr. ${SNR.get(pid)} / ${SNR_ANTAL}` : "",
+    fastNr(r) ? `🔢 Fast nr. ${esc(fastNr(r))}` : "",
+    p.lag === "udkast" && p.bevis ? `📑 Bevis: ${p.bevis === "underbygget" ? "<b>Underbygget</b> – slægtsdatabasen bekræftet af skifter/artikler" : "Slægtsdatabase (MyHeritage) – ikke efterprøvet"}` : "",
+    p.hypotese ? `<div style="background:#fff7e6;border:1px dashed #d99a2b;border-radius:8px;padding:6px 9px;font-size:13px;color:#7a4b00">⚠️ ${esc(p.hypotese)}</div>` : "",
     p.far_pid ? `Far: ${rel(p.far_pid)}` : "", p.mor_pid ? `Mor: ${rel(p.mor_pid)}` : "",
     [p.bonus1_pid, p.bonus2_pid].filter(Boolean).map(b => `Bonusforælder: ${rel(b)}`).join("<br>"),
     pa ? `Partner: ${rel(pa)}` : "",
@@ -445,7 +510,7 @@ function visPanel(pid) {
       const g = { af: hent("ok_navn") || hent("ok_nr") || "admin", nr: hent("ok_nr"), dato: new Date().toISOString().slice(0, 10) };
       await updateDoc(doc(db, "olsenpost", "slaegt_" + pid), { lag: "", godkendt_til_udkast1: g });
       p.lag = ""; p.godkendt_til_udkast1 = g;
-      $("panel-bg").style.display = "none"; tegnTrae(sidsteTop || stamPids);
+      $("panel-bg").style.display = "none"; if (sidsteTop) tegnTrae(sidsteTop); else visPeriode(new URL(location.href).searchParams.get("periode") || "1");
     } catch (e) { gk.disabled = false; gk.textContent = "Kunne ikke godkende – prøv igen"; }
   };
 }
@@ -559,7 +624,8 @@ function rodFor(pids) {
   return bedst;
 }
 function visFra(pids) {
-  sidsteTop = pids;
+  sidsteTop = pids; PERIODE = null;
+  document.querySelectorAll(".btn.periode").forEach(b => b.classList.remove("valgt"));
   const url = new URL(location.href);
   if (pids.length === 1) url.searchParams.set("top", pids[0]); else url.searchParams.delete("top");
   history.replaceState(null, "", url);
@@ -567,7 +633,17 @@ function visFra(pids) {
 }
 $("vis-herfra").onclick = () => { const pid = findPid($("find").value); if (pid) visFra([pid]); else $("status").textContent = "Personen blev ikke fundet. Vælg fra listen."; };
 $("find").addEventListener("keydown", e => { if (e.key === "Enter") $("vis-herfra").click(); });
-$("hele").onclick = () => visFra(UDKAST ? rodFor(stamPids) : stamPids);
+function visPeriode(hv) {
+  document.querySelectorAll(".btn.periode").forEach(b => b.classList.toggle("valgt", b.dataset.periode === String(hv)));
+  const u = new URL(location.href); u.searchParams.set("periode", hv); u.searchParams.delete("top"); history.replaceState(null, "", u);
+  sidsteTop = null;
+  if (hv === "1") { PERIODE = 1; tegnTrae(stamPids); return; }
+  if (hv === "2" || hv === "3") { PERIODE = +hv; const r = rodderFor(PERIODE); if (!r.length) { $("trae").innerHTML = `<div class="tom">Der er endnu ingen personer i denne periode${UDKAST ? "" : " i det bekræftede træ – prøv »🧪 Udkast 2«"}.</div>`; $("status").textContent = ""; return; } tegnTrae([], r); return; }
+  PERIODE = null;
+  if (UDKAST) tegnTrae([], rodderFor(null)); else tegnTrae(stamPids);
+}
+document.querySelectorAll(".btn.periode").forEach(b => b.onclick = () => visPeriode(b.dataset.periode));
+$("trae").addEventListener("click", e => { const f = e.target.closest(".fortsaet"); if (f) { e.stopPropagation(); visPeriode(f.dataset.periode); } }, true);
 $("udkast-knap").textContent = UDKAST ? "✅ Tilbage til udkast 1 (bekræftet)" : "🧪 Udkast 2 (forventet)";
 $("udkast-knap").onclick = () => { const u = new URL(location.href); if (UDKAST) u.searchParams.delete("udkast"); else u.searchParams.set("udkast", "1"); u.searchParams.delete("top"); location.href = u.toString(); };
 $("mit").onclick = () => {
@@ -591,12 +667,13 @@ $("mit").onclick = () => {
 try {
   await hentData();
   beregnSlaegtsnumre();
+  estimer();
   // Hvem er jeg? (ok_nr fx "8-B")
   const mig = hent("ok_nr").toUpperCase();
   if (mig) for (const [pid, r] of P) if (r.kilde === "kartotek" && String(personNr(r)).toUpperCase() === mig) { mitPid = pid; break; }
   $("alle-personer").innerHTML = [...P.keys()].map(etiket).sort((a, b) => a.localeCompare(b, "da", { numeric: true })).map(t => `<option value="${esc(t)}"></option>`).join("");
-  const top = new URL(location.href).searchParams.get("top");
-  visFra(top && P.has(top) ? [top] : (UDKAST ? rodFor(stamPids) : stamPids));
+  const _u = new URL(location.href), top = _u.searchParams.get("top"), per = _u.searchParams.get("periode");
+  if (top && P.has(top)) visFra([top]); else visPeriode(per || (UDKAST ? "hele" : "1"));
 } catch(err) {
   $("status").textContent = "Kunne ikke hente data: " + (err.message || err);
 }
