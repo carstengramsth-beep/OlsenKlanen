@@ -72,6 +72,17 @@ header p{margin-top:.3rem;color:var(--gron-pale)}
 .person.udkast{border-style:dashed;border-color:#7b4fa0;background:#f6f0fb}
 .person.udkast::before{content:'udkast';position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);background:#7b4fa0;color:#fff;font-size:9px;padding:0 6px;border-radius:7px}
 body.udkast-tilstand .lerred{background:repeating-linear-gradient(45deg,transparent,transparent 18px,rgba(123,79,160,.04) 18px,rgba(123,79,160,.04) 36px)}
+.person.udkast .navn{font-style:italic}
+.person.udkast .navn::before{content:'? ';color:#7b4fa0;font-weight:700}
+.tvivl-maerke{position:absolute;top:3px;left:4px;font-size:15px;line-height:1;color:#d97706;cursor:help}
+.person.tvivl{box-shadow:0 0 0 3px #f59e0b}
+.tvivl-boks{display:flow-root;background:#fff4e0;border:2px solid #f59e0b;border-radius:8px;padding:7px 10px;font-size:13px;color:#7a4b00}
+.tvivl-boks .sp{margin:4px 0;padding:4px 0;border-top:1px dashed #f5c26b}
+.tvivl-boks .sp:first-of-type{border-top:0}
+.afklaret{font-size:12.5px;color:#2e6b3a;margin-top:3px}
+#sp-liste{max-height:70vh;overflow:auto}
+#sp-liste .sp-raekke{padding:7px 4px;border-bottom:1px solid #eee;font-size:14px}
+#sp-liste .sp-navn{font-weight:700;color:#5a2f80;cursor:pointer;text-decoration:underline}
 .person.afdod{opacity:.85}
 .person.afdod .navn::after{content:' 🕯️'}
 .person.fremhaev{box-shadow:0 0 0 3px #f1c40f}
@@ -133,6 +144,7 @@ body.udkast-tilstand .lerred{background:repeating-linear-gradient(45deg,transpar
     <button class="btn periode" data-periode="3" title="ca. 1540 – 1776">Træ 3 <small>ca. 1540 – 1776</small></button>
   </span>
   <button class="btn" id="mit">👤 Mit træ</button>
+  <button class="btn" id="sp-knap" title="Liste over oplysninger, der skal bekræftes (fx fødsels- eller dødsdato)" style="border-color:#f59e0b">❓ Spørgsmål</button>
   <button class="btn" id="udkast-knap" title="Udkast 1 = bekræftet træ · Udkast 2 = forventet træ med ubekræftede oplysninger (fx fra MyHeritage)">🧪 Udkast 2 (forventet)</button>
 </div>
 <div class="info">
@@ -144,11 +156,21 @@ body.udkast-tilstand .lerred{background:repeating-linear-gradient(45deg,transpar
     <span>⚮ Tidligere ægtefælle</span>
     <span>&amp; Fælles børn</span>
     <span>🕯️ Afdød</span>
+    <span><b style="color:#d97706">⚠</b> Skal bekræftes</span>
+    <span><i style="color:#7b4fa0">? Navn</i> Udkast – ikke bekræftet</span>
     <span>Tryk på en person for at se mere</span>
   </div>
 </div>
 <div class="lerred" id="lerred"><div class="trae" id="trae"></div></div>
 
+<div class="panel-baggrund" id="sp-bg">
+  <div class="panel" style="max-width:640px">
+    <button class="btn" id="sp-luk" style="float:right">✕ Luk</button>
+    <h2 style="margin-top:0">❓ Spørgsmål – skal bekræftes</h2>
+    <div style="font-size:13px;color:#555;margin-bottom:8px">Her står de oplysninger, vi ikke er 100 % sikre på. Tryk på et navn for at se personen. Når vi ved, hvad der er rigtigt, trykker en administrator »✅ Afklaret« på personen. Så kan man se, hvem der afklarede det og hvornår.</div>
+    <div id="sp-liste"></div>
+  </div>
+</div>
 <div class="panel-baggrund" id="panel-bg">
   <div class="panel">
     <div class="panel-krop" id="panel-krop"></div>
@@ -189,7 +211,7 @@ body.udkast-tilstand .lerred{background:repeating-linear-gradient(45deg,transpar
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, getDoc, addDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const app = initializeApp({
@@ -309,12 +331,46 @@ function manglerFor(p) {
   if (p.status === "afdød" && !(p.bekraeftet && p.bekraeftet.navn)) m.push("bekræftelse af data");
   return m;
 }
+// Oplysninger vi ikke er sikre på (orange ⚠). p.tvivl = liste af tekster.
+function aabneSpm(p) { return Array.isArray(p.tvivl) ? p.tvivl.filter(Boolean) : (p.tvivl ? [String(p.tvivl)] : []); }
+function hvemHvornaar(g) { return g ? `${esc(g.af || "admin")}${g.dato ? " (" + esc(datoTekst(g.dato)) + ")" : ""}` : ""; }
+// Gem ændringer på én person – både slægt og medlemmer (henter frisk data først)
+async function gemPerson(pid, felter) {
+  const r = P.get(pid);
+  if (r.kilde === "slaegt") { await updateDoc(doc(db, "olsenpost", "slaegt_" + pid), felter); }
+  else {
+    const ref = doc(db, "membres", r.nr); const snap = await getDoc(ref);
+    const fm = (snap.data().familiemedlemmer || []).map(x => x.pid === pid ? { ...x, ...felter } : x);
+    await updateDoc(ref, { familiemedlemmer: fm });
+  }
+  Object.assign(r.p, felter);
+}
+function visSpoergsmaal() {
+  const aab = [], afk = [];
+  P.forEach((r, pid) => {
+    aabneSpm(r.p).forEach(t => aab.push({ pid, navn: navnAf(r.p), t }));
+    (r.p.tvivl_afklaret || []).forEach(a => afk.push({ pid, navn: navnAf(r.p), a }));
+  });
+  aab.sort((x, y) => x.navn.localeCompare(y.navn, "da"));
+  afk.sort((x, y) => String(y.a.dato || "").localeCompare(String(x.a.dato || "")));
+  const nk = (pid, n) => `<span class="sp-navn" data-sp-pid="${esc(pid)}">${esc(n)}</span>`;
+  $("sp-liste").innerHTML = `<h3 style="margin:.3rem 0">⚠ Åbne spørgsmål (${aab.length})</h3>`
+    + (aab.length ? aab.map(x => `<div class="sp-raekke">${nk(x.pid, x.navn)}: ${esc(x.t)}</div>`).join("") : `<div class="sp-raekke">Ingen åbne spørgsmål 🎉</div>`)
+    + `<h3 style="margin:1rem 0 .3rem">✅ Afklaret (${afk.length})</h3>`
+    + (afk.length ? afk.map(x => `<div class="sp-raekke">${nk(x.pid, x.navn)}: <s style="color:#888">${esc(x.a.tekst || "")}</s><div class="afklaret">✅ ${esc(x.a.svar || "Afklaret")} – af ${hvemHvornaar(x.a)}</div></div>`).join("") : `<div class="sp-raekke" style="color:#777">Intet afklaret endnu.</div>`);
+  $("sp-liste").querySelectorAll("[data-sp-pid]").forEach(el => el.onclick = () => { $("sp-bg").style.display = "none"; visPanel(el.dataset.spPid); });
+  $("sp-bg").style.display = "flex";
+}
+function opdaterSpKnap() { let n = 0; P.forEach(r => n += aabneSpm(r.p).length); $("sp-knap").textContent = `❓ Spørgsmål (${n})`; }
+function genTegn() { if (sidsteTop) tegnTrae(sidsteTop); else visPeriode(new URL(location.href).searchParams.get("periode") || "1"); opdaterSpKnap(); }
+
 function personKort(pid, tilloeben) {
   const r = P.get(pid); const p = r.p; const navn = navnAf(p);
   const initialer = navn.split(/\s+/).map(x => x[0]).slice(0, 2).join("").toUpperCase();
   const snr = SNR.has(pid) ? `<span class="snr">${SNR.get(pid)} / ${SNR_ANTAL}</span>` : "";
-  return `<div class="person${p.lag === "udkast" ? " udkast" : ""}${tilloeben ? " til" : ""}${p.status === "afdød" ? " afdod" : ""}${pid === mitPid ? " mig" : ""}" data-pid="${pid}" title="${esc(navn)}">
-    ${snr}${manglerFor(p).length ? `<span class="mangler-prik" title="Mangler: ${esc(manglerFor(p).join(", "))}"></span>` : ""}${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="">` : `<div class="foto uden" title="Billede mangler">${esc(initialer)}<span class="kam">📷</span></div>`}
+  const tv = aabneSpm(p);
+  return `<div class="person${p.lag === "udkast" ? " udkast" : ""}${tv.length ? " tvivl" : ""}${tilloeben ? " til" : ""}${p.status === "afdød" ? " afdod" : ""}${pid === mitPid ? " mig" : ""}" data-pid="${pid}" title="${esc(navn)}">
+    ${snr}${tv.length ? `<span class="tvivl-maerke" title="Skal bekræftes: ${esc(tv.join(" · "))}">⚠</span>` : ""}${manglerFor(p).length ? `<span class="mangler-prik" title="Mangler: ${esc(manglerFor(p).join(", "))}"></span>` : ""}${p.foto ? `<img class="foto" src="${esc(p.foto)}" alt="">` : `<div class="foto uden" title="Billede mangler">${esc(initialer)}<span class="kam">📷</span></div>`}
     <div class="navn">${esc(navn)}</div><div class="aar">${esc(aarTekst(p))}</div>${fastNr(r) ? `<div class="fastnr">${esc(fastNr(r))}</div>` : ""}${tilloeben ? foraeldreLink(p, pid) : ""}</div>`;
 }
 // Tilløbne: vis et link op til deres egne forældre (fx svigerforældre)
@@ -472,6 +528,9 @@ function visPanel(pid) {
   const pa = partnerAf(pid);
   const linjer = [
     p.lag === "udkast" ? `<div style="background:#f6f0fb;border:1px dashed #7b4fa0;border-radius:8px;padding:6px 9px;font-size:13px;color:#5a2f80">🧪 <b>Udkast 2 – ikke bekræftet.</b><br>${esc(p.kilde || "")}${erAdmin ? `<br><button class="btn gron" id="p-godkend" style="margin-top:6px">✅ Godkend – flyt til udkast 1</button>` : ""}</div>` : "",
+    aabneSpm(p).length ? `<div class="tvivl-boks">⚠ <b>Skal bekræftes:</b>${aabneSpm(p).map((t, i) => `<div class="sp">${esc(t)}${erAdmin ? `<br><button class="btn gron" data-afklar="${i}" style="margin-top:4px;font-size:13px">✅ Afklaret – gem hvad der er rigtigt</button>` : ""}</div>`).join("")}</div>` : "",
+    (p.tvivl_afklaret || []).length ? (p.tvivl_afklaret || []).map(a => `<div class="afklaret">✅ <s style="color:#888">${esc(a.tekst || "")}</s> → ${esc(a.svar || "Afklaret")} · af ${hvemHvornaar(a)}</div>`).join("") : "",
+    p.godkendt_til_udkast1 ? `<div class="afklaret">✅ Godkendt (flyttet fra udkast) af ${hvemHvornaar(p.godkendt_til_udkast1)}</div>` : "",
     p.tidligere_navne ? `📝 Tidligere navne: ${esc(p.tidligere_navne)}` : "",
     p.foedselsdato ? `🎂 Født ${datoTekst(p.foedselsdato)}` : "",
     p.status === "afdød" ? `🕯️ Død ${datoTekst(p.status_dato) || ""}` : "",
@@ -510,11 +569,25 @@ function visPanel(pid) {
       const g = { af: hent("ok_navn") || hent("ok_nr") || "admin", nr: hent("ok_nr"), dato: new Date().toISOString().slice(0, 10) };
       await updateDoc(doc(db, "olsenpost", "slaegt_" + pid), { lag: "", godkendt_til_udkast1: g });
       p.lag = ""; p.godkendt_til_udkast1 = g;
-      $("panel-bg").style.display = "none"; if (sidsteTop) tegnTrae(sidsteTop); else visPeriode(new URL(location.href).searchParams.get("periode") || "1");
+      $("panel-bg").style.display = "none"; genTegn();
     } catch (e) { gk.disabled = false; gk.textContent = "Kunne ikke godkende – prøv igen"; }
   };
+  $("panel-krop").querySelectorAll("[data-afklar]").forEach(b => b.onclick = async () => {
+    const liste = aabneSpm(p), t = liste[+b.dataset.afklar];
+    const svar = prompt("Spørgsmål: " + t + "\n\nHvad er rigtigt? (Retter du en dato, så ret den også med ✏️ Ret data.)", "Vores data er rigtige");
+    if (svar === null) return;
+    b.disabled = true; b.textContent = "⏳ Gemmer …";
+    try {
+      const a = { tekst: t, svar: svar.trim() || "Afklaret", af: hent("ok_navn") || hent("ok_nr") || "admin", nr: hent("ok_nr"), dato: new Date().toISOString().slice(0, 10) };
+      await gemPerson(pid, { tvivl: liste.filter(x => x !== t), tvivl_afklaret: [...(p.tvivl_afklaret || []), a] });
+      visPanel(pid); genTegn();
+    } catch (e) { b.disabled = false; b.textContent = "Kunne ikke gemme – prøv igen"; }
+  });
 }
 $("p-luk").onclick = () => $("panel-bg").style.display = "none";
+$("sp-knap").onclick = visSpoergsmaal;
+$("sp-luk").onclick = () => $("sp-bg").style.display = "none";
+$("sp-bg").addEventListener("click", e => { if (e.target.id === "sp-bg") $("sp-bg").style.display = "none"; });
 $("p-ret").onclick = () => {
   const r = P.get(panelPid);
   if (r.kilde === "kartotek") { location.href = "medlemskartotek.html?rediger=" + encodeURIComponent(r.nr); return; }
@@ -667,7 +740,7 @@ $("mit").onclick = () => {
 try {
   await hentData();
   beregnSlaegtsnumre();
-  estimer();
+  estimer(); opdaterSpKnap();
   // Hvem er jeg? (ok_nr fx "8-B")
   const mig = hent("ok_nr").toUpperCase();
   if (mig) for (const [pid, r] of P) if (r.kilde === "kartotek" && String(personNr(r)).toUpperCase() === mig) { mitPid = pid; break; }
