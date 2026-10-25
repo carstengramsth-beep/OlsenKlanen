@@ -645,7 +645,7 @@ $("r-gem").onclick = async () => {
     tegnTrae(top && P.has(top) ? [top] : stamPids);
     visPanel(panelPid);
     $("r-status-tekst").textContent = "";
-    if (window.InfoLog) InfoLog.spoerg({ art: nyt.foto ? "billede" : "rettelse", hvad: nyt.foto ? `tilføjet et billede af ${navnAf(p)}` : `opdateret oplysningerne om ${navnAf(p)}`, link: "person.html?pid=" + encodeURIComponent(panelPid) });
+    if (window.InfoLog) InfoLog.spoerg({ art: nyt.foto ? "billede" : "rettelse", hvad: nyt.foto ? `tilføjet et billede af ${navnAf(p)}` : `opdateret oplysningerne om ${navnAf(p)}`, link: "person.html?pid=" + encodeURIComponent(panelPid), billede: nyt.foto || "" });
   } catch(e) {
     $("r-status-tekst").textContent = "Kunne ikke gemme: " + (e.message || e);
   }

@@ -58,6 +58,10 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .privat-maerke { display: inline-block; background: #c0392b; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 3px; margin-left: 6px; vertical-align: middle; }
 .seddel-top { display: flex; justify-content: space-between; align-items: flex-start; font-size: 12px; color: #6a5a1a; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px dashed rgba(106,90,26,0.3); }
 .seddel-nr { font-weight: bold; }
+.seddel-billede { display: block; width: 100%; max-height: 360px; object-fit: cover; border-radius: 6px; margin: 4px 0 8px; cursor: zoom-in; background: #eee; }
+.billede-valg { margin: 10px 0 4px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 15px; }
+.billede-valg label.vaelg { background: #fff; border: 1px dashed #c89e3c; border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+.billede-valg img { height: 70px; border-radius: 6px; }
 .seddel-tekst { font-size: 15px; color: #2c3e1f; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; min-height: 60px; }
 .seddel-bund { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 8px; border-top: 1px dashed rgba(106,90,26,0.3); }
 .seddel-forfatter { font-size: 13px; font-style: italic; color: #5a4a1a; }
@@ -116,6 +120,11 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
   <div id="ok-besked" class="ok-besked"></div>
   <div class="skriv-boks">
     <textarea id="nyt-opslag" placeholder="Skriv dit opslag her..." maxlength="500"></textarea>
+    <div class="billede-valg">
+      <label class="vaelg">📷 Vedhæft et billede (valgfrit)<input type="file" id="opslag-billede" accept="image/*" style="display:none"></label>
+      <img id="opslag-billede-vis" alt="" style="display:none">
+      <button type="button" id="opslag-billede-fjern" class="knap knap-fortryd" style="display:none">Fjern billede</button>
+    </div>
     <div class="modtager-valg" id="modtager-valg">
       <strong>📨 Hvem skal se opslaget?</strong>
       <label>
@@ -145,6 +154,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 </div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 const firebaseConfig = {
   apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -156,6 +166,21 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
+// Vedhæftet billede: gøres højst 1600 px og gemmes i Storage (fotovaeg/opslag/)
+let opslagBillede = null;
+const bInput = document.getElementById("opslag-billede"), bVis = document.getElementById("opslag-billede-vis"), bFjern = document.getElementById("opslag-billede-fjern");
+function nulstilBillede() { opslagBillede = null; bInput.value = ""; bVis.style.display = "none"; bFjern.style.display = "none"; }
+bFjern.onclick = nulstilBillede;
+bInput.onchange = () => {
+  const f = bInput.files[0]; if (!f) return;
+  const img = new Image();
+  img.onload = () => { const k = Math.min(1, 1600 / Math.max(img.width, img.height)); const c = document.createElement("canvas");
+    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    c.toBlob(b => { opslagBillede = b; bVis.src = URL.createObjectURL(b); bVis.style.display = ""; bFjern.style.display = ""; }, "image/jpeg", 0.88); };
+  img.onerror = () => alert("Billedet kunne ikke læses. Prøv et andet (JPG eller PNG).");
+  img.src = URL.createObjectURL(f);
+};
 let mitNavn = "Anonym";
 let mitNiveau = "gaest";
 let minEmail = "";
@@ -199,13 +224,22 @@ window.sendOpslag = async function() {
   knap.disabled = true;
   knap.textContent = "Sender...";
   try {
+    let billedeUrl = "";
+    if (opslagBillede) {
+      knap.textContent = "Lægger billedet op...";
+      const sti = sRef(storage, `fotovaeg/opslag/${Date.now()}_${(sessionStorage.getItem("ok_nr") || "x").replace(/[^\w-]/g, "")}.jpg`);
+      await uploadBytes(sti, opslagBillede, { contentType: "image/jpeg" });
+      billedeUrl = await getDownloadURL(sti);
+    }
     const nytRef = await addDoc(collection(db, "opslagstavle"), {
+      billede: billedeUrl,
       tekst: tekst, forfatter: mitNavn, email: minEmail, tidspunkt: serverTimestamp(),
       reaktioner: {}, kommentarer: [], flag: [], set_af: [minEmail], slettet: false,
       modtager: erPrivat ? "hjemmesidegruppen" : "alle"
     });
     // Infolog på forsiden: "Carsten har lagt en besked på opslagstavlen" (kun opslag til alle)
-    if (!erPrivat && window.InfoLog) InfoLog.log({ art: "opslag", hvad: "lagt en besked på opslagstavlen", link: "opslagstavlen.html#o-" + nytRef.id });
+    if (!erPrivat && window.InfoLog) InfoLog.log({ art: "opslag", hvad: "lagt en besked på opslagstavlen", link: "opslagstavlen.html#o-" + nytRef.id, billede: billedeUrl });
+    nulstilBillede();
     opslagFelt.value = ""; tegnTal.textContent = "0";
     document.querySelector('input[name="modtager"][value="alle"]').checked = true;
     visOk(erPrivat ? "Dit opslag er sendt privat til hjemmesidegruppen. 🔒" : "Dit opslag er hængt op! 📌");
@@ -215,6 +249,7 @@ window.sendOpslag = async function() {
 window.rydOpslag = function() {
   opslagFelt.value = ""; tegnTal.textContent = "0";
   document.querySelector('input[name="modtager"][value="alle"]').checked = true;
+  nulstilBillede();
 };
 const q = query(collection(db, "opslagstavle"), orderBy("tidspunkt", "desc"));
 onSnapshot(q, async (snap) => {
@@ -286,7 +321,7 @@ function lavSeddel(id, data, nr, erNyt) {
   const erMin = (data.email === minEmail);
   const kanSlette = erMin || erOlsenBanden;
   const erPrivat = (data.modtager === "hjemmesidegruppen");
-  return `<div id="o-${id}" class="seddel ${erNyt ? 'ny' : ''} ${erPrivat ? 'privat' : ''}"><div class="seddel-top"><span class="seddel-nr">#${String(nr).padStart(3, '0')}${erPrivat ? '<span class="privat-maerke">🔒 GRUPPE</span>' : ''}</span><span>${dato}</span></div><div class="seddel-tekst">${escapeHtml(data.tekst)}</div><div class="seddel-bund"><span class="seddel-forfatter">— ${escapeHtml(data.forfatter)}</span><div class="reaktioner">${reaktionerHtml}</div></div><div class="kommentarer">${kommentarerHtml}<input class="kommentar-input" type="text" placeholder="Skriv en kommentar..." onkeydown="if(event.key==='Enter'){sendKommentar('${id}', this); event.preventDefault();}" maxlength="200"></div><div class="seddel-handlinger">${kanSlette ? `<a onclick="sletOpslag('${id}', ${erMin})">${erMin ? '↩ Træk tilbage' : '🗑 Slet (OlsenBanden)'}</a>` : ''}</div></div>`;
+  return `<div id="o-${id}" class="seddel ${erNyt ? 'ny' : ''} ${erPrivat ? 'privat' : ''}"><div class="seddel-top"><span class="seddel-nr">#${String(nr).padStart(3, '0')}${erPrivat ? '<span class="privat-maerke">🔒 GRUPPE</span>' : ''}</span><span>${dato}</span></div>${data.billede ? `<img class="seddel-billede" src="${escapeHtml(data.billede)}" alt="" data-stort="${escapeHtml(data.forfatter)}" loading="lazy">` : ""}<div class="seddel-tekst">${escapeHtml(data.tekst)}</div><div class="seddel-bund"><span class="seddel-forfatter">— ${escapeHtml(data.forfatter)}</span><div class="reaktioner">${reaktionerHtml}</div></div><div class="kommentarer">${kommentarerHtml}<input class="kommentar-input" type="text" placeholder="Skriv en kommentar..." onkeydown="if(event.key==='Enter'){sendKommentar('${id}', this); event.preventDefault();}" maxlength="200"></div><div class="seddel-handlinger">${kanSlette ? `<a onclick="sletOpslag('${id}', ${erMin})">${erMin ? '↩ Træk tilbage' : '🗑 Slet (OlsenBanden)'}</a>` : ''}</div></div>`;
 }
 function lavTilbagetrukket(id, data, nr) {
   return `<div class="seddel" style="opacity:0.6; background:#eee;"><div class="seddel-top"><span class="seddel-nr">#${String(nr).padStart(3, '0')}</span></div><div class="seddel-tekst" style="font-style:italic; color:#888;">Opslag tilbagetrukket</div><div class="seddel-bund"><span class="seddel-forfatter">— ${escapeHtml(data.forfatter)}</span></div></div>`;
@@ -365,6 +400,7 @@ function visOk(tekst) {
 <script type="module" src="familieopkald.js"></script>
 <script src="infolog.js"></script>
 <script>if (location.hash === "#skriv") setTimeout(() => { const t = document.getElementById("nyt-opslag"); if (t) { t.scrollIntoView({ behavior: "smooth", block: "center" }); t.focus(); } }, 400);</script>
+<script src="stort-billede.js" defer></script>
 <script src="forside-knap.js" defer></script>
 </body>
 </html>

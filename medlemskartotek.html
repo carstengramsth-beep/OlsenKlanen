@@ -1910,7 +1910,7 @@ document.getElementById('afdod-gem').onclick = async () => {
     lukAfdod(); renderGrid();
     if (window.InfoLog) InfoLog.spoerg({ art: ny.foto && ny.foto !== gl.foto ? 'billede' : 'rettelse',
       hvad: !afdodPid ? `tilføjet ${ny.navn} til slægten` : (ny.foto && ny.foto !== gl.foto ? `tilføjet et billede af ${ny.navn}` : `opdateret oplysningerne om ${ny.navn}`),
-      link: 'person.html?pid=' + encodeURIComponent(pid) });
+      link: 'person.html?pid=' + encodeURIComponent(pid), billede: ny.foto && ny.foto !== gl.foto ? ny.foto : '' });
   } catch (e) { st.textContent = '✗ Kunne ikke gemme: ' + (e.message || e); st.className = 'historisk-status-el fejl'; }
 };
 document.getElementById('grid').addEventListener('click', e => {
