@@ -10,6 +10,9 @@
   const hent = k => { try { return sessionStorage.getItem(k) || localStorage.getItem(k) || ""; } catch (e) { return ""; } };
   const fornavn = () => (hent("ok_navn") || "Et medlem").trim().split(/\s+/)[0];
   const esc = s => String(s || "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  // 5-Banden må fjerne indlæg og kommentarer: Carsten (8), Tommy (19), Kurt (22), Karin (23), Sanne (48)
+  const erFemBanden = () => { const hus = hent("ok_nr").split("-")[0].trim(), fn = (hent("ok_navn") || "").trim().split(/\s+/)[0].toLowerCase();
+    return (hent("ok_niveau") || "").toLowerCase() === "admin" && ({ "8": "carsten", "19": "tommy", "22": "kurt", "23": "karin", "48": "sanne" })[hus] === fn; };
   const EMOJI = { opslag: "📌", billede: "📷", rettelse: "✏️", person: "🌳", hilsen: "👋" };
 
   // Firestore-værdi → JS
@@ -97,7 +100,7 @@
     return d.toLocaleDateString("da-DK", { weekday: "long", day: "numeric", month: "short" }) + " kl. " + d.toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
   }
   const kort = x => {
-    const mig = hent("ok_nr"), harTommel = x.tommel.some(t => t.nr === mig);
+    const mig = hent("ok_nr"), harTommel = x.tommel.some(t => t.nr === mig), fem = erFemBanden(), synligeSvar = x.svar.filter(v => !v.skjult);
     const tNavne = x.tommel.map(t => (t.navn || "").split(" ")[0]).filter(Boolean).join(", ");
     const indhold = `${x.billede ? `<img class="il-billede" src="${esc(x.billede)}" alt="" loading="lazy">` : ""}<div class="il-tekst">${EMOJI[x.art] || "✏️"} ${esc(x.tekst)}</div>`;
     return `<div class="il-kort" data-id="${esc(x.id)}">
@@ -105,11 +108,16 @@
       ${x.link ? `<a class="il-indhold" href="${esc(x.link)}">${indhold}<span class="il-se">Se det →</span></a>` : `<div class="il-indhold">${indhold}</div>`}
       <div class="il-handling">
         <button class="il-tommel${harTommel ? " valgt" : ""}" data-tommel title="${esc(tNavne ? "Synes godt om: " + tNavne : "Giv en tommel op")}">👍 ${x.tommel.length || ""}</button>
-        <button class="il-svar-knap" data-svar-aaben>💬 Svar${x.svar.length ? " (" + x.svar.length + ")" : ""}</button>
+        <button class="il-svar-knap" data-svar-aaben>💬 Kommentér indlæg</button>
+        ${fem ? `<button class="il-fjern" data-fjern title="Kun 5-Banden: fjern indlægget">🗑 Fjern</button>` : ""}
         ${tNavne ? `<span class="il-tnavne">👍 ${esc(tNavne)}</span>` : ""}
       </div>
-      ${x.svar.length ? `<div class="il-svarliste">${x.svar.map(v => `<div class="il-svar"><div class="il-svar-top"><b>${esc(v.navn || "")}</b> · ${tidspunkt(v.tid)}</div>${esc(v.tekst)}</div>`).join("")}</div>` : ""}
-      <div class="il-svarfelt" style="display:none"><textarea maxlength="300" placeholder="Skriv et svar …"></textarea><button data-svar-send>Send svar</button></div>
+      ${synligeSvar.length ? `<div class="il-svarliste"><div class="il-svar-titel">💬 ${synligeSvar.length} ${synligeSvar.length === 1 ? "kommentar" : "kommentarer"}</div>${x.svar.map((v, i) => v.skjult ? "" : `<div class="il-svar"><div class="il-svar-top"><b>${esc(v.navn || "")}</b> · ${tidspunkt(v.tid)}${fem ? ` <button class="il-fjern lille" data-fjern-svar="${i}" title="Kun 5-Banden: fjern kommentaren">🗑</button>` : ""}</div>${esc(v.tekst)}</div>`).join("")}</div>` : ""}
+      <div class="il-svarfelt" style="display:none">
+        <div class="il-kommenterer">Du kommenterer: <b>»${esc(String(x.tekst).slice(0, 70))}${String(x.tekst).length > 70 ? " …" : ""}«</b> fra ${esc((x.hvem_navn || "").split(" ")[0])}, ${tidspunkt(x.tid)}</div>
+        <textarea maxlength="300" placeholder="Skriv din kommentar …"></textarea>
+        <div class="il-kommenterer">Dit navn, dato og klokkeslæt kommer automatisk på.</div>
+        <button data-svar-send>Send kommentar</button></div>
     </div>`;
   };
 
@@ -128,13 +136,27 @@
           try { await retFelt(id, "tommel", l => l.some(t => t.nr === mig.nr) ? l.filter(t => t.nr !== mig.nr) : [...l, { ...mig, tid: new Date().toISOString() }]); } catch (err) { alert("Kunne ikke gemme. Prøv igen."); }
           return vis(el, antal);
         }
+        if (e.target.closest("[data-fjern]")) {
+          if (!erFemBanden()) return;
+          if (!confirm("Fjern dette indlæg fra infologgen?\n\nDet kan ikke ses af andre bagefter.")) return;
+          try { const r = await fetch(`${URL}/olsenpost/${id}?key=${KEY}&updateMask.fieldPaths=skjult&updateMask.fieldPaths=fjernet_af&updateMask.fieldPaths=fjernet_tid`, { method: "PATCH", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ fields: { skjult: { booleanValue: true }, fjernet_af: { stringValue: mig.navn || mig.nr }, fjernet_tid: { stringValue: new Date().toISOString() } } }) }); if (!r.ok) throw 0; }
+          catch (err) { alert("Kunne ikke fjerne. Prøv igen."); }
+          return vis(el, antal);
+        }
+        if (e.target.closest("[data-fjern-svar]")) {
+          if (!erFemBanden()) return; const i = +e.target.closest("[data-fjern-svar]").dataset.fjernSvar;
+          if (!confirm("Fjern denne kommentar?")) return;
+          try { await retFelt(id, "svar", l => l.map((v, j) => j === i ? { ...v, skjult: true, fjernet_af: mig.navn || mig.nr, fjernet_tid: new Date().toISOString() } : v)); } catch (err) { alert("Kunne ikke fjerne. Prøv igen."); }
+          return vis(el, antal);
+        }
         if (e.target.closest("[data-svar-aaben]")) { const f = k.querySelector(".il-svarfelt"); f.style.display = f.style.display === "none" ? "" : "none"; if (f.style.display === "") f.querySelector("textarea").focus(); return; }
         if (e.target.closest("[data-svar-send]")) {
-          if (!mig.nr) return alert("Log ind for at svare.");
+          if (!mig.nr) return alert("Log ind for at kommentere.");
           const t = k.querySelector(".il-svarfelt textarea"), tekst = t.value.trim(); if (!tekst) return t.focus();
           const b = e.target.closest("[data-svar-send]"); b.disabled = true; b.textContent = "⏳ Sender …";
           try { await retFelt(id, "svar", l => [...l, { ...mig, tekst, tid: new Date().toISOString() }]); t.blur(); }
-          catch (err) { alert("Kunne ikke sende svaret. Prøv igen."); b.disabled = false; b.textContent = "Send svar"; return; }
+          catch (err) { alert("Kunne ikke sende kommentaren. Prøv igen."); b.disabled = false; b.textContent = "Send kommentar"; return; }
           return vis(el, antal);
         }
       }); }
