@@ -102,17 +102,23 @@
   const kort = x => {
     const mig = hent("ok_nr"), harTommel = x.tommel.some(t => t.nr === mig), fem = erFemBanden(), synligeSvar = x.svar.filter(v => !v.skjult);
     const tNavne = x.tommel.map(t => (t.navn || "").split(" ")[0]).filter(Boolean).join(", ");
-    const indhold = `${x.billede ? `<img class="il-billede" src="${esc(x.billede)}" alt="" loading="lazy">` : ""}<div class="il-tekst">${EMOJI[x.art] || "✏️"} ${esc(x.tekst)}</div>${x.indhold ? `<div class="il-opslag">${esc(x.indhold)}</div>` : ""}`;
+    const indhold = `${x.billede ? `<img class="il-billede" src="${esc(x.billede)}" alt="" loading="lazy">` : ""}<div class="il-tekst">${EMOJI[x.art] || "✏️"} ${esc(x.tekst)}</div>${x.indhold ? `<div class="il-opslag">${esc(x.indhold)}${x.rettet_tid ? `<div class="il-rettet">✏️ Rettet ${tidspunkt(x.rettet_tid)}${x.rettet_af ? " af " + esc(String(x.rettet_af).split(" ")[0]) : ""}</div>` : ""}</div>` : ""}`;
     return `<div class="il-kort" data-id="${esc(x.id)}">
       <div class="il-top"><span class="il-dato">${tidspunkt(x.tid)}</span><span class="il-fra">${esc(x.hvem_navn || "")}</span></div>
       ${x.link ? `<a class="il-indhold" href="${esc(x.link)}">${indhold}<span class="il-se">Se det →</span></a>` : `<div class="il-indhold">${indhold}</div>`}
       <div class="il-handling">
         <button class="il-tommel${harTommel ? " valgt" : ""}" data-tommel title="${esc(tNavne ? "Synes godt om: " + tNavne : "Giv en tommel op")}">👍 ${x.tommel.length || ""}</button>
         <button class="il-svar-knap" data-svar-aaben>💬 Kommentér indlæg</button>
+        ${x.art === "opslag" && (fem || (mig && x.hvem_nr === mig)) ? `<button class="il-ret" data-ret title="Ret teksten i opslaget">✏️ Ret</button>` : ""}
         ${fem ? `<button class="il-fjern" data-fjern title="Kun 5-Banden: fjern indlægget">🗑 Fjern</button>` : ""}
         ${tNavne ? `<span class="il-tnavne">👍 ${esc(tNavne)}</span>` : ""}
       </div>
       ${synligeSvar.length ? `<div class="il-svarliste"><div class="il-svar-titel">💬 ${synligeSvar.length} ${synligeSvar.length === 1 ? "kommentar" : "kommentarer"}</div>${x.svar.map((v, i) => v.skjult ? "" : `<div class="il-svar"><div class="il-svar-top"><b>${esc(v.navn || "")}</b> · ${tidspunkt(v.tid)}${fem ? ` <button class="il-fjern lille" data-fjern-svar="${i}" title="Kun 5-Banden: fjern kommentaren">🗑</button>` : ""}</div>${esc(v.tekst)}</div>`).join("")}</div>` : ""}
+      <div class="il-retfelt" style="display:none">
+        <div class="il-kommenterer">Ret teksten i dit opslag (højst 500 tegn). Der kommer »rettet« og tidspunkt på.</div>
+        <textarea>${esc(x.indhold || "")}</textarea>
+        <div class="il-kommenterer"><span data-ret-tal>${String(x.indhold || "").length}</span> / 500 tegn</div>
+        <div style="display:flex;gap:8px;justify-content:flex-end"><button data-ret-annuller class="hvid">Fortryd</button><button data-ret-gem>💾 Gem rettelsen</button></div></div>
       <div class="il-svarfelt" style="display:none">
         <div class="il-kommenterer">Du kommenterer: <b>»${esc(String(x.tekst).slice(0, 70))}${String(x.tekst).length > 70 ? " …" : ""}«</b> fra ${esc((x.hvem_navn || "").split(" ")[0])}, ${tidspunkt(x.tid)}</div>
         <textarea maxlength="300" placeholder="Skriv din kommentar …"></textarea>
@@ -127,13 +133,32 @@
     try {
       const l = (await hentLinjer()).slice(0, antal || 15);
       el.innerHTML = l.length ? l.map(kort).join("") : `<div class="infolog-tom">Her kommer det nye på siden – fx nye billeder, rettelser og hilsner.</div>`;
-      if (!el._klik) { el._klik = true; el.addEventListener("click", async e => {
+      if (!el._klik) { el._klik = true;
+        el.addEventListener("input", e => { const f = e.target.closest(".il-retfelt"); if (!f) return; const n = e.target.value.length, s = f.querySelector("[data-ret-tal]"); s.textContent = n; s.style.color = n > 500 ? "#c0392b" : n >= 450 ? "#b9770e" : ""; });
+        el.addEventListener("click", async e => {
         const k = e.target.closest(".il-kort"); if (!k) return; const id = k.dataset.id;
         const mig = { nr: hent("ok_nr"), navn: hent("ok_navn") };
         if (e.target.closest("[data-tommel]")) {
           if (!mig.nr) return alert("Log ind for at give en tommel op.");
           e.target.closest("[data-tommel]").disabled = true;
           try { await retFelt(id, "tommel", l => l.some(t => t.nr === mig.nr) ? l.filter(t => t.nr !== mig.nr) : [...l, { ...mig, tid: new Date().toISOString() }]); } catch (err) { alert("Kunne ikke gemme. Prøv igen."); }
+          return vis(el, antal);
+        }
+        if (e.target.closest("[data-ret]")) { const f = k.querySelector(".il-retfelt"); f.style.display = f.style.display === "none" ? "" : "none"; if (f.style.display === "") f.querySelector("textarea").focus(); return; }
+        if (e.target.closest("[data-ret-annuller]")) { k.querySelector(".il-retfelt").style.display = "none"; return vis(el, antal); }
+        if (e.target.closest("[data-ret-gem]")) {
+          const t = k.querySelector(".il-retfelt textarea"), tekst = t.value.trim(), b = e.target.closest("[data-ret-gem]");
+          if (tekst.length < 3) return alert("Skriv lidt mere – mindst 3 tegn.");
+          if (tekst.length > 500) return alert(`Teksten er ${tekst.length} tegn – der er plads til 500. Fjern ${tekst.length - 500} tegn.`);
+          b.disabled = true; b.textContent = "⏳ Gemmer …";
+          try {
+            const x = (await hentLinjer()).find(y => y.id === id) || {}, nu = new Date().toISOString(), af = mig.navn || mig.nr;
+            const m = String(x.link || "").match(/opslagstavlen\.html#o-(.+)$/);
+            if (m) { const r = await fetch(`${URL}/opslagstavle/${m[1]}?key=${KEY}&updateMask.fieldPaths=tekst&updateMask.fieldPaths=rettet_tid&updateMask.fieldPaths=rettet_af`, { method: "PATCH", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ fields: { tekst: { stringValue: tekst }, rettet_tid: { stringValue: nu }, rettet_af: { stringValue: af } } }) }); if (!r.ok) throw 0; }
+            const r2 = await fetch(`${URL}/olsenpost/${id}?key=${KEY}&updateMask.fieldPaths=indhold&updateMask.fieldPaths=rettet_tid&updateMask.fieldPaths=rettet_af`, { method: "PATCH", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ fields: { indhold: { stringValue: tekst }, rettet_tid: { stringValue: nu }, rettet_af: { stringValue: af } } }) }); if (!r2.ok) throw 0;
+          } catch (err) { alert("Kunne ikke gemme rettelsen. Prøv igen."); b.disabled = false; b.textContent = "💾 Gem rettelsen"; return; }
           return vis(el, antal);
         }
         if (e.target.closest("[data-fjern]")) {
