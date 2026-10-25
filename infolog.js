@@ -12,15 +12,32 @@
   const esc = s => String(s || "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const EMOJI = { opslag: "📌", billede: "📷", rettelse: "✏️", person: "🌳", hilsen: "👋" };
 
+  // Firestore-værdi → JS
+  const fra = v => { const [t, x] = Object.entries(v)[0];
+    if (t === "arrayValue") return (x.values || []).map(fra);
+    if (t === "mapValue") { const o = {}; for (const [k, y] of Object.entries(x.fields || {})) o[k] = fra(y); return o; }
+    if (t === "booleanValue") return x; if (t === "nullValue") return null; return x; };
+  const til = v => Array.isArray(v) ? { arrayValue: { values: v.map(til) } }
+    : (v && typeof v === "object") ? { mapValue: { fields: Object.fromEntries(Object.entries(v).map(([k, y]) => [k, til(y)])) } }
+    : typeof v === "boolean" ? { booleanValue: v } : { stringValue: String(v ?? "") };
+
   async function hentLinjer() {
     const r = await fetch(`${URL}:runQuery?key=${KEY}`, { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ structuredQuery: { from: [{ collectionId: "olsenpost" }],
         where: { fieldFilter: { field: { fieldPath: "type" }, op: "EQUAL", value: { stringValue: "infolog" } } } } }) });
     const j = await r.json();
     return j.filter(x => x.document).map(x => {
-      const f = x.document.fields, g = k => f[k] ? Object.values(f[k])[0] : "";
-      return { id: x.document.name.split("/").pop(), art: g("art"), tekst: g("tekst"), link: g("link"), billede: g("billede"), hvem_nr: g("hvem_nr"), hvem_navn: g("hvem_navn"), tid: g("tid"), skjult: g("skjult") === true };
-    }).filter(x => !x.skjult).sort((a, b) => String(b.tid).localeCompare(String(a.tid)));
+      const o = { id: x.document.name.split("/").pop() }; for (const [k, v] of Object.entries(x.document.fields || {})) o[k] = fra(v);
+      o.tommel = Array.isArray(o.tommel) ? o.tommel : []; o.svar = Array.isArray(o.svar) ? o.svar : []; return o;
+    }).filter(x => x.skjult !== true).sort((a, b) => String(b.tid).localeCompare(String(a.tid)));
+  }
+  // Læs frisk, ret og gem ét felt (tommel eller svar)
+  async function retFelt(id, felt, fn) {
+    const d = await (await fetch(`${URL}/olsenpost/${id}?key=${KEY}`)).json();
+    const nu = d.fields && d.fields[felt] ? fra(d.fields[felt]) : [];
+    const ny = fn(Array.isArray(nu) ? nu : []);
+    const r = await fetch(`${URL}/olsenpost/${id}?key=${KEY}&updateMask.fieldPaths=${felt}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fields: { [felt]: til(ny) } }) });
+    if (!r.ok) throw new Error("gem");
   }
 
   // Samme person + samme genvej inden for 30 min → ingen ny linje (undgår mange linjer for én rettelse)
@@ -79,13 +96,48 @@
     const d = new Date(iso); if (isNaN(d)) return "";
     return d.toLocaleDateString("da-DK", { weekday: "long", day: "numeric", month: "short" }) + " kl. " + d.toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
   }
+  const kort = x => {
+    const mig = hent("ok_nr"), harTommel = x.tommel.some(t => t.nr === mig);
+    const tNavne = x.tommel.map(t => (t.navn || "").split(" ")[0]).filter(Boolean).join(", ");
+    const indhold = `${x.billede ? `<img class="il-billede" src="${esc(x.billede)}" alt="" loading="lazy">` : ""}<div class="il-tekst">${EMOJI[x.art] || "✏️"} ${esc(x.tekst)}</div>`;
+    return `<div class="il-kort" data-id="${esc(x.id)}">
+      <div class="il-top"><span class="il-dato">${tidspunkt(x.tid)}</span><span class="il-fra">${esc(x.hvem_navn || "")}</span></div>
+      ${x.link ? `<a class="il-indhold" href="${esc(x.link)}">${indhold}<span class="il-se">Se det →</span></a>` : `<div class="il-indhold">${indhold}</div>`}
+      <div class="il-handling">
+        <button class="il-tommel${harTommel ? " valgt" : ""}" data-tommel title="${esc(tNavne ? "Synes godt om: " + tNavne : "Giv en tommel op")}">👍 ${x.tommel.length || ""}</button>
+        <button class="il-svar-knap" data-svar-aaben>💬 Svar${x.svar.length ? " (" + x.svar.length + ")" : ""}</button>
+        ${tNavne ? `<span class="il-tnavne">👍 ${esc(tNavne)}</span>` : ""}
+      </div>
+      ${x.svar.length ? `<div class="il-svarliste">${x.svar.map(v => `<div class="il-svar"><div class="il-svar-top"><b>${esc(v.navn || "")}</b> · ${tidspunkt(v.tid)}</div>${esc(v.tekst)}</div>`).join("")}</div>` : ""}
+      <div class="il-svarfelt" style="display:none"><textarea maxlength="300" placeholder="Skriv et svar …"></textarea><button data-svar-send>Send svar</button></div>
+    </div>`;
+  };
+
   async function vis(el, antal) {
     if (!el) return;
+    if (el.contains(document.activeElement) && document.activeElement.tagName === "TEXTAREA") return; // forstyr ikke, mens man skriver
     try {
       const l = (await hentLinjer()).slice(0, antal || 15);
-      el.innerHTML = l.length ? l.map(x => `<a class="infolog-linje" href="${esc(x.link || "#")}"${x.link ? "" : " onclick=\"return false\""}>
-          <span class="il-emoji">${EMOJI[x.art] || "✏️"}</span><span class="il-tekst">${x.billede ? `<img class="il-billede" src="${esc(x.billede)}" alt="" loading="lazy">` : ""}${esc(x.tekst)}<span class="il-tid">${x.hvem_navn ? "Fra " + esc(x.hvem_navn) + " · " : ""}${tidspunkt(x.tid)}${x.link ? " · se det →" : ""}</span></span></a>`).join("")
-        : `<div class="infolog-tom">Her kommer det nye på siden – fx nye billeder, rettelser og hilsner.</div>`;
+      el.innerHTML = l.length ? l.map(kort).join("") : `<div class="infolog-tom">Her kommer det nye på siden – fx nye billeder, rettelser og hilsner.</div>`;
+      if (!el._klik) { el._klik = true; el.addEventListener("click", async e => {
+        const k = e.target.closest(".il-kort"); if (!k) return; const id = k.dataset.id;
+        const mig = { nr: hent("ok_nr"), navn: hent("ok_navn") };
+        if (e.target.closest("[data-tommel]")) {
+          if (!mig.nr) return alert("Log ind for at give en tommel op.");
+          e.target.closest("[data-tommel]").disabled = true;
+          try { await retFelt(id, "tommel", l => l.some(t => t.nr === mig.nr) ? l.filter(t => t.nr !== mig.nr) : [...l, { ...mig, tid: new Date().toISOString() }]); } catch (err) { alert("Kunne ikke gemme. Prøv igen."); }
+          return vis(el, antal);
+        }
+        if (e.target.closest("[data-svar-aaben]")) { const f = k.querySelector(".il-svarfelt"); f.style.display = f.style.display === "none" ? "" : "none"; if (f.style.display === "") f.querySelector("textarea").focus(); return; }
+        if (e.target.closest("[data-svar-send]")) {
+          if (!mig.nr) return alert("Log ind for at svare.");
+          const t = k.querySelector(".il-svarfelt textarea"), tekst = t.value.trim(); if (!tekst) return t.focus();
+          const b = e.target.closest("[data-svar-send]"); b.disabled = true; b.textContent = "⏳ Sender …";
+          try { await retFelt(id, "svar", l => [...l, { ...mig, tekst, tid: new Date().toISOString() }]); t.blur(); }
+          catch (err) { alert("Kunne ikke sende svaret. Prøv igen."); b.disabled = false; b.textContent = "Send svar"; return; }
+          return vis(el, antal);
+        }
+      }); }
     } catch (e) { el.innerHTML = `<div class="infolog-tom">Infologgen kunne ikke hentes lige nu.</div>`; }
   }
 
