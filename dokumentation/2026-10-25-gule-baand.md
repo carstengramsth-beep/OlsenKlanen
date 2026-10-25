@@ -2,8 +2,8 @@
 
 Aftalt med Carsten 25. okt. 2026.
 
-- Ny side **`baand.html`** (Administration → 🟨 Det gule bånd). Kun for admin og OlsenBanden.
-  Genvej også nederst i infologgen på forsiden (»🟨 Ret teksten i det gule bånd«, kun admin/OlsenBanden).
+- Ny side **`baand.html`** (Administration → 🟨 Det gule bånd). **Kun 5-Banden** (Carsten 8, Tommy 19, Kurt 22, Karin 23, Sanne 48 – skal også være admin).
+  Genvej også nederst i infologgen på forsiden (»🟨 Ret teksten i det gule bånd«, kun 5-Banden).
 - Man skriver en tekst (højst 200 tegn), vælger **vis fra** og **vis til og med**, ser en gul forhåndsvisning og trykker Gem (bekræftes).
 - Lister: Kører nu / Kommer senere / Udløbet. Knapper: ✏️ Ret, ⏹ Stop nu, 🔁 Vis igen i 7 dage, 🗑 Slet.
   Der gemmes hvem der skrev/rettede og hvornår.

@@ -39,7 +39,7 @@ textarea{min-height:80px;resize:vertical}
   <a href="forside.html">🏠 Forsiden</a>
   <a href="admin.html">← Administration</a>
 </header>
-<div id="lukket" class="ramme" style="display:none"><div class="kort">Denne side er kun for administratorer og OlsenBanden. <a href="login.html?videre=baand.html">Log ind</a>.</div></div>
+<div id="lukket" class="ramme" style="display:none"><div class="kort">Kun 5-Banden (Carsten, Tommy, Kurt, Sanne og Karin) kan skrive i det gule bånd. <a href="login.html?videre=baand.html">Log ind</a>.</div></div>
 <main class="ramme" id="aaben" style="display:none">
   <div class="kort">
     <h2 id="form-titel">✍️ Skriv en ny besked</h2>
@@ -68,6 +68,9 @@ const KEY = "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU";
 const URL0 = "https://firestore.googleapis.com/v1/projects/olsenklanen-familieside/databases/(default)/documents";
 const hent = k => { try { return sessionStorage.getItem(k) || localStorage.getItem(k) || ""; } catch (e) { return ""; } };
 const niveau = hent("ok_niveau").trim().toLowerCase();
+// Kun 5-Banden må skrive i det gule bånd: Carsten (8), Tommy (19), Kurt (22), Karin (23), Sanne (48)
+const FEM_BANDEN = { "8": "carsten", "19": "tommy", "22": "kurt", "23": "karin", "48": "sanne" };
+const erFemBanden = (() => { const hus = hent("ok_nr").split("-")[0].trim(), fn = hent("ok_navn").trim().split(/\s+/)[0].toLowerCase(); return niveau === "admin" && FEM_BANDEN[hus] === fn; })();
 const $ = id => document.getElementById(id);
 const esc = s => String(s || "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const dag = (plus = 0) => { const d = new Date(); d.setDate(d.getDate() + plus); return d.toLocaleDateString("sv-SE"); };
@@ -113,7 +116,7 @@ function nulstil() {
 }
 function opdVis() { $("b-tegn").textContent = $("b-tekst").value.length; $("b-vis").textContent = $("b-tekst").value.trim() || "Sådan ser det ud i båndet"; }
 
-if (niveau !== "admin" && niveau !== "olsenbanden") $("lukket").style.display = "block";
+if (!erFemBanden) $("lukket").style.display = "block";
 else {
   $("aaben").style.display = "block";
   $("b-tekst").oninput = opdVis;
