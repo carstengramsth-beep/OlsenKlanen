@@ -1908,6 +1908,9 @@ document.getElementById('afdod-gem').onclick = async () => {
     const i = slaegtData.findIndex(x => x.pid === pid);
     if (i >= 0) slaegtData[i] = { ...slaegtData[i], ...ny }; else slaegtData.push(ny);
     lukAfdod(); renderGrid();
+    if (window.InfoLog) InfoLog.spoerg({ art: ny.foto && ny.foto !== gl.foto ? 'billede' : 'rettelse',
+      hvad: !afdodPid ? `tilføjet ${ny.navn} til slægten` : (ny.foto && ny.foto !== gl.foto ? `tilføjet et billede af ${ny.navn}` : `opdateret oplysningerne om ${ny.navn}`),
+      link: 'person.html?pid=' + encodeURIComponent(pid) });
   } catch (e) { st.textContent = '✗ Kunne ikke gemme: ' + (e.message || e); st.className = 'historisk-status-el fejl'; }
 };
 document.getElementById('grid').addEventListener('click', e => {
@@ -3754,6 +3757,7 @@ lysboksOverlay.addEventListener('click', () => {
 </script>
 <script type="module" src="post-varsel.js"></script>
 <script type="module" src="familieopkald.js"></script>
+<script src="infolog.js"></script>
 <script src="forside-knap.js" defer></script>
 </body>
 </html>
