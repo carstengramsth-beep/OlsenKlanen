@@ -1,5 +1,11 @@
 [
   {
+    "fil": "2026-10-25-gule-baand.md",
+    "dato": "2026-10-25",
+    "titel": "Det gule bånd styres fra hjemmesiden (baand.html)",
+    "af": "Claude Code (pc-1)"
+  },
+  {
     "fil": "2026-10-25-infolog.md",
     "dato": "2026-10-25",
     "titel": "Infolog på forsiden + »➕ Tilføj opslag« (spørger før ændringer annonceres)",
