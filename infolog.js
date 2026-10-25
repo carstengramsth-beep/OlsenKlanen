@@ -19,7 +19,7 @@
     const j = await r.json();
     return j.filter(x => x.document).map(x => {
       const f = x.document.fields, g = k => f[k] ? Object.values(f[k])[0] : "";
-      return { id: x.document.name.split("/").pop(), art: g("art"), tekst: g("tekst"), link: g("link"), hvem_nr: g("hvem_nr"), tid: g("tid"), skjult: g("skjult") === true };
+      return { id: x.document.name.split("/").pop(), art: g("art"), tekst: g("tekst"), link: g("link"), hvem_nr: g("hvem_nr"), hvem_navn: g("hvem_navn"), tid: g("tid"), skjult: g("skjult") === true };
     }).filter(x => !x.skjult).sort((a, b) => String(b.tid).localeCompare(String(a.tid)));
   }
 
@@ -62,20 +62,17 @@
     });
   }
 
-  function siden(iso) {
-    const s = (Date.now() - new Date(iso).getTime()) / 1000;
-    if (s < 60) return "lige nu"; if (s < 3600) return Math.floor(s / 60) + " min. siden";
-    if (s < 86400) return Math.floor(s / 3600) + " t. siden";
-    const d = Math.floor(s / 86400); if (d === 1) return "i går"; if (d < 7) return d + " dage siden";
-    return new Date(iso).toLocaleDateString("da-DK", { day: "numeric", month: "short" });
+  // "søndag 25. okt. kl. 10.42"
+  function tidspunkt(iso) {
+    const d = new Date(iso); if (isNaN(d)) return "";
+    return d.toLocaleDateString("da-DK", { weekday: "long", day: "numeric", month: "short" }) + " kl. " + d.toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
   }
-
   async function vis(el, antal) {
     if (!el) return;
     try {
       const l = (await hentLinjer()).slice(0, antal || 15);
       el.innerHTML = l.length ? l.map(x => `<a class="infolog-linje" href="${esc(x.link || "#")}"${x.link ? "" : " onclick=\"return false\""}>
-          <span class="il-emoji">${EMOJI[x.art] || "✏️"}</span><span class="il-tekst">${esc(x.tekst)}<span class="il-tid">${siden(x.tid)}${x.link ? " · se det →" : ""}</span></span></a>`).join("")
+          <span class="il-emoji">${EMOJI[x.art] || "✏️"}</span><span class="il-tekst">${esc(x.tekst)}<span class="il-tid">${x.hvem_navn ? "Fra " + esc(x.hvem_navn) + " · " : ""}${tidspunkt(x.tid)}${x.link ? " · se det →" : ""}</span></span></a>`).join("")
         : `<div class="infolog-tom">Her kommer det nye på siden – fx nye billeder, rettelser og hilsner.</div>`;
     } catch (e) { el.innerHTML = `<div class="infolog-tom">Infologgen kunne ikke hentes lige nu.</div>`; }
   }
