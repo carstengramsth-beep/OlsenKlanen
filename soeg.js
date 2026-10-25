@@ -33,7 +33,7 @@
     { t: "Videofon – mødesal", u: "videofon-moederum.html", i: "📹", d: "Videomøde for familien.", k: "video videofon møde mødesal opkald" },
     { t: "Opslagstavlen", u: "opslagstavlen.html", i: "📌", d: "Opslag fra klanen.", k: "opslag opslagstavle" },
     { t: "Nyt om hjemmesiden", u: "nyheder.html", i: "🆕", d: "Hvad er nyt på hjemmesiden.", k: "nyt nyheder hjemmeside ændringer" },
-    { t: "Det gule bånd", u: "baand.html", i: "🟨", d: "Skriv teksten, der kører i det gule bånd på forsiden (kun administratorer).", k: "bånd baand gule båndet nyhedsbånd rullende tekst besked forside info" },
+    { t: "Det gule bånd", u: "baand.html", i: "🟨", d: "Skriv teksten, der kører i det gule bånd på forsiden (kun 5-Banden).", k: "bånd baand gule båndet nyhedsbånd rullende tekst besked forside info" },
     { t: "Administration", u: "admin.html", i: "⚙️", d: "Kun for OlsenBanden.", k: "admin administration olsenbanden dokumentation" }
   ];
 

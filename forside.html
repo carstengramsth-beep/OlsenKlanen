@@ -463,7 +463,8 @@ try {
  
 </div>
 <script src="infolog.js"></script>
-<script>try { const nv = (sessionStorage.getItem("ok_niveau") || localStorage.getItem("ok_niveau") || "").toLowerCase(); if (nv === "admin" || nv === "olsenbanden") document.getElementById("ret-baand").style.display = "block"; } catch (e) {}
+<script>try { const nv = (sessionStorage.getItem("ok_niveau") || localStorage.getItem("ok_niveau") || "").toLowerCase(); const hus = (sessionStorage.getItem("ok_nr") || localStorage.getItem("ok_nr") || "").split("-")[0].trim(), fn = (sessionStorage.getItem("ok_navn") || localStorage.getItem("ok_navn") || "").trim().split(/\s+/)[0].toLowerCase();
+  if (nv === "admin" && ({ "8": "carsten", "19": "tommy", "22": "kurt", "23": "karin", "48": "sanne" })[hus] === fn) document.getElementById("ret-baand").style.display = "block"; } catch (e) {}
 InfoLog.vis(document.getElementById("infolog"), 15); setInterval(() => InfoLog.vis(document.getElementById("infolog"), 15), 120000);</script>
  
 <!-- NYHEDSBAAND — fast i bunden af siden -->
