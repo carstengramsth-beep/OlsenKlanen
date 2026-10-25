@@ -273,7 +273,7 @@ onSnapshot(q, async (snap) => {
   }
 });
 function lavSeddel(id, data, nr, erNyt) {
-  const dato = data.tidspunkt ? new Date(data.tidspunkt.toDate()).toLocaleDateString("da-DK", {day:"numeric", month:"short", year:"numeric"}) : "—";
+  const dato = data.tidspunkt ? (() => { const d = new Date(data.tidspunkt.toDate()); return d.toLocaleDateString("da-DK", {weekday:"long", day:"numeric", month:"short", year:"numeric"}) + " kl. " + d.toLocaleTimeString("da-DK", {hour:"2-digit", minute:"2-digit"}); })() : "—";
   const reaktionsListe = ["👍", "❤️", "😂", "🤔"];
   const reaktionerHtml = reaktionsListe.map(r => {
     const antal = (data.reaktioner && data.reaktioner[r]) ? data.reaktioner[r].length : 0;
