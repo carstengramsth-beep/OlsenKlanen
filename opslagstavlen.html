@@ -119,7 +119,8 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
   <div id="fejl-besked" class="fejl-besked"></div>
   <div id="ok-besked" class="ok-besked"></div>
   <div class="skriv-boks">
-    <textarea id="nyt-opslag" placeholder="Skriv dit opslag her..." maxlength="500"></textarea>
+    <textarea id="nyt-opslag" placeholder="Skriv dit opslag her..."></textarea>
+    <div id="tegn-advarsel" style="display:none;margin-top:6px;padding:8px 12px;border-radius:6px;font-size:15px"></div>
     <div class="billede-valg">
       <label class="vaelg">📷 Vedhæft et billede (valgfrit)<input type="file" id="opslag-billede" accept="image/*" style="display:none"></label>
       <img id="opslag-billede-vis" alt="" style="display:none">
@@ -210,13 +211,23 @@ document.querySelectorAll(".filter-knap").forEach(k => {
 });
 const opslagFelt = document.getElementById("nyt-opslag");
 const tegnTal = document.getElementById("tegn-tal");
-opslagFelt.addEventListener("input", () => {
-  tegnTal.textContent = opslagFelt.value.length;
-});
+// Højst 500 tegn. Advarsel fra 450 tegn – og tydelig besked, hvis teksten er for lang (fx efter kopiering)
+const tegnAdv = document.getElementById("tegn-advarsel");
+function tjekTegn() {
+  const n = opslagFelt.value.length; tegnTal.textContent = n;
+  tegnTal.style.color = n > 500 ? "#c0392b" : n >= 450 ? "#b9770e" : ""; tegnTal.style.fontWeight = n >= 450 ? "bold" : "";
+  if (n > 500) { tegnAdv.style.display = "block"; tegnAdv.style.background = "#fdecea"; tegnAdv.style.color = "#a12a1d";
+    tegnAdv.textContent = `⚠️ Teksten er ${n} tegn. Der er plads til 500. Fjern ${n - 500} tegn, før du hænger den op.`; }
+  else if (n >= 450) { tegnAdv.style.display = "block"; tegnAdv.style.background = "#fff4e0"; tegnAdv.style.color = "#7a4b00";
+    tegnAdv.textContent = `Du har ${500 - n} tegn tilbage.`; }
+  else tegnAdv.style.display = "none";
+}
+opslagFelt.addEventListener("input", tjekTegn);
 window.sendOpslag = async function() {
   const tekst = opslagFelt.value.trim();
   if (!tekst) { visFejl("Skriv noget før du hænger det op 😊"); return; }
   if (tekst.length < 3) { visFejl("Skriv lidt mere — mindst 3 tegn."); return; }
+  if (tekst.length > 500) { visFejl(`Teksten er ${tekst.length} tegn – der er plads til 500. Gør den lidt kortere.`); tjekTegn(); return; }
   const valgtModtager = document.querySelector('input[name="modtager"]:checked').value;
   const erPrivat = (valgtModtager === "hjemmesidegruppen");
   if (erPrivat && !hjemmesidegruppen) { visFejl("Kun hjemmesidegruppen kan sende private opslag."); return; }
@@ -240,14 +251,14 @@ window.sendOpslag = async function() {
     // Infolog på forsiden: "Carsten har lagt en besked på opslagstavlen" (kun opslag til alle)
     if (!erPrivat && window.InfoLog) InfoLog.log({ art: "opslag", hvad: "lagt en besked på opslagstavlen", link: "opslagstavlen.html#o-" + nytRef.id, billede: billedeUrl, indhold: tekst });
     nulstilBillede();
-    opslagFelt.value = ""; tegnTal.textContent = "0";
+    opslagFelt.value = ""; tjekTegn();
     document.querySelector('input[name="modtager"][value="alle"]').checked = true;
     visOk(erPrivat ? "Dit opslag er sendt privat til hjemmesidegruppen. 🔒" : "Dit opslag er hængt op! 📌");
   } catch(e) { console.error(e); visFejl("Kunne ikke sende opslaget. Prøv igen.");
   } finally { knap.disabled = false; knap.textContent = "Hæng op 📌"; }
 };
 window.rydOpslag = function() {
-  opslagFelt.value = ""; tegnTal.textContent = "0";
+  opslagFelt.value = ""; tjekTegn();
   document.querySelector('input[name="modtager"][value="alle"]').checked = true;
   nulstilBillede();
 };
