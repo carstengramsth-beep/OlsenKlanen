@@ -453,11 +453,13 @@ try {
       <a class="infolog-skriv" href="opslagstavlen.html#skriv">➕ Tilføj opslag</a>
       <div id="infolog">Henter …</div>
     </div>
+    <a id="ret-baand" href="baand.html" style="display:none;font-size:13px;color:#7a5c12;margin:8px 4px 0;text-decoration:none">🟨 Ret teksten i det gule bånd</a>
   </aside>
  
 </div>
 <script src="infolog.js"></script>
-<script>InfoLog.vis(document.getElementById("infolog"), 15); setInterval(() => InfoLog.vis(document.getElementById("infolog"), 15), 120000);</script>
+<script>try { const nv = (sessionStorage.getItem("ok_niveau") || localStorage.getItem("ok_niveau") || "").toLowerCase(); if (nv === "admin" || nv === "olsenbanden") document.getElementById("ret-baand").style.display = "block"; } catch (e) {}
+InfoLog.vis(document.getElementById("infolog"), 15); setInterval(() => InfoLog.vis(document.getElementById("infolog"), 15), 120000);</script>
  
 <!-- NYHEDSBAAND — fast i bunden af siden -->
 <div class="nyhedsbaand">
@@ -1374,17 +1376,23 @@ function logUd() {
 let nyheder = [];
 let vejr = "";
  
-// Faste beskeder i båndet – vises til og med datoen "til"
-const BAAND_BESKEDER = [
-  { tekst: "🌳 Info nr. 5 er udgivet – om OlsenKlanens stamtræ. Læs den i Infoarkivet, og find Stamtræ i navigationen.", til: "2026-11-05" },
-  { tekst: "📮 Ved en fejl er Info nr. 5 rundsendt 3 gange – OlsenPost beklager ulejligheden.", til: "2026-10-29" }
-];
+// Beskeder i båndet skrives på siden baand.html (Administration → Det gule bånd).
+// De gemmes i olsenpost (type "baand") og vises fra "fra" til og med "til".
+const BAAND_BESKEDER = [];
+fetch("https://firestore.googleapis.com/v1/projects/olsenklanen-familieside/databases/(default)/documents:runQuery?key=AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU", {
+  method: "POST", headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ structuredQuery: { from: [{ collectionId: "olsenpost" }], where: { fieldFilter: { field: { fieldPath: "type" }, op: "EQUAL", value: { stringValue: "baand" } } } } })
+}).then(r => r.json()).then(j => {
+  j.filter(x => x.document).map(x => { const f = x.document.fields, g = k => f[k] ? Object.values(f[k])[0] : ""; return { tekst: g("tekst"), fra: g("fra"), til: g("til"), slettet: g("slettet") === true }; })
+   .filter(b => !b.slettet && b.tekst).sort((a, b) => String(a.fra).localeCompare(String(b.fra))).forEach(b => BAAND_BESKEDER.push(b));
+  window.byggBaand();
+}).catch(() => {});
 window.byggBaand = function byggBaand() {
   let tekst = "";
   // Fødselsdag FØRST — det er det festlige
   if (window.OLSEN_FOEDSELSDAG) tekst += window.OLSEN_FOEDSELSDAG + "     ";
   const idag = new Date().toISOString().slice(0, 10);
-  BAAND_BESKEDER.filter(b => idag <= b.til).forEach(b => { tekst += b.tekst + "     "; });
+  BAAND_BESKEDER.filter(b => (!b.fra || b.fra <= idag) && idag <= b.til).forEach(b => { tekst += b.tekst + "     "; });
   if (vejr) tekst += vejr + "     ";
   nyheder.forEach(n => { tekst += "★  " + n + "     "; });
   if (tekst) {

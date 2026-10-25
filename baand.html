@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Det gule bånd — OlsenKlanen</title>
+<style>
+:root{--mos:#2d5016;--mos-mork:#243b1c;--guld:#c89e3c;--guld-pale:#faf3dc;--creme:#f5f0e6;--tekst:#2c3e1f}
+*{box-sizing:border-box}
+body{margin:0;font-family:Georgia,serif;background:var(--creme);color:var(--tekst);line-height:1.5;font-size:17px}
+.topbar{background:var(--mos-mork);color:#f5e6a8;padding:14px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.topbar h1{font-weight:normal;font-size:24px;margin:0;flex:1}
+.topbar a{color:#f5e6a8;text-decoration:none;border:1px solid rgba(245,230,168,.5);padding:6px 14px;border-radius:20px;font-size:15px}
+.ramme{max-width:820px;margin:0 auto;padding:20px 16px 120px}
+.kort{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:18px 20px;margin-bottom:18px}
+h2{font-weight:normal;color:var(--mos);margin:0 0 10px;font-size:21px}
+label{display:block;font-size:15px;color:#555;margin:10px 0 4px}
+textarea,input[type=date]{width:100%;font:inherit;font-size:17px;padding:10px;border:1px solid #ccc;border-radius:8px}
+textarea{min-height:80px;resize:vertical}
+.raekke{display:flex;gap:14px;flex-wrap:wrap}.raekke>div{flex:1;min-width:180px}
+.knap{font:inherit;font-size:17px;padding:11px 18px;border:0;border-radius:8px;background:var(--mos);color:#fff;cursor:pointer}
+.knap.hvid{background:#fff;color:var(--tekst);border:1px solid #bbb}
+.knap.lille{font-size:14px;padding:6px 12px}
+.knap:disabled{opacity:.5;cursor:default}
+.forhaand{background:#ffd700;color:#1a1a1a;font-family:Arial,sans-serif;font-weight:bold;font-size:20px;padding:12px 14px;border-radius:6px;margin-top:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.besked{padding:12px 4px;border-bottom:1px solid #eee}
+.besked:last-child{border-bottom:0}
+.besked .t{font-size:17px}
+.besked .m{font-size:13px;color:#777;margin:3px 0 6px}
+.besked .h{display:flex;gap:8px;flex-wrap:wrap}
+.status{margin-top:10px;font-size:15px}
+.hjaelp{font-size:14px;color:#666}
+.tom{color:#888;font-style:italic;font-size:15px}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <h1>🟨 Det gule bånd på forsiden</h1>
+  <a href="forside.html">🏠 Forsiden</a>
+  <a href="admin.html">← Administration</a>
+</header>
+<div id="lukket" class="ramme" style="display:none"><div class="kort">Denne side er kun for administratorer og OlsenBanden. <a href="login.html?videre=baand.html">Log ind</a>.</div></div>
+<main class="ramme" id="aaben" style="display:none">
+  <div class="kort">
+    <h2 id="form-titel">✍️ Skriv en ny besked</h2>
+    <div class="hjaelp">Beskeden kører i det gule bånd nederst på forsiden fra den første dag til og med den sidste dag. Hold den kort – én sætning er bedst.</div>
+    <label for="b-tekst">Tekst</label>
+    <textarea id="b-tekst" maxlength="200" placeholder="Fx: 🌳 Info nr. 6 er udgivet – læs den i Infoarkivet."></textarea>
+    <div class="hjaelp"><span id="b-tegn">0</span> / 200 tegn</div>
+    <div class="raekke">
+      <div><label for="b-fra">Vis fra</label><input type="date" id="b-fra"></div>
+      <div><label for="b-til">Vis til og med</label><input type="date" id="b-til"></div>
+    </div>
+    <div class="forhaand" id="b-vis">Sådan ser det ud i båndet</div>
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="knap" id="b-gem">💾 Gem i båndet</button>
+      <button class="knap hvid" id="b-annuller" style="display:none">Annullér rettelse</button>
+    </div>
+    <div class="status" id="b-status"></div>
+  </div>
+  <div class="kort"><h2>▶️ Kører nu</h2><div id="l-nu"></div></div>
+  <div class="kort"><h2>⏳ Kommer senere</h2><div id="l-senere"></div></div>
+  <div class="kort"><h2>✔️ Udløbet</h2><div id="l-gammel"></div></div>
+</main>
+<script>
+// Beskeder i det gule bånd gemmes i olsenpost (type "baand"): tekst, fra, til, oprettet_af, oprettet, rettet_af, rettet, slettet
+const KEY = "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU";
+const URL0 = "https://firestore.googleapis.com/v1/projects/olsenklanen-familieside/databases/(default)/documents";
+const hent = k => { try { return sessionStorage.getItem(k) || localStorage.getItem(k) || ""; } catch (e) { return ""; } };
+const niveau = hent("ok_niveau").trim().toLowerCase();
+const $ = id => document.getElementById(id);
+const esc = s => String(s || "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const dag = (plus = 0) => { const d = new Date(); d.setDate(d.getDate() + plus); return d.toLocaleDateString("sv-SE"); };
+const datoTekst = iso => iso ? new Date(iso + "T12:00").toLocaleDateString("da-DK", { day: "numeric", month: "long", year: "numeric" }) : "";
+let alle = [], retId = null;
+
+async function hentAlle() {
+  const r = await fetch(`${URL0}:runQuery?key=${KEY}`, { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ structuredQuery: { from: [{ collectionId: "olsenpost" }], where: { fieldFilter: { field: { fieldPath: "type" }, op: "EQUAL", value: { stringValue: "baand" } } } } }) });
+  const j = await r.json();
+  alle = j.filter(x => x.document).map(x => { const f = x.document.fields, g = k => f[k] ? Object.values(f[k])[0] : "";
+    return { id: x.document.name.split("/").pop(), tekst: g("tekst"), fra: g("fra"), til: g("til"), oprettet_af: g("oprettet_af"), oprettet: g("oprettet"), rettet_af: g("rettet_af"), rettet: g("rettet"), slettet: g("slettet") === true }; })
+    .filter(x => !x.slettet);
+}
+async function gemFelter(id, felter) {
+  const fields = {}; for (const [k, v] of Object.entries(felter)) fields[k] = typeof v === "boolean" ? { booleanValue: v } : { stringValue: v };
+  const q = Object.keys(felter).map(k => "updateMask.fieldPaths=" + k).join("&");
+  const url = id ? `${URL0}/olsenpost/${id}?key=${KEY}&${q}` : `${URL0}/olsenpost?key=${KEY}`;
+  const r = await fetch(url, { method: id ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fields }) });
+  if (!r.ok) throw new Error("Kunne ikke gemme (" + r.status + ")");
+}
+function linje(b) {
+  const hvem = b.rettet_af ? `Rettet af ${esc(b.rettet_af)} ${datoTekst(b.rettet.slice(0, 10))}` : `Skrevet af ${esc(b.oprettet_af || "?")} ${datoTekst((b.oprettet || "").slice(0, 10))}`;
+  const idag = dag();
+  return `<div class="besked"><div class="t">${esc(b.tekst)}</div>
+    <div class="m">Vises ${datoTekst(b.fra)} – ${datoTekst(b.til)} · ${hvem}</div>
+    <div class="h"><button class="knap hvid lille" data-ret="${b.id}">✏️ Ret</button>
+    ${b.til >= idag ? `<button class="knap hvid lille" data-stop="${b.id}">⏹ Stop nu</button>` : `<button class="knap hvid lille" data-igen="${b.id}">🔁 Vis igen i 7 dage</button>`}
+    <button class="knap hvid lille" data-slet="${b.id}">🗑 Slet</button></div></div>`;
+}
+function tegn() {
+  const idag = dag();
+  const nu = alle.filter(b => b.fra <= idag && idag <= b.til).sort((a, b) => a.fra.localeCompare(b.fra));
+  const senere = alle.filter(b => b.fra > idag).sort((a, b) => a.fra.localeCompare(b.fra));
+  const gammel = alle.filter(b => b.til < idag).sort((a, b) => b.til.localeCompare(a.til)).slice(0, 15);
+  $("l-nu").innerHTML = nu.length ? nu.map(linje).join("") : `<div class="tom">Ingen beskeder kører lige nu.</div>`;
+  $("l-senere").innerHTML = senere.length ? senere.map(linje).join("") : `<div class="tom">Ingen.</div>`;
+  $("l-gammel").innerHTML = gammel.length ? gammel.map(linje).join("") : `<div class="tom">Ingen.</div>`;
+}
+function nulstil() {
+  retId = null; $("b-tekst").value = ""; $("b-fra").value = dag(); $("b-til").value = dag(7);
+  $("form-titel").textContent = "✍️ Skriv en ny besked"; $("b-annuller").style.display = "none"; $("b-gem").textContent = "💾 Gem i båndet"; opdVis();
+}
+function opdVis() { $("b-tegn").textContent = $("b-tekst").value.length; $("b-vis").textContent = $("b-tekst").value.trim() || "Sådan ser det ud i båndet"; }
+
+if (niveau !== "admin" && niveau !== "olsenbanden") $("lukket").style.display = "block";
+else {
+  $("aaben").style.display = "block";
+  $("b-tekst").oninput = opdVis;
+  $("b-annuller").onclick = nulstil;
+  $("b-gem").onclick = async () => {
+    const tekst = $("b-tekst").value.trim(), fra = $("b-fra").value, til = $("b-til").value, st = $("b-status");
+    if (tekst.length < 3) { st.textContent = "Skriv en tekst først."; return; }
+    if (!fra || !til || til < fra) { st.textContent = "Tjek datoerne – »til og med« skal være samme dag eller senere end »fra«."; return; }
+    if (!confirm(`Skal denne besked ${retId ? "rettes" : "køre"} i det gule bånd fra ${datoTekst(fra)} til og med ${datoTekst(til)}?\n\n${tekst}`)) return;
+    $("b-gem").disabled = true; st.textContent = "⏳ Gemmer …";
+    try {
+      const nu = new Date().toISOString(), navn = hent("ok_navn") || hent("ok_nr");
+      if (retId) await gemFelter(retId, { tekst, fra, til, rettet_af: navn, rettet: nu });
+      else await gemFelter(null, { type: "baand", tekst, fra, til, oprettet_af: navn, oprettet_af_nr: hent("ok_nr"), oprettet: nu });
+      st.textContent = "✅ Gemt. Beskeden kommer i båndet på forsiden."; nulstil(); await hentAlle(); tegn();
+    } catch (e) { st.textContent = "❌ " + e.message; }
+    $("b-gem").disabled = false;
+  };
+  document.addEventListener("click", async e => {
+    const t = e.target.closest("[data-ret],[data-stop],[data-igen],[data-slet]"); if (!t) return;
+    const id = t.dataset.ret || t.dataset.stop || t.dataset.igen || t.dataset.slet, b = alle.find(x => x.id === id); if (!b) return;
+    const navn = hent("ok_navn") || hent("ok_nr"), nu = new Date().toISOString();
+    if (t.dataset.ret) {
+      retId = id; $("b-tekst").value = b.tekst; $("b-fra").value = b.fra; $("b-til").value = b.til;
+      $("form-titel").textContent = "✏️ Ret beskeden"; $("b-gem").textContent = "💾 Gem rettelsen"; $("b-annuller").style.display = ""; opdVis();
+      window.scrollTo({ top: 0, behavior: "smooth" }); return;
+    }
+    try {
+      if (t.dataset.stop) { if (!confirm("Stop beskeden nu? Den forsvinder fra båndet.")) return; await gemFelter(id, { til: dag(-1), fra: b.fra <= dag(-1) ? b.fra : dag(-1), rettet_af: navn, rettet: nu }); }
+      if (t.dataset.igen) { await gemFelter(id, { fra: dag(), til: dag(7), rettet_af: navn, rettet: nu }); }
+      if (t.dataset.slet) { if (!confirm("Slet beskeden helt?")) return; await gemFelter(id, { slettet: true, rettet_af: navn, rettet: nu }); }
+      await hentAlle(); tegn();
+    } catch (err) { alert(err.message); }
+  });
+  nulstil(); hentAlle().then(tegn).catch(() => { $("l-nu").innerHTML = `<div class="tom">Kunne ikke hente beskederne.</div>`; });
+}
+</script>
+<script src="forside-knap.js" defer></script>
+</body>
+</html>
