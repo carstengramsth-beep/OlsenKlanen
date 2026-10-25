@@ -551,7 +551,7 @@ window.uploadBilleder = async function(){
   statusEl.textContent = "⏳ Lægger billeder op …";
   statusEl.style.display = "block";
 
-  let lagt = 0, fejl = 0, foersteNy = "";
+  let lagt = 0, fejl = 0, foersteNy = "", foersteUrl = "";
   for (const v of valgteFiler) {
     if (v.fejl || !v.img) { fejl++; continue; }
     try {
@@ -565,7 +565,7 @@ window.uploadBilleder = async function(){
         uploadet: serverTimestamp(),
         uploadet_lokal: Date.now()
       });
-      lagt++; if (!foersteNy) foersteNy = nyB.id;
+      lagt++; if (!foersteNy) { foersteNy = nyB.id; try { foersteUrl = await getDownloadURL(ref(storage, sti)); } catch (e) {} }
     } catch(e) {
       console.log("Upload-fejl:", e);
       fejl++;
@@ -579,7 +579,7 @@ window.uploadBilleder = async function(){
   knap.disabled = false;
   await hentAlt();
   // Spørg om det må stå i infologgen på forsiden
-  if (lagt && window.InfoLog) InfoLog.spoerg({ art: "billede", hvad: lagt === 1 ? "tilføjet et gammelt billede" : `tilføjet ${lagt} gamle billeder`, link: "gamle-billeder.html#b-" + foersteNy });
+  if (lagt && window.InfoLog) InfoLog.spoerg({ art: "billede", hvad: lagt === 1 ? "tilføjet et gammelt billede" : `tilføjet ${lagt} gamle billeder`, link: "gamle-billeder.html#b-" + foersteNy, billede: foersteUrl });
 };
 
 window.visStort = function(url){
