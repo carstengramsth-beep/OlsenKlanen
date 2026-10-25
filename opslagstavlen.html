@@ -238,7 +238,7 @@ window.sendOpslag = async function() {
       modtager: erPrivat ? "hjemmesidegruppen" : "alle"
     });
     // Infolog på forsiden: "Carsten har lagt en besked på opslagstavlen" (kun opslag til alle)
-    if (!erPrivat && window.InfoLog) InfoLog.log({ art: "opslag", hvad: "lagt en besked på opslagstavlen", link: "opslagstavlen.html#o-" + nytRef.id, billede: billedeUrl });
+    if (!erPrivat && window.InfoLog) InfoLog.log({ art: "opslag", hvad: "lagt en besked på opslagstavlen", link: "opslagstavlen.html#o-" + nytRef.id, billede: billedeUrl, indhold: tekst });
     nulstilBillede();
     opslagFelt.value = ""; tegnTal.textContent = "0";
     document.querySelector('input[name="modtager"][value="alle"]').checked = true;

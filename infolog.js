@@ -63,11 +63,11 @@
     });
   }
 
-  async function log({ art, hvad, link, billede }) {
+  async function log({ art, hvad, link, billede, indhold }) {
     if (!hvad) return false;
     if (link && await erDublet(link)) return false;
     const tekst = `${fornavn()} har ${hvad}`;
-    const felter = { type: "infolog", art: art || "rettelse", tekst, link: link || "", billede: await lilleBillede(billede), hvem_nr: hent("ok_nr"), hvem_navn: hent("ok_navn"),
+    const felter = { type: "infolog", art: art || "rettelse", tekst, link: link || "", billede: await lilleBillede(billede), indhold: String(indhold || "").slice(0, 600), hvem_nr: hent("ok_nr"), hvem_navn: hent("ok_navn"),
       tid: new Date().toISOString(), sendt_lokal: String(Date.now()) };
     const fields = {}; for (const [k, v] of Object.entries(felter)) fields[k] = { stringValue: v };
     try { const r = await fetch(`${URL}/olsenpost?key=${KEY}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fields }) }); return r.ok; }
@@ -102,7 +102,7 @@
   const kort = x => {
     const mig = hent("ok_nr"), harTommel = x.tommel.some(t => t.nr === mig), fem = erFemBanden(), synligeSvar = x.svar.filter(v => !v.skjult);
     const tNavne = x.tommel.map(t => (t.navn || "").split(" ")[0]).filter(Boolean).join(", ");
-    const indhold = `${x.billede ? `<img class="il-billede" src="${esc(x.billede)}" alt="" loading="lazy">` : ""}<div class="il-tekst">${EMOJI[x.art] || "✏️"} ${esc(x.tekst)}</div>`;
+    const indhold = `${x.billede ? `<img class="il-billede" src="${esc(x.billede)}" alt="" loading="lazy">` : ""}<div class="il-tekst">${EMOJI[x.art] || "✏️"} ${esc(x.tekst)}</div>${x.indhold ? `<div class="il-opslag">${esc(x.indhold)}</div>` : ""}`;
     return `<div class="il-kort" data-id="${esc(x.id)}">
       <div class="il-top"><span class="il-dato">${tidspunkt(x.tid)}</span><span class="il-fra">${esc(x.hvem_navn || "")}</span></div>
       ${x.link ? `<a class="il-indhold" href="${esc(x.link)}">${indhold}<span class="il-se">Se det →</span></a>` : `<div class="il-indhold">${indhold}</div>`}
