@@ -333,8 +333,10 @@ async function gemRelation(pid, type) {
     st.textContent = `Søskende kobles via fælles forældre. Vælg først ${fornavn(pid)}s far eller mor.`; return;
   }
   $("e-gem").disabled = true; st.textContent = "Gemmer …";
+  let nyOprettet = false;
   try {
     if (!anden) {
+      nyOprettet = true;
       const ny = { type: "slaegt", til: [], pid: nyPid(), fornavn: v("e-fornavn"), mellemnavn: v("e-mellemnavn"), efternavn: v("e-efternavn"),
         foedselsdato: v("e-foedt"), status: v("e-status"), status_dato: v("e-status") === "afdød" ? v("e-doed") : "",
         fortaelling: "", foto: "", mindeord: "", gravsted: "", grav_foto: "", far_pid: "", mor_pid: "", partner_pid: "",
@@ -379,6 +381,7 @@ async function gemRelation(pid, type) {
       }
     }
     vis(pid, true);
+    if (window.InfoLog) InfoLog.spoerg({ art: "person", hvad: nyOprettet ? `tilføjet ${navnAf(P.get(anden).p)} i stamtræet` : `opdateret familien omkring ${navnAf(cur)}`, link: "person.html?pid=" + encodeURIComponent(nyOprettet ? anden : pid) });
   } catch(e) { st.textContent = "Kunne ikke gemme: " + (e.message || e); $("e-gem").disabled = false; }
 }
 
@@ -441,6 +444,7 @@ try {
   vis(q.get("pid"), q.get("rel") === "1");
 } catch(e) { $("main").innerHTML = '<div class="kort">Kunne ikke hente data: ' + esc(e.message || e) + '</div>'; }
 </script>
+<script src="infolog.js"></script>
 <script src="forside-knap.js" defer></script>
 <script src="stort-billede.js" defer></script>
 </body>

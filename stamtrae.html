@@ -581,6 +581,7 @@ function visPanel(pid) {
       const a = { tekst: t, svar: svar.trim() || "Afklaret", af: hent("ok_navn") || hent("ok_nr") || "admin", nr: hent("ok_nr"), dato: new Date().toISOString().slice(0, 10) };
       await gemPerson(pid, { tvivl: liste.filter(x => x !== t), tvivl_afklaret: [...(p.tvivl_afklaret || []), a] });
       visPanel(pid); genTegn();
+      if (window.InfoLog) InfoLog.spoerg({ art: "rettelse", hvad: `afklaret et spørgsmål om ${navnAf(p)} i stamtræet`, link: "person.html?pid=" + encodeURIComponent(pid) });
     } catch (e) { b.disabled = false; b.textContent = "Kunne ikke gemme – prøv igen"; }
   });
 }
@@ -644,6 +645,7 @@ $("r-gem").onclick = async () => {
     tegnTrae(top && P.has(top) ? [top] : stamPids);
     visPanel(panelPid);
     $("r-status-tekst").textContent = "";
+    if (window.InfoLog) InfoLog.spoerg({ art: nyt.foto ? "billede" : "rettelse", hvad: nyt.foto ? `tilføjet et billede af ${navnAf(p)}` : `opdateret oplysningerne om ${navnAf(p)}`, link: "person.html?pid=" + encodeURIComponent(panelPid) });
   } catch(e) {
     $("r-status-tekst").textContent = "Kunne ikke gemme: " + (e.message || e);
   }
@@ -751,6 +753,7 @@ try {
   $("status").textContent = "Kunne ikke hente data: " + (err.message || err);
 }
 </script>
+<script src="infolog.js"></script>
 <script src="forside-knap.js" defer></script>
 <script src="stort-billede.js" defer></script>
 </body>

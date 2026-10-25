@@ -11,7 +11,18 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .topbar h1 { font-size: 22px; font-weight: normal; }
 .topbar .user { display: flex; align-items: center; gap: 14px; font-style: italic; font-size: 15px; }
 .topbar .logout { color: #f5e6a8; text-decoration: none; padding: 5px 12px; border: 1px solid #f5e6a8; border-radius: 4px; font-size: 13px; font-style: normal; cursor: pointer; }
-.layout { display: grid; grid-template-columns: 260px 1fr 280px; gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto; }
+.layout { display: grid; grid-template-columns: 260px 1fr 280px 290px; gap: 20px; padding: 20px; max-width: 1760px; margin: 0 auto; }
+/* Infolog – ny kolonne til højre for navigationen */
+.infolog-boks { background: #fff; border-radius: 8px; border-left: 4px solid #c89e3c; box-shadow: 0 1px 3px rgba(0,0,0,0.06); padding: 12px 12px 8px; }
+.infolog-skriv { display: block; text-align: center; background: #2d5016; color: #fff; text-decoration: none; padding: 10px; border-radius: 6px; font-size: 15px; margin-bottom: 10px; }
+.infolog-skriv:hover { background: #3d6a1f; }
+.infolog-linje { display: flex; gap: 9px; align-items: flex-start; padding: 8px 6px; border-bottom: 1px solid #f0ead8; text-decoration: none; color: #2c3e1f; font-size: 14px; line-height: 1.3; border-radius: 4px; }
+.infolog-linje:hover { background: #faf3dc; }
+.infolog-linje:last-child { border-bottom: 0; }
+.il-emoji { font-size: 18px; line-height: 1.1; }
+.il-tid { display: block; font-size: 12px; color: #888; margin-top: 2px; }
+.infolog-tom { font-size: 13px; color: #888; padding: 8px 4px; font-style: italic; }
+@media (max-width: 1500px) { .layout { grid-template-columns: 260px 1fr 280px; max-width: 1400px; } .layout > aside.infolog-kol { grid-column: 3; } }
 .section-title { font-size: 12px; color: #888; letter-spacing: 1px; margin-bottom: 12px; padding-left: 4px; }
 .opslag { background: #fff; padding: 14px 16px; margin-bottom: 10px; border-radius: 6px; border-left: 4px solid #2d5016; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
 .opslag-emoji { font-size: 22px; margin-bottom: 4px; }
@@ -152,7 +163,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
   100% { transform: translateX(-100%); }
 }
  
-@media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
+@media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } .layout > aside.infolog-kol { grid-column: auto; } }
 </style>
 <script>
 try {
@@ -435,8 +446,18 @@ try {
     </div>
  
   </aside>
+
+  <aside class="infolog-kol">
+    <div class="section-title">INFOLOG – DET NYE PÅ SIDEN</div>
+    <div class="infolog-boks">
+      <a class="infolog-skriv" href="opslagstavlen.html#skriv">➕ Tilføj opslag</a>
+      <div id="infolog">Henter …</div>
+    </div>
+  </aside>
  
 </div>
+<script src="infolog.js"></script>
+<script>InfoLog.vis(document.getElementById("infolog"), 15); setInterval(() => InfoLog.vis(document.getElementById("infolog"), 15), 120000);</script>
  
 <!-- NYHEDSBAAND — fast i bunden af siden -->
 <div class="nyhedsbaand">

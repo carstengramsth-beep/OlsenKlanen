@@ -215,7 +215,7 @@ async function tegnGalleri(){
       }
     }
     return `
-      <div class="billede-kort">
+      <div class="billede-kort" id="b-${b.id}">
         <button type="button" class="slet-billede-knap" onclick="sletBillede('${b.id}','${b.storage_sti}')" title="Slet billede">🗑</button>
         <img src="${url}" onclick="visStort('${url}')" loading="lazy">
         <div class="billede-krop">
@@ -551,21 +551,21 @@ window.uploadBilleder = async function(){
   statusEl.textContent = "⏳ Lægger billeder op …";
   statusEl.style.display = "block";
 
-  let lagt = 0, fejl = 0;
+  let lagt = 0, fejl = 0, foersteNy = "";
   for (const v of valgteFiler) {
     if (v.fejl || !v.img) { fejl++; continue; }
     try {
       const data = await beskaerOgRoterTilBlob(v);
       const sti = `gamle_billeder/${Date.now()}_${v.fil.name.replace(/[^\w.\-]/g,"_")}`;
       await uploadBytes(ref(storage, sti), data);
-      await addDoc(collection(db, "gamle_billeder"), {
+      const nyB = await addDoc(collection(db, "gamle_billeder"), {
         storage_sti: sti,
         uploadet_af_nr: MIT_NR,
         uploadet_af_navn: MIT_NAVN,
         uploadet: serverTimestamp(),
         uploadet_lokal: Date.now()
       });
-      lagt++;
+      lagt++; if (!foersteNy) foersteNy = nyB.id;
     } catch(e) {
       console.log("Upload-fejl:", e);
       fejl++;
@@ -578,6 +578,8 @@ window.uploadBilleder = async function(){
   document.getElementById("forhaandsvisning").innerHTML = "";
   knap.disabled = false;
   await hentAlt();
+  // Spørg om det må stå i infologgen på forsiden
+  if (lagt && window.InfoLog) InfoLog.spoerg({ art: "billede", hvad: lagt === 1 ? "tilføjet et gammelt billede" : `tilføjet ${lagt} gamle billeder`, link: "gamle-billeder.html#b-" + foersteNy });
 };
 
 window.visStort = function(url){
@@ -591,6 +593,7 @@ window.lukLup = function(){
 hentAlt();
 </script>
 <script type="module" src="familieopkald.js"></script>
+<script src="infolog.js"></script>
 <script src="forside-knap.js" defer></script>
 </body>
 </html>
