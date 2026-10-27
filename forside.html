@@ -174,9 +174,10 @@ a.il-indhold:hover .il-tekst { text-decoration: underline; }
   right: 0;
   background: #FFD700;
   border-top: 2px solid #c8a800;
-  padding: 10px 16px;
+  padding: 12px 0;
+  overflow: hidden;
   z-index: 999;
-  text-align: center;
+  white-space: nowrap;
   cursor: pointer;
   text-decoration: none;
   display: block;
@@ -184,13 +185,18 @@ a.il-indhold:hover .il-tekst { text-decoration: underline; }
 .nyhedsbaand-tekst {
   display: inline-block;
   font-family: 'Segoe UI', Arial, sans-serif;
-  font-size: 20px;
+  font-size: 26px;
   font-weight: 600;
   color: #000;
   letter-spacing: 0.3px;
+  animation: baand 60s linear infinite;
 }
-.nyhedsbaand:hover .nyhedsbaand-tekst { text-decoration: underline; }
-@media (max-width: 700px) { .nyhedsbaand { padding: 8px 10px; } .nyhedsbaand-tekst { font-size: 15px; } }
+.nyhedsbaand:hover .nyhedsbaand-tekst { animation-play-state: paused; }
+@keyframes baand {
+  0%   { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+@media (max-width: 700px) { .nyhedsbaand-tekst { font-size: 20px; } }
  
 @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } .layout > aside:first-of-type, .layout > main, .layout > aside.infolog-kol, .layout > aside:nth-of-type(2) { grid-column: auto; grid-row: auto; } }
 </style>
@@ -496,9 +502,9 @@ try {
   if (nv === "admin" && ({ "8": "carsten", "19": "tommy", "22": "kurt", "23": "karin", "48": "sanne" })[hus] === fn) document.getElementById("ret-baand").style.display = "block"; } catch (e) {}
 InfoLog.vis(document.getElementById("infolog"), 15); setInterval(() => InfoLog.vis(document.getElementById("infolog"), 15), 120000);</script>
  
-<!-- NYHEDSBAAND — fast i bunden af siden. Står stille og viser det nye på siden -->
+<!-- NYHEDSBAAND — rulletekst fast i bunden af siden. Klik = gå til infologgen -->
 <a class="nyhedsbaand" href="#infolog" title="Gå til infologgen" onclick="document.getElementById('infolog').scrollIntoView({behavior:'smooth',block:'start'});return false;">
-  <span class="nyhedsbaand-tekst" id="baand-tekst">Henter det nye på siden …</span>
+  <span class="nyhedsbaand-tekst" id="baand-tekst">Henter det nye på siden, nyheder og vejr …</span>
 </a>
  
 <!-- FØDSELSDAGSHILSEN — vindue til at skrive en hilsen (åbnes fra "Fremhævede begivenheder") -->
@@ -1407,14 +1413,16 @@ function logUd() {
   window.location.href = "login.html";
 }
  
-// NYHEDSBAAND — står stille (ingen rulletekst). Viser en kort sammenfatning af det nye på siden:
-// fødselsdag, beskeder fra 5-Banden (baand.html) og dagens indlæg i infologgen.
-// (DR-nyheder og vejr er taget ud efter ønske fra Carsten 27. okt. 2026.)
+// NYHEDSBAAND — rulletekst i bunden af forsiden. Rækkefølge:
+// fødselsdag · beskeder fra 5-Banden (baand.html) · uddrag af det nye i infologgen · vejret · nyheder (DR, TV2, Politiken m.fl.)
+// Uddraget fra infologgen opdateres hvert 2. minut, så man kan se, hvor der sker noget.
+let nyheder = [];
+let vejr = "";
 
 // Beskeder i båndet skrives på siden baand.html (Administration → Det gule bånd).
 // De gemmes i olsenpost (type "baand") og vises fra "fra" til og med "til".
 const BAAND_BESKEDER = [];
-let INFOLOG_RESUME = "";
+let INFOLOG_UDDRAG = "";
 fetch("https://firestore.googleapis.com/v1/projects/olsenklanen-familieside/databases/(default)/documents:runQuery?key=AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU", {
   method: "POST", headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ structuredQuery: { from: [{ collectionId: "olsenpost" }], where: { fieldFilter: { field: { fieldPath: "type" }, op: "EQUAL", value: { stringValue: "baand" } } } } })
@@ -1424,42 +1432,124 @@ fetch("https://firestore.googleapis.com/v1/projects/olsenklanen-familieside/data
   window.byggBaand();
 }).catch(() => {});
 
-// "I dag (27-10): 8 nye indlæg i infologgen – 6 af Kurt og 2 af Carsten".
-// Er der intet i dag, vises den seneste dag med nyt.
-function infologResume(linjer) {
+// Uddrag af infologgen for den seneste dag med nyt, fx
+// "📣 NYT I INFOLOGGEN i dag (27-10) – 8 indlæg: Kurt har tilføjet Gudrun i stamtræet ▸ … ▸ og 3 mere – se infologgen"
+function infologUddrag(linjer) {
   const dag = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   const medDag = linjer.map(x => ({ x, d: new Date(x.tid) })).filter(o => !isNaN(o.d));
   if (!medDag.length) return "";
   const idag = dag(new Date()), seneste = dag(medDag[0].d);
-  const dagens = medDag.filter(o => dag(o.d) === seneste);
-  const antalPr = {};
-  dagens.forEach(o => { const n = (o.x.hvem_navn || "et medlem").trim().split(/\s+/)[0]; antalPr[n] = (antalPr[n] || 0) + 1; });
-  const navne = Object.entries(antalPr).sort((a, b) => b[1] - a[1]);
-  const hvem = navne.length === 1 ? "af " + navne[0][0]
-    : "– " + navne.map(([n, a]) => a + " af " + n).join(", ").replace(/, ([^,]*)$/, " og $1");
+  const dagens = medDag.filter(o => dag(o.d) === seneste).map(o => o.x);
   const dd = seneste.slice(8, 10) + "-" + seneste.slice(5, 7);
-  const n = dagens.length;
-  return (seneste === idag ? "📣 I dag (" + dd + "): " : "📣 Seneste nyt (" + dd + "): ")
-    + n + " " + (n === 1 ? "nyt indlæg" : "nye indlæg") + " i infologgen " + hvem;
+  const kort = s => { s = String(s || "").replace(/\s+/g, " ").trim(); return s.length > 90 ? s.slice(0, 87) + " …" : s; };
+  const VIS = 5;
+  const uddrag = dagens.slice(0, VIS).map(x => kort(x.tekst) + (x.art === "opslag" && x.indhold ? ": »" + kort(x.indhold) + "«" : ""));
+  if (dagens.length > VIS) uddrag.push("og " + (dagens.length - VIS) + " mere – se infologgen");
+  return "📣 NYT I INFOLOGGEN " + (seneste === idag ? "i dag" : "senest") + " (" + dd + ") – "
+    + dagens.length + " indlæg:  " + uddrag.join("  ▸  ");
 }
-function hentInfologResume() {
+function hentInfologUddrag() {
   if (!window.InfoLog || !InfoLog.hent) return;
-  InfoLog.hent().then(l => { INFOLOG_RESUME = infologResume(l); window.byggBaand(); }).catch(() => {});
+  InfoLog.hent().then(l => { const ny = infologUddrag(l); if (ny !== INFOLOG_UDDRAG) { INFOLOG_UDDRAG = ny; window.byggBaand(); } }).catch(() => {});
 }
-hentInfologResume();
-setInterval(hentInfologResume, 120000);
+hentInfologUddrag();
+setInterval(hentInfologUddrag, 120000);
 
 window.byggBaand = function byggBaand() {
-  const dele = [];
+  let tekst = "";
   // Fødselsdag FØRST — det er det festlige
-  if (window.OLSEN_FOEDSELSDAG) dele.push(window.OLSEN_FOEDSELSDAG);
+  if (window.OLSEN_FOEDSELSDAG) tekst += window.OLSEN_FOEDSELSDAG + "     ";
   const idag = new Date().toISOString().slice(0, 10);
-  BAAND_BESKEDER.filter(b => (!b.fra || b.fra <= idag) && idag <= b.til).forEach(b => dele.push(b.tekst));
-  if (INFOLOG_RESUME) dele.push(INFOLOG_RESUME);
-  if (dele.length) document.getElementById("baand-tekst").textContent = dele.join("   ·   ");
-  // Båndet står fast i bunden: giv siden plads nok under indholdet, så intet skjules bag det
-  requestAnimationFrame(() => { const b = document.querySelector(".nyhedsbaand"); if (b) document.body.style.paddingBottom = (b.offsetHeight + 12) + "px"; });
+  BAAND_BESKEDER.filter(b => (!b.fra || b.fra <= idag) && idag <= b.til).forEach(b => { tekst += b.tekst + "     "; });
+  if (INFOLOG_UDDRAG) tekst += INFOLOG_UDDRAG + "     ";
+  if (vejr) tekst += vejr + "     ";
+  nyheder.forEach(n => { tekst += "★  " + n + "     "; });
+  if (tekst) {
+    const el = document.getElementById("baand-tekst");
+    if (el.textContent === tekst) return; // samme tekst: lad båndet køre videre uden at starte forfra
+    el.textContent = tekst;
+    // Rolig, ens fart uanset hvor lang teksten er (ca. 90 punkter i sekundet)
+    setTimeout(() => { const s = Math.max(25, Math.round((el.scrollWidth + window.innerWidth) / 90)); el.style.animationDuration = s + "s"; }, 0);
+  }
 };
+
+fetch("https://api.open-meteo.com/v1/forecast?latitude=55.68&longitude=12.57&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FCopenhagen&forecast_days=1")
+  .then(r => r.json())
+  .then(data => {
+    const max = Math.round(data.daily.temperature_2m_max[0]);
+    const min = Math.round(data.daily.temperature_2m_min[0]);
+    vejr = "☀  Vejret i dag:  " + max + "° / " + min + "°";
+    window.byggBaand();
+  })
+  .catch(() => { vejr = ""; window.byggBaand(); });
+
+// NYHEDER FRA FLERE KILDER — DR, TV2, Politiken, Berlingske, Ekstra Bladet. Blander kilderne.
+const NYHEDS_KILDER = [
+  { navn: "DR",       url: "https://www.dr.dk/nyheder/service/feeds/senestenyt" },
+  { navn: "TV2",      url: "https://feeds.services.tv2.dk/api/feeds/nyheder/rss" },
+  { navn: "Politiken", url: "https://politiken.dk/rss/senestenyt.rss" },
+  { navn: "Berlingske", url: "https://www.berlingske.dk/content/rss" },
+  { navn: "Ekstra Bladet", url: "https://ekstrabladet.dk/rssfeed/all/" }
+];
+
+// Overskrifter fra et RSS-dokument (højst 4)
+function rssTitler(xmlTekst, kilde) {
+  const xml = new DOMParser().parseFromString(xmlTekst || "", "text/xml");
+  const ud = [];
+  xml.querySelectorAll("item").forEach(item => {
+    if (ud.length >= 4) return;
+    const t = (item.querySelector("title")?.textContent || "").trim();
+    if (t) ud.push({ kilde: kilde.navn, titel: t });
+  });
+  if (!ud.length) throw new Error("tom");
+  return ud;
+}
+// Hent ét feed → liste af {kilde, titel}. Prøver direkte først (fx TV2 tillader det),
+// derefter allorigins og til sidst rss2json.
+function hentEtFeed(kilde) {
+  const medTid = (p, ms) => Promise.race([p, new Promise((_, nej) => setTimeout(() => nej(new Error("tid")), ms))]);
+  return medTid(fetch(kilde.url).then(r => { if (!r.ok) throw new Error("http"); return r.text(); }), 8000)
+    .then(t => rssTitler(t, kilde))
+    .catch(() => medTid(fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(kilde.url)).then(r => r.json()), 10000)
+      .then(data => rssTitler(data.contents, kilde)))
+    .catch(() => medTid(fetch("https://api.rss2json.com/v1/api.json?count=5&rss_url=" + encodeURIComponent(kilde.url)).then(r => r.json()), 10000)
+      .then(data => (data && data.status === "ok" && data.items) ? data.items.slice(0, 4).map(it => ({ kilde: kilde.navn, titel: it.title })).filter(x => x.titel) : []))
+    .catch(() => []);
+}
+
+// Ligger der friske overskrifter i olsenpost/nyhedsbaand (højst 6 timer gamle), bruges de.
+// Ellers hentes de her i browseren. (Dokumentet kan fyldes af en GitHub-opgave – se
+// dokumentation/2026-10-27-baand-staar-stille.md. Den er ikke sat op endnu.)
+fetch("https://firestore.googleapis.com/v1/projects/olsenklanen-familieside/databases/(default)/documents/olsenpost/nyhedsbaand?key=AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU")
+  .then(r => r.json())
+  .then(d => {
+    const f = d.fields || {}, hentet = f.hentet ? f.hentet.stringValue : "";
+    const titler = ((f.titler && f.titler.arrayValue && f.titler.arrayValue.values) || []).map(v => v.stringValue).filter(Boolean);
+    if (!titler.length || !hentet || Date.now() - new Date(hentet) > 6 * 3600000) throw new Error("gammel");
+    nyheder = titler;
+    window.byggBaand();
+  })
+  .catch(hentNyhederIBrowseren);
+
+function hentNyhederIBrowseren() {
+Promise.all(NYHEDS_KILDER.map(hentEtFeed))
+  .then(resultater => {
+    // Flet sammen: tag skiftevis fra hver kilde, så de blandes pænt
+    let blandet = [];
+    const maxLaengde = Math.max(...resultater.map(r => r.length), 0);
+    for (let i = 0; i < maxLaengde; i++) {
+      resultater.forEach(kildeListe => {
+        if (kildeListe[i]) blandet.push(kildeListe[i]);
+      });
+    }
+    nyheder = blandet.length ? blandet.slice(0, 15).map(n => n.kilde + ": " + n.titel) : ["Velkommen til OlsenKlanen"];
+    window.byggBaand();
+  })
+  .catch(() => {
+    nyheder = ["Velkommen til OlsenKlanen"];
+    window.byggBaand();
+  });
+}
 </script>
  
  

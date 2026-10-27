@@ -11,4 +11,4 @@ Aftalt med Carsten 25. okt. 2026.
 - Forsiden henter beskederne selv. Den gamle faste liste `BAAND_BESKEDER` i `forside.html` er tom nu.
 - De to beskeder om Info nr. 5 (udgivet til 5. nov. og beklagelsen til 29. okt.) er flyttet over.
 
-Rettet 27. okt. 2026: båndet ruller ikke længere; DR-nyheder og vejr er taget ud. Se 2026-10-27-baand-staar-stille.md.
+Rettet 27. okt. 2026: uddrag fra infologgen kommer nu med i båndet, og Politiken er ny nyhedskilde. Se 2026-10-27-baand-staar-stille.md.

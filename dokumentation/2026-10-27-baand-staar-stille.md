@@ -1,14 +1,23 @@
-# Det gule bånd står stille og viser det nye på siden
+# Det gule bånd: rulletekst med uddrag fra infologgen + nyheder
 
-Ønsket af Carsten 27. okt. 2026.
+Ønsket af Carsten 27. okt. 2026. (Samme dag blev båndet først gjort stillestående. Carsten ville have liv igen, så det ruller nu igen.)
 
-- Båndet nederst på forsiden **ruller ikke længere**. Teksten står stille og kan fylde to linjer.
-- **DR-/TV2-nyheder og vejret er taget ud** af båndet.
-- Båndet viser nu, i denne rækkefølge, adskilt med »·«:
-  1. Fødselsdag (som før).
-  2. Beskeder fra 5-Banden (skrives på `baand.html`, som før).
-  3. **Sammenfatning af infologgen**, fx »📣 I dag (27-10): 8 nye indlæg i infologgen af Kurt«.
-     Flere personer: »– 6 af Kurt og 2 af Carsten«. Intet nyt i dag: »📣 Seneste nyt (25-10): …«.
-- Klik på båndet ruller ned til infologgen. Sammenfatningen opdateres hvert 2. minut.
-- Teknik: `infolog.js` har fået `InfoLog.hent()` (= de synlige linjer, nyeste først). Forsiden tæller linjerne pr. dag og pr. fornavn.
-- Siden får automatisk plads nok i bunden, så båndet ikke dækker indholdet. Mindre skrift på mobil.
+## Hvad står der i båndet (i denne rækkefølge)
+1. Fødselsdag.
+2. Beskeder fra 5-Banden (skrives på `baand.html`).
+3. **Uddrag fra infologgen** for den seneste dag med nyt, fx
+   »📣 NYT I INFOLOGGEN i dag (27-10) – 8 indlæg: Kurt har tilføjet Gudrun i stamtræet ▸ … ▸ og 3 mere – se infologgen«.
+   Højst 5 linjer; ved opslag kommer også et kort uddrag af teksten. Opdateres hvert 2. minut.
+4. Vejret (open-meteo).
+5. Nyheder: DR, TV2, Politiken, Berlingske, Ekstra Bladet (4 fra hver, blandet).
+
+Klik på båndet = gå til infologgen. Mus over båndet = det står stille, så man kan læse.
+
+## Nyhederne
+- Nyhederne hentes i browseren. TV2 tillader det direkte fra olsenklanen.dk. De andre går via gratis mellemtjenester (allorigins, rss2json), som er ustabile. Derfor kan det ske, at kun TV2 kommer med.
+- **Bedre løsning, ikke sat op endnu:** en GitHub-opgave, der hver halve time henter overskrifterne og gemmer dem i Firestore `olsenpost/nyhedsbaand` (`type: "nyhedsfeed"`, `titler`, `hentet`). Forsiden læser allerede dokumentet, hvis det er under 6 timer gammelt.
+  Opgaven blev afvist ved upload 27. okt.: Carstens adgangsnøgle på pc-1 mangler retten `workflow`. Kan lægges op fra GitHub i browseren eller med en nøgle med `workflow`-ret. Koden er testet (alle 5 kilder gav 4 overskrifter):
+  `.github/workflows/nyheder.yml` (cron `*/30 * * * *`, node 22, kører scriptet) og `.github/scripts/hent-nyheder.mjs` (henter RSS, blander, PATCH til dokumentet med web-API-nøglen).
+
+## Teknik
+- `infolog.js` har `InfoLog.hent()` (= de synlige linjer, nyeste først).
