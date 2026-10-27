@@ -12,3 +12,5 @@ Aftalt med Carsten 25. okt. 2026.
 - De to beskeder om Info nr. 5 (udgivet til 5. nov. og beklagelsen til 29. okt.) er flyttet over.
 
 Rettet 27. okt. 2026: uddrag fra infologgen kommer nu med i båndet, og Politiken er ny nyhedskilde. Se 2026-10-27-baand-staar-stille.md.
+
+27. okt. 2026: Beskeden »Ved en fejl er Info nr. 5 rundsendt 3 gange …« er stoppet i båndet (til = 26. okt.) og sat op som gul seddel på opslagstavlen i Carstens navn (opslagstavle/bl0N0mEs6dZ6qtsj7tvw) med linje i infologgen. Gjort af Claude Code efter aftale med Carsten (`indsat_af`).
