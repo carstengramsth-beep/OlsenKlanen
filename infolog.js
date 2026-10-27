@@ -199,5 +199,5 @@
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fremhaev); else fremhaev();
 
-  window.InfoLog = { log, spoerg, vis };
+  window.InfoLog = { log, spoerg, vis, hent: hentLinjer };
 })();

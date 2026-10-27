@@ -174,24 +174,23 @@ a.il-indhold:hover .il-tekst { text-decoration: underline; }
   right: 0;
   background: #FFD700;
   border-top: 2px solid #c8a800;
-  padding: 12px 0;
-  overflow: hidden;
+  padding: 10px 16px;
   z-index: 999;
-  white-space: nowrap;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
 }
 .nyhedsbaand-tekst {
   display: inline-block;
   font-family: 'Segoe UI', Arial, sans-serif;
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 600;
   color: #000;
   letter-spacing: 0.3px;
-  animation: baand 60s linear infinite;
 }
-@keyframes baand {
-  0%   { transform: translateX(100vw); }
-  100% { transform: translateX(-100%); }
-}
+.nyhedsbaand:hover .nyhedsbaand-tekst { text-decoration: underline; }
+@media (max-width: 700px) { .nyhedsbaand { padding: 8px 10px; } .nyhedsbaand-tekst { font-size: 15px; } }
  
 @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } .layout > aside:first-of-type, .layout > main, .layout > aside.infolog-kol, .layout > aside:nth-of-type(2) { grid-column: auto; grid-row: auto; } }
 </style>
@@ -497,10 +496,10 @@ try {
   if (nv === "admin" && ({ "8": "carsten", "19": "tommy", "22": "kurt", "23": "karin", "48": "sanne" })[hus] === fn) document.getElementById("ret-baand").style.display = "block"; } catch (e) {}
 InfoLog.vis(document.getElementById("infolog"), 15); setInterval(() => InfoLog.vis(document.getElementById("infolog"), 15), 120000);</script>
  
-<!-- NYHEDSBAAND — fast i bunden af siden -->
-<div class="nyhedsbaand">
-  <span class="nyhedsbaand-tekst" id="baand-tekst">Henter nyheder og vejr...</span>
-</div>
+<!-- NYHEDSBAAND — fast i bunden af siden. Står stille og viser det nye på siden -->
+<a class="nyhedsbaand" href="#infolog" title="Gå til infologgen" onclick="document.getElementById('infolog').scrollIntoView({behavior:'smooth',block:'start'});return false;">
+  <span class="nyhedsbaand-tekst" id="baand-tekst">Henter det nye på siden …</span>
+</a>
  
 <!-- FØDSELSDAGSHILSEN — vindue til at skrive en hilsen (åbnes fra "Fremhævede begivenheder") -->
 <!-- FØDSELSDAGSKORT — åbnes ved klik på ⭐ ved fødselaren. Kan gemmes som PDF / printes på A4 -->
@@ -1408,13 +1407,14 @@ function logUd() {
   window.location.href = "login.html";
 }
  
-// NYHEDSBAAND — Fødselsdag + DR + Vejr
-let nyheder = [];
-let vejr = "";
- 
+// NYHEDSBAAND — står stille (ingen rulletekst). Viser en kort sammenfatning af det nye på siden:
+// fødselsdag, beskeder fra 5-Banden (baand.html) og dagens indlæg i infologgen.
+// (DR-nyheder og vejr er taget ud efter ønske fra Carsten 27. okt. 2026.)
+
 // Beskeder i båndet skrives på siden baand.html (Administration → Det gule bånd).
 // De gemmes i olsenpost (type "baand") og vises fra "fra" til og med "til".
 const BAAND_BESKEDER = [];
+let INFOLOG_RESUME = "";
 fetch("https://firestore.googleapis.com/v1/projects/olsenklanen-familieside/databases/(default)/documents:runQuery?key=AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU", {
   method: "POST", headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ structuredQuery: { from: [{ collectionId: "olsenpost" }], where: { fieldFilter: { field: { fieldPath: "type" }, op: "EQUAL", value: { stringValue: "baand" } } } } })
@@ -1423,95 +1423,43 @@ fetch("https://firestore.googleapis.com/v1/projects/olsenklanen-familieside/data
    .filter(b => !b.slettet && b.tekst).sort((a, b) => String(a.fra).localeCompare(String(b.fra))).forEach(b => BAAND_BESKEDER.push(b));
   window.byggBaand();
 }).catch(() => {});
-window.byggBaand = function byggBaand() {
-  let tekst = "";
-  // Fødselsdag FØRST — det er det festlige
-  if (window.OLSEN_FOEDSELSDAG) tekst += window.OLSEN_FOEDSELSDAG + "     ";
-  const idag = new Date().toISOString().slice(0, 10);
-  BAAND_BESKEDER.filter(b => (!b.fra || b.fra <= idag) && idag <= b.til).forEach(b => { tekst += b.tekst + "     "; });
-  if (vejr) tekst += vejr + "     ";
-  nyheder.forEach(n => { tekst += "★  " + n + "     "; });
-  if (tekst) {
-    const el = document.getElementById("baand-tekst");
-    el.textContent = tekst;
-    // Rolig, ens fart uanset hvor lang teksten er (ca. 90 punkter i sekundet)
-    requestAnimationFrame(() => { const s = Math.max(25, Math.round((el.scrollWidth + window.innerWidth) / 90)); el.style.animationDuration = s + "s"; });
-  }
-};
- 
-fetch("https://api.open-meteo.com/v1/forecast?latitude=55.68&longitude=12.57&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FCopenhagen&forecast_days=1")
-  .then(r => r.json())
-  .then(data => {
-    const max = Math.round(data.daily.temperature_2m_max[0]);
-    const min = Math.round(data.daily.temperature_2m_min[0]);
-    vejr = "☀  Vejret i dag:  " + max + "° / " + min + "°";
-    window.byggBaand();
-  })
-  .catch(() => { vejr = ""; window.byggBaand(); });
- 
-// NYHEDER FRA FLERE KILDER — DR, TV2, Berlingske, Ekstra Bladet
-// Henter via rss2json med allorigins som reserve. Blander kilderne.
-const NYHEDS_KILDER = [
-  { navn: "DR",       url: "https://www.dr.dk/nyheder/service/feeds/senestenyt" },
-  { navn: "TV2",      url: "https://feeds.services.tv2.dk/api/feeds/nyheder/rss" },
-  { navn: "Berlingske", url: "https://www.berlingske.dk/content/rss" },
-  { navn: "Ekstra Bladet", url: "https://ekstrabladet.dk/rssfeed/all/" }
-];
- 
-// Hent ét feed → returnér liste af {kilde, titel}
-// allorigins bruges primært (ingen stram grænse); rss2json som reserve.
-function hentEtFeed(kilde) {
-  return fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(kilde.url))
-    .then(r => r.json())
-    .then(data => {
-      const xml = new DOMParser().parseFromString(data.contents, "text/xml");
-      const items = xml.querySelectorAll("item");
-      let ud = [], c = 0;
-      items.forEach(item => {
-        if (c >= 4) return;
-        const t = item.querySelector("title")?.textContent || "";
-        if (t) { ud.push({ kilde: kilde.navn, titel: t }); c++; }
-      });
-      if (ud.length) return ud;
-      throw new Error("tom");
-    })
-    .catch(() => {
-      // Reserve: rss2json
-      const via2 = "https://api.rss2json.com/v1/api.json?count=5&rss_url=" + encodeURIComponent(kilde.url);
-      return fetch(via2)
-        .then(r => r.json())
-        .then(data => {
-          if (data && data.status === "ok" && data.items && data.items.length) {
-            return data.items.slice(0, 4).map(it => ({ kilde: kilde.navn, titel: it.title })).filter(x => x.titel);
-          }
-          return [];
-        })
-        .catch(() => []);
-    });
+
+// "I dag (27-10): 8 nye indlæg i infologgen – 6 af Kurt og 2 af Carsten".
+// Er der intet i dag, vises den seneste dag med nyt.
+function infologResume(linjer) {
+  const dag = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const medDag = linjer.map(x => ({ x, d: new Date(x.tid) })).filter(o => !isNaN(o.d));
+  if (!medDag.length) return "";
+  const idag = dag(new Date()), seneste = dag(medDag[0].d);
+  const dagens = medDag.filter(o => dag(o.d) === seneste);
+  const antalPr = {};
+  dagens.forEach(o => { const n = (o.x.hvem_navn || "et medlem").trim().split(/\s+/)[0]; antalPr[n] = (antalPr[n] || 0) + 1; });
+  const navne = Object.entries(antalPr).sort((a, b) => b[1] - a[1]);
+  const hvem = navne.length === 1 ? "af " + navne[0][0]
+    : "– " + navne.map(([n, a]) => a + " af " + n).join(", ").replace(/, ([^,]*)$/, " og $1");
+  const dd = seneste.slice(8, 10) + "-" + seneste.slice(5, 7);
+  const n = dagens.length;
+  return (seneste === idag ? "📣 I dag (" + dd + "): " : "📣 Seneste nyt (" + dd + "): ")
+    + n + " " + (n === 1 ? "nyt indlæg" : "nye indlæg") + " i infologgen " + hvem;
 }
- 
-// Hent alle kilder parallelt, bland resultaterne
-Promise.all(NYHEDS_KILDER.map(hentEtFeed))
-  .then(resultater => {
-    // Flet sammen: tag skiftevis fra hver kilde, så de blandes pænt
-    let blandet = [];
-    const maxLaengde = Math.max(...resultater.map(r => r.length), 0);
-    for (let i = 0; i < maxLaengde; i++) {
-      resultater.forEach(kildeListe => {
-        if (kildeListe[i]) blandet.push(kildeListe[i]);
-      });
-    }
-    if (blandet.length) {
-      nyheder = blandet.slice(0, 12).map(n => n.kilde + ": " + n.titel);
-    } else {
-      nyheder = ["Velkommen til OlsenKlanen"];
-    }
-    window.byggBaand();
-  })
-  .catch(() => {
-    nyheder = ["Velkommen til OlsenKlanen"];
-    window.byggBaand();
-  });
+function hentInfologResume() {
+  if (!window.InfoLog || !InfoLog.hent) return;
+  InfoLog.hent().then(l => { INFOLOG_RESUME = infologResume(l); window.byggBaand(); }).catch(() => {});
+}
+hentInfologResume();
+setInterval(hentInfologResume, 120000);
+
+window.byggBaand = function byggBaand() {
+  const dele = [];
+  // Fødselsdag FØRST — det er det festlige
+  if (window.OLSEN_FOEDSELSDAG) dele.push(window.OLSEN_FOEDSELSDAG);
+  const idag = new Date().toISOString().slice(0, 10);
+  BAAND_BESKEDER.filter(b => (!b.fra || b.fra <= idag) && idag <= b.til).forEach(b => dele.push(b.tekst));
+  if (INFOLOG_RESUME) dele.push(INFOLOG_RESUME);
+  if (dele.length) document.getElementById("baand-tekst").textContent = dele.join("   ·   ");
+  // Båndet står fast i bunden: giv siden plads nok under indholdet, så intet skjules bag det
+  requestAnimationFrame(() => { const b = document.querySelector(".nyhedsbaand"); if (b) document.body.style.paddingBottom = (b.offsetHeight + 12) + "px"; });
+};
 </script>
  
  

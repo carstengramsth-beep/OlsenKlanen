@@ -10,3 +10,5 @@ Aftalt med Carsten 25. okt. 2026.
 - Data: `olsenpost`, `type: "baand"`, felter `tekst, fra, til, oprettet_af, oprettet, rettet_af, rettet, slettet`.
 - Forsiden henter beskederne selv. Den gamle faste liste `BAAND_BESKEDER` i `forside.html` er tom nu.
 - De to beskeder om Info nr. 5 (udgivet til 5. nov. og beklagelsen til 29. okt.) er flyttet over.
+
+Rettet 27. okt. 2026: båndet ruller ikke længere; DR-nyheder og vejr er taget ud. Se 2026-10-27-baand-staar-stille.md.
