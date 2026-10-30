@@ -11,9 +11,17 @@
 - Ny linje på `kort.html` under "Vælg et kort": man kan bestille et specialkort via post@olsenklanen.dk.
 - Næste ledige motiv-nummer: **18**.
 
+## Hvad kan et specialkort være?
+
+- En særlig hilsen, fx til Halloween, jul eller påske.
+- En **invitation** til et særligt arrangement, fx barnedåb, bryllup, konfirmation eller rund fødselsdag.
+  Kortet sendes til familien gennem Post-Olsen, ligesom de andre kort.
+- Idé til senere: tilmelding direkte fra invitationen (ja/nej og antal personer).
+
 ## Procedure: Sådan laves et specialkort
 
 1. **Bestilling:** Et medlem skriver til Carsten (post@olsenklanen.dk) med anledning, billeder og evt. ønske til hilsen.
+   Ved en invitation: dato, tid, sted, svarfrist og hvem der skal inviteres.
    Billeder kan også sendes via `send-kunst.html`.
 2. **Tjek:** Carsten bekræfter anledning og billeder med bestilleren. Er der børn på billederne,
    skal forældrene have sagt ja til, at billedet bruges.
