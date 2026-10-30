@@ -100,6 +100,7 @@ try {
       <div id="kort-valg"></div>
       <p class="hint">Hvert motiv har et fast nummer (Nr.), så det er nemt at tale om et bestemt kort. Nummeret står også på kortet.</p>
       <p class="hint" style="margin-top:8px;"><a href="send-kunst.html" style="color:#2d5016; font-weight:bold;">🎨 Har du selv en tegning eller et maleri? Send det her</a> — måske bliver det til et postkort.</p>
+      <p class="hint" style="margin-top:6px;">✨ <b>Bliver du inspireret?</b> Ønsker du et specialkort til en særlig dag, fx med dine egne billeder? Skriv til Carsten på <b>post@olsenklanen.dk</b>. Så laver vi det sammen, og det kommer under "Specialkort".</p>
     </div>
     <div class="trin">
       <h2>2. Skriv din hilsen</h2>
@@ -202,8 +203,10 @@ const KORT = [
   { nr: 15, gruppe: "saerlige", fil: "billeder/kort/samlekort.jpg", titel: "Alle vores kort", maler: "Olsenklanens kunstnere", art: "Samlekort" },
   { nr: 16, gruppe: "saerlige", fil: "billeder/kort/halloween-esther-luna.jpg", titel: "Halloween", maler: "Esther, Luna og familien", art: "Tegning og foto",
     forslag: { besked: "Buh.. Bøh! 👻\n\nGræskarret griner, edderkoppen hænger klar, og flagermusen er på vej – og se lige de to uhyggelige sygeplejersker!\n\nVi ønsker jer en rigtig sjov og uhyggelig Halloween.\n\nTak til Esther for den flotte tegning – og til Luna og Esther for det flotte billede.", slut: "Pas nu på derude – og med uhyggelig hilsen", skrift: 7 } },
-  // forslag: { besked, slut, skrift } = færdig hilsen (og skrifttype nr.), der sættes ind, når kortet vælges (kan rettes)
-  // Næste motiv får nr. 17 — børnetegninger: gruppe "boern", art "Tegning"; medlemmernes egne værker: gruppe "voksne".
+  { nr: 17, gruppe: "saerlige", fil: "billeder/kort/halloween-esther-luna.jpg", titel: "Halloween – fra Elisabeth & Carsten", maler: "Esther, Luna og familien", art: "Tegning og foto",
+    forslag: { til: "Kære Olsenklanen", besked: "Bøh! 👻\n\nNu lyser græskarrene 🎃, og flagermusene flyver 🦇. Vi sender en uhyggelig, men kærlig hilsen til jer alle.\n\nEn særlig tak til Esther, som har tegnet årets flotte Halloween-græskar. Og tak til Esther og Luna for det flotte, bloddryppende billede.* 🩸\n\nPas godt på hinanden, og pas på edderkopperne! 🕷️🕸️\n\n*Undskyld, hvis det giver kuldegysninger.", slut: "Med uhyggelig hilsen", fra: "Elisabeth & Carsten", skrift: 0 } },
+  // forslag: { til?, besked, slut, fra?, skrift } = færdig hilsen (og skrifttype nr.), der sættes ind, når kortet vælges (kan rettes)
+  // Næste motiv får nr. 18 — børnetegninger: gruppe "boern", art "Tegning"; medlemmernes egne værker: gruppe "voksne".
 ];
 // Temaer — rækkefølgen er rækkefølgen på siden. Flere temaer: skriv dem i kort-temaer.js.
 // Et motiv uden tema (eller med et tema, der ikke står her) kommer under "Uden tema".
@@ -218,7 +221,7 @@ const GRUPPER = [
   { id: "boern",    titel: "Børnetegninger", vis_tom: true,
     tom: "Her kommer børnenes tegninger — kunstnerens navn står under hver tegning. Den første er på vej!" },
   { id: "voksne",   titel: "Medlemmernes egne værker" },
-  { id: "saerlige", titel: "Særlige kort" }
+  { id: "saerlige", titel: "Specialkort" }
 ];
 
 // Skrifttyper — f = størrelsesfaktor, så de ser nogenlunde lige store ud (1 = 14 pkt)
@@ -279,7 +282,7 @@ let sidsteForslag = "";
 $("kort-valg").querySelectorAll("button").forEach(b => b.onclick = () => {
   valgt = +b.dataset.i; const k = KORT[valgt];
   const nu = $("besked").value.trim();
-  if (k.forslag && (!nu || nu === sidsteForslag)) { $("besked").value = k.forslag.besked; if (k.forslag.slut) $("slut").value = k.forslag.slut; if (k.forslag.skrift != null && $("skrift").options[k.forslag.skrift]) $("skrift").value = String(k.forslag.skrift); sidsteForslag = k.forslag.besked; }
+  if (k.forslag && (!nu || nu === sidsteForslag)) { $("besked").value = k.forslag.besked; if (k.forslag.til) $("til").value = k.forslag.til; if (k.forslag.fra) $("fra").value = k.forslag.fra; if (k.forslag.slut) $("slut").value = k.forslag.slut; if (k.forslag.skrift != null && $("skrift").options[k.forslag.skrift]) $("skrift").value = String(k.forslag.skrift); sidsteForslag = k.forslag.besked; }
   else if (!k.forslag && nu && nu === sidsteForslag) { $("besked").value = ""; $("slut").value = "Kærlig hilsen"; sidsteForslag = ""; }
   opdater();
 });
