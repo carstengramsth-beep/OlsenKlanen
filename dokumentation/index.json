@@ -1,5 +1,11 @@
 [
   {
+    "fil": "2026-11-03-login-mobil-og-api-noegle.md",
+    "dato": "2026-11-03",
+    "titel": "Login på mobil rettet (sangteksten skjulte login-feltet) + kontrol af Google API-nøglen",
+    "af": "Claude Code"
+  },
+  {
     "fil": "2026-10-30-specialkort-procedure.md",
     "dato": "2026-10-30",
     "titel": "Specialkort: nyt kort nr. 17 (Halloween fra Elisabeth & Carsten) og fast procedure for bestilling",
