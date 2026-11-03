@@ -30,6 +30,64 @@ const POSTANSVARLIGE = ["8-B", "19-A", "22-B", "23-B", "48-B"];
  * almindeligt medlem (ikke kun de 5 postansvarlige) sende én-til-én mail
  * til et andet medlem via OlsenPost.
  */
+// ── PIN-kontrol på serveren (sikkerhed, nov. 2026) ─────────────────────────
+// Login tjekker PIN her i stedet for i browseren. For mange forkerte forsøg
+// på samme husstand spærrer en kort tid (beskytter mod gætteri).
+// pin_forsoeg/{hus} er ikke nævnt i Firestore-reglerne og er derfor lukket for alle
+// andre end serveren.
+const MAKS_FORSOEG = 10;
+const SPAERRE_MS = 15 * 60 * 1000;
+
+async function erSpaerret(hus) {
+  const s = await getFirestore().doc("pin_forsoeg/" + hus).get();
+  if (!s.exists) return false;
+  const f = s.data();
+  return (f.antal || 0) >= MAKS_FORSOEG && Date.now() - (f.foerste || 0) < SPAERRE_MS;
+}
+
+async function noterForkert(hus) {
+  const ref = getFirestore().doc("pin_forsoeg/" + hus);
+  const s = await ref.get();
+  const f = s.exists ? s.data() : null;
+  const nu = Date.now();
+  if (!f || nu - (f.foerste || 0) >= SPAERRE_MS) {
+    await ref.set({ antal: 1, foerste: nu });
+  } else {
+    await ref.set({ antal: (f.antal || 0) + 1, foerste: f.foerste });
+  }
+}
+
+async function nulstilForsoeg(hus) {
+  await getFirestore().doc("pin_forsoeg/" + hus).delete().catch(() => {});
+}
+
+/**
+ * tjekPin — bruges af login.html.
+ * Svarer { ok: true } eller { ok: false, grund: "ukendt" | "ingen_pin" | "forkert" | "spaerret" }.
+ * Sender aldrig PIN-koden tilbage.
+ */
+exports.tjekPin = onCall(async (request) => {
+  const nrRaa = String(request.data && request.data.nr || "").trim().toUpperCase();
+  const pin = String(request.data && request.data.pin || "").trim();
+  const m = nrRaa.match(/^(\d+)\s*[-\s]?\s*([A-ZÆØÅ]|\d+)?$/);
+  if (!m || !pin) return { ok: false, grund: "forkert" };
+  const hus = m[1];
+
+  if (await erSpaerret(hus)) return { ok: false, grund: "spaerret" };
+
+  const snap = await getFirestore().doc("membres/" + hus).get();
+  if (!snap.exists) return { ok: false, grund: "ukendt" };
+  const rigtigKode = String(snap.data().kode || "").trim();
+  if (!rigtigKode) return { ok: false, grund: "ingen_pin" };
+
+  if (rigtigKode !== pin) {
+    await noterForkert(hus);
+    return { ok: false, grund: "forkert" };
+  }
+  await nulstilForsoeg(hus);
+  return { ok: true };
+});
+
 exports.logInPostansvarlig = onCall(async (request) => {
   const nrRaa = String(request.data && request.data.nr || "").trim().toUpperCase();
   const pin = String(request.data && request.data.pin || "").trim();
@@ -42,6 +100,10 @@ exports.logInPostansvarlig = onCall(async (request) => {
   const del = (m[2] || "").trim();
   const fuldtNr = del ? `${hus}-${del}` : hus;
 
+  if (await erSpaerret(hus)) {
+    throw new HttpsError("resource-exhausted", "For mange forkerte forsøg. Prøv igen om 15 minutter.");
+  }
+
   const snap = await getFirestore().doc("membres/" + hus).get();
   if (!snap.exists) {
     throw new HttpsError("not-found", "Medlemsnummer ikke fundet.");
@@ -49,8 +111,10 @@ exports.logInPostansvarlig = onCall(async (request) => {
   const husstand = snap.data();
   const rigtigKode = String(husstand.kode || "").trim();
   if (!rigtigKode || rigtigKode !== pin) {
+    if (rigtigKode) await noterForkert(hus);
     throw new HttpsError("permission-denied", "Forkert PIN-kode.");
   }
+  await nulstilForsoeg(hus);
 
   const erPostansvarlig = POSTANSVARLIGE.includes(fuldtNr);
   const erBekraeftet = !!husstand.medlemskab_bekraeftet;

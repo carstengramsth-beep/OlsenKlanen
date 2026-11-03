@@ -1,5 +1,11 @@
 [
   {
+    "fil": "2026-11-03-pin-paa-serveren.md",
+    "dato": "2026-11-03",
+    "titel": "Sikkerhed: PIN tjekkes på serveren + spærring efter 10 forkerte forsøg (domænet ligger på GitHub Pages!)",
+    "af": "Claude Code"
+  },
+  {
     "fil": "2026-11-03-login-mobil-og-api-noegle.md",
     "dato": "2026-11-03",
     "titel": "Login på mobil rettet (sangteksten skjulte login-feltet) + kontrol af Google API-nøglen",
