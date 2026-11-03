@@ -269,6 +269,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, doc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getStorage, ref, listAll, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+  import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
  
   const firebaseConfig = {
     apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
@@ -281,6 +282,25 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const storage = getStorage(app);
+  const funcs = getFunctions(app, "europe-west1");
+
+  // PIN tjekkes på serveren (tjekPin). Kan serveren ikke nås (teknisk fejl),
+  // bruges den gamle kontrol i browseren, så login aldrig går i stå.
+  // Svar: "ok" | "ingen_pin" | "forkert" | "spaerret"
+  async function kontrollerPin(nrRaa, kode, d) {
+    try {
+      const svar = await httpsCallable(funcs, "tjekPin")({ nr: nrRaa, pin: kode });
+      const r = svar && svar.data;
+      if (r && r.ok === true) return "ok";
+      if (r && ["ingen_pin", "forkert", "spaerret"].includes(r.grund)) return r.grund;
+      if (r && r.grund === "ukendt") return "forkert";
+    } catch (e) {
+      console.warn("PIN-tjek på serveren fejlede – bruger reserve", e);
+    }
+    const rigtig = String(d.kode || "").trim();
+    if (!rigtig) return "ingen_pin";
+    return kode === rigtig ? "ok" : "forkert";
+  }
  
   // ---- VEDLIGEHOLDELSES-SKILT (styres af filen vedligehold.json) ----
   // Er "aktiv": true i vedligehold.json, vises en kort besked og login lukkes.
@@ -559,16 +579,23 @@
       }
  
       const d = snap.data();
-      const rigtigKode = String(d.kode || "").trim();
+      const pinSvar = await kontrollerPin(nrRaa, kode, d);
  
-      if (!rigtigKode) {
+      if (pinSvar === "ingen_pin") {
         besked.textContent = "Der er endnu ikke sat en PIN-kode på dette nummer. Spørg OlsenBanden.";
         besked.className = "besked";
         knap.disabled = false;
         return;
       }
  
-      if (kode !== rigtigKode) {
+      if (pinSvar === "spaerret") {
+        besked.textContent = "For mange forkerte forsøg. Vent 15 minutter, og prøv igen.";
+        besked.className = "besked";
+        knap.disabled = false;
+        return;
+      }
+ 
+      if (pinSvar !== "ok") {
         besked.textContent = "Forkert PIN-kode.";
         besked.className = "besked";
         knap.disabled = false;
