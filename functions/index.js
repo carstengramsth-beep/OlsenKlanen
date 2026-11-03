@@ -66,9 +66,12 @@ async function nulstilForsoeg(hus) {
  * Svarer { ok: true } eller { ok: false, grund: "ukendt" | "ingen_pin" | "forkert" | "spaerret" }.
  * Sender aldrig PIN-koden tilbage.
  */
-exports.tjekPin = onCall(async (request) => {
-  const nrRaa = String(request.data && request.data.nr || "").trim().toUpperCase();
-  const pin = String(request.data && request.data.pin || "").trim();
+// Selve kontrollen. Bruges af tjekPin og af logInPostansvarlig({ kunTjek: true }).
+// (tjekPin kunne ikke gøres offentlig af GitHub-deployet, så login.html kalder
+//  logInPostansvarlig med kunTjek: true, som allerede er offentlig.)
+async function pinTjek(data) {
+  const nrRaa = String(data && data.nr || "").trim().toUpperCase();
+  const pin = String(data && data.pin || "").trim();
   const m = nrRaa.match(/^(\d+)\s*[-\s]?\s*([A-ZÆØÅ]|\d+)?$/);
   if (!m || !pin) return { ok: false, grund: "forkert" };
   const hus = m[1];
@@ -86,9 +89,14 @@ exports.tjekPin = onCall(async (request) => {
   }
   await nulstilForsoeg(hus);
   return { ok: true };
-});
+}
+
+exports.tjekPin = onCall(async (request) => pinTjek(request.data));
 
 exports.logInPostansvarlig = onCall(async (request) => {
+  // Kun PIN-kontrol til login.html: intet token, intet kort.
+  if (request.data && request.data.kunTjek === true) return pinTjek(request.data);
+
   const nrRaa = String(request.data && request.data.nr || "").trim().toUpperCase();
   const pin = String(request.data && request.data.pin || "").trim();
 
