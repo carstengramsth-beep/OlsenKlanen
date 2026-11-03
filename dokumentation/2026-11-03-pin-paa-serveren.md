@@ -3,7 +3,8 @@
 3. nov. 2026, godkendt af Carsten.
 
 ## Lavet nu
-- Ny Cloud Function `tjekPin` (functions/index.js). login.html tjekker PIN her i stedet for i browseren.
+- PIN-kontrollen ligger i `pinTjek` (functions/index.js). login.html kalder `logInPostansvarlig({ kunTjek: true })`,
+  fordi den nye funktion `tjekPin` ikke kunne gøres offentlig fra GitHub-deployet (manglende IAM-ret).
 - Efter 10 forkerte forsøg på samme husstand spærres i 15 minutter (gemmes i `pin_forsoeg`,
   som Firestore-reglerne ikke nævner, og som derfor er lukket for alle andre end serveren).
   Samme spærring gælder `logInPostansvarlig` (OlsenPost og postkort).

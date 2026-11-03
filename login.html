@@ -284,12 +284,12 @@
   const storage = getStorage(app);
   const funcs = getFunctions(app, "europe-west1");
 
-  // PIN tjekkes på serveren (tjekPin). Kan serveren ikke nås (teknisk fejl),
+  // PIN tjekkes på serveren (logInPostansvarlig med kunTjek). Kan serveren ikke nås (teknisk fejl),
   // bruges den gamle kontrol i browseren, så login aldrig går i stå.
   // Svar: "ok" | "ingen_pin" | "forkert" | "spaerret"
   async function kontrollerPin(nrRaa, kode, d) {
     try {
-      const svar = await httpsCallable(funcs, "tjekPin")({ nr: nrRaa, pin: kode });
+      const svar = await httpsCallable(funcs, "logInPostansvarlig")({ nr: nrRaa, pin: kode, kunTjek: true });
       const r = svar && svar.data;
       if (r && r.ok === true) return "ok";
       if (r && ["ingen_pin", "forkert", "spaerret"].includes(r.grund)) return r.grund;
