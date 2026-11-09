@@ -1,52 +1,61 @@
 [
-  {
-    "nr": 1,
-    "id": "velkomstbrev",
-    "titel": "Velkommen til OlsenKlanen – familiens egen hjemmeside (velkomstbrevet)",
-    "dato": "2026-06-14",
-    "gruppe": "Velkomst og vejledninger",
-    "note": "Sendt som PDF med personlige mails til husstandene fra 14. juni 2026 (opdateret 27. juni). Adressen er her rettet til www.olsenklanen.dk.",
-    "rids": "Velkommen til familiens hjemmeside: sådan logger du ind med medlemsnummer og PIN-kode, og sådan lægger du OlsenKlanen som et ikon på skærmen.",
-    "sendt_foer": "2026-06-14"
-  },
-  {
-    "nr": 2,
-    "id": "postkort",
-    "titel": "Et kort fra OlsenKlanen – nu kan alle sende Olsenpostkort",
-    "dato": "2026-10-07",
-    "gruppe": "Nyt fra OlsenKlanen",
-    "note": "Oprindeligt sendt som brevkort til 41 medlemmer.",
-    "rids": "Nu kan alle medlemmer sende Olsenpostkort til hinanden – kræver, at jeres medlemsdata er opdaterede og godkendt.",
-    "sendt_foer": "2026-10-07"
-  },
-  {
-    "nr": 3,
-    "id": "opfordring-data",
-    "titel": "Et kort med opfordring – bekræft jeres medlemsdata",
-    "dato": "2026-10-11",
-    "gruppe": "Opfordringer",
-    "note": "Oprindeligt sendt som brevkort til 43 medlemmer.",
-    "rids": "Opfordring: bekræft jeres medlemsdata på olsenklanen.dk, og skriv mail og telefonnummer ind.",
-    "sendt_foer": "2026-10-11"
-  },
-  {
-    "nr": 4,
-    "id": "maerkedage",
-    "titel": "Se familiens mærkedage mange år frem – og hjælp med at gøre listen komplet",
-    "dato": "2026-10-13",
-    "gruppe": "Velkomst og vejledninger",
-    "note": "Sendt til 45 medlemmer (med emnet »Info nr. 1«, før nummereringen blev lavet om).",
-    "rids": "Se familiens mærkedage mange år frem (runde fødselsdage, bryllupsdage, konfirmationer m.m.) – og hjælp med at gøre listen komplet i Medlemskartoteket.",
-    "sendt_foer": "2026-10-13"
-  },
-  {
-    "nr": 5,
-    "id": "familietrae",
-    "titel": "Familietræet er ved at blive bygget – hjælp os med at gøre det færdigt",
-    "dato": "2026-10-22",
-    "gruppe": "Nyt fra OlsenKlanen",
-    "rids": "Familietræet på olsenklanen.dk vokser (50 personer i dag – over 100 når det er færdigt). Sådan finder du Stamtræ i navigationen, og sådan hjælper du med data og billeder.",
-    "klar": true,
-    "beklagelse": "Ved en fejl blev Info nr. 5 rundsendt 3 gange – OlsenPost beklager ulejligheden."
-  }
+ {
+  "nr": 1,
+  "id": "velkomstbrev",
+  "titel": "Velkommen til OlsenKlanen – familiens egen hjemmeside (velkomstbrevet)",
+  "dato": "2026-06-14",
+  "gruppe": "Velkomst og vejledninger",
+  "note": "Sendt som PDF med personlige mails til husstandene fra 14. juni 2026 (opdateret 27. juni). Adressen er her rettet til www.olsenklanen.dk.",
+  "rids": "Velkommen til familiens hjemmeside: sådan logger du ind med medlemsnummer og PIN-kode, og sådan lægger du OlsenKlanen som et ikon på skærmen.",
+  "sendt_foer": "2026-06-14"
+ },
+ {
+  "nr": 2,
+  "id": "postkort",
+  "titel": "Et kort fra OlsenKlanen – nu kan alle sende Olsenpostkort",
+  "dato": "2026-10-07",
+  "gruppe": "Nyt fra OlsenKlanen",
+  "note": "Oprindeligt sendt som brevkort til 41 medlemmer.",
+  "rids": "Nu kan alle medlemmer sende Olsenpostkort til hinanden – kræver, at jeres medlemsdata er opdaterede og godkendt.",
+  "sendt_foer": "2026-10-07"
+ },
+ {
+  "nr": 3,
+  "id": "opfordring-data",
+  "titel": "Et kort med opfordring – bekræft jeres medlemsdata",
+  "dato": "2026-10-11",
+  "gruppe": "Opfordringer",
+  "note": "Oprindeligt sendt som brevkort til 43 medlemmer.",
+  "rids": "Opfordring: bekræft jeres medlemsdata på olsenklanen.dk, og skriv mail og telefonnummer ind.",
+  "sendt_foer": "2026-10-11"
+ },
+ {
+  "nr": 4,
+  "id": "maerkedage",
+  "titel": "Se familiens mærkedage mange år frem – og hjælp med at gøre listen komplet",
+  "dato": "2026-10-13",
+  "gruppe": "Velkomst og vejledninger",
+  "note": "Sendt til 45 medlemmer (med emnet »Info nr. 1«, før nummereringen blev lavet om).",
+  "rids": "Se familiens mærkedage mange år frem (runde fødselsdage, bryllupsdage, konfirmationer m.m.) – og hjælp med at gøre listen komplet i Medlemskartoteket.",
+  "sendt_foer": "2026-10-13"
+ },
+ {
+  "nr": 5,
+  "id": "familietrae",
+  "titel": "Familietræet er ved at blive bygget – hjælp os med at gøre det færdigt",
+  "dato": "2026-10-22",
+  "gruppe": "Nyt fra OlsenKlanen",
+  "rids": "Familietræet på olsenklanen.dk vokser (50 personer i dag – over 100 når det er færdigt). Sådan finder du Stamtræ i navigationen, og sådan hjælper du med data og billeder.",
+  "klar": true,
+  "beklagelse": "Ved en fejl blev Info nr. 5 rundsendt 3 gange – OlsenPost beklager ulejligheden."
+ },
+ {
+  "nr": 6,
+  "id": "tommy-50-aar-dsb",
+  "titel": "Det kører på skinner for Tommy – giv ham en tommel op",
+  "dato": "2026-11-09",
+  "gruppe": "Nyt fra OlsenKlanen",
+  "rids": "Tommy har været i DSB i 50 år. Se den specielle lykønskning på forsiden, og giv ham en 👍 tommel op.",
+  "klar": true
+ }
 ]

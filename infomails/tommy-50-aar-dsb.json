@@ -1,0 +1,40 @@
+{
+ "emne": "Det kører på skinner for Tommy – giv ham en tommel op 🚂",
+ "hilsen": "Kære alle i OlsenKlanen",
+ "afsnit": [
+  {
+   "type": "p",
+   "tekst": "I november er det 50 år siden, Tommy stod af cyklen og tog toget. Han har nu været i DSB i 50 år – et flot jubilæum!"
+  },
+  {
+   "type": "p",
+   "tekst": "Vi har sat en speciel lykønskning til Tommy op på forsiden af olsenklanen.dk. Den kan ses hele november."
+  },
+  {
+   "type": "h",
+   "tekst": "Sådan giver du Tommy en tommel op"
+  },
+  {
+   "type": "nummerliste",
+   "punkter": [
+    "Log ind på olsenklanen.dk med dit medlemsnummer og din kode, som du plejer.",
+    "På forsiden ser du en rød boks: »Speciel lykønskning · 50 års jubilæum i DSB«. Den står i midten, over »Fremhævede begivenheder og lykønskninger«.",
+    "Tryk på knappen »👍 Giv Tommy en tommel op«.",
+    "Nu står dit navn på listen over dem, der synes godt om."
+   ]
+  },
+  {
+   "type": "p",
+   "tekst": "Tryk på billedet, så bliver det stort."
+  },
+  {
+   "type": "tip",
+   "tekst": "Har du svært ved at logge ind, så skriv til os på post@olsenklanen.dk. Du får svar fra en af ugens postansvarlige."
+  }
+ ],
+ "slut": [
+  "Mange hilsner",
+  "Carsten Gram (8-B)",
+  "på vegne af 5-Banden"
+ ]
+}
