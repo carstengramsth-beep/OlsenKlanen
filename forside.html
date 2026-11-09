@@ -78,6 +78,15 @@ a.il-indhold:hover .il-tekst { text-decoration: underline; }
 .billede-boks { position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
 .billede-boks img { width: 100%; height: auto; display: block; }
 .billede-tekst { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.7)); color: #fff; padding: 20px 16px 12px; display: flex; justify-content: space-between; font-style: italic; pointer-events: none; }
+/* Speciel lykønskning (vises i en bestemt periode) */
+.special-hilsen { display: none; background: #fffaf0; border: 2px solid #c89e3c; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.10); margin-bottom: 16px; }
+.special-hilsen .sh-top { background: #a4161a; color: #fff; padding: 10px 16px; font-weight: bold; font-size: 14px; letter-spacing: 1px; }
+.special-hilsen .sh-indhold { display: flex; gap: 16px; padding: 16px; align-items: center; flex-wrap: wrap; }
+.special-hilsen img { width: 260px; max-width: 100%; border-radius: 8px; border: 1px solid #e0d8bd; }
+.special-hilsen .sh-tekst { flex: 1; min-width: 220px; }
+.special-hilsen .sh-titel { font-family: 'Pacifico', cursive; font-size: 26px; color: #a4161a; line-height: 1.3; margin-bottom: 8px; }
+.special-hilsen .sh-brod { font-size: 16px; color: #2c3e1f; line-height: 1.6; }
+.special-hilsen .sh-fra { margin-top: 10px; font-style: italic; color: #6b5a2a; }
 .fremh-boks { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
 .fremh-header { background: #2d5016; color: #c89e3c; padding: 10px 16px; font-weight: bold; font-size: 14px; letter-spacing: 1px; }
 .fremh-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid #f0ead8; }
@@ -334,6 +343,23 @@ try {
       </div>
     </div>
  
+    <!-- SPECIEL LYKØNSKNING: Tommy 50 år i DSB (vises i november 2026) -->
+    <div class="special-hilsen" id="special-tommy-dsb" data-fra="2026-11-01" data-til="2026-11-30">
+      <div class="sh-top">🚂 SPECIEL LYKØNSKNING</div>
+      <div class="sh-indhold">
+        <img src="billeder/hilsner/tommy-50-aar-paa-skinner.webp" alt="Tommy fejrer 50 år i DSB" data-stort="Tommy fejrer 50 års jubilæum i DSB — november 2026" title="Tryk for at se billedet stort">
+        <div class="sh-tekst">
+          <div class="sh-titel">Det kører på skinner for Tommy!</div>
+          <div class="sh-brod">
+            Hjertelig tillykke med <b>50 år på skinner</b>, kære Tommy. 🎉<br>
+            For 50 år siden — i november 1976 — stod du af cyklen og tog toget. Og du er blevet ved lige siden.<br>
+            Tak for mange gode år på sporet. Vi glæder os til at høre historierne!
+          </div>
+          <div class="sh-fra">Mange hilsner fra hele OlsenKlanen 🚆</div>
+        </div>
+      </div>
+    </div>
+
     <div class="fremh-boks" id="fremhaevede" style="scroll-margin-top:80px;">
       <div class="fremh-header">⭐ FREMHÆVEDE BEGIVENHEDER OG LYKØNSKNINGER</div>
       <div id="fremh-liste">
@@ -757,6 +783,14 @@ function kommendeFoedselsdage(personer, idag, antal) {
 }
  
 // Render "Fremhævede begivenheder" på midten af forsiden
+// Specielle lykønskninger vises kun mellem data-fra og data-til (begge dage med)
+document.querySelectorAll('.special-hilsen[data-fra][data-til]').forEach(el => {
+  const nu = new Date();
+  const fra = new Date(el.dataset.fra + 'T00:00:00');
+  const til = new Date(el.dataset.til + 'T23:59:59');
+  if (nu >= fra && nu <= til) el.style.display = 'block';
+});
+
 function renderFremhaevede(kommende) {
   const el = document.getElementById('fremh-liste');
   if (!el) return;
