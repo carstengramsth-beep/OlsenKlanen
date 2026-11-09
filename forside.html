@@ -87,6 +87,12 @@ a.il-indhold:hover .il-tekst { text-decoration: underline; }
 .special-hilsen .sh-titel { font-family: 'Pacifico', cursive; font-size: 26px; color: #a4161a; line-height: 1.3; margin-bottom: 8px; }
 .special-hilsen .sh-brod { font-size: 16px; color: #2c3e1f; line-height: 1.6; }
 .special-hilsen .sh-fra { margin-top: 10px; font-style: italic; color: #6b5a2a; }
+.special-hilsen .sh-tommel-rk { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.special-hilsen .sh-tommel { background: #fff; border: 2px solid #c89e3c; color: #5a4a1f; border-radius: 20px; font-family: inherit; font-size: 15px; padding: 6px 16px; cursor: pointer; }
+.special-hilsen .sh-tommel:hover { background: #fff3d6; }
+.special-hilsen .sh-tommel.valgt { background: #c89e3c; color: #fff; }
+.special-hilsen .sh-tommel:disabled { opacity: 0.6; cursor: default; }
+.special-hilsen .sh-tommel-navne { font-size: 13px; color: #6b5a2a; font-style: italic; }
 .fremh-boks { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
 .fremh-header { background: #2d5016; color: #c89e3c; padding: 10px 16px; font-weight: bold; font-size: 14px; letter-spacing: 1px; }
 .fremh-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid #f0ead8; }
@@ -344,7 +350,7 @@ try {
     </div>
  
     <!-- SPECIEL LYKØNSKNING: Tommy 50 år i DSB (vises i november 2026) -->
-    <div class="special-hilsen" id="special-tommy-dsb" data-fra="2026-11-01" data-til="2026-11-30">
+    <div class="special-hilsen" id="special-tommy-dsb" data-fra="2026-11-01" data-til="2026-11-30" data-tommel="tommy-dsb-50-aar" data-tommel-tekst="Giv Tommy en tommel op">
       <div class="sh-top">🚂 SPECIEL LYKØNSKNING · 50 ÅRS JUBILÆUM I DSB</div>
       <div class="sh-indhold">
         <img src="billeder/hilsner/tommy-50-aar-paa-skinner.webp" alt="Tommy fejrer 50 år i DSB" data-stort="Tommy fejrer 50 års jubilæum i DSB — november 2026" title="Tryk for at se billedet stort">
@@ -356,6 +362,10 @@ try {
             Tak for mange gode år på sporet. Vi glæder os til at høre historierne!
           </div>
           <div class="sh-fra">Mange hilsner fra hele OlsenKlanen 🚆</div>
+          <div class="sh-tommel-rk">
+            <button class="sh-tommel" type="button" disabled>👍 …</button>
+            <span class="sh-tommel-navne"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -1653,6 +1663,59 @@ window.byggKalender();
 <script src="soeg.js" defer></script>
 <script type="module" src="familieopkald.js"></script>
 <script src="stort-billede.js" defer></script>
+<script>
+// 👍 Tommel op på specielle lykønskninger. Gemmes i olsenpost/special_<data-tommel> som tommel: [{nr, navn, tid}]
+(function () {
+  const KEY = "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU";
+  const URL = "https://firestore.googleapis.com/v1/projects/olsenklanen-familieside/databases/(default)/documents/olsenpost/";
+  const hent = k => { try { return sessionStorage.getItem(k) || localStorage.getItem(k) || ""; } catch (e) { return ""; } };
+  const mig = { nr: hent("ok_nr"), navn: hent("ok_navn") };
+  const fra = v => { const [t, x] = Object.entries(v)[0];
+    if (t === "arrayValue") return (x.values || []).map(fra);
+    if (t === "mapValue") { const o = {}; for (const [k, y] of Object.entries(x.fields || {})) o[k] = fra(y); return o; }
+    return x; };
+  const til = v => Array.isArray(v) ? { arrayValue: { values: v.map(til) } }
+    : (v && typeof v === "object") ? { mapValue: { fields: Object.fromEntries(Object.entries(v).map(([k, y]) => [k, til(y)])) } }
+    : { stringValue: String(v ?? "") };
+  async function hentTommel(id) {
+    const r = await fetch(URL + "special_" + id + "?key=" + KEY);
+    if (r.status === 404) return [];
+    const d = await r.json();
+    return d.fields && d.fields.tommel ? fra(d.fields.tommel) : [];
+  }
+  async function gemTommel(id, liste) {
+    const r = await fetch(URL + "special_" + id + "?key=" + KEY + "&updateMask.fieldPaths=tommel&updateMask.fieldPaths=type",
+      { method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fields: { tommel: til(liste), type: { stringValue: "special_hilsen" } } }) });
+    if (!r.ok) throw new Error("gem");
+  }
+  document.querySelectorAll(".special-hilsen[data-tommel]").forEach(boks => {
+    const id = boks.dataset.tommel, knap = boks.querySelector(".sh-tommel"), navneEl = boks.querySelector(".sh-tommel-navne");
+    const tekst = boks.dataset.tommelTekst || "Giv en tommel op";
+    function tegn(liste) {
+      const harGivet = liste.some(t => t.nr === mig.nr);
+      knap.classList.toggle("valgt", harGivet);
+      knap.textContent = "👍 " + (harGivet ? "Du har givet en tommel op" : tekst) + (liste.length ? " · " + liste.length : "");
+      knap.title = harGivet ? "Tryk igen for at fjerne din tommel" : "";
+      const navne = liste.map(t => String(t.navn || "").trim().split(/\s+/)[0]).filter(Boolean);
+      navneEl.textContent = navne.length ? "Synes godt om: " + navne.join(", ") : "";
+      knap.disabled = false;
+    }
+    hentTommel(id).then(tegn).catch(() => { knap.textContent = "👍 " + tekst; knap.disabled = false; });
+    knap.addEventListener("click", async () => {
+      if (!mig.nr) return alert("Log ind for at give en tommel op.");
+      knap.disabled = true;
+      try {
+        const nu = await hentTommel(id);
+        const ny = nu.some(t => t.nr === mig.nr) ? nu.filter(t => t.nr !== mig.nr)
+          : [...nu, { nr: mig.nr, navn: mig.navn, tid: new Date().toISOString() }];
+        await gemTommel(id, ny);
+        tegn(ny);
+      } catch (e) { alert("Kunne ikke gemme. Prøv igen."); knap.disabled = false; }
+    });
+  });
+})();
+</script>
 </body>
 </html>
  

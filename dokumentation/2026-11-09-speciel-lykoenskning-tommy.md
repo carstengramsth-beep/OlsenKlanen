@@ -14,3 +14,10 @@
 2. Kopiér `<div class="special-hilsen" …>`-blokken i `forside.html`, og giv den et nyt `id`.
 3. Ret `data-fra` og `data-til` (ÅÅÅÅ-MM-DD) — boksen vises kun i den periode.
 4. Ret billede, overskrift og tekst. Få teksten godkendt af Carsten, før den lægges op.
+
+## 👍 Tommel op (tilføjet 9. nov. 2026)
+
+- Under hilsenen er der en knap "👍 Giv Tommy en tommel op". Tryk igen = fjern.
+- Navnene på dem, der har givet en tommel, står ved siden af ("Synes godt om: …").
+- Gemmes i Firestore `olsenpost/special_<data-tommel>` som `tommel: [{nr, navn, tid}]` (samme form som i infologgen).
+- En ny speciel lykønskning får tommel op ved at sætte `data-tommel="<unikt navn>"` og evt. `data-tommel-tekst` på boksen.
