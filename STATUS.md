@@ -37,6 +37,9 @@ Sidst opdateret: 2026-10-16
   1. EmailJS **Personal**: 9 USD/md. (ca. 56–60 kr.), eller ca. 45 kr./md. ved årlig betaling (20 % rabat). Fjerner stemplet ("Completely white label") og giver 2.000 mails/md.
   2. Send mails via Simply (post@olsenklanen.dk) fra en Cloud Function i stedet for EmailJS. Gratis, men en større opgave, der skal testes grundigt. **Anbefalet.**
 - **EmailJS' gratis loft:** Gratis-pakken giver kun 200 mails om måneden, og hver modtager tæller som én. En mail til alle med "Vælg alle" kan ramme loftet, og så bliver resten ikke sendt. Følg forbruget, og løs det sammen med punktet ovenfor.
+- **Domænet olsenklanen.dk hos Simply:** Automatisk fornyelse er slået fra (set 9. nov. 2026). Domænet udløber **30. juni 2027**. Slå automatisk fornyelse til, eller sæt en påmindelse i god tid. Kontoen står i Tommys navn.
+- **Send Info nr. 6 igen til de 8 hotmail-adresser**, når DMARC virker (sat op 9. nov. 2026). Send først en prøve til en hotmail-adresse.
+- **DMARC strengere senere:** i dag `p=none`. Overvej `p=quarantine` eller `p=reject`, når alle mails kommer frem.
 - **Gamle filer i repoet:** Der ligger flere kopier og gamle udgaver (fx `admin (1).html`, `admin (2).html`, `forside (6).html`, `forside (10).html`, `forside (11).html`, `blad-2022 (1).html`, `index (22).html`, `medlemskartotek.html.html`, `olsenbanden (2).html`, `olsenbanden (5).html`). Gennemgå og fjern dem, der ikke bruges.
 
 ## Idéer til senere
