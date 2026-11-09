@@ -26,3 +26,14 @@
 ## Hvor kan man se listen?
 OlsenPost → **⚠️ Ikke leveret**. Her står hver adresse med medlem, grund og dato.
 Hotmail-afvisningerne står som "Afvist af modtagerens system (spamfilter / afsender ikke godkendt)". Dem skal man **ikke** rette i kartoteket.
+
+## Status 9. nov. 2026 (efter tjek hos Simply)
+- Simplys kontrolpanel → olsenklanen.dk → DNS viste:
+  - ✅ SPF fandtes allerede: `TXT olsenklanen.dk  v=spf1 include:spf.simply.com ~all`
+  - ✅ DKIM fandtes allerede: `simplycom1._domainkey` → `dkim1.simply.com` og `simplycom2._domainkey` → `dkim2.simply.com`
+  - ❌ **DMARC manglede.** Det kræver Microsoft (hotmail/outlook) af afsendere.
+- **Carsten tilføjede DMARC:** `TXT _dmarc.olsenklanen.dk  v=DMARC1; p=none;` (den blide udgave, der ikke stopper vores egne mails).
+  Kan gøres strengere senere (`p=quarantine` eller `p=reject`), når det er set, at alle mails kommer frem.
+- Det kan tage op til 24 timer, før ændringen virker.
+- **Næste skridt (10. nov.):** send en prøve til en hotmail-adresse. Kommer den frem, sendes Info nr. 6 igen til de 8 med »Send til det valgte medlem«.
+- Set samtidig: **automatisk fornyelse er slået fra** hos Simply. Domænet udløber 30. juni 2027. Står på huskelisten i STATUS.md.
