@@ -231,6 +231,11 @@ try {
       <label for="tekst-mail" id="tekst-mail-label">Din besked</label>
       <textarea id="tekst-mail" placeholder="Skriv din personlige besked her …&#10;&#10;Hilsen og dit navn tilføjes automatisk nederst.&#10;&#10;Tip: du kan indsætte (Ctrl+V) et kopieret billede direkte her i feltet."></textarea>
 
+      <label id="ogsaa-intern-label" style="display:flex; align-items:center; gap:8px; margin-top:10px; font-size:14px; color:#333;">
+        <input type="checkbox" id="ogsaa-intern" checked style="width:18px; height:18px;">
+        💬 Send også som intern besked til de valgte (de ser den, når de logger ind)
+      </label>
+
       <div id="velkomstbrev-boks" style="display:none; margin-top:10px;">
         <label id="inkluder-velkomstbrev-label" style="display:flex; align-items:center; gap:8px; margin-top:0;">
           <input type="checkbox" id="inkluder-velkomstbrev" checked style="width:18px; height:18px;">
@@ -877,6 +882,7 @@ function saetVelkomstTilstand(til){
   const skjul = (id, ja) => { const el = document.getElementById(id); if (el) el.style.display = ja ? "none" : ""; };
   skjul("modtager-valg-sektion", til);
   skjul("inkluder-velkomstbrev-label", til);
+  skjul("ogsaa-intern-label", til);
   const garanti = document.getElementById("velkomst-garanti");
   if (garanti) garanti.style.display = til ? "block" : "none";
   const cb = document.getElementById("inkluder-velkomstbrev");
@@ -947,11 +953,16 @@ async function tegnInformationer(){
   } catch(e) { el.textContent = "Kunne ikke hente informationerne. Genindlæs siden."; return; }
   // Hvornår er de sendt? (de 5 kan se det)
   let sendtLog = {};
+  internLog = {};
   if (ER_POSTANSVARLIG) {
     try {
       const snap = await getDocs(query(collection(db, "olsenpost_mail"), where("type", "==", "infomail")));
       snap.forEach(d => { const m = d.data(); (sendtLog[m.skabelon] = sendtLog[m.skabelon] || []).push(m); });
     } catch(e) { console.log("Infomail-log:", e); }
+    try {
+      const snapI = await getDocs(query(collection(db, "olsenpost"), where("kilde", "==", "infomail")));
+      snapI.forEach(d => { const m = d.data(); (internLog[m.info_skabelon] = internLog[m.info_skabelon] || []).push(m); });
+    } catch(e) { console.log("Intern-log:", e); }
   }
   const medMail = alleModtagere.filter(m => String(m.email || "").includes("@"));
   const minMail = String((alleModtagere.find(m => m.nr === MIT_NR) || {}).email || "").split("/")[0].trim();
@@ -968,9 +979,9 @@ async function tegnInformationer(){
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
           <button type="button" class="knap lille" onclick="visInfo('${enc(m.id)}');document.getElementById('info-vis-${enc(m.id)}').scrollIntoView({behavior:'smooth'})">📖 Læs</button>
           <button type="button" class="knap lille" onclick="sendInfomail('${enc(m.id)}','prove')">🧪 Prøve til mig selv</button>
-          <button type="button" class="knap" style="background:#8b1e1e;" onclick="sendInfomail('${enc(m.id)}','alle')">📨 Send til alle</button>
+          <span data-kanal style="display:inline-flex;gap:10px;align-items:center;flex-wrap:wrap;"><label style="display:inline-flex;align-items:center;gap:4px;margin:0;font-size:14px;color:#333;"><input type="checkbox" class="kanal-mail" checked style="width:18px;height:18px;"> 📧 Mail</label><label style="display:inline-flex;align-items:center;gap:4px;margin:0;font-size:14px;color:#333;"><input type="checkbox" class="kanal-intern" checked style="width:18px;height:18px;"> 💬 Intern besked</label><button type="button" class="knap" style="background:#8b1e1e;margin-top:0;" onclick="sendInfomail('${enc(m.id)}','alle',this)">📨 Send til alle</button></span>
         </div></div>`).join("")}
-      <div style="font-size:13px;color:#666;">Når du trykker »Send til alle«, skal du altid skrive din PIN-kode. Den sendes kun én gang – bagefter forsvinder den herfra.</div>
+      <div style="font-size:13px;color:#666;">»Send til alle« sender både som <b>📧 mail</b> og som <b>💬 intern besked</b>. Fjern et kryds, hvis den kun skal én vej. Du skal altid skrive din PIN-kode. Den sendes kun én gang – bagefter forsvinder den herfra.</div>
     </div>`;
   } else if (andenISammeHus && liste.some(m => m.klar)) {
     klarEl.innerHTML = `<div style="border:2px solid #e0a800;background:#fff8d6;border-radius:10px;padding:10px 14px;margin:6px 0 16px;font-size:15px;">
@@ -982,7 +993,8 @@ async function tegnInformationer(){
     const alle = log.filter(x => !x.enkelt), enkelte = log.filter(x => x.enkelt);
     if (m.sendt_foer && !alle.length) alle.push({ sendt_lokal: new Date(m.sendt_foer + "T12:00:00").getTime(), antal_sendt: "før systemet" });
     const logTekst = ER_POSTANSVARLIG ? (alle.length ? "✅ Sendt til alle " + alle.map(x => infoDato(new Date(x.sendt_lokal).toISOString()) + " (" + (x.antal_sendt || 0) + ")").join(", ") : "Ikke sendt til alle endnu")
-      + (enkelte.length ? " · sendt enkeltvis til: " + enkelte.map(x => escHtml(x.til_navn || "")).join(", ") : "") : "";
+      + (enkelte.length ? " · sendt enkeltvis til: " + enkelte.map(x => escHtml(x.til_navn || "")).join(", ") : "")
+      + ((internLog[m.id] || []).length ? " · 💬 Intern besked sendt " + internLog[m.id].map(x => infoDato(new Date(x.sendt_lokal || Date.now()).toISOString()) + " (" + ((x.til || []).length) + ")").join(", ") : "") : "";
     return `<div class="info-punkt" data-id="${enc(m.id)}" style="border:1px solid #ddd;border-radius:8px;padding:12px 14px;margin:10px 0;background:#fff;">
       <div style="font-size:13px;color:#8a7a3f;"><b>Info nr. ${escHtml(m.nr)}</b> · ${escHtml(infoDato(m.dato))} · ${escHtml(m.gruppe || "")}</div>
       <div style="font-weight:bold;color:#2d5016;margin:2px 0 ${m.rids ? 2 : 6}px;">${escHtml(m.titel)}</div>
@@ -992,7 +1004,8 @@ async function tegnInformationer(){
         <button type="button" class="knap lille" onclick="visInfo('${enc(m.id)}')">📖 Læs</button>
         ${ER_POSTANSVARLIG ? `
         <button type="button" class="knap lille" onclick="sendInfomail('${enc(m.id)}','prove')">🧪 Prøve til mig selv</button>
-        ${paaVejNu ? `<span style="align-self:center;font-weight:bold;color:#2d5016">📨 På vej ud nu …</span>` : alle.length ? `<button type="button" class="knap lille" style="background:#888;" onclick="sendInfomail('${enc(m.id)}','alle')">🔁 Send igen / med rettelser …</button>` : `<button type="button" class="knap lille" style="background:#8b1e1e;" onclick="sendInfomail('${enc(m.id)}','alle')">📨 Send til alle</button>`}` : `
+        ${paaVejNu ? `<span style="align-self:center;font-weight:bold;color:#2d5016">📨 På vej ud nu …</span>` : alle.length ? `<button type="button" class="knap lille" style="background:#888;" onclick="sendInfomail('${enc(m.id)}','alle')">🔁 Send igen / med rettelser …</button>` : `<span data-kanal style="display:inline-flex;gap:10px;align-items:center;flex-wrap:wrap;"><label style="display:inline-flex;align-items:center;gap:4px;margin:0;font-size:14px;color:#333;"><input type="checkbox" class="kanal-mail" checked style="width:18px;height:18px;"> 📧 Mail</label><label style="display:inline-flex;align-items:center;gap:4px;margin:0;font-size:14px;color:#333;"><input type="checkbox" class="kanal-intern" checked style="width:18px;height:18px;"> 💬 Intern besked</label><button type="button" class="knap lille" style="background:#8b1e1e;" onclick="sendInfomail('${enc(m.id)}','alle',this)">📨 Send til alle</button></span>`}
+        ${alle.length && !(internLog[m.id] || []).length ? `<button type="button" class="knap lille" onclick="sendInfoIntern('${enc(m.id)}',true)">💬 Send som intern besked til alle</button>` : ""}` : `
 `}
       </div>
       ${!ER_POSTANSVARLIG ? `<div style="margin-top:8px;background:#f5f1e8;border-radius:8px;padding:8px 10px;">
@@ -1033,8 +1046,57 @@ window.visInfo = async function(id, aabn){
   } catch(e) { boks.textContent = "Kunne ikke hente informationen."; }
 };
 
-window.sendInfomail = async function(id, maade){
+// 💬 Intern besked til alle medlemmer (samme modtagere som »Vælg alle« under Intern besked)
+let internLog = {};
+async function sendInternTilAlle(tekst, ekstra){
+  const modt = alleModtagere.filter(m => m.nr);
+  await addDoc(collection(db, "olsenpost"), {
+    fra_nr: MIT_NR, fra_navn: MIT_NAVN,
+    til: modt.map(m => m.nr), til_navne: modt.map(m => m.navn),
+    tekst, type: "besked",
+    sendt: serverTimestamp(), sendt_lokal: Date.now(),
+    set_af: [], svar: [], ...(ekstra || {})
+  });
+  return modt.length;
+}
+function infoInternTekst(meta, ogsaaMail){
+  return "📮 Info nr. " + meta.nr + " – " + (meta.titel || "") + (meta.rids ? "\n\n" + meta.rids : "")
+    + "\n\nLæs hele informationen i OlsenPost → 📚 Informationer." + (ogsaaMail ? " Den er også sendt på mail." : "");
+}
+// Send en information som intern besked til alle (kun én gang, med tydelig besked)
+window.sendInfoIntern = async function(id, ogsaaMail, auto){
   if (!ER_POSTANSVARLIG) { infoStatus("fejl", "Kun de 5 postansvarlige kan sende informationer."); return; }
+  const meta = (infoListe || []).find(x => x.id === id) || {};
+  let tidl = [];
+  try { const snap = await getDocs(query(collection(db, "olsenpost"), where("info_skabelon", "==", id))); snap.forEach(d => tidl.push(d.data())); } catch(e) { console.log("Intern-dublet-tjek:", e); }
+  if (tidl.length) {
+    if (auto) { infoStatus("ok", "✅ Info nr. " + meta.nr + " er sat i kø som mail. Den interne besked var sendt før, så den sendes ikke igen."); return; }
+    const sidst = new Date(Math.max(...tidl.map(x => x.sendt_lokal || 0))).toLocaleString("da-DK", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+    const valg = await vaelgBoks("⚠️ Allerede sendt som intern besked", "Info nr. " + escHtml(meta.nr) + " er sendt som intern besked " + sidst + ".<br><br>Hvad vil du?",
+      [["nej", "Annullér – send ikke", "#2d5016"], ["igen", "🔁 Send den igen", "#8b1e1e"]]);
+    if (valg !== "igen") { infoStatus("ok", "Ikke sendt."); return; }
+  }
+  const antal = alleModtagere.filter(m => m.nr).length;
+  if (!auto && !(await sikrePin(true, "💬 <b>Info nr. " + escHtml(meta.nr) + "</b> sendes som <b>intern besked</b> til <b>alle " + antal + " medlemmer</b> – én gang."))) { infoStatus("fejl", "Ikke sendt."); return; }
+  try {
+    const n = await sendInternTilAlle(infoInternTekst(meta, ogsaaMail), { kilde: "infomail", info_skabelon: id, info_nr: meta.nr || null });
+    infoStatus("ok", (auto ? "✅ Info nr. " + meta.nr + " er sat i kø som mail" + " – og " : "✅ Info nr. " + meta.nr + " er ") + "sendt som intern besked til " + n + " medlemmer.");
+    tegnInformationer();
+    if (!auto) await vaelgBoks("✅ Sendt som intern besked", "Info nr. " + escHtml(meta.nr) + " er sendt som intern besked til " + n + " medlemmer – én gang.", [["ok", "OK", "#2d5016"]]);
+  } catch(e) {
+    console.log("Intern info fejlede:", e);
+    infoStatus("fejl", "Den interne besked kunne ikke sendes. Prøv igen.");
+  }
+};
+
+window.sendInfomail = async function(id, maade, knap){
+  if (!ER_POSTANSVARLIG) { infoStatus("fejl", "Kun de 5 postansvarlige kan sende informationer."); return; }
+  // Send til alle: 📧 mail og/eller 💬 intern besked (begge er krydset af som standard)
+  const kanalBoks = maade === "alle" && knap && knap.closest ? knap.closest("[data-kanal]") : null;
+  const viaMail = kanalBoks ? kanalBoks.querySelector(".kanal-mail").checked : true;
+  const viaIntern = kanalBoks ? kanalBoks.querySelector(".kanal-intern").checked : false;
+  if (maade === "alle" && !viaMail && !viaIntern) { infoStatus("fejl", "Sæt kryds ved 📧 Mail, 💬 Intern besked eller begge."); return; }
+  if (maade === "alle" && !viaMail) { await sendInfoIntern(id, false, false); return; }
   const meta = (infoListe || []).find(x => x.id === id) || {};
   let data;
   try { data = await hentInfo(id); } catch(e) { infoStatus("fejl", "Kunne ikke hente informationen."); return; }
@@ -1086,6 +1148,7 @@ window.sendInfomail = async function(id, maade){
     });
     infoStatus("ok", "✅ " + navn + " er sat i kø. Den bliver sendt inden for 5 minutter …");
     window._gensend = false;
+    if (maade === "alle" && viaIntern) await sendInfoIntern(id, true, true);
     const fd = maade === "alle" ? fremdriftBoks(navn, new Set(alleModtagere.map(m => String(m.email || "").trim().toLowerCase()).filter(x => x.includes("@"))).size) : null;
     if (maade === "alle") tegnInformationer();
     onSnapshot(doc(db, "olsenpost_mail", ref.id), s => {
@@ -1431,7 +1494,24 @@ window.sendMail = async function(){
     }
     fd.status("📨", "Sender …", "Sendt til " + (sendt + fejl) + " af " + antalModt + ".<br><b>Tryk ikke igen, og luk ikke siden.</b>");
   }
-  fd.status(fejl ? "⚠️" : "✅", fejl ? "Delvist sendt" : "Mailen er sendt", "Sendt til " + sendt + " modtager" + (sendt === 1 ? "" : "e") + " – én gang." + (fejl ? "<br>" + fejl + " kunne ikke sendes." : ""), true);
+  // 💬 Også som intern besked (aldrig velkomstbrevet – det indeholder PIN-koder)
+  let internTekst = "";
+  const ogsaaIntern = document.getElementById("ogsaa-intern");
+  if (sendt > 0 && ogsaaIntern && ogsaaIntern.checked && !inkluderVelkomst) {
+    try {
+      const nrListe = [...valgteMail.keys()];
+      await addDoc(collection(db, "olsenpost"), {
+        fra_nr: MIT_NR, fra_navn: MIT_NAVN,
+        til: nrListe, til_navne: [...valgteMail.values()].map(d => typeof d === "string" ? d : d.navn),
+        tekst: "✉️ " + emne + "\n\n" + tekst + billedLinje + "\n\n(Sendt både som mail og som intern besked.)",
+        type: "besked", kilde: "mail",
+        sendt: serverTimestamp(), sendt_lokal: Date.now(),
+        set_af: [], svar: []
+      });
+      internTekst = "<br>💬 Også sendt som intern besked til " + nrListe.length + ".";
+    } catch(e) { console.log("Intern kopi fejlede:", e); internTekst = "<br>⚠️ Den interne besked kunne ikke sendes."; }
+  }
+  fd.status(fejl ? "⚠️" : "✅", fejl ? "Delvist sendt" : "Mailen er sendt", "Sendt til " + sendt + " modtager" + (sendt === 1 ? "" : "e") + " – én gang." + (fejl ? "<br>" + fejl + " kunne ikke sendes." : "") + internTekst, true);
 
   if (EMAILJS_PUBLIC_KEY === "INDSÆT_PUBLIC_KEY_HER") {
     vis(statusEl, "ok", `📋 Besked gemt til ${sendt} modtager${sendt===1?'':'e'} — EmailJS skal opsættes for at sende rigtig mail.`);
