@@ -21,3 +21,10 @@
 - Navnene på dem, der har givet en tommel, står ved siden af ("Synes godt om: …").
 - Gemmes i Firestore `olsenpost/special_<data-tommel>` som `tommel: [{nr, navn, tid}]` (samme form som i infologgen).
 - En ny speciel lykønskning får tommel op ved at sætte `data-tommel="<unikt navn>"` og evt. `data-tommel-tekst` på boksen.
+
+## Nyhedslinjen og Info nr. 6 (tilføjet 9. nov. 2026)
+
+- **Det gule bånd:** besked i Carstens navn, 9.–30. nov.: »🚂 Det kører på skinner for Tommy – 50 år i DSB! Se lykønskningen på forsiden, og giv Tommy en 👍 tommel op.«
+  Firestore `olsenpost/m4OwDjDXyNI9GXIGZuHx` (`type: "baand"`, `indsat_af: Claude Code efter aftale med Carsten`). Kan rettes/stoppes på `baand.html`.
+- **Info nr. 6** (`infomails/tommy-50-aar-dsb.json`) godkendt af Carsten og lagt i »📮 Klar til afsendelse« (`klar: true`).
+  Sendes af en postansvarlig fra OlsenPost → 📚 Informationer (prøve først, PIN ved »Send til alle«).
