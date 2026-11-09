@@ -31,3 +31,14 @@ Info nr. 5 blev sendt tre gange, fordi der ikke var tydelig besked om, at den va
 - Ved tryk på send kommer straks en stor boks: **»Mailen er modtaget til afsendelse«** → »Sender … 3 af 45« → **»✅ Mailen er sendt – én gang«**. Man kan ikke trykke igen imens.
 - Mere end 3 modtagere = rundsendelse → **PIN-kode hver gang**.
 - Er en mail med **samme emne** sendt til nogen af modtagerne inden for 7 dage: **»⚠️ Denne mail er sendt før«** → Annullér / Ret først / Send igen.
+
+## Tilføjet 9. nov. 2026: Både mail og intern besked er reglen
+
+Aftalt med Carsten: Når der sendes til alle, sendes der **både som mail og som intern besked**.
+- **📚 Informationer → »Send til alle«:** to krydser ved siden af knappen, **📧 Mail** og **💬 Intern besked**. Begge er sat som standard.
+  Fjern et kryds, hvis den kun skal én vej. Uden mail-kryds sendes kun den interne besked (PIN kræves).
+  Den interne besked er et kort rids med »Læs hele informationen i OlsenPost → 📚 Informationer«.
+  Gemmes i `olsenpost` med `type: "besked"`, `kilde: "infomail"`, `info_skabelon`, `info_nr`. Kun én gang – ellers spørges der (Annullér / Send igen).
+- En information, der kun er sendt som mail, får knappen **»💬 Send som intern besked til alle«**. Under informationen står det, når den er sendt internt.
+- **Send mail til medlem:** krydset **»💬 Send også som intern besked til de valgte«** er sat som standard. Gemmes med `kilde: "mail"`.
+  Velkomstmails sendes aldrig som intern besked (de indeholder PIN-koder).
