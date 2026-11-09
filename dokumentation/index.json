@@ -1,5 +1,11 @@
 [
   {
+    "fil": "2026-11-09-speciel-lykoenskning-tommy.md",
+    "dato": "2026-11-09",
+    "titel": "Speciel lykønskning på forsiden: Tommy 50 år på skinner (vises i november 2026)",
+    "af": "Claude Code"
+  },
+  {
     "fil": "2026-11-03-pin-paa-serveren.md",
     "dato": "2026-11-03",
     "titel": "Sikkerhed: PIN tjekkes på serveren + spærring efter 10 forkerte forsøg (domænet ligger på GitHub Pages!)",
