@@ -354,11 +354,15 @@ try {
     <div style="background:#0f1e3a;border-radius:10px;padding:26px 18px;margin:16px 0;text-align:center;color:#f3efe6;">
       <div style="font-family:Georgia,serif;font-size:26px;">OlsenKlanens gamle hjemmeside</div>
       <div style="width:60px;height:1px;background:#d4a843;margin:14px auto;"></div>
-      <div style="font-size:15px;line-height:1.5;margin-bottom:16px;">Her kan du stadig se alt det gamle indhold.<br>Log på med koden til den gamle side.</div>
-      <a href="http://www.olsenklanen.minisite.dk" target="_blank" rel="noopener"
+      <div style="font-size:15px;line-height:1.5;margin-bottom:12px;">Her kan du stadig se alt det gamle indhold.<br>Log på med koden til den gamle side:</div>
+      <div style="display:inline-block;background:#f3efe6;color:#0f1e3a;font-size:20px;font-weight:bold;letter-spacing:2px;padding:6px 18px;border-radius:6px;margin-bottom:6px;">oldermand</div>
+      <div style="font-size:13px;color:#b9c3d6;margin-bottom:14px;">Små bogstaver. Koden bliver kopieret, når du trykker på knappen.<br>Sæt den ind i feltet på den gamle side med <b>Ctrl+V</b> (på mobil: hold fingeren nede → Indsæt).</div><br>
+      <a href="http://www.olsenklanen.minisite.dk" target="_blank" rel="noopener" id="gamle-side-knap"
+         onclick="try{navigator.clipboard.writeText('oldermand').then(function(){var k=document.getElementById('gamle-side-kopieret');if(k)k.style.display='block';});}catch(e){}"
          style="display:inline-block;padding:12px 26px;border:1px solid #d4a843;color:#d4a843;text-decoration:none;font-size:16px;letter-spacing:1px;border-radius:4px;">
         Log på Olsenklanens gamle hjemmeside her
       </a>
+      <div id="gamle-side-kopieret" style="display:none;font-size:14px;color:#9fd38a;margin-top:10px;">✅ Koden er kopieret. Tryk Ctrl+V i feltet på den gamle side.</div>
       <div style="font-size:13px;color:#b9c3d6;margin-top:14px;">www.olsenklanen.minisite.dk · åbner i en ny fane<br>Tilmelding og betaling dér gælder ikke længere.</div>
     </div>
  
