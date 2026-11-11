@@ -12,3 +12,6 @@
 **Rettet 11-11-2026 (Claude Code):** Linket virkede ikke. `https://olsenklanen.minisite.dk` giver en sikkerhedsadvarsel i browseren
 (den gamle side har ikke et gyldigt certifikat). Linket er nu `http://www.olsenklanen.minisite.dk` på forsiden, i søgningen og på skovtur2026.html.
 Browseren viser "Ikke sikker" i adresselinjen, men siden åbner. Testet af Carsten.
+
+**Tilføjet 11-11-2026:** Koden til den gamle side (**oldermand**, små bogstaver – bekræftet af Carsten efter tjek med Kurt) står nu i boksen på forsiden.
+Når man trykker på knappen, kopieres koden automatisk, så den kan sættes ind med Ctrl+V. Den gamle side kan ikke tage imod koden via linket.
