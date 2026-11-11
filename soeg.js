@@ -18,7 +18,7 @@
     { t: "Årbogen", u: "aarbogen.html", i: "📚", d: "Informationsblade, indbydelser og regnskaber gennem årene.", k: "årbog blad information informationsblad indbydelse regnskab økonomi kasserer gamle" },
     { t: "Årenes billeder", u: "aarenes-billeder.html", i: "📸", d: "Billeder fra skovturene år for år.", k: "billeder billede foto fotos fællesfoto årenes" },
     { t: "Fotovæg", u: "fotovaeg-galleri.html", i: "🖼️", d: "Fotovæggen med billeder fra klanen.", k: "fotovæg foto billeder galleri" },
-    { t: "Den gamle hjemmeside", u: "https://olsenklanen.minisite.dk", i: "📜", d: "Klanens gamle hjemmeside (minisite) – åbner i en ny fane. Kun til at kigge.", k: "gamle hjemmeside minisite arkiv gammel side" },
+    { t: "Den gamle hjemmeside", u: "http://www.olsenklanen.minisite.dk", i: "📜", d: "Klanens gamle hjemmeside (minisite) – åbner i en ny fane. Kun til at kigge.", k: "gamle hjemmeside minisite arkiv gammel side" },
     { t: "Gamle billeder", u: "gamle-billeder.html", i: "🗃️", d: "Gamle familiebilleder – læg selv billeder op og skriv kommentarer.", k: "gamle billeder gammelt foto familiebilleder" },
     { t: "Historier", u: "historier.html", i: "📖", d: "Små historier og erindringer fra klanen.", k: "historie historier erindring erindringer fortælling familiekrønike risvangen" },
     { t: "Musik og sange", u: "musik.html", i: "🎵", d: "Klanens sange – hør dem, og syng med.", k: "musik sang sange syng skovtursang jubijæ slagsang birthe" },
