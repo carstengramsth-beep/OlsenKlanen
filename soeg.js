@@ -18,6 +18,7 @@
     { t: "Årbogen", u: "aarbogen.html", i: "📚", d: "Informationsblade, indbydelser og regnskaber gennem årene.", k: "årbog blad information informationsblad indbydelse regnskab økonomi kasserer gamle" },
     { t: "Årenes billeder", u: "aarenes-billeder.html", i: "📸", d: "Billeder fra skovturene år for år.", k: "billeder billede foto fotos fællesfoto årenes" },
     { t: "Fotovæg", u: "fotovaeg-galleri.html", i: "🖼️", d: "Fotovæggen med billeder fra klanen.", k: "fotovæg foto billeder galleri" },
+    { t: "Den gamle hjemmeside", u: "https://olsenklanen.minisite.dk", i: "📜", d: "Klanens gamle hjemmeside (minisite) – åbner i en ny fane. Kun til at kigge.", k: "gamle hjemmeside minisite arkiv gammel side" },
     { t: "Gamle billeder", u: "gamle-billeder.html", i: "🗃️", d: "Gamle familiebilleder – læg selv billeder op og skriv kommentarer.", k: "gamle billeder gammelt foto familiebilleder" },
     { t: "Historier", u: "historier.html", i: "📖", d: "Små historier og erindringer fra klanen.", k: "historie historier erindring erindringer fortælling familiekrønike risvangen" },
     { t: "Musik og sange", u: "musik.html", i: "🎵", d: "Klanens sange – hør dem, og syng med.", k: "musik sang sange syng skovtursang jubijæ slagsang birthe" },
@@ -172,7 +173,7 @@
       const infos = findInfos(q);
       if (infos.length) html += infos.map(m => `<a href="infoarkiv.html?vis=${encodeURIComponent(m.id)}"><span class="r-ikon">📚</span><span><span class="r-titel">Læs Info nr. ${esc(m.nr)}: ${esc(m.titel)}</span><br><span class="r-tekst">${esc(m.rids || "")} Du kan også få den på mail i OlsenPost → 📚 Informationer.</span></span></a>`).join("");
       html += r.length
-        ? r.map(s => `<a href="${esc(s.u)}"><span class="r-ikon">${s.i}</span><span><span class="r-titel">${esc(s.t)}</span><br><span class="r-tekst">${esc(s.d)}</span></span></a>`).join("")
+        ? r.map(s => `<a href="${esc(s.u)}"${/^https?:/.test(s.u) ? ' target="_blank" rel="noopener"' : ""}><span class="r-ikon">${s.i}</span><span><span class="r-titel">${esc(s.t)}</span><br><span class="r-tekst">${esc(s.d)}</span></span></a>`).join("")
         : (pers.length || infos.length ? "" : `<div class="ingen">Ingen sider passer på "${esc(q)}". Prøv et andet ord – eller skriv til OlsenBanden i <a href="meddelelser.html" style="display:inline;padding:0;border:0;color:#2d5016;font-weight:bold">OlsenPost</a>.</div>`);
       ud.innerHTML = html;
       clearTimeout(logTimer);
@@ -180,7 +181,7 @@
     }
     felt.addEventListener("input", vis);
     felt.addEventListener("focus", () => hentPersoner());
-    felt.addEventListener("keydown", e => { if (e.key === "Enter") { const a = ud.querySelector("a"); if (a) location.href = a.getAttribute("href"); } });
+    felt.addEventListener("keydown", e => { if (e.key === "Enter") { const a = ud.querySelector("a"); if (a) { if (a.target === "_blank") window.open(a.href, "_blank", "noopener"); else location.href = a.getAttribute("href"); } } });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", byg); else byg();
 })();

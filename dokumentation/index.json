@@ -1,5 +1,11 @@
 [
   {
+    "fil": "2026-11-11-gamle-hjemmeside-adgang.md",
+    "dato": "2026-11-11",
+    "titel": "Adgang til den gamle hjemmeside (olsenklanen.minisite.dk) fra forsiden",
+    "af": "Claude"
+  },
+  {
     "fil": "2026-11-09-mails-afvist-spf-dkim-dmarc.md",
     "dato": "2026-11-09",
     "titel": "Info nr. 6: mails til hotmail afvist – olsenklanen.dk mangler SPF/DKIM/DMARC (ID-papirer hos Simply)",
