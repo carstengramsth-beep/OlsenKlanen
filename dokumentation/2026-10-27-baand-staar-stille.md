@@ -21,3 +21,11 @@ Klik på båndet = gå til infologgen. Mus over båndet = det står stille, så 
 
 ## Teknik
 - `infolog.js` har `InfoLog.hent()` (= de synlige linjer, nyeste først).
+
+## Genveje i båndet (tilføjet 26. nov. 2026)
+Ønsket af Carsten. Hver del af båndet er nu sin egen genvej (før gik hele båndet til infologgen):
+- **Nyheder** → selve artiklen (fra RSS `<link>`), åbner i ny fane. Mangler linket, går den til kildens forside.
+- **Fødselsdag** → `#fremhaevede`. **Uddrag af infologgen** → `#infolog`. **Vejret** → dmi.dk.
+- **Beskeder fra 5-Banden** kan have et felt `link` i Firestore (`#id` på forsiden eller en webadresse). Tommys besked har `link: "#special-tommy-dsb"`.
+  (baand.html har endnu ikke et felt til link – kan tilføjes.)
+- Mus over båndet = det står stille, så man kan ramme genvejen.
