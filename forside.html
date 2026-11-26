@@ -764,12 +764,13 @@ async function hentAllePersoner() {
         if (dele.length === 3) {
           // Afdøde og udmeldte står hverken på fødselsdagslisten, i nyhedsbåndet eller i kalenderen
           if (p.status === "afdød" || p.status === "udmeldt") return;
-          // Mail til fødselsdagshilsen: personens egen mail (voksne må bruge husstandens mail)
-          const email = (p.email || (p.rolle !== "barn" ? fam.email : "") || "").trim();
+          // Mail til fødselsdagshilsen: personens egen mail. Voksne må bruge husstandens mail.
+          // Børn uden egen mail: hilsenen går til mor/far (en voksen i husstanden med mail), ellers til husstandens mail.
+          const { email, viaForaelder } = hilsenMailFor(p, fam);
           // Fulde navn (fornavn, mellemnavn, efternavn) vises på listen; fornavnet bruges stadig som nøgle til hilsner
           const fuldtNavn = ([p.fornavn, p.mellemnavn, p.efternavn].filter(x => x && String(x).trim()).join(' ').trim()) || (p.navn || '').trim() || navn;
           personer.push({
-            navn, fuldtNavn, email, foedselsdato: p.foedselsdato, hus, rolle: p.rolle || "",
+            navn, fuldtNavn, email, viaForaelder, foedselsdato: p.foedselsdato, hus, rolle: p.rolle || "",
             aar: parseInt(dele[0]),
             maaned: parseInt(dele[1]),
             dag: parseInt(dele[2])
@@ -781,6 +782,18 @@ async function hentAllePersoner() {
   return personer;
 }
  
+// Hvilken mail skal en fødselsdagshilsen sendes til?
+function hilsenMailFor(p, fam){
+  const foerste = v => (String(v || "").split(/[\/;,\s]+/).find(x => x.includes("@")) || "").trim();
+  const egen = foerste(p.email);
+  if (egen) return { email: egen, viaForaelder: false };
+  if (p.rolle !== "barn") return { email: foerste(fam.email), viaForaelder: false };
+  const voksne = (fam.familiemedlemmer || []).filter(x => x !== p && x.rolle !== "barn" && x.status !== "afdød" && x.status !== "udmeldt" && foerste(x.email));
+  voksne.sort((a, b) => (b.dataansvarlig ? 1 : 0) - (a.dataansvarlig ? 1 : 0));
+  const mail = (voksne[0] && foerste(voksne[0].email)) || foerste(fam.email);
+  return { email: mail, viaForaelder: !!mail };
+}
+
 // Find dem der har fødselsdag I DAG
 function foedselsdageIdag(personer, idag) {
   const m = idag.getMonth() + 1;
@@ -800,6 +813,7 @@ function kommendeFoedselsdage(personer, idag, antal) {
         navn: p.navn,
         fuldtNavn: p.fuldtNavn,
         email: p.email,
+        viaForaelder: p.viaForaelder,
         foedselsdato: p.foedselsdato,
         dato: naeste,
         alder: alderPaa(p.aar, naeste.getFullYear())
@@ -856,7 +870,7 @@ function renderFremhaevede(kommende) {
     const dag = new Date(idag0.getFullYear(), p.maaned - 1, p.dag);
     if (hilsenVindue(dag) !== "efter") return;
     const noegle = hilsenTilNoegle({ navn: p.navn, foedselsdato: p.foedselsdato, dato: dag });
-    tidligere[noegle] = Object.assign(tidligere[noegle] || { noegle, navn: p.navn, foedselsdato: p.foedselsdato, dag, alder: idag0.getFullYear() - p.aar }, { email: p.email });
+    tidligere[noegle] = Object.assign(tidligere[noegle] || { noegle, navn: p.navn, foedselsdato: p.foedselsdato, dag, alder: idag0.getFullYear() - p.aar }, { email: p.email, viaForaelder: p.viaForaelder });
   });
   // Slå det fulde navn op ud fra fornavn + fødselsdato
   const fuldtNavnAf = (navn, fd) => {
@@ -868,7 +882,7 @@ function renderFremhaevede(kommende) {
     .slice(0, ANTAL_I_LISTEN - MIN_KOMMENDE);
   const antalKommende = Math.max(MIN_KOMMENDE, ANTAL_I_LISTEN - tidligereListe.length);
   tidligereListe.forEach(x => {
-      const k = { navn: x.navn, foedselsdato: x.foedselsdato, dato: x.dag, alder: x.alder, email: x.email, vindue: hilsenVindue(x.dag) };
+      const k = { navn: x.navn, foedselsdato: x.foedselsdato, dato: x.dag, alder: x.alder, email: x.email, viaForaelder: x.viaForaelder, vindue: hilsenVindue(x.dag) };
       const info = hilsenInfo(k);
       const noegle = encodeURIComponent(x.noegle);
       const stjerne = info.antal ? `<span class="hilsen-antal klik" title="Klik og se fødselsdagskortet" onclick="visKort('${noegle}')">⭐ ${info.antal}</span>` : '';
@@ -1259,7 +1273,9 @@ window.sendHilsen = async function(){
   const emne = k.vindue === "efter"
     ? "🎂 En forsinket fødselsdagshilsen til dig, " + k.navn + "!"
     : "🎂 Tillykke med fødselsdagen, " + k.navn + "!";
-  const mailTekst = tekst + "\n\n" + (slut ? slut + "\n" : "") + MIT_NAVN_HILSEN + "\n\n---\nSendt fra OlsenKlanens familieside · olsenklanen.dk";
+  const mailTekst = tekst + "\n\n" + (slut ? slut + "\n" : "") + MIT_NAVN_HILSEN + "\n\n---\n"
+    + (k.viaForaelder ? "Hilsenen er sendt til jer som forældre, fordi " + k.navn + " ikke har sin egen mail i OlsenKlanens kartotek. Giv den gerne videre. 🎂\n" : "")
+    + "Sendt fra OlsenKlanens familieside · olsenklanen.dk";
   const hilsenDok = {
     til: k.navn, tilNoegle: hilsenTilNoegle(k), aar: new Date().getFullYear(),
     fra: MIT_NAVN_HILSEN.slice(0, 60), fra_nr: MIT_NR_HILSEN,

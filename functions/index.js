@@ -391,7 +391,15 @@ async function sendPlanlagteHilsner() {
           if (mail || p.status === "afdød" || p.status === "udmeldt") return;
           const fn = (p.fornavn || String(p.navn || "").trim().split(/\s+/)[0] || "").trim();
           if (fn === fornavn && p.foedselsdato === foedselsdato) {
-            mail = String(p.email || (p.rolle !== "barn" ? fam.email : "") || "").trim();
+            // Egen mail. Voksne må bruge husstandens mail. Børn uden egen mail: en voksen i husstanden (mor/far), ellers husstandens mail.
+            const foerste = v => (String(v || "").split(/[\/;,\s]+/).find(x => x.includes("@")) || "").trim();
+            mail = foerste(p.email);
+            if (!mail && p.rolle !== "barn") mail = foerste(fam.email);
+            if (!mail) {
+              const voksne = (fam.familiemedlemmer || []).filter(x => x !== p && x.rolle !== "barn" && x.status !== "afdød" && x.status !== "udmeldt" && foerste(x.email));
+              voksne.sort((a, b) => (b.dataansvarlig ? 1 : 0) - (a.dataansvarlig ? 1 : 0));
+              mail = (voksne[0] && foerste(voksne[0].email)) || foerste(fam.email);
+            }
           }
         });
       });
