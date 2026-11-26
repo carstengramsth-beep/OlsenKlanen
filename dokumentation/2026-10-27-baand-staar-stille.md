@@ -36,3 +36,7 @@ Klik på båndet = gå til infologgen. Mus over båndet = det står stille, så 
   Klik åbner en boks på forsiden med overskrift, **smagsprøven** fra RSS (`<description>`, gjort til ren tekst, højst ca. 400 tegn)
   og beskeden »kræver tit abonnement«, plus knappen »Prøv at læse hele artiklen hos …«.
 - Man kan ikke se på forhånd, om netop én artikel er gratis. Derfor får man altid besked ved de tre medier.
+
+## Fødselsdag i båndet → fødselsdagskortet (tilføjet 26. nov. 2026)
+- Hver fødselsdag i dag er sin egen del af båndet (`window.OLSEN_FOEDSELSDAG_DELE`, med nøglen til kortet).
+- Klik viser **fødselsdagskortet** med hilsnerne (`visKort`). Er der ingen hilsner endnu, hopper den til listen under »Fremhævede begivenheder«, så man kan skrive den første.
