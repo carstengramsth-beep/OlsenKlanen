@@ -7,7 +7,8 @@
 <title>OlsenKlanen · Demo af nyhedsbåndet</title>
 <!--
   LIVE-DEMO af det gule nyhedsbånd til aviserne (fx Politiken og Berlingske).
-  Siden viser INGEN familiedata: ingen navne, fødselsdage, billeder eller beskeder.
+  Siden viser INGEN rigtige familiedata. Forsiden er et billede (billeder/demo/demo-forside.jpg) lavet med
+  opdigtede navne og sløret familiebillede; fødselsdagskortet er et eksempel (billeder/demo/demo-foedselsdagskort.png).
   Den henter kun offentlige RSS-overskrifter – samme kode som på forsiden.
   Kræver ikke login. Linket gives kun til de aviser, vi taler med.
 -->
@@ -17,21 +18,16 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .topbar { background: #2d5016; color: #f5e6a8; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
 .topbar h1 { font-size: 20px; font-weight: normal; }
 .topbar a { color: #f5e6a8; text-decoration: none; border: 1px solid #f5e6a8; border-radius: 4px; padding: 5px 12px; font-size: 14px; }
-.wrap { max-width: 1000px; margin: 0 auto; padding: 20px 16px; }
-.intro { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 20px 22px; margin-bottom: 18px; border-left: 6px solid #FFD700; }
+.wrap { max-width: 1400px; margin: 0 auto; padding: 20px 16px; }
+.intro { max-width: 1000px; margin-left: auto; margin-right: auto; background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 20px 22px; margin-bottom: 18px; border-left: 6px solid #FFD700; }
 .intro h2 { color: #2d5016; font-size: 22px; margin-bottom: 8px; }
 .intro p { margin-bottom: 8px; font-size: 16px; }
 .intro ul { margin: 6px 0 0 22px; font-size: 16px; }
 .intro li { margin-bottom: 4px; }
 .fortroligt { background: #fff8d6; border: 1px solid #e0a800; border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 14px; }
-.attrap { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 14px; }
-@media (max-width: 760px) { .attrap { grid-template-columns: 1fr; } }
-.felt { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 14px; }
-.felt .titel { font-weight: bold; color: #2d5016; font-size: 14px; margin-bottom: 10px; letter-spacing: 1px; }
-.graa { background: #e9e4d6; border-radius: 4px; height: 12px; margin: 8px 0; }
-.graa.kort { width: 60%; } .graa.mellem { width: 80%; }
-.skjult { font-size: 13px; color: #8a7a3f; font-style: italic; margin-top: 10px; }
-.billede { background: #ddd6c2; border-radius: 6px; height: 170px; display: flex; align-items: center; justify-content: center; color: #8a7a3f; font-style: italic; font-size: 14px; }
+.forsidebillede { display: block; width: 100%; max-width: 1360px; margin: 0 auto; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.15); user-select: none; -webkit-user-drag: none; pointer-events: none; }
+.billede-ramme { position: relative; max-width: 1360px; margin: 0 auto; }
+.billede-maerke { position: absolute; top: 10px; right: 10px; background: rgba(45,80,22,.92); color: #f5e6a8; font-size: 13px; padding: 5px 12px; border-radius: 14px; }
 /* Det gule bånd — samme udseende som på forsiden */
 .nyhedsbaand { position: fixed; bottom: 0; left: 0; right: 0; background: #FFD700; border-top: 2px solid #c8a800; padding: 12px 0; overflow: hidden; z-index: 999; white-space: nowrap; }
 .nyhedsbaand-tekst { display: inline-block; font-family: 'Segoe UI', Arial, sans-serif; font-size: 26px; font-weight: 600; color: #000; animation: baand 60s linear infinite; }
@@ -53,21 +49,21 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 <div class="wrap">
   <div class="intro">
     <h2>Sådan viser vi jeres nyheder for familien</h2>
-    <p>OlsenKlanen er en familieforening med cirka 50 husstande. På vores lukkede familieside kører et gult nyhedsbånd nederst på skærmen. Nyhederne nedenfor er <b>live</b> – de hentes fra mediernes egne RSS-feeds lige nu.</p>
+    <p>OlsenKlanen er en familieforening med cirka 50 husstande. Nedenfor ser du et <b>billede</b> af vores lukkede familieside med opdigtede navne. Nederst kører det gule nyhedsbånd <b>live</b> – nyhederne hentes fra mediernes egne RSS-feeds lige nu.</p>
     <ul>
       <li>Hold musen over båndet, så står det stille.</li>
       <li>Nyheder fra <b>DR</b> og <b>TV2</b> åbner artiklen direkte.</li>
       <li>Nyheder fra medier, der tit kræver abonnement, har en <b>🔒</b>. Et klik viser overskriften og smagsprøven fra RSS, og et link til hele artiklen hos mediet.</li>
+      <li>Fødselsdage står også i båndet. Et klik viser familiens fødselsdagskort med hilsnerne (her et eksempel).</li>
     </ul>
     <p style="margin-top:10px;">Vi vil gerne høre, om der findes en ordning, så vores medlemmer kan læse hele artiklen, når de klikker.</p>
-    <div class="fortroligt">🔐 Denne demo viser <b>ingen familiedata</b>. Familiens indhold er erstattet af grå felter. Linket deles kun med de medier, vi taler med.</div>
+    <div class="fortroligt">🔐 Demoen viser <b>ingen rigtige familiedata</b>. Billedet af forsiden er lavet med opdigtede navne, og familiebilledet er sløret. Linket deles kun med de medier, vi taler med.</div>
   </div>
 
-  <!-- Attrap af familiesiden: kun grå felter, intet rigtigt indhold -->
-  <div class="attrap">
-    <div class="felt"><div class="titel">OPSLAGSTAVLEN</div><div class="graa"></div><div class="graa mellem"></div><div class="graa kort"></div><div class="graa"></div><div class="graa kort"></div><div class="skjult">Familiens indhold er skjult i denne demo.</div></div>
-    <div class="felt"><div class="billede">Familiebillede (skjult i demoen)</div><div class="graa"></div><div class="graa mellem"></div><div class="graa kort"></div><div class="skjult">Fødselsdage, hilsner og kalender er skjult i denne demo.</div></div>
-    <div class="felt"><div class="titel">INFOLOG</div><div class="graa mellem"></div><div class="graa"></div><div class="graa kort"></div><div class="graa mellem"></div><div class="skjult">Familiens opslag er skjult i denne demo.</div></div>
+  <!-- Billede af forsiden med opdigtede data – kun et billede, man kan ikke klikke sig ind -->
+  <div class="billede-ramme">
+    <img class="forsidebillede" src="billeder/demo/demo-forside.jpg" alt="Billede af OlsenKlanens forside (eksempel med opdigtede navne)">
+    <div class="billede-maerke">Eksempel · opdigtede navne</div>
   </div>
 </div>
 
@@ -138,9 +134,33 @@ function visNyhedsboks(n) {
   bg.appendChild(boks);
   document.body.appendChild(bg);
 }
+// Eksempel på et fødselsdagskort (billede med opdigtede navne)
+function visEksempelKort() {
+  const gl = document.getElementById("nyhedsboks"); if (gl) gl.remove();
+  const bg = document.createElement("div");
+  bg.id = "nyhedsboks";
+  bg.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:10px";
+  const tekst = document.createElement("div");
+  tekst.style.cssText = "color:#fff;font-size:15px;text-align:center;max-width:520px";
+  tekst.textContent = "Eksempel: Sådan ser et fødselsdagskort ud på familiesiden. Navnene er dem, der har sendt en hilsen (her opdigtede).";
+  const img = document.createElement("img");
+  img.src = "billeder/demo/demo-foedselsdagskort.png"; img.alt = "Eksempel på fødselsdagskort";
+  img.style.cssText = "max-height:78vh;max-width:100%;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.4);background:#fff";
+  const luk = document.createElement("button"); luk.type = "button"; luk.textContent = "Luk";
+  luk.style.cssText = "background:#f5e6a8;color:#2d5016;border:none;padding:10px 22px;border-radius:6px;font-size:15px;cursor:pointer;font-family:Georgia,serif";
+  luk.onclick = () => bg.remove();
+  bg.onclick = e => { if (e.target === bg) bg.remove(); };
+  bg.append(tekst, img, luk);
+  document.body.appendChild(bg);
+}
 function byggBaand(nyheder) {
   const el = document.getElementById("baand-tekst");
   el.textContent = "";
+  const fd = document.createElement("a");
+  fd.href = "#"; fd.title = "Se fødselsdagskortet (eksempel)";
+  fd.textContent = "🎂 I dag fylder Emma 16 år — Hurra og tillykke fra OlsenKlanen!";
+  fd.addEventListener("click", e => { e.preventDefault(); visEksempelKort(); });
+  el.appendChild(fd);
   nyheder.forEach(n => {
     const betaling = !n.kilde.gratis;
     const a = document.createElement("a");
@@ -158,8 +178,8 @@ Promise.all(NYHEDS_KILDER.map(hentEtFeed)).then(res => {
   const blandet = [];
   const max = Math.max(...res.map(r => r.length), 0);
   for (let i = 0; i < max; i++) res.forEach(l => { if (l[i]) blandet.push(l[i]); });
-  if (blandet.length) byggBaand(blandet.slice(0, 15));
-  else document.getElementById("baand-tekst").textContent = "Nyhederne kunne ikke hentes lige nu. Prøv at genindlæse siden.";
+  byggBaand(blandet.slice(0, 15));
+  if (!blandet.length) { const s = document.createElement("span"); s.textContent = "Nyhederne kunne ikke hentes lige nu. Prøv at genindlæse siden."; document.getElementById("baand-tekst").appendChild(s); }
 });
 </script>
 <script src="forside-knap.js" defer></script>
