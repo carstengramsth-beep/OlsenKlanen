@@ -804,7 +804,7 @@ function foedselsdageIdag(personer, idag) {
   const aar = idag.getFullYear();
   return personer
     .filter(p => p.maaned === m && p.dag === d)
-    .map(p => ({ navn: p.navn, alder: alderPaa(p.aar, aar) }));
+    .map(p => ({ navn: p.navn, alder: alderPaa(p.aar, aar), foedselsdato: p.foedselsdato }));
 }
  
 // Byg de næste kommende mærkedage (til "Fremhævede begivenheder")
@@ -1136,6 +1136,8 @@ function kortTilfaeldig(froe){
   return () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 100000) / 100000; };
 }
 
+// Har fødselsdagen fået hilsner, så der er et fødselsdagskort at vise? (bruges af båndet)
+window.harFoedselsdagskort = function(noegle){ const t = hilsenTal[noegle]; return !!(t && t.navne && t.navne.length); };
 window.visKort = function(noegleKodet){
   const noegle = decodeURIComponent(noegleKodet);
   const t = hilsenTal[noegle];
@@ -1352,6 +1354,11 @@ let foedselsdagsTekst = "";
       foedselsdagsTekst = idagsFoedselsdage
         .map(f => `🎂 I dag fylder ${f.navn} ${f.alder} år — Hurra og tillykke fra OlsenKlanen!`)
         .join('     ');
+      // Til båndet: hver fødselsdag for sig, så et klik kan åbne netop dens fødselsdagskort
+      window.OLSEN_FOEDSELSDAG_DELE = idagsFoedselsdage.map(f => ({
+        tekst: `🎂 I dag fylder ${f.navn} ${f.alder} år — Hurra og tillykke fra OlsenKlanen!`,
+        kort: hilsenTilNoegle({ dato: idag, navn: f.navn, foedselsdato: f.foedselsdato })
+      }));
     }
     const idagsBryllupper = alleBryllupper.filter(b => b.maaned === idag.getMonth() + 1 && b.dag === idag.getDate() && (idag.getFullYear() === b.aar || BRYLLUP_NAVN[idag.getFullYear() - b.aar]));
     if (idagsBryllupper.length) {
@@ -1359,6 +1366,7 @@ let foedselsdagsTekst = "";
         ? `💒 I dag bliver ${b.navne} gift — Hurra og tillykke fra OlsenKlanen!`
         : `💍 I dag har ${b.navne} ${bryllupTekst(idag.getFullYear() - b.aar)} — Hurra og tillykke fra OlsenKlanen!`).join('     ');
       foedselsdagsTekst = foedselsdagsTekst ? foedselsdagsTekst + '     ' + t : t;
+      window.OLSEN_FOEDSELSDAG_DELE = (window.OLSEN_FOEDSELSDAG_DELE || []).concat([{ tekst: t, kort: "" }]);
     }
  
     // 2) Kommende mærkedage → Fremhævede begivenheder
@@ -1539,7 +1547,8 @@ setInterval(hentInfologUddrag, 120000);
 window.byggBaand = function byggBaand() {
   const dele = [];
   // Fødselsdag FØRST — det er det festlige
-  if (window.OLSEN_FOEDSELSDAG) dele.push({ tekst: window.OLSEN_FOEDSELSDAG, link: "#fremhaevede" });
+  if (window.OLSEN_FOEDSELSDAG_DELE && window.OLSEN_FOEDSELSDAG_DELE.length) window.OLSEN_FOEDSELSDAG_DELE.forEach(f => dele.push({ tekst: f.tekst, link: "#fremhaevede", kort: f.kort }));
+  else if (window.OLSEN_FOEDSELSDAG) dele.push({ tekst: window.OLSEN_FOEDSELSDAG, link: "#fremhaevede" });
   const idag = new Date().toISOString().slice(0, 10);
   BAAND_BESKEDER.filter(b => (!b.fra || b.fra <= idag) && idag <= b.til).forEach(b => dele.push({ tekst: b.tekst, link: b.link || "" }));
   if (INFOLOG_UDDRAG) dele.push({ tekst: INFOLOG_UDDRAG, link: "#infolog" });
@@ -1558,7 +1567,15 @@ window.byggBaand = function byggBaand() {
     n.textContent = d.tekst;
     if (ok) {
       n.href = link;
-      if (link[0] === "#") {
+      if (d.kort) {
+        // Fødselsdag: vis fødselsdagskortet med hilsnerne. Ingen hilsner endnu → hop til listen, så man kan skrive den første.
+        n.title = "Se fødselsdagskortet";
+        n.addEventListener("click", e => {
+          e.preventDefault();
+          if (window.harFoedselsdagskort && window.harFoedselsdagskort(d.kort)) { window.visKort(encodeURIComponent(d.kort)); return; }
+          const m = document.querySelector(link); if (m) m.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      } else if (link[0] === "#") {
         n.title = "Gå til det på siden";
         n.addEventListener("click", e => { const m = document.querySelector(link); if (m) { e.preventDefault(); m.scrollIntoView({ behavior: "smooth", block: "start" }); } });
       } else if (d.nyhed) {
