@@ -1544,10 +1544,10 @@ window.byggBaand = function byggBaand() {
   BAAND_BESKEDER.filter(b => (!b.fra || b.fra <= idag) && idag <= b.til).forEach(b => dele.push({ tekst: b.tekst, link: b.link || "" }));
   if (INFOLOG_UDDRAG) dele.push({ tekst: INFOLOG_UDDRAG, link: "#infolog" });
   if (vejr) dele.push({ tekst: vejr, link: "https://www.dmi.dk/" });
-  nyheder.forEach(n => dele.push(typeof n === "string" ? { tekst: "★  " + n, link: "" } : { tekst: "★  " + n.tekst, link: n.link || "" }));
+  nyheder.forEach(n => dele.push(typeof n === "string" ? { tekst: "★  " + n, link: "" } : { tekst: "★  " + n.tekst, link: n.link || "", nyhed: n.betaling ? n : null }));
   if (!dele.length) return;
   const el = document.getElementById("baand-tekst");
-  const noegle = JSON.stringify(dele);
+  const noegle = JSON.stringify(dele.map(d => [d.tekst, d.link]));
   if (el.dataset.noegle === noegle) return; // samme indhold: lad båndet køre videre uden at starte forfra
   el.dataset.noegle = noegle;
   el.textContent = "";
@@ -1561,6 +1561,9 @@ window.byggBaand = function byggBaand() {
       if (link[0] === "#") {
         n.title = "Gå til det på siden";
         n.addEventListener("click", e => { const m = document.querySelector(link); if (m) { e.preventDefault(); m.scrollIntoView({ behavior: "smooth", block: "start" }); } });
+      } else if (d.nyhed) {
+        n.title = "Kan kræve abonnement – tryk for at se smagsprøven";
+        n.addEventListener("click", e => { e.preventDefault(); visNyhedsboks(d.nyhed); });
       } else { n.target = "_blank"; n.rel = "noopener"; n.title = "Åbn i en ny fane"; }
     }
     el.appendChild(n);
@@ -1581,13 +1584,18 @@ fetch("https://api.open-meteo.com/v1/forecast?latitude=55.68&longitude=12.57&dai
 
 // NYHEDER FRA FLERE KILDER — DR, TV2, Politiken, Berlingske, Ekstra Bladet. Blander kilderne.
 const NYHEDS_KILDER = [
-  { navn: "DR",       url: "https://www.dr.dk/nyheder/service/feeds/senestenyt", forside: "https://www.dr.dk/nyheder" },
-  { navn: "TV2",      url: "https://feeds.services.tv2.dk/api/feeds/nyheder/rss", forside: "https://nyheder.tv2.dk/" },
+  { navn: "DR",       url: "https://www.dr.dk/nyheder/service/feeds/senestenyt", forside: "https://www.dr.dk/nyheder", gratis: true },
+  { navn: "TV2",      url: "https://feeds.services.tv2.dk/api/feeds/nyheder/rss", forside: "https://nyheder.tv2.dk/", gratis: true },
   { navn: "Politiken", url: "https://politiken.dk/rss/senestenyt.rss", forside: "https://politiken.dk/" },
   { navn: "Berlingske", url: "https://www.berlingske.dk/content/rss", forside: "https://www.berlingske.dk/" },
   { navn: "Ekstra Bladet", url: "https://ekstrabladet.dk/rssfeed/all/", forside: "https://ekstrabladet.dk/" }
 ];
 
+// Smagsprøven (teaseren) fra RSS kan indeholde HTML – lav den om til ren tekst (højst ca. 400 tegn)
+function rentTeaser(html) {
+  const t = (new DOMParser().parseFromString(String(html || ""), "text/html").body.textContent || "").replace(/\s+/g, " ").trim();
+  return t.length > 400 ? t.slice(0, 397) + " …" : t;
+}
 // Overskrifter fra et RSS-dokument (højst 4)
 function rssTitler(xmlTekst, kilde) {
   const xml = new DOMParser().parseFromString(xmlTekst || "", "text/xml");
@@ -1596,7 +1604,8 @@ function rssTitler(xmlTekst, kilde) {
     if (ud.length >= 4) return;
     const t = (item.querySelector("title")?.textContent || "").trim();
     const l = (item.querySelector("link")?.textContent || item.querySelector("guid")?.textContent || "").trim();
-    if (t) ud.push({ kilde: kilde.navn, titel: t, link: /^https?:\/\//.test(l) ? l : kilde.forside });
+    const d = rentTeaser(item.querySelector("description")?.textContent || "");
+    if (t) ud.push({ kilde: kilde.navn, titel: t, link: /^https?:\/\//.test(l) ? l : kilde.forside, teaser: d });
   });
   if (!ud.length) throw new Error("tom");
   return ud;
@@ -1610,8 +1619,42 @@ function hentEtFeed(kilde) {
     .catch(() => medTid(fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(kilde.url)).then(r => r.json()), 10000)
       .then(data => rssTitler(data.contents, kilde)))
     .catch(() => medTid(fetch("https://api.rss2json.com/v1/api.json?count=5&rss_url=" + encodeURIComponent(kilde.url)).then(r => r.json()), 10000)
-      .then(data => (data && data.status === "ok" && data.items) ? data.items.slice(0, 4).map(it => ({ kilde: kilde.navn, titel: it.title, link: /^https?:\/\//.test(it.link || "") ? it.link : kilde.forside })).filter(x => x.titel) : []))
+      .then(data => (data && data.status === "ok" && data.items) ? data.items.slice(0, 4).map(it => ({ kilde: kilde.navn, titel: it.title, link: /^https?:\/\//.test(it.link || "") ? it.link : kilde.forside, teaser: rentTeaser(it.description) })).filter(x => x.titel) : []))
     .catch(() => []);
+}
+
+// En nyhed i båndet. Medier, der tit kræver abonnement, får 🔒 og åbner en boks med smagsprøven først.
+function lavNyhed(kilde, titel, link, teaser) {
+  const navn = kilde ? kilde.navn : "";
+  const betaling = !!(kilde && !kilde.gratis);
+  return { tekst: (navn ? navn + (betaling ? " 🔒" : "") + ": " : "") + titel, link, betaling, kilde: navn, titel, teaser };
+}
+// Boksen med overskrift, smagsprøve og besked om abonnement
+function visNyhedsboks(n) {
+  const gl = document.getElementById("nyhedsboks"); if (gl) gl.remove();
+  const bg = document.createElement("div");
+  bg.id = "nyhedsboks";
+  bg.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px";
+  const boks = document.createElement("div");
+  boks.style.cssText = "background:#fff;border-radius:12px;max-width:520px;width:100%;padding:18px 20px;border-top:6px solid #FFD700;font-family:Georgia,serif;color:#2c3e1f";
+  const kilde = document.createElement("div"); kilde.style.cssText = "font-size:13px;color:#8a7a3f;margin-bottom:4px"; kilde.textContent = "📰 " + n.kilde;
+  const titel = document.createElement("div"); titel.style.cssText = "font-size:20px;font-weight:bold;margin-bottom:10px;line-height:1.3"; titel.textContent = n.titel;
+  const teaser = document.createElement("div"); teaser.style.cssText = "font-size:16px;line-height:1.55;margin-bottom:12px" + (n.teaser ? "" : ";color:#888;font-style:italic");
+  teaser.textContent = n.teaser || "Der følger ingen smagsprøve med denne nyhed.";
+  const note = document.createElement("div"); note.style.cssText = "font-size:14px;background:#fff8d6;border:1px solid #e0a800;border-radius:8px;padding:8px 10px;margin-bottom:14px";
+  note.textContent = "🔒 " + n.kilde + " kræver tit abonnement. Måske kan du læse hele artiklen, måske kun begyndelsen.";
+  const knapper = document.createElement("div"); knapper.style.cssText = "display:flex;gap:8px;flex-wrap:wrap";
+  const laes = document.createElement("a"); laes.href = n.link; laes.target = "_blank"; laes.rel = "noopener";
+  laes.style.cssText = "background:#2d5016;color:#f5e6a8;padding:10px 18px;border-radius:6px;text-decoration:none;font-size:15px";
+  laes.textContent = "Prøv at læse hele artiklen hos " + n.kilde + " ↗";
+  const luk = document.createElement("button"); luk.type = "button"; luk.textContent = "Luk";
+  luk.style.cssText = "background:#e8e2cd;color:#555;border:none;padding:10px 18px;border-radius:6px;font-size:15px;cursor:pointer;font-family:inherit";
+  luk.onclick = () => bg.remove();
+  bg.onclick = e => { if (e.target === bg) bg.remove(); };
+  knapper.append(laes, luk);
+  boks.append(kilde, titel, teaser, note, knapper);
+  bg.appendChild(boks);
+  document.body.appendChild(bg);
 }
 
 // Ligger der friske overskrifter i olsenpost/nyhedsbaand (højst 6 timer gamle), bruges de.
@@ -1624,7 +1667,7 @@ fetch("https://firestore.googleapis.com/v1/projects/olsenklanen-familieside/data
     const titler = ((f.titler && f.titler.arrayValue && f.titler.arrayValue.values) || []).map(v => v.stringValue).filter(Boolean);
     if (!titler.length || !hentet || Date.now() - new Date(hentet) > 6 * 3600000) throw new Error("gammel");
     // Gemte overskrifter er "Kilde: titel" uden link → link til kildens forside
-    nyheder = titler.map(t => { const k = NYHEDS_KILDER.find(x => t.startsWith(x.navn + ":")); return { tekst: t, link: k ? k.forside : "" }; });
+    nyheder = titler.map(t => { const k = NYHEDS_KILDER.find(x => t.startsWith(x.navn + ":")); return lavNyhed(k, k ? t.slice(k.navn.length + 1).trim() : t, k ? k.forside : "", ""); });
     window.byggBaand();
   })
   .catch(hentNyhederIBrowseren);
@@ -1640,7 +1683,7 @@ Promise.all(NYHEDS_KILDER.map(hentEtFeed))
         if (kildeListe[i]) blandet.push(kildeListe[i]);
       });
     }
-    nyheder = blandet.length ? blandet.slice(0, 15).map(n => ({ tekst: n.kilde + ": " + n.titel, link: n.link || "" })) : ["Velkommen til OlsenKlanen"];
+    nyheder = blandet.length ? blandet.slice(0, 15).map(n => lavNyhed(NYHEDS_KILDER.find(x => x.navn === n.kilde), n.titel, n.link || "", n.teaser || "")) : ["Velkommen til OlsenKlanen"];
     window.byggBaand();
   })
   .catch(() => {

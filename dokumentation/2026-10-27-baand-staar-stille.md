@@ -29,3 +29,10 @@ Klik på båndet = gå til infologgen. Mus over båndet = det står stille, så 
 - **Beskeder fra 5-Banden** kan have et felt `link` i Firestore (`#id` på forsiden eller en webadresse). Tommys besked har `link: "#special-tommy-dsb"`.
   (baand.html har endnu ikke et felt til link – kan tilføjes.)
 - Mus over båndet = det står stille, så man kan ramme genvejen.
+
+## Abonnement og smagsprøve (tilføjet 26. nov. 2026)
+- **DR og TV2** er gratis (`gratis: true` i `NYHEDS_KILDER`): klik åbner artiklen direkte.
+- **Ekstra Bladet, Politiken og Berlingske** kræver tit abonnement: der står **🔒** ved mediets navn i båndet.
+  Klik åbner en boks på forsiden med overskrift, **smagsprøven** fra RSS (`<description>`, gjort til ren tekst, højst ca. 400 tegn)
+  og beskeden »kræver tit abonnement«, plus knappen »Prøv at læse hele artiklen hos …«.
+- Man kan ikke se på forhånd, om netop én artikel er gratis. Derfor får man altid besked ved de tre medier.
