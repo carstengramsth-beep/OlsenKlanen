@@ -1,5 +1,11 @@
 [
   {
+    "fil": "2026-11-26-demo-nyhedsbaand.md",
+    "dato": "2026-11-26",
+    "titel": "Live-demo af det gule nyhedsbånd til aviserne (demo-nyhedsbaand.html, uden familiedata)",
+    "af": "Claude Code"
+  },
+  {
     "fil": "2026-11-11-gamle-hjemmeside-adgang.md",
     "dato": "2026-11-11",
     "titel": "Adgang til den gamle hjemmeside (olsenklanen.minisite.dk) fra forsiden",
