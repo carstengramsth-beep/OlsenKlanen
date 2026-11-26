@@ -19,3 +19,10 @@
 - Båndet starter med **»🎂 I dag fylder Emma 16 år — Hurra og tillykke fra OlsenKlanen!«**.
   Klik viser et **eksempel på et fødselsdagskort** (`billeder/demo/demo-foedselsdagskort.png`) med opdigtede hilsner.
 - Billederne blev lavet af Claude Code med en kopi af forsiden i en test-browser med falske data (ingen rigtige data hentet).
+
+## Udgave til medlemmerne (tilføjet 26. nov. 2026)
+- **`demo-nyhedsbaand.html?medlem`** viser en anden tekst øverst: »Se hvad der sker på OlsenKlanens familieside«,
+  forklaring af båndet, og en boks om, at det er et eksempel med opdigtede navne – med knappen »🔑 Log ind på olsenklanen.dk«.
+- Avisernes udgave (uden `?medlem`) er uændret.
+- Plan: Carsten viser linket til oldermanden Kurt og aftaler markedsføringen, **før** den evt. rundsendes til medlemmerne
+  (som Info nr. 7, både mail og intern besked). Intet er rundsendt endnu.

@@ -47,7 +47,25 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 </div>
 
 <div class="wrap">
-  <div class="intro">
+  <!-- Udgave til medlemmerne: demo-nyhedsbaand.html?medlem -->
+  <div class="intro" id="intro-medlem" style="display:none">
+    <h2>Se hvad der sker på OlsenKlanens familieside</h2>
+    <p>Sådan ser forsiden af <b>olsenklanen.dk</b> ud. Nederst kører det gule bånd med fødselsdage, nyt fra familien og dagens nyheder. Prøv at klikke på det!</p>
+    <ul>
+      <li>Hold musen over båndet, så står det stille.</li>
+      <li>Klik på fødselsdagen, så ser du fødselsdagskortet med alle hilsnerne.</li>
+      <li>Klik på en nyhed fra <b>DR</b> eller <b>TV2</b>, så åbner hele artiklen. Nyheder med <b>🔒</b> viser en smagsprøve – hele artiklen kræver ofte abonnement.</li>
+    </ul>
+    <div class="fortroligt" style="font-size:16px;">
+      🔐 <b>Det, du ser her, er et eksempel med opdigtede navne.</b><br>
+      Vil du se det rigtige indhold – familiens fødselsdage, hilsner, billeder og infologgen – skal du logge ind på olsenklanen.dk.
+      Det er for at beskytte medlemmernes personlige oplysninger.
+      <div style="margin-top:12px;"><a href="login.html" style="display:inline-block;background:#2d5016;color:#f5e6a8;text-decoration:none;padding:11px 22px;border-radius:6px;font-size:16px;">🔑 Log ind på olsenklanen.dk</a></div>
+      <div style="font-size:13px;margin-top:8px;color:#6b5a2a;">Har du glemt dit medlemsnummer eller din kode? Skriv til post@olsenklanen.dk.</div>
+    </div>
+  </div>
+
+  <div class="intro" id="intro-aviser">
     <h2>Sådan viser vi jeres nyheder for familien</h2>
     <p>OlsenKlanen er en familieforening med cirka 50 husstande. Nedenfor ser du et <b>billede</b> af vores lukkede familieside med opdigtede navne. Nederst kører det gule nyhedsbånd <b>live</b> – nyhederne hentes fra mediernes egne RSS-feeds lige nu.</p>
     <ul>
@@ -72,6 +90,13 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 </div>
 
 <script>
+// ?medlem = udgaven til OlsenKlanens medlemmer (med "Log ind"), ellers udgaven til aviserne
+if (new URLSearchParams(location.search).has("medlem")) {
+  document.getElementById("intro-medlem").style.display = "block";
+  document.getElementById("intro-aviser").style.display = "none";
+  document.title = "OlsenKlanen · Se hvad der sker på familiesiden";
+  const h1 = document.querySelector(".topbar h1"); if (h1) h1.textContent = "🌳 OlsenKlanen · Eksempel på familiesiden";
+}
 // Samme kilder og regler som det gule bånd på forsiden (forside.html)
 const NYHEDS_KILDER = [
   { navn: "DR",       url: "https://www.dr.dk/nyheder/service/feeds/senestenyt", forside: "https://www.dr.dk/nyheder", gratis: true },
