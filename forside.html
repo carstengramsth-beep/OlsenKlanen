@@ -207,6 +207,9 @@ a.il-indhold:hover .il-tekst { text-decoration: underline; }
   animation: baand 60s linear infinite;
 }
 .nyhedsbaand:hover .nyhedsbaand-tekst { animation-play-state: paused; }
+.nyhedsbaand-tekst > * { margin-right: 70px; }
+.nyhedsbaand-tekst a { color: #000; text-decoration: none; }
+.nyhedsbaand-tekst a:hover { text-decoration: underline; color: #6b1f00; }
 @keyframes baand {
   0%   { transform: translateX(100vw); }
   100% { transform: translateX(-100%); }
@@ -555,10 +558,10 @@ try {
   if (nv === "admin" && ({ "8": "carsten", "19": "tommy", "22": "kurt", "23": "karin", "48": "sanne" })[hus] === fn) document.getElementById("ret-baand").style.display = "block"; } catch (e) {}
 InfoLog.vis(document.getElementById("infolog"), 15); setInterval(() => InfoLog.vis(document.getElementById("infolog"), 15), 120000);</script>
  
-<!-- NYHEDSBAAND — rulletekst fast i bunden af siden. Klik = gå til infologgen -->
-<a class="nyhedsbaand" href="#infolog" title="Gå til infologgen" onclick="document.getElementById('infolog').scrollIntoView({behavior:'smooth',block:'start'});return false;">
+<!-- NYHEDSBAAND — rulletekst fast i bunden af siden. Hver nyhed er sin egen genvej. Mus over båndet = det står stille -->
+<div class="nyhedsbaand" title="Hold musen over båndet, så står det stille. Klik på en nyhed for at åbne den.">
   <span class="nyhedsbaand-tekst" id="baand-tekst">Henter det nye på siden, nyheder og vejr …</span>
-</a>
+</div>
  
 <!-- FØDSELSDAGSHILSEN — vindue til at skrive en hilsen (åbnes fra "Fremhævede begivenheder") -->
 <!-- FØDSELSDAGSKORT — åbnes ved klik på ⭐ ved fødselaren. Kan gemmes som PDF / printes på A4 -->
@@ -1504,7 +1507,7 @@ fetch("https://firestore.googleapis.com/v1/projects/olsenklanen-familieside/data
   method: "POST", headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ structuredQuery: { from: [{ collectionId: "olsenpost" }], where: { fieldFilter: { field: { fieldPath: "type" }, op: "EQUAL", value: { stringValue: "baand" } } } } })
 }).then(r => r.json()).then(j => {
-  j.filter(x => x.document).map(x => { const f = x.document.fields, g = k => f[k] ? Object.values(f[k])[0] : ""; return { tekst: g("tekst"), fra: g("fra"), til: g("til"), slettet: g("slettet") === true }; })
+  j.filter(x => x.document).map(x => { const f = x.document.fields, g = k => f[k] ? Object.values(f[k])[0] : ""; return { tekst: g("tekst"), fra: g("fra"), til: g("til"), link: g("link"), slettet: g("slettet") === true }; })
    .filter(b => !b.slettet && b.tekst).sort((a, b) => String(a.fra).localeCompare(String(b.fra))).forEach(b => BAAND_BESKEDER.push(b));
   window.byggBaand();
 }).catch(() => {});
@@ -1532,22 +1535,38 @@ function hentInfologUddrag() {
 hentInfologUddrag();
 setInterval(hentInfologUddrag, 120000);
 
+// Hver del af båndet er {tekst, link}. link = "#id" (hop på siden) eller en webadresse (åbner i ny fane).
 window.byggBaand = function byggBaand() {
-  let tekst = "";
+  const dele = [];
   // Fødselsdag FØRST — det er det festlige
-  if (window.OLSEN_FOEDSELSDAG) tekst += window.OLSEN_FOEDSELSDAG + "     ";
+  if (window.OLSEN_FOEDSELSDAG) dele.push({ tekst: window.OLSEN_FOEDSELSDAG, link: "#fremhaevede" });
   const idag = new Date().toISOString().slice(0, 10);
-  BAAND_BESKEDER.filter(b => (!b.fra || b.fra <= idag) && idag <= b.til).forEach(b => { tekst += b.tekst + "     "; });
-  if (INFOLOG_UDDRAG) tekst += INFOLOG_UDDRAG + "     ";
-  if (vejr) tekst += vejr + "     ";
-  nyheder.forEach(n => { tekst += "★  " + n + "     "; });
-  if (tekst) {
-    const el = document.getElementById("baand-tekst");
-    if (el.textContent === tekst) return; // samme tekst: lad båndet køre videre uden at starte forfra
-    el.textContent = tekst;
-    // Rolig, ens fart uanset hvor lang teksten er (ca. 90 punkter i sekundet)
-    setTimeout(() => { const s = Math.max(25, Math.round((el.scrollWidth + window.innerWidth) / 90)); el.style.animationDuration = s + "s"; }, 0);
-  }
+  BAAND_BESKEDER.filter(b => (!b.fra || b.fra <= idag) && idag <= b.til).forEach(b => dele.push({ tekst: b.tekst, link: b.link || "" }));
+  if (INFOLOG_UDDRAG) dele.push({ tekst: INFOLOG_UDDRAG, link: "#infolog" });
+  if (vejr) dele.push({ tekst: vejr, link: "https://www.dmi.dk/" });
+  nyheder.forEach(n => dele.push(typeof n === "string" ? { tekst: "★  " + n, link: "" } : { tekst: "★  " + n.tekst, link: n.link || "" }));
+  if (!dele.length) return;
+  const el = document.getElementById("baand-tekst");
+  const noegle = JSON.stringify(dele);
+  if (el.dataset.noegle === noegle) return; // samme indhold: lad båndet køre videre uden at starte forfra
+  el.dataset.noegle = noegle;
+  el.textContent = "";
+  dele.forEach(d => {
+    const link = String(d.link || "");
+    const ok = /^https?:\/\//.test(link) || /^#[\w-]+$/.test(link);
+    const n = document.createElement(ok ? "a" : "span");
+    n.textContent = d.tekst;
+    if (ok) {
+      n.href = link;
+      if (link[0] === "#") {
+        n.title = "Gå til det på siden";
+        n.addEventListener("click", e => { const m = document.querySelector(link); if (m) { e.preventDefault(); m.scrollIntoView({ behavior: "smooth", block: "start" }); } });
+      } else { n.target = "_blank"; n.rel = "noopener"; n.title = "Åbn i en ny fane"; }
+    }
+    el.appendChild(n);
+  });
+  // Rolig, ens fart uanset hvor lang teksten er (ca. 90 punkter i sekundet)
+  setTimeout(() => { const s = Math.max(25, Math.round((el.scrollWidth + window.innerWidth) / 90)); el.style.animationDuration = s + "s"; }, 0);
 };
 
 fetch("https://api.open-meteo.com/v1/forecast?latitude=55.68&longitude=12.57&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FCopenhagen&forecast_days=1")
@@ -1562,11 +1581,11 @@ fetch("https://api.open-meteo.com/v1/forecast?latitude=55.68&longitude=12.57&dai
 
 // NYHEDER FRA FLERE KILDER — DR, TV2, Politiken, Berlingske, Ekstra Bladet. Blander kilderne.
 const NYHEDS_KILDER = [
-  { navn: "DR",       url: "https://www.dr.dk/nyheder/service/feeds/senestenyt" },
-  { navn: "TV2",      url: "https://feeds.services.tv2.dk/api/feeds/nyheder/rss" },
-  { navn: "Politiken", url: "https://politiken.dk/rss/senestenyt.rss" },
-  { navn: "Berlingske", url: "https://www.berlingske.dk/content/rss" },
-  { navn: "Ekstra Bladet", url: "https://ekstrabladet.dk/rssfeed/all/" }
+  { navn: "DR",       url: "https://www.dr.dk/nyheder/service/feeds/senestenyt", forside: "https://www.dr.dk/nyheder" },
+  { navn: "TV2",      url: "https://feeds.services.tv2.dk/api/feeds/nyheder/rss", forside: "https://nyheder.tv2.dk/" },
+  { navn: "Politiken", url: "https://politiken.dk/rss/senestenyt.rss", forside: "https://politiken.dk/" },
+  { navn: "Berlingske", url: "https://www.berlingske.dk/content/rss", forside: "https://www.berlingske.dk/" },
+  { navn: "Ekstra Bladet", url: "https://ekstrabladet.dk/rssfeed/all/", forside: "https://ekstrabladet.dk/" }
 ];
 
 // Overskrifter fra et RSS-dokument (højst 4)
@@ -1576,7 +1595,8 @@ function rssTitler(xmlTekst, kilde) {
   xml.querySelectorAll("item").forEach(item => {
     if (ud.length >= 4) return;
     const t = (item.querySelector("title")?.textContent || "").trim();
-    if (t) ud.push({ kilde: kilde.navn, titel: t });
+    const l = (item.querySelector("link")?.textContent || item.querySelector("guid")?.textContent || "").trim();
+    if (t) ud.push({ kilde: kilde.navn, titel: t, link: /^https?:\/\//.test(l) ? l : kilde.forside });
   });
   if (!ud.length) throw new Error("tom");
   return ud;
@@ -1590,7 +1610,7 @@ function hentEtFeed(kilde) {
     .catch(() => medTid(fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(kilde.url)).then(r => r.json()), 10000)
       .then(data => rssTitler(data.contents, kilde)))
     .catch(() => medTid(fetch("https://api.rss2json.com/v1/api.json?count=5&rss_url=" + encodeURIComponent(kilde.url)).then(r => r.json()), 10000)
-      .then(data => (data && data.status === "ok" && data.items) ? data.items.slice(0, 4).map(it => ({ kilde: kilde.navn, titel: it.title })).filter(x => x.titel) : []))
+      .then(data => (data && data.status === "ok" && data.items) ? data.items.slice(0, 4).map(it => ({ kilde: kilde.navn, titel: it.title, link: /^https?:\/\//.test(it.link || "") ? it.link : kilde.forside })).filter(x => x.titel) : []))
     .catch(() => []);
 }
 
@@ -1603,7 +1623,8 @@ fetch("https://firestore.googleapis.com/v1/projects/olsenklanen-familieside/data
     const f = d.fields || {}, hentet = f.hentet ? f.hentet.stringValue : "";
     const titler = ((f.titler && f.titler.arrayValue && f.titler.arrayValue.values) || []).map(v => v.stringValue).filter(Boolean);
     if (!titler.length || !hentet || Date.now() - new Date(hentet) > 6 * 3600000) throw new Error("gammel");
-    nyheder = titler;
+    // Gemte overskrifter er "Kilde: titel" uden link → link til kildens forside
+    nyheder = titler.map(t => { const k = NYHEDS_KILDER.find(x => t.startsWith(x.navn + ":")); return { tekst: t, link: k ? k.forside : "" }; });
     window.byggBaand();
   })
   .catch(hentNyhederIBrowseren);
@@ -1619,7 +1640,7 @@ Promise.all(NYHEDS_KILDER.map(hentEtFeed))
         if (kildeListe[i]) blandet.push(kildeListe[i]);
       });
     }
-    nyheder = blandet.length ? blandet.slice(0, 15).map(n => n.kilde + ": " + n.titel) : ["Velkommen til OlsenKlanen"];
+    nyheder = blandet.length ? blandet.slice(0, 15).map(n => ({ tekst: n.kilde + ": " + n.titel, link: n.link || "" })) : ["Velkommen til OlsenKlanen"];
     window.byggBaand();
   })
   .catch(() => {
