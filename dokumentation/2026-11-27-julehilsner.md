@@ -39,3 +39,7 @@
 - I den røde boks »🎄 Læg kortet op på julehilsensiden« står nu **»👀 Sådan kommer den til at se ud på julehilsensiden«**:
   billede, tekst, skrifttype og »Lagt op af …«, som den vil stå på julehilsensiden. Den skifter, mens man skriver (`opdaterJulVisning`).
 - Kortet som A4 ses stadig til højre (nederst på mobil). Guiden fortæller om begge dele.
+
+## Start forfra (tilføjet 27. nov. 2026)
+- Knappen **»🔄 Start forfra – slet mit udkast«** under trin 2 på `kort.html` fjerner eget billede og tekst (spørger først)
+  og går tilbage til start-kortet (Esthers "Jul" ved `?jul=1`). »✕ Fjern mit billede« fjerner kun billedet.
