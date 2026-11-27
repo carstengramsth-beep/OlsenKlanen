@@ -99,6 +99,12 @@ try {
       <h2>1. Vælg et kort</h2>
       <div id="kort-valg"></div>
       <p class="hint">Hvert motiv har et fast nummer (Nr.), så det er nemt at tale om et bestemt kort. Nummeret står også på kortet.</p>
+      <div id="eget-boks" style="margin-top:12px; background:#fdfbf5; border:1px dashed #c8bfa0; border-radius:8px; padding:10px 12px;">
+        <label for="eget-fil" style="margin-top:0; color:#2d5016; font-weight:bold;">📷 Eller brug dit eget billede</label>
+        <input type="file" id="eget-fil" accept="image/*" style="font-size:14px; width:100%;">
+        <button type="button" id="eget-fjern" style="display:none; margin-top:6px; background:none; border:1px solid #c0392b; color:#c0392b; border-radius:12px; padding:3px 12px; cursor:pointer; font-family:inherit;">✕ Fjern mit billede</button>
+        <p class="hint" style="margin-top:6px;">Dit eget billede kan bruges, når du lægger kortet op på julehilsensiden. Er der børn på billedet, skal forældrene have sagt ja.</p>
+      </div>
       <p class="hint" style="margin-top:8px;"><a href="send-kunst.html" style="color:#2d5016; font-weight:bold;">🎨 Har du selv en tegning eller et maleri? Send det her</a> — måske bliver det til et postkort.</p>
       <p class="hint" style="margin-top:6px;">✨ <b>Bliver du inspireret?</b> Ønsker du et specialkort eller en invitation til en særlig dag, fx barnedåb, bryllup eller rund fødselsdag? Skriv til Carsten på <b>post@olsenklanen.dk</b>. Så laver vi det sammen, og det kommer under "Specialkort".</p>
     </div>
@@ -120,6 +126,12 @@ try {
       <h2>3. Print eller gem</h2>
       <button class="print-knap" onclick="window.print()">🖨️ Print på A4 / Gem som PDF</button>
       <p class="hint">Vælg din printer — eller "Gem som PDF" i printvinduet. Sæt "Skalering" til 100 % (standard), hvis den kan vælges.</p>
+    </div>
+    <div class="trin" id="send-jul" style="display:none; border:2px solid #a4161a; background:#fffaf0;">
+      <h2>🎄 Læg kortet op på julehilsensiden</h2>
+      <p style="font-size:14px; color:#555;">Hele familien kan se din julehilsen på siden <a href="julehilsner.html" style="color:#a4161a; font-weight:bold;">🎄 Julehilsner</a>. Den kommer også i det gule bånd på forsiden.</p>
+      <button class="print-knap" id="jul-knap" onclick="laegJulehilsenOp()" style="background:#a4161a;">🎄 Læg op på julehilsensiden</button>
+      <p class="hint" id="jul-status"></p>
     </div>
     <div class="trin" id="send-en" style="display:none; border:2px solid #2d7a2d;">
       <h2>4. Send kortet til et familiemedlem</h2>
@@ -287,7 +299,10 @@ $("kort-valg").querySelectorAll("button").forEach(b => b.onclick = () => {
   opdater();
 });
 
+// Eget billede (kun til julehilsensiden): { blob, url }
+window.egetBillede = null;
 function opdater(){
+  if (window.egetBillede) return opdaterEget();
   const k = KORT[valgt];
   $("kort-billede").onload = function(){
     const hoej = this.naturalHeight > this.naturalWidth;
@@ -309,6 +324,47 @@ function opdater(){
   $("kort").style.setProperty("--skrift", sk.familie);
   tilpasTekst();
 }
+function opdaterEget(){
+  $("kort-billede").onload = function(){
+    const hoej = this.naturalHeight > this.naturalWidth;
+    this.classList.toggle("hoejkant", hoej); $("kort").classList.toggle("hoejkant", hoej); tilpasTekst();
+  };
+  $("kort-billede").src = window.egetBillede.url;
+  $("kort-billede").alt = "Eget billede";
+  $("v-maler").textContent = "Foto: " + (hent("ok_navn") || "") + " · olsenklanen.dk";
+  $("v-udlaant").textContent = "";
+  $("kort-valg").querySelectorAll("button").forEach(b => b.classList.remove("valgt"));
+  $("v-til").textContent = $("til").value.trim();
+  $("v-besked").textContent = $("besked").value.trim() || "Skriv din hilsen …";
+  $("v-besked").style.color = $("besked").value.trim() ? "" : "#bbb";
+  $("v-slut").textContent = $("slut").value.trim();
+  $("v-fra").textContent = $("fra").value.trim();
+  $("kort").style.setProperty("--skrift", SKRIFTER[+$("skrift").value].familie);
+  tilpasTekst();
+}
+// Eget billede: gøres højst 1600 px (som på opslagstavlen) og vises på kortet
+$("eget-fil").onchange = () => {
+  const f = $("eget-fil").files[0]; if (!f) return;
+  const img = new Image();
+  img.onload = () => { const k = Math.min(1, 1600 / Math.max(img.width, img.height)); const c = document.createElement("canvas");
+    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    c.toBlob(b => { window.egetBillede = { blob: b, url: URL.createObjectURL(b) }; $("eget-fjern").style.display = ""; opdater(); }, "image/jpeg", 0.88); };
+  img.onerror = () => alert("Billedet kunne ikke læses. Prøv et andet (JPG eller PNG).");
+  img.src = URL.createObjectURL(f);
+};
+$("eget-fjern").onclick = () => { window.egetBillede = null; $("eget-fil").value = ""; $("eget-fjern").style.display = "none"; opdater(); };
+// Vælger man et af kortene, slås eget billede fra
+$("kort-valg").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+  if (window.egetBillede) { window.egetBillede = null; $("eget-fil").value = ""; $("eget-fjern").style.display = "none"; opdater(); }
+}, true));
+// kort.html?jul=1 (fra julehilsensiden): start med Esthers "Jul" og vis julehilsen-trinnet tydeligt
+if (new URLSearchParams(location.search).has("jul")) {
+  const i = KORT.findIndex(k => k.nr === 13); if (i >= 0) valgt = i;
+  if (!$("til").value) $("til").value = "Kære alle i OlsenKlanen";
+  if (!$("slut").value || $("slut").value === "Kærlig hilsen") $("slut").value = "Glædelig jul og godt nytår";
+  setTimeout(() => { const j = $("send-jul"); if (j && j.style.display !== "none") j.scrollIntoView({ behavior: "smooth", block: "center" }); }, 900);
+}
+
 // Er der meget tekst, gøres skriften mindre, så det hele passer på kortet (én A4-side)
 function tilpasTekst(){
   const sk = SKRIFTER[+$("skrift").value];
@@ -348,6 +404,7 @@ import { getFirestore, collection, getDocs, addDoc, doc, onSnapshot, serverTimes
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const POSTANSVARLIGE = ["8-B", "19-A", "22-B", "23-B", "48-B"];   // samme som i meddelelser.html
 const MIT_NR = window.hent("ok_nr").trim();
@@ -371,7 +428,7 @@ if (MIT_NR && !ER_GAEST) {
   async function taelBrug(){
     try {
       const [intern, mail] = await Promise.all([
-        getDocs(query(collection(db, "olsenpost"), where("type", "==", "kort"))),
+        getDocs(query(collection(db, "olsenpost"), where("type", "in", ["kort", "julehilsen"]))),
         getDocs(query(collection(db, "olsenpost_mail"), where("type", "in", ["kort_medlem", "brevkort"])))
       ]);
       const tael = {};
@@ -387,6 +444,49 @@ if (MIT_NR && !ER_GAEST) {
   window.taelBrug = taelBrug;
 
   $("send-en").style.display = "block";
+  $("send-jul").style.display = "block";
+  const storage = getStorage(app);
+
+  // ── 🎄 Læg kortet op på julehilsensiden (olsenpost, type "julehilsen") ──
+  function julStatus(html, klasse){ const el = $("jul-status"); el.innerHTML = html; el.className = "hint " + (klasse || ""); }
+  window.laegJulehilsenOp = async function(){
+    const besked = $("besked").value.trim();
+    if (!besked) { julStatus("Skriv en tekst på kortet først.", "fejl"); return; }
+    const knap = $("jul-knap");
+    knap.disabled = true;
+    try {
+      const k = window.valgtKort();
+      const eget = window.egetBillede;
+      let fil = k.fil;
+      if (eget) {
+        julStatus("⏳ Lægger dit billede op …");
+        const sti = sRef(storage, `fotovaeg/julehilsner/${Date.now()}_${MIT_NR.replace(/[^\w-]/g, "")}.jpg`);
+        await uploadBytes(sti, eget.blob, { contentType: "image/jpeg" });
+        fil = await getDownloadURL(sti);
+      }
+      julStatus("⏳ Gemmer din julehilsen …");
+      const nu = new Date();
+      const navn = window.hent("ok_navn").trim() || ("Medlem " + MIT_NR);
+      const ny = await addDoc(collection(db, "olsenpost"), {
+        type: "julehilsen", saeson: nu.getMonth() >= 6 ? nu.getFullYear() : nu.getFullYear() - 1,
+        fra_nr: MIT_NR, fra_navn: navn,
+        kort_fil: fil, eget_billede: !!eget,
+        kort_maler: eget ? navn : k.maler, kort_art: eget ? "Foto" : (k.art || "Maleri"), kort_nr: eget ? null : k.nr,
+        kort_titel: eget ? "" : k.titel, kort_titel_vis: eget ? "" : (k.titel || ""),
+        kort_til: $("til").value.trim(), kort_besked: besked, kort_slut: $("slut").value.trim(), kort_fra: $("fra").value.trim(),
+        kort_skrift: window.skriftNr(),
+        tid: nu.toISOString(), sendt: serverTimestamp(), sendt_lokal: Date.now(), skjult: false
+      });
+      // Linje i infologgen (kommer også i det gule bånd)
+      try { if (window.InfoLog) await InfoLog.log({ art: "hilsen", hvad: "lagt en julehilsen op 🎄", link: "julehilsner.html#jh-" + ny.id, billede: fil }); } catch(e) {}
+      julStatus('✅ Din julehilsen er lagt op! <a href="julehilsner.html#jh-' + ny.id + '" style="color:#a4161a;font-weight:bold;">Se den på julehilsensiden →</a>', "ok");
+      taelBrug();
+    } catch(e) {
+      console.log("Julehilsen fejlede:", e);
+      julStatus("Det lykkedes ikke. Prøv igen.", "fejl");
+    }
+    knap.disabled = false;
+  };
   if (ER_POSTANSVARLIG) $("send-alle").style.display = "block";
   $("en-emne").value = "Et kort fra " + (window.hent("ok_navn").split(/\s+/)[0] || "OlsenKlanen");
 
@@ -509,6 +609,7 @@ if (MIT_NR && !ER_GAEST) {
     const valg = $("en-modtager").value;
     const besked = $("besked").value.trim();
     const pin = $("en-pin").value.trim();
+    if (window.egetBillede) { enStatus("Dit eget billede kan kun bruges på julehilsensiden. Vælg et af kortene for at sende til en person.", "fejl"); return; }
     if (!valg) { enStatus("Vælg hvem kortet skal til.", "fejl"); return; }
     if (!besked) { enStatus("Skriv en tekst på kortet først.", "fejl"); return; }
     if (maade() === "intern") {
@@ -583,6 +684,7 @@ if (MIT_NR && !ER_GAEST) {
 
   window.sendTilAlle = async function(prove){
     if (!ER_POSTANSVARLIG) return;
+    if (window.egetBillede) { status("Dit eget billede kan kun bruges på julehilsensiden. Vælg et af kortene for at sende til alle.", "fejl"); return; }
     const besked = $("besked").value.trim();
     if (!besked) { status("Skriv en tekst på kortet først.", "fejl"); return; }
     if (!antal && !prove) { status("Der er ingen modtagere.", "fejl"); return; }
@@ -676,6 +778,7 @@ if (vis) {
   }
 }
 </script>
+<script src="infolog.js"></script>
 <script type="module" src="familieopkald.js"></script>
 <script src="forside-knap.js" defer></script>
 </body>

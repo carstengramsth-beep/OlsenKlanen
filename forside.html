@@ -78,6 +78,19 @@ a.il-indhold:hover .il-tekst { text-decoration: underline; }
 .billede-boks { position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
 .billede-boks img { width: 100%; height: auto; display: block; }
 .billede-tekst { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.7)); color: #fff; padding: 20px 16px 12px; display: flex; justify-content: space-between; font-style: italic; pointer-events: none; }
+/* 🎄 Julehilsner – boks øverst i højre side */
+.jul-boks { display: none; background: #fffaf0; border: 2px solid #a4161a; border-radius: 10px; overflow: hidden; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.jul-boks .jul-top { background: #a4161a; color: #fff; padding: 9px 14px; font-weight: bold; font-size: 14px; letter-spacing: 1px; }
+.jul-boks .jul-liste { padding: 8px 12px 4px; }
+.jul-boks .jul-rk { display: flex; gap: 10px; align-items: center; text-decoration: none; color: inherit; padding: 6px 0; border-bottom: 1px solid #f0ead8; }
+.jul-boks .jul-rk:last-child { border-bottom: none; }
+.jul-boks .jul-rk img { width: 58px; height: 58px; object-fit: cover; border-radius: 6px; flex: 0 0 58px; background: #eee; }
+.jul-boks .jul-rk .jul-tekst { font-size: 13px; line-height: 1.35; color: #444; }
+.jul-boks .jul-rk .jul-fra { font-weight: bold; color: #2d5016; font-size: 14px; }
+.jul-boks .jul-knapper { display: flex; gap: 8px; padding: 8px 12px 12px; flex-wrap: wrap; }
+.jul-boks .jul-knapper a { flex: 1; text-align: center; text-decoration: none; border-radius: 6px; padding: 8px 10px; font-size: 14px; }
+.jul-boks .jul-ny { background: #2d5016; color: #f5e6a8; }
+.jul-boks .jul-alle { background: #f0ead8; color: #2d5016; }
 /* Speciel lykønskning (vises i en bestemt periode) */
 .special-hilsen { display: none; background: #fffaf0; border: 2px solid #c89e3c; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.10); margin-bottom: 16px; }
 .special-hilsen .sh-top { background: #a4161a; color: #fff; padding: 10px 16px; font-weight: bold; font-size: 14px; letter-spacing: 1px; }
@@ -540,6 +553,15 @@ try {
 
   <aside class="infolog-kol">
     <div class="section-title">&nbsp;</div>
+    <!-- 🎄 JULEHILSNER: vises fra 15. november til 10. januar (eller når der er hilsner) -->
+    <div class="jul-boks" id="jul-boks">
+      <div class="jul-top">🎄 JULEHILSNER</div>
+      <div class="jul-liste" id="jul-liste"><div style="font-size:13px;color:#8a7a3f;font-style:italic;padding:6px 0;">Der er ingen julehilsner endnu. Bliv den første!</div></div>
+      <div class="jul-knapper">
+        <a class="jul-ny" href="kort.html?jul=1">➕ Læg en julehilsen op</a>
+        <a class="jul-alle" href="julehilsner.html">Se alle →</a>
+      </div>
+    </div>
     <div class="infolog-boks">
       <div class="infolog-hoved">📣 <span>INFOLOG<small>Det nye på olsenklanen.dk</small></span></div>
       <div class="infolog-intro">
@@ -1023,6 +1045,34 @@ function hilsenInfo(k){
   const t = hilsenTal[hilsenTilNoegle(k)];
   return { antal: t ? t.antal : 0, fraMig: !!(t && MIT_NR_HILSEN && t.fraNr.has(MIT_NR_HILSEN)) };
 }
+/* ════════ 🎄 JULEHILSNER: boks i højre side + linjer i det gule bånd ════════ */
+(function(){
+  const saeson = d => d.getMonth() >= 6 ? d.getFullYear() : d.getFullYear() - 1;
+  const nu = new Date(), NU_SAESON = saeson(nu);
+  const iSaesonen = (nu.getMonth() === 10 && nu.getDate() >= 15) || nu.getMonth() === 11 || (nu.getMonth() === 0 && nu.getDate() <= 10);
+  const esc = t => String(t == null ? "" : t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const sikkerBillede = u => /^https:\/\/firebasestorage\.googleapis\.com\//.test(u) || /^billeder\/[\w\-\/]+\.(jpg|jpeg|png|webp)$/i.test(u) ? u : "";
+  onSnapshot(query(collection(db, "olsenpost"), where("type", "==", "julehilsen")), snap => {
+    const liste = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .filter(h => !h.skjult && (h.saeson || saeson(new Date(h.sendt_lokal || 0))) === NU_SAESON)
+      .sort((a, b) => (b.sendt_lokal || 0) - (a.sendt_lokal || 0));
+    const boks = document.getElementById("jul-boks");
+    if (boks) boks.style.display = (iSaesonen || liste.length) ? "block" : "none";
+    const el = document.getElementById("jul-liste");
+    if (el && liste.length) el.innerHTML = liste.slice(0, 3).map(h => {
+      const b = sikkerBillede(h.kort_fil || "");
+      const tekst = String(h.kort_besked || "").replace(/\s+/g, " ");
+      return `<a class="jul-rk" href="julehilsner.html#jh-${esc(h.id)}">${b ? `<img src="${esc(b)}" alt="" loading="lazy">` : ""}
+        <span class="jul-tekst"><span class="jul-fra">🎄 ${esc(h.kort_fra || h.fra_navn || "")}</span><br>${esc(tekst.length > 70 ? tekst.slice(0, 67) + " …" : tekst)}</span></a>`;
+    }).join("") + (liste.length > 3 ? `<div style="font-size:12px;color:#8a7a3f;padding:4px 0;">… og ${liste.length - 3} mere</div>` : "");
+    // Det gule bånd: julehilsner fra de sidste 7 dage, hver med genvej til hilsenen
+    const graense = Date.now() - 7 * 864e5;
+    window.OLSEN_JULEHILSNER = liste.filter(h => (h.sendt_lokal || 0) > graense).slice(0, 5)
+      .map(h => ({ tekst: "🎄 Julehilsen fra " + (h.kort_fra || h.fra_navn || "et medlem"), link: "julehilsner.html#jh-" + h.id }));
+    if (typeof window.byggBaand === "function") window.byggBaand();
+  }, e => console.log("Julehilsner:", e));
+})();
+
 onSnapshot(collection(db, "hilsener"), snap => {
   const tal = {};
   snap.forEach(d => {
@@ -1551,6 +1601,7 @@ window.byggBaand = function byggBaand() {
   else if (window.OLSEN_FOEDSELSDAG) dele.push({ tekst: window.OLSEN_FOEDSELSDAG, link: "#fremhaevede" });
   const idag = new Date().toISOString().slice(0, 10);
   BAAND_BESKEDER.filter(b => (!b.fra || b.fra <= idag) && idag <= b.til).forEach(b => dele.push({ tekst: b.tekst, link: b.link || "" }));
+  (window.OLSEN_JULEHILSNER || []).forEach(j => dele.push(j));
   if (INFOLOG_UDDRAG) dele.push({ tekst: INFOLOG_UDDRAG, link: "#infolog" });
   if (vejr) dele.push({ tekst: vejr, link: "https://www.dmi.dk/" });
   nyheder.forEach(n => dele.push(typeof n === "string" ? { tekst: "★  " + n, link: "" } : { tekst: "★  " + n.tekst, link: n.link || "", nyhed: n.betaling ? n : null }));
@@ -1562,7 +1613,7 @@ window.byggBaand = function byggBaand() {
   el.textContent = "";
   dele.forEach(d => {
     const link = String(d.link || "");
-    const ok = /^https?:\/\//.test(link) || /^#[\w-]+$/.test(link);
+    const ok = /^https?:\/\//.test(link) || /^#[\w-]+$/.test(link) || /^[\w-]+\.html(#[\w-]+)?$/.test(link);
     const n = document.createElement(ok ? "a" : "span");
     n.textContent = d.tekst;
     if (ok) {
@@ -1581,6 +1632,7 @@ window.byggBaand = function byggBaand() {
       } else if (d.nyhed) {
         n.title = "Kan kræve abonnement – tryk for at se smagsprøven";
         n.addEventListener("click", e => { e.preventDefault(); visNyhedsboks(d.nyhed); });
+      } else if (!/^https?:/.test(link)) { n.title = "Gå til det på siden";
       } else { n.target = "_blank"; n.rel = "noopener"; n.title = "Åbn i en ny fane"; }
     }
     el.appendChild(n);

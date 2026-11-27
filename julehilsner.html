@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlsenKlanen · Julehilsner</title>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=EB+Garamond:ital@0;1&family=Caveat:wght@500&family=Great+Vibes&family=Kalam&family=Lora&family=Open+Sans&family=Creepster&family=Pacifico&display=swap" rel="stylesheet">
+<script>
+try {
+  function hent(n){ return sessionStorage.getItem(n) || localStorage.getItem(n) || ""; }
+  if (!(hent("ok_nr") || hent("ok_navn") || hent("ok_niveau"))) window.location.href = "login.html";
+} catch(e) {}
+</script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; color: #2c3e1f; line-height: 1.5; padding-bottom: 60px;
+  background-image: radial-gradient(circle at 10% 20%, rgba(164,22,26,.05) 0 2px, transparent 3px), radial-gradient(circle at 70% 60%, rgba(45,80,22,.05) 0 2px, transparent 3px); background-size: 60px 60px; }
+.header { background: #a4161a; color: #fff; padding: 16px 26px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 4px solid #2d5016; }
+.header h1 { font-size: 22px; font-weight: normal; }
+.header a { color: #fff; text-decoration: none; padding: 6px 14px; border: 1px solid #fff; border-radius: 4px; font-size: 14px; }
+.wrap { max-width: 1150px; margin: 0 auto; padding: 22px 16px; }
+.intro { background: #fffaf0; border: 2px solid #c89e3c; border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; text-align: center; }
+.intro .stor { font-family: 'Pacifico', cursive; font-size: 34px; color: #a4161a; line-height: 1.3; }
+.intro p { font-size: 16px; margin: 6px 0 12px; }
+.ny-knap { display: inline-block; background: #2d5016; color: #f5e6a8; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 17px; }
+.ny-knap:hover { background: #3d6b1f; }
+.fra-alle { margin-top: 12px; font-size: 15px; color: #6b5a2a; }
+.fra-alle .navne { font-family: 'Dancing Script', cursive; font-size: 22px; color: #2d5016; }
+.gitter { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+.hilsen { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.10); overflow: hidden; border-top: 6px solid #a4161a; display: flex; flex-direction: column; scroll-margin-top: 20px; transition: box-shadow .4s; }
+.hilsen.fremhaev { box-shadow: 0 0 0 4px #c89e3c, 0 2px 8px rgba(0,0,0,.10); }
+.hilsen img { width: 100%; height: 230px; object-fit: cover; display: block; cursor: zoom-in; background: #eee; }
+.hilsen .indhold { padding: 14px 18px 8px; flex: 1; font-family: var(--skrift, 'Dancing Script', cursive); color: #2c3e1f; }
+.hilsen .til { font-size: 22px; margin-bottom: 6px; }
+.hilsen .besked { font-size: 19px; line-height: 1.45; white-space: pre-wrap; }
+.hilsen .slut { font-size: 19px; margin-top: 10px; }
+.hilsen .fra { font-size: 22px; }
+.hilsen .bund { font-family: Georgia, serif; font-size: 13px; color: #8a7a3f; padding: 8px 18px 12px; border-top: 1px solid #f0ead8; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.hilsen .ophav { font-family: Georgia, serif; font-size: 11px; color: #a09060; font-style: italic; padding: 4px 18px 0; }
+.fjern { background: none; border: 1px solid #c0392b; color: #c0392b; border-radius: 12px; font-size: 12px; padding: 2px 10px; cursor: pointer; font-family: inherit; }
+.tom { text-align: center; color: #8a7a3f; font-style: italic; padding: 30px; background: #fff; border-radius: 10px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🎄 Julehilsner fra OlsenKlanen</h1>
+  <a href="forside.html">🏠 Forsiden</a>
+</div>
+
+<div class="wrap">
+  <div class="intro">
+    <div class="stor">Glædelig jul</div>
+    <p>Her samles familiens julehilsner. Vælg et af kortene – eller dit eget billede – skriv en hilsen, og læg den op til hele familien.</p>
+    <a class="ny-knap" href="kort.html?jul=1">➕ Læg en julehilsen op</a>
+    <div class="fra-alle" id="fra-alle"></div>
+  </div>
+  <div class="gitter" id="hilsner"><div class="tom">Henter julehilsner …</div></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyDlydsBrJQswqtiqTLM4yXDQWHbAolMpZU",
+  authDomain: "olsenklanen-familieside.firebaseapp.com",
+  projectId: "olsenklanen-familieside",
+  storageBucket: "olsenklanen-familieside.firebasestorage.app",
+  messagingSenderId: "640843662410",
+  appId: "1:640843662410:web:e749b77ec9271e75c4d2b3"
+});
+const db = getFirestore(app);
+const hent = n => { try { return sessionStorage.getItem(n) || localStorage.getItem(n) || ""; } catch(e) { return ""; } };
+const MIT_NR = hent("ok_nr"), MIT_NAVN = hent("ok_navn");
+// 5-Banden må fjerne hilsner (som i infologgen): Carsten (8), Tommy (19), Kurt (22), Karin (23), Sanne (48)
+const erFemBanden = (() => { const hus = MIT_NR.split("-")[0].trim(), fn = (MIT_NAVN || "").trim().split(/\s+/)[0].toLowerCase();
+  return (hent("ok_niveau") || "").toLowerCase() === "admin" && ({ "8": "carsten", "19": "tommy", "22": "kurt", "23": "karin", "48": "sanne" })[hus] === fn; })();
+// Samme skrifttyper og rækkefølge som på kort.html (kort_skrift = nummer i listen)
+const SKRIFTER = ["'Dancing Script', cursive", "'Great Vibes', cursive", "'Caveat', cursive", "'Kalam', cursive", "'EB Garamond', Georgia, serif", "'Lora', Georgia, serif", "'Open Sans', Arial, sans-serif", "'Creepster', cursive"];
+// Julesæsonen: juli–december hører til det år, januar–juni til året før
+const saeson = d => d.getMonth() >= 6 ? d.getFullYear() : d.getFullYear() - 1;
+const NU_SAESON = saeson(new Date());
+const esc = t => String(t == null ? "" : t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const dato = ms => new Date(ms).toLocaleDateString("da-DK", { day: "numeric", month: "long" }) + " kl. " + new Date(ms).toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
+const sikkerBillede = u => /^https:\/\/firebasestorage\.googleapis\.com\//.test(u) || /^billeder\/[\w\-\/]+\.(jpg|jpeg|png|webp)$/i.test(u) ? u : "";
+let foersteGang = true;
+
+onSnapshot(query(collection(db, "olsenpost"), where("type", "==", "julehilsen")), snap => {
+  const liste = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .filter(h => !h.skjult && (h.saeson || saeson(new Date(h.sendt_lokal || 0))) === NU_SAESON)
+    .sort((a, b) => (b.sendt_lokal || 0) - (a.sendt_lokal || 0));
+  const el = document.getElementById("hilsner");
+  if (!liste.length) {
+    el.innerHTML = '<div class="tom">Der er ingen julehilsner endnu. Bliv den første! 🎄</div>';
+    document.getElementById("fra-alle").innerHTML = "";
+    return;
+  }
+  // "Julehilsner fra: …" – som navnene på et fødselsdagskort
+  const navne = [...new Set(liste.map(h => (h.kort_fra || h.fra_navn || "").trim()).filter(Boolean))];
+  document.getElementById("fra-alle").innerHTML = "Julehilsner fra: <span class='navne'>" + navne.map(esc).join(" · ") + "</span>";
+  el.innerHTML = liste.map(h => {
+    const billede = sikkerBillede(h.kort_fil || "");
+    const kanFjerne = erFemBanden || (MIT_NR && h.fra_nr === MIT_NR);
+    const ophav = h.eget_billede ? "Foto: " + (h.fra_navn || "") : ((h.kort_art || "Maleri") + " nr. " + (h.kort_nr || "") + (h.kort_titel_vis ? " · “" + h.kort_titel_vis + "”" : "") + " · © " + (h.kort_maler || ""));
+    return `<div class="hilsen" id="jh-${esc(h.id)}" style="--skrift:${SKRIFTER[h.kort_skrift] || SKRIFTER[0]}">
+      ${billede ? `<img src="${esc(billede)}" alt="Julehilsen" data-stort="Julehilsen fra ${esc(h.kort_fra || h.fra_navn || "")}" loading="lazy">` : ""}
+      <div class="ophav">${esc(ophav)}</div>
+      <div class="indhold">
+        ${h.kort_til ? `<div class="til">${esc(h.kort_til)}</div>` : ""}
+        <div class="besked">${esc(h.kort_besked || "")}</div>
+        ${h.kort_slut ? `<div class="slut">${esc(h.kort_slut)}</div>` : ""}
+        ${h.kort_fra ? `<div class="fra">${esc(h.kort_fra)}</div>` : ""}
+      </div>
+      <div class="bund"><span>🎄 Lagt op af ${esc(h.fra_navn || "")} · ${esc(dato(h.sendt_lokal || Date.now()))}</span>
+        ${kanFjerne ? `<button class="fjern" data-fjern="${esc(h.id)}">🗑 Fjern</button>` : ""}</div>
+    </div>`;
+  }).join("");
+  el.querySelectorAll("[data-fjern]").forEach(b => b.onclick = async () => {
+    if (!confirm("Vil du fjerne denne julehilsen? Den forsvinder for alle.")) return;
+    try { await updateDoc(doc(db, "olsenpost", b.dataset.fjern), { skjult: true, fjernet_af: MIT_NAVN, fjernet_tid: new Date().toISOString() }); }
+    catch(e) { alert("Kunne ikke fjerne hilsenen. Prøv igen."); }
+  });
+  // Kom man via en genvej (#jh-<id>), så hop til hilsenen og fremhæv den
+  if (foersteGang && location.hash.startsWith("#jh-")) {
+    const m = document.getElementById(location.hash.slice(1));
+    if (m) { m.scrollIntoView({ behavior: "smooth", block: "start" }); m.classList.add("fremhaev"); setTimeout(() => m.classList.remove("fremhaev"), 4000); }
+  }
+  foersteGang = false;
+}, e => { document.getElementById("hilsner").innerHTML = '<div class="tom">Julehilsnerne kunne ikke hentes. Genindlæs siden.</div>'; });
+</script>
+<script src="stort-billede.js" defer></script>
+<script src="forside-knap.js" defer></script>
+</body>
+</html>
