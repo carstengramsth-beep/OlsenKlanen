@@ -34,3 +34,8 @@
 - Knappen i boksen 🎄 Julehilsner på forsiden (og på julehilsensiden) hedder nu **»🎄 Lav et julekort«** og går til `kort.html?jul=1&guide=1`.
 - `guide=1` viser en lille guide nederst på skærmen, trin for trin: 1) Vælg dit billede, 2) Skriv din hilsen,
   3) Læg den op til hele familien, 4) … eller send den til én person. Hvert trin fremhæves med en gul ramme. »Næste«, »Tilbage«, »Luk guiden«.
+
+## Forhåndsvisning (tilføjet 27. nov. 2026)
+- I den røde boks »🎄 Læg kortet op på julehilsensiden« står nu **»👀 Sådan kommer den til at se ud på julehilsensiden«**:
+  billede, tekst, skrifttype og »Lagt op af …«, som den vil stå på julehilsensiden. Den skifter, mens man skriver (`opdaterJulVisning`).
+- Kortet som A4 ses stadig til højre (nederst på mobil). Guiden fortæller om begge dele.
