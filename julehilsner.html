@@ -29,7 +29,7 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .gitter { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
 .hilsen { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.10); overflow: hidden; border-top: 6px solid #a4161a; display: flex; flex-direction: column; scroll-margin-top: 20px; transition: box-shadow .4s; }
 .hilsen.fremhaev { box-shadow: 0 0 0 4px #c89e3c, 0 2px 8px rgba(0,0,0,.10); }
-.hilsen img { width: 100%; height: auto; max-height: 560px; object-fit: contain; display: block; cursor: zoom-in; background: #eee; }
+.hilsen img { width: 100%; height: 260px; object-fit: contain; display: block; background: #f5f1e8; cursor: zoom-in; background: #eee; }
 .hilsen .indhold { padding: 14px 18px 8px; flex: 1; font-family: var(--skrift, 'Dancing Script', cursive); color: #2c3e1f; }
 .hilsen .til { font-size: 22px; margin-bottom: 6px; }
 .hilsen .besked { font-size: 19px; line-height: 1.45; white-space: pre-wrap; }
@@ -105,7 +105,7 @@ onSnapshot(query(collection(db, "olsenpost"), where("type", "==", "julehilsen"))
     const kanFjerne = erFemBanden || (MIT_NR && h.fra_nr === MIT_NR);
     const ophav = h.eget_billede ? "Foto: " + (h.fra_navn || "") : ((h.kort_art || "Maleri") + " nr. " + (h.kort_nr || "") + (h.kort_titel_vis ? " · “" + h.kort_titel_vis + "”" : "") + " · © " + (h.kort_maler || ""));
     return `<div class="hilsen" id="jh-${esc(h.id)}" style="--skrift:${SKRIFTER[h.kort_skrift] || SKRIFTER[0]}">
-      ${billede ? `<img src="${esc(billede)}" alt="Julehilsen" data-stort="Julehilsen fra ${esc(h.kort_fra || h.fra_navn || "")}" loading="lazy">` : ""}
+      ${billede ? `<img title="Tryk for at se billedet stort" src="${esc(billede)}" alt="Julehilsen" data-stort="Julehilsen fra ${esc(h.kort_fra || h.fra_navn || "")}" loading="lazy">` : ""}
       <div class="ophav">${esc(ophav)}</div>
       <div class="indhold">
         ${h.kort_til ? `<div class="til">${esc(h.kort_til)}</div>` : ""}
