@@ -29,3 +29,8 @@
 - OlsenPost viser kort med eget billede (Storage-URL), og `kort.html?vis=intern:<id>` kan vise dem.
 - Julehilsensiden viser altid **hele billedet** (ikke beskåret).
 - Esthers julekage-foto blev brugt som eksempel, men er et privat foto: det er **ikke** lagt ind som specialkort og ikke i repoet.
+
+## Guide: »🎄 Lav et julekort« (tilføjet 27. nov. 2026)
+- Knappen i boksen 🎄 Julehilsner på forsiden (og på julehilsensiden) hedder nu **»🎄 Lav et julekort«** og går til `kort.html?jul=1&guide=1`.
+- `guide=1` viser en lille guide nederst på skærmen, trin for trin: 1) Vælg dit billede, 2) Skriv din hilsen,
+  3) Læg den op til hele familien, 4) … eller send den til én person. Hvert trin fremhæves med en gul ramme. »Næste«, »Tilbage«, »Luk guiden«.
