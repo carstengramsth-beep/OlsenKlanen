@@ -66,9 +66,15 @@ textarea { min-height: 150px; resize: vertical; }
 #kort .fra { font-size: calc(16pt * var(--f)); margin-top: 1mm; }
 
 body.vis .wrap { display: block; max-width: 660px; }
+/* Kortet følger med ned, når man ruller, så det altid står ved siden af det, man skriver (kun på brede skærme) */
+@media (min-width: 861px) {
+  .forhaand-kol { position: sticky; top: 14px; }
+  body:not(.vis) #kort-ramme { max-width: min(620px, calc((100vh - 70px) * 210 / 297)); }
+}
 
 /* Udskrift: siden vises i fuld størrelse uden skalering */
 @media print {
+  .forhaand-kol { position: static !important; }
   @page { size: A4 portrait; margin: 0; }
   html, body { background: #fff; margin: 0; padding: 0; }
   .header, .styring, .forhaand-titel { display: none !important; }
@@ -188,7 +194,7 @@ try {
     </div>
   </div>
 
-  <div>
+  <div class="forhaand-kol">
     <div class="forhaand-titel" id="forhaand-titel">Sådan ser kortet ud:</div>
     <button class="print-knap forhaand-titel" id="vis-print" onclick="window.print()" style="display:none; max-width:620px; margin-bottom:12px;">🖨️ Print kortet på A4 / Gem som PDF</button>
     <div id="kort-ramme"><div id="kort">
