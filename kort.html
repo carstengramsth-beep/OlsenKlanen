@@ -130,6 +130,18 @@ try {
     <div class="trin" id="send-jul" style="display:none; border:2px solid #a4161a; background:#fffaf0;">
       <h2>🎄 Læg kortet op på julehilsensiden</h2>
       <p style="font-size:14px; color:#555;">Hele familien kan se din julehilsen på siden <a href="julehilsner.html" style="color:#a4161a; font-weight:bold;">🎄 Julehilsner</a>. Den kommer også i det gule bånd på forsiden.</p>
+      <div style="font-size:14px; color:#a4161a; font-weight:bold; margin:10px 0 6px;">👀 Sådan kommer den til at se ud på julehilsensiden:</div>
+      <div id="jul-visning" style="background:#fff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,.10); overflow:hidden; border-top:6px solid #a4161a; margin-bottom:12px;">
+        <img id="jv-billede" alt="" style="width:100%; height:200px; object-fit:contain; display:block; background:#f5f1e8;">
+        <div id="jv-ophav" style="font-size:11px; color:#a09060; font-style:italic; padding:4px 14px 0;"></div>
+        <div id="jv-indhold" style="padding:10px 14px 8px; color:#2c3e1f;">
+          <div id="jv-til" style="font-size:20px; margin-bottom:4px;"></div>
+          <div id="jv-besked" style="font-size:17px; line-height:1.45; white-space:pre-wrap;"></div>
+          <div id="jv-slut" style="font-size:17px; margin-top:8px;"></div>
+          <div id="jv-fra" style="font-size:20px;"></div>
+        </div>
+        <div style="font-size:12px; color:#8a7a3f; padding:6px 14px 10px; border-top:1px solid #f0ead8;">🎄 Lagt op af <span id="jv-af"></span></div>
+      </div>
       <button class="print-knap" id="jul-knap" onclick="laegJulehilsenOp()" style="background:#a4161a;">🎄 Læg op på julehilsensiden</button>
       <p class="hint" id="jul-status"></p>
     </div>
@@ -299,6 +311,20 @@ $("kort-valg").querySelectorAll("button").forEach(b => b.onclick = () => {
   opdater();
 });
 
+// 👀 Lille forhåndsvisning af, hvordan hilsenen ser ud på julehilsensiden (skifter, mens man skriver)
+function opdaterJulVisning(){
+  if (!$("jul-visning")) return;
+  const eget = window.egetBillede, k = KORT[valgt];
+  $("jv-billede").src = eget ? eget.url : (k.fil + "?v=" + BILLED_VERSION);
+  $("jv-ophav").textContent = eget ? "Foto: " + (eget.maler || hent("ok_navn") || "") : ((k.art || "Maleri") + " nr. " + k.nr + (visTitel(k) ? " · \u201c" + k.titel + "\u201d" : "") + " · © " + k.maler);
+  $("jv-indhold").style.fontFamily = SKRIFTER[+$("skrift").value].familie;
+  $("jv-til").textContent = $("til").value.trim();
+  $("jv-besked").textContent = $("besked").value.trim() || "Skriv din hilsen …";
+  $("jv-besked").style.color = $("besked").value.trim() ? "" : "#bbb";
+  $("jv-slut").textContent = $("slut").value.trim();
+  $("jv-fra").textContent = $("fra").value.trim();
+  $("jv-af").textContent = hent("ok_navn") || "";
+}
 // Eget billede (kun til julehilsensiden): { blob, url }
 window.egetBillede = null;
 function opdater(){
@@ -322,6 +348,7 @@ function opdater(){
   $("v-fra").textContent = $("fra").value.trim();
   const sk = SKRIFTER[+$("skrift").value];
   $("kort").style.setProperty("--skrift", sk.familie);
+  opdaterJulVisning();
   tilpasTekst();
 }
 function opdaterEget(){
@@ -340,6 +367,7 @@ function opdaterEget(){
   $("v-slut").textContent = $("slut").value.trim();
   $("v-fra").textContent = $("fra").value.trim();
   $("kort").style.setProperty("--skrift", SKRIFTER[+$("skrift").value].familie);
+  opdaterJulVisning();
   tilpasTekst();
 }
 // Eget billede: gøres højst 1600 px (som på opslagstavlen) og vises på kortet
@@ -810,9 +838,9 @@ if (vis) {
 (function () {
   if (!new URLSearchParams(location.search).has("guide")) return;
   const TRIN = [
-    { el: "eget-boks", titel: "Vælg dit billede", tekst: "Tryk på »Vælg fil« og find et billede på din computer eller mobil. Du kan også bare trykke på et af de faste kort ovenfor. Til højre (eller nederst på mobilen) ser du, hvordan kortet ser ud." },
+    { el: "eget-boks", titel: "Vælg dit billede", tekst: "Tryk på »Vælg fil« og find et billede på din computer eller mobil. Du kan også bare trykke på et af de faste kort ovenfor. Kortet bygges op, mens du arbejder: til højre (eller nederst på mobilen) ser du hele kortet." },
     { el: "trin-2", titel: "Skriv din hilsen", tekst: "Skriv hvem hilsenen er til, din julehilsen, en slutning og hvem den er fra. Vælg den skrifttype, du bedst kan lide." },
-    { el: "send-jul", titel: "Læg den op til hele familien", tekst: "Tryk på den røde knap »🎄 Læg op på julehilsensiden«. Så kommer din hilsen på julehilsensiden, på forsiden og i det gule bånd. 🎉" },
+    { el: "send-jul", titel: "Læg den op til hele familien", tekst: "I den røde boks ser du præcis, hvordan din hilsen kommer til at se ud. Er du tilfreds, så tryk på den røde knap »🎄 Læg op på julehilsensiden«. Så kommer din hilsen på julehilsensiden, på forsiden og i det gule bånd. 🎉" },
     { el: "send-en", titel: "… eller send den til én person", tekst: "Vil du hellere sende kortet til et bestemt familiemedlem, så vælg »Intern post« her og find personen på listen." }
   ];
   let i = 0, boks = null;
