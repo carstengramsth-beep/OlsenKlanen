@@ -127,6 +127,7 @@ try {
       <input type="text" id="fra" maxlength="80">
       <label for="skrift">Skrifttype</label>
       <select id="skrift"></select>
+      <button type="button" id="start-forfra" style="margin-top:14px; background:#f1ede2; border:1px dashed #9a9a8a; color:#5a5a4a; border-radius:16px; padding:7px 16px; cursor:pointer; font-family:inherit; font-size:14px;">🔄 Start forfra – slet mit udkast</button>
     </div>
     <div class="trin">
       <h2>3. Print eller gem</h2>
@@ -391,6 +392,23 @@ $("eget-fjern").onclick = () => { window.egetBillede = null; $("eget-fil").value
 $("kort-valg").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
   if (window.egetBillede) { window.egetBillede = null; $("eget-fil").value = ""; $("eget-fjern").style.display = "none"; opdater(); }
 }, true));
+// 🔄 Start forfra: fjern eget billede og tekst, og gå tilbage til start-kortet
+$("start-forfra").onclick = () => {
+  if (!confirm("Vil du slette dit udkast og starte forfra?\n\nBilledet og teksten bliver fjernet.")) return;
+  window.egetBillede = null; $("eget-fil").value = ""; $("eget-fjern").style.display = "none";
+  const jul = new URLSearchParams(location.search).has("jul");
+  const start = jul ? KORT.findIndex(k => k.nr === 13) : 0;
+  valgt = start >= 0 ? start : 0;
+  $("til").value = jul ? "Kære alle i OlsenKlanen" : "";
+  $("besked").value = "";
+  $("slut").value = jul ? "Glædelig jul og godt nytår" : "Kærlig hilsen";
+  $("fra").value = hent("ok_navn");
+  $("skrift").value = "0";
+  sidsteForslag = "";
+  ["jul-status", "en-status", "send-status"].forEach(id => { const el = $(id); if (el) { el.textContent = ""; el.className = "hint"; } });
+  opdater();
+  document.getElementById("trin-1").scrollIntoView({ behavior: "smooth", block: "start" });
+};
 // kort.html?jul=1 (fra julehilsensiden): start med Esthers "Jul" og vis julehilsen-trinnet tydeligt
 if (new URLSearchParams(location.search).has("jul")) {
   const i = KORT.findIndex(k => k.nr === 13); if (i >= 0) valgt = i;
