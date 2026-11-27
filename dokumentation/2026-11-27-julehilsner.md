@@ -21,3 +21,11 @@
 
 ## Regler
 - Er der børn på et eget billede, skal forældrene have sagt ja (står på kort.html). Esthers julekage-billede: Trine og Elisabeth har sagt ja.
+
+## Ændret 27. nov. 2026 (Carstens ønske)
+- **Eget billede = personligt specialkort.** Et eget billede bliver aldrig et kort, som andre kan vælge. Det bruges kun til den ene hilsen.
+- Kortet med eget billede kan nu **sendes til et familiemedlem som intern post** (billedet lægges i Storage `fotovaeg/kort/`, `eget_billede: true`)
+  eller **lægges op på julehilsensiden**. Som mail og »send til alle« går det ikke endnu (serveren kender kun de faste kort).
+- OlsenPost viser kort med eget billede (Storage-URL), og `kort.html?vis=intern:<id>` kan vise dem.
+- Julehilsensiden viser altid **hele billedet** (ikke beskåret).
+- Esthers julekage-foto blev brugt som eksempel, men er et privat foto: det er **ikke** lagt ind som specialkort og ikke i repoet.

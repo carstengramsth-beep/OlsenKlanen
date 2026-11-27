@@ -103,7 +103,7 @@ try {
         <label for="eget-fil" style="margin-top:0; color:#2d5016; font-weight:bold;">📷 Eller brug dit eget billede</label>
         <input type="file" id="eget-fil" accept="image/*" style="font-size:14px; width:100%;">
         <button type="button" id="eget-fjern" style="display:none; margin-top:6px; background:none; border:1px solid #c0392b; color:#c0392b; border-radius:12px; padding:3px 12px; cursor:pointer; font-family:inherit;">✕ Fjern mit billede</button>
-        <p class="hint" style="margin-top:6px;">Dit eget billede kan bruges, når du lægger kortet op på julehilsensiden. Er der børn på billedet, skal forældrene have sagt ja.</p>
+        <p class="hint" style="margin-top:6px;">Med dit eget billede kan du sende kortet til et familiemedlem som <b>intern post</b> eller lægge det op på julehilsensiden. Billedet bliver ikke et kort, som andre kan bruge. Er der børn på billedet, skal forældrene have sagt ja.</p>
       </div>
       <p class="hint" style="margin-top:8px;"><a href="send-kunst.html" style="color:#2d5016; font-weight:bold;">🎨 Har du selv en tegning eller et maleri? Send det her</a> — måske bliver det til et postkort.</p>
       <p class="hint" style="margin-top:6px;">✨ <b>Bliver du inspireret?</b> Ønsker du et specialkort eller en invitation til en særlig dag, fx barnedåb, bryllup eller rund fødselsdag? Skriv til Carsten på <b>post@olsenklanen.dk</b>. Så laver vi det sammen, og det kommer under "Specialkort".</p>
@@ -331,7 +331,7 @@ function opdaterEget(){
   };
   $("kort-billede").src = window.egetBillede.url;
   $("kort-billede").alt = "Eget billede";
-  $("v-maler").textContent = "Foto: " + (hent("ok_navn") || "") + " · olsenklanen.dk";
+  $("v-maler").textContent = "Foto: " + (window.egetBillede.maler || hent("ok_navn") || "") + " · olsenklanen.dk";
   $("v-udlaant").textContent = "";
   $("kort-valg").querySelectorAll("button").forEach(b => b.classList.remove("valgt"));
   $("v-til").textContent = $("til").value.trim();
@@ -609,7 +609,7 @@ if (MIT_NR && !ER_GAEST) {
     const valg = $("en-modtager").value;
     const besked = $("besked").value.trim();
     const pin = $("en-pin").value.trim();
-    if (window.egetBillede) { enStatus("Dit eget billede kan kun bruges på julehilsensiden. Vælg et af kortene for at sende til en person.", "fejl"); return; }
+    if (window.egetBillede && maade() !== "intern") { enStatus("Et kort med dit eget billede kan sendes som intern post – ikke som mail endnu. Vælg \"Intern post\" ovenfor.", "fejl"); return; }
     if (!valg) { enStatus("Vælg hvem kortet skal til.", "fejl"); return; }
     if (!besked) { enStatus("Skriv en tekst på kortet først.", "fejl"); return; }
     if (maade() === "intern") {
@@ -619,12 +619,24 @@ if (MIT_NR && !ER_GAEST) {
       const knap = $("en-knap");
       knap.disabled = true;
       try {
+        // Eget billede: lægges i Storage (fotovaeg/kort/) – det bliver ikke et kort, som andre kan vælge
+        const eget = window.egetBillede && window.egetBillede.blob ? window.egetBillede : null;
+        let egetUrl = "";
+        if (eget) {
+          enStatus("⏳ Lægger dit billede op …");
+          const sti = sRef(storage, `fotovaeg/kort/${Date.now()}_${MIT_NR.replace(/[^\w-]/g, "")}.jpg`);
+          await uploadBytes(sti, eget.blob, { contentType: "image/jpeg" });
+          egetUrl = await getDownloadURL(sti);
+        }
+        const mitNavnK = window.hent("ok_navn").trim() || ("Medlem " + MIT_NR);
         await addDoc(collection(db, "olsenpost"), {
           fra_nr: MIT_NR, fra_navn: window.hent("ok_navn").trim() || ("Medlem " + MIT_NR),
           til: [valg], til_navne: [navn],
           type: "kort",
           tekst: [$("til").value.trim(), besked, "", $("slut").value.trim(), $("fra").value.trim()].join("\n").trim(),
-          kort_fil: k.fil, kort_maler: k.maler, kort_art: k.art || "Maleri", kort_nr: k.nr, kort_titel: k.titel, kort_titel_vis: visTitel(k) ? k.titel : "",
+          kort_fil: eget ? egetUrl : k.fil, eget_billede: !!eget,
+          kort_maler: eget ? mitNavnK : k.maler, kort_art: eget ? "Foto" : (k.art || "Maleri"), kort_nr: eget ? null : k.nr,
+          kort_titel: eget ? "" : k.titel, kort_titel_vis: eget ? "" : (visTitel(k) ? k.titel : ""),
           kort_til: $("til").value.trim(), kort_besked: besked, kort_slut: $("slut").value.trim(), kort_fra: $("fra").value.trim(),
           kort_skrift: window.skriftNr(),
           sendt: serverTimestamp(), sendt_lokal: Date.now(),
@@ -765,7 +777,8 @@ if (vis) {
     const snap = await getDoc(doc(db, samling, id.replace(/[^A-Za-z0-9]/g, "")));
     const k = snap.exists() ? snap.data() : null;
     if (!k || !k.kort_besked) throw new Error("ikke fundet");
-    window.vaelgKortFil(k.kort_fil);
+    if (/^https:\/\/firebasestorage\.googleapis\.com\//.test(k.kort_fil || "")) window.egetBillede = { url: k.kort_fil, maler: k.kort_maler || "" };
+    else window.vaelgKortFil(k.kort_fil);
     $("til").value = k.kort_til || (k.type === "brevkort" || k.type === "kort_medlem" ? "" : "");
     if (!k.kort_til && k.til_fornavn) $("til").value = "Kære " + k.til_fornavn;
     $("besked").value = k.kort_besked || "";
