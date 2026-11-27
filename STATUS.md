@@ -78,6 +78,7 @@ Sidst opdateret: 2026-10-16
 5. Beskeder mellem familiemedlemmer
 6. Forbedret mobilvisning
 7. Egne @olsenklanen.dk-adresser til medlemmer (fx carsten@olsenklanen.dk). Tilbydes som en mulighed, når der er styr på medlemmerne. Oprettes hos Simply, enten som videresendelse til medlemmets egen mail eller som rigtig postkasse. Simplys priser skal undersøges, og så skal det prissættes for medlemmerne. Har intet med EmailJS-loftet at gøre.
+8. Send et kort (også julekort med eget billede) som mail til en person **uden for familien** ved at skrive en mailadresse. Kræver ændring på serveren og beskyttelse mod spam. Bør vente, til mails til hotmail kommer frem (DMARC). I dag: send til dig selv og videresend, eller gem som PDF. (Ønsket af Carsten 27. nov. 2026.)
 
 ---
 
