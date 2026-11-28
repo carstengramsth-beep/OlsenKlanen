@@ -43,3 +43,8 @@
 ## Start forfra (tilføjet 27. nov. 2026)
 - Knappen **»🔄 Start forfra – slet mit udkast«** under trin 2 på `kort.html` fjerner eget billede og tekst (spørger først)
   og går tilbage til start-kortet (Esthers "Jul" ved `?jul=1`). »✕ Fjern mit billede« fjerner kun billedet.
+
+## Reaktioner: 👍 og 🎅 (tilføjet 28. nov. 2026, Carstens ønske)
+- Under hver julehilsen er der to knapper: **👍 Tommel op** og **🎅 Glad julemand**, med antal. Under knapperne står fornavnene på dem, der har trykket.
+- Ét tryk giver en reaktion; tryk igen for at fjerne den. Hvert medlem kan give én af hver slags (pr. medlemsnummer).
+- Gemmes på hilsenen i Firestore: `reaktioner.tommel.<medlemsnr> = fornavn` og `reaktioner.julemand.<medlemsnr> = fornavn`.
