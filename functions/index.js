@@ -178,6 +178,22 @@ async function koeMedlemsKort(fraNr, fraHusstand, kort) {
     throw new HttpsError("failed-precondition", "Modtagerens husstand har ikke godkendt sine oplysninger endnu.");
   }
 
+  // Kopi til flere (CC): højst 5, samme krav som modtageren (aktiv, egen mail, godkendt husstand)
+  const ccListe = Array.isArray(kort.cc) && !tilSelv ? kort.cc.slice(0, 5) : [];
+  const ccEmails = [], ccNavne = [];
+  for (const c of ccListe) {
+    const h = tekst(c && c.til_hus), i = parseInt(c && c.til_idx, 10);
+    const s = h ? await db.doc("membres/" + h).get() : null;
+    const hs = s && s.exists ? s.data() : null;
+    const p = hs && (hs.familiemedlemmer || [])[i];
+    const navn = p ? ([tekst(p.fornavn), tekst(p.efternavn)].filter(Boolean).join(" ") || tekst(p.navn)) : "en modtager";
+    if (!hs || !aktiv(p) || !tekst(p.email).includes("@") || !hs.medlemskab_bekraeftet) {
+      throw new HttpsError("failed-precondition", navn + " kan ikke få kortet som mail endnu (kræver egen mail og godkendte oplysninger).");
+    }
+    const mail = tekst(p.email);
+    if (mail.toLowerCase() !== tekst(modtager.email).toLowerCase() && !ccEmails.some(x => x.toLowerCase() === mail.toLowerCase())) { ccEmails.push(mail); ccNavne.push(navn); }
+  }
+
   // Højst 20 kort pr. døgn fra samme afsender
   const siden = Date.now() - 24 * 3600 * 1000;
   const mine = await db.collection("olsenpost_mail").where("fra_nr", "==", fraNr).get();
@@ -192,6 +208,7 @@ async function koeMedlemsKort(fraNr, fraHusstand, kort) {
     type: "kort_medlem", status: "afventer",
     fra_nr: fraNr, fra_navn: fraNavn, fra_email: tekst(afsender.email),
     til_nr: tilHus, til_navn: tilNavn, til_email: tekst(modtager.email), til_fornavn: fornavnAf(modtager),
+    cc_emails: ccEmails, cc_navne: ccNavne,
     emne: tekst(kort.emne).slice(0, 100) || ("Et kort fra " + fraNavn),
     tekst: [tekst(kort.kort_til), tekst(kort.kort_besked), "", tekst(kort.kort_slut), tekst(kort.kort_fra)].join("\n").slice(0, 1500),
     kort_fil: /^billeder\/kort\/[\w\-]+\.jpg$/.test(fil) ? fil : "",
@@ -715,6 +732,7 @@ async function sendBrevkort() {
           await transport.sendMail({
             from: { name: (k.fra_navn || "OlsenKlanen") + " – Olsenklanen", address: "post@olsenklanen.dk" },
             to: mail,
+            ...(k.type === "kort_medlem" && Array.isArray(k.cc_emails) && k.cc_emails.length ? { cc: k.cc_emails } : {}),
             replyTo: k.fra_email || "post@olsenklanen.dk",
             subject: (k.prove ? "[PRØVE] " : "") + (k.emne || "Et kort fra OlsenKlanen"),
             text: tekst,
