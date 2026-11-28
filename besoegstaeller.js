@@ -149,15 +149,16 @@ async function visForskellige30() {
       a.besoeg += n;
       if (String(dagSnap.key).slice(5) <= iDagMD) a.tilSammeDag += n;
     });
-    const nu = aar[iAar] || { besoeg: 0, forskellige: new Set() };
-    const t1 = document.getElementById("besoeg-aar-tekst"); if (t1) t1.textContent = "📆 Besøg i " + iAar + " (" + nu.forskellige.size + " forskellige)";
-    saetTal("besoeg-aar", nu.besoeg);
-    const sidst = aar[iAar - 1];
-    if (sidst && sidst.besoeg) {
-      const rk = document.getElementById("besoeg-sidste-aar-rk"); if (rk) rk.style.display = "";
-      const t2 = document.getElementById("besoeg-sidste-aar-tekst");
-      if (t2) t2.textContent = "📆 " + (iAar - 1) + " til samme dag: " + sidst.tilSammeDag + " · hele året (" + sidst.forskellige.size + " forskellige)";
-      saetTal("besoeg-sidste-aar", sidst.besoeg);
+    // Tabel: én kolonne pr. år, nyeste til venstre (højst 3 år)
+    const tabel = document.getElementById("besoeg-tabel");
+    if (tabel) {
+      const aarListe = Object.keys(aar).map(Number).filter(y => y <= iAar).sort((x, y) => y - x).slice(0, 3);
+      if (!aarListe.includes(iAar)) aarListe.unshift(iAar);
+      const v = y => aar[y] || { besoeg: 0, forskellige: new Set() };
+      tabel.querySelector("thead tr").innerHTML = "<th></th>" + aarListe.map(y => "<th>" + y + "</th>").join("");
+      const rk = tabel.querySelectorAll("tbody tr");
+      rk[0].innerHTML = "<td>Besøg i alt i året</td>" + aarListe.map(y => "<td" + (y < iAar ? " title=\"Til samme dag: " + v(y).tilSammeDag + "\"" : "") + ">" + v(y).besoeg + "</td>").join("");
+      rk[1].innerHTML = '<td title="Cirka – en person på både mobil og computer kan tælle 2 gange">Forskellige medlemmer i året (ca.)</td>' + aarListe.map(y => "<td>" + v(y).forskellige.size + "</td>").join("");
     }
   } catch (e) { el.textContent = "–"; }
 }

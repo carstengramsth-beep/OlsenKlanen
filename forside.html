@@ -78,6 +78,11 @@ a.il-indhold:hover .il-tekst { text-decoration: underline; }
 .billede-boks { position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
 .billede-boks img { width: 100%; height: auto; display: block; }
 .billede-tekst { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.7)); color: #fff; padding: 20px 16px 12px; display: flex; justify-content: space-between; font-style: italic; pointer-events: none; }
+/* Besøg pr. år */
+.besoeg-tabel { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+.besoeg-tabel th { text-align: right; color: #2d5016; font-size: 14px; padding: 4px 6px; border-bottom: 2px solid #e0d8bd; }
+.besoeg-tabel td { padding: 6px; border-bottom: 1px solid #f0ead8; color: #444; }
+.besoeg-tabel td + td { text-align: right; font-weight: bold; color: #2d5016; font-size: 15px; }
 /* 🎄 Julehilsner – boks øverst i højre side */
 .jul-boks { display: none; background: #fffaf0; border: 2px solid #a4161a; border-radius: 10px; overflow: hidden; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 .jul-boks .jul-top { background: #a4161a; color: #fff; padding: 9px 14px; font-weight: bold; font-size: 14px; letter-spacing: 1px; }
@@ -539,23 +544,21 @@ try {
           <span class="tavle-tal-tekst">📅 Besøg i dag</span>
           <span class="tavle-tal-tal" id="besoeg-idag">0</span>
         </div>
-        <div class="tavle-tal">
-          <span class="tavle-tal-tekst">🧮 Besøg i alt</span>
-          <span class="tavle-tal-tal ialt" id="besoeg-ialt">0</span>
-        </div>
         <div class="tavle-tal" title="Hvor mange forskellige har besøgt siden de sidste 30 dage? Ingen navne – kun et antal.">
-          <span class="tavle-tal-tekst">👥 Forskellige besøgende (30 dage)</span>
+          <span class="tavle-tal-tekst">👥 Forskellige medlemmer de sidste 30 dage</span>
           <span class="tavle-tal-tal" id="besoeg-30">–</span>
         </div>
-        <div class="tavle-tal" title="Besøg i år, og hvor mange forskellige der stod for dem">
-          <span class="tavle-tal-tekst" id="besoeg-aar-tekst">📆 Besøg i år</span>
-          <span class="tavle-tal-tal" id="besoeg-aar">–</span>
-        </div>
-        <div class="tavle-tal" id="besoeg-sidste-aar-rk" style="display:none" title="Sammenligning med sidste år (samme periode og hele året)">
-          <span class="tavle-tal-tekst" id="besoeg-sidste-aar-tekst">📆 Sidste år</span>
-          <span class="tavle-tal-tal" id="besoeg-sidste-aar">–</span>
-        </div>
+        <!-- "Besøg i alt" (alle år) tælles stadig i baggrunden, men vises ikke – tabellen viser pr. år -->
+        <span id="besoeg-ialt" style="display:none">0</span>
       </div>
+      <!-- Besøg pr. år: én kolonne pr. år (nyeste til venstre), så årene kan sammenlignes -->
+      <table class="besoeg-tabel" id="besoeg-tabel">
+        <thead><tr><th></th><th>–</th></tr></thead>
+        <tbody>
+          <tr><td>Besøg i alt i året</td><td>–</td></tr>
+          <tr><td title="Cirka – en person på både mobil og computer kan tælle 2 gange">Forskellige medlemmer i året (ca.)</td><td>–</td></tr>
+        </tbody>
+      </table>
       <div style="font-size:11px; color:#888; margin-top:8px; padding-left:4px; font-style:italic;">
         Dit besøg tæller 1 pr. dag — så kan du selv holde øje.
       </div>
