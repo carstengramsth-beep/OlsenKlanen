@@ -393,10 +393,11 @@ exports.tjekIndkommendeMail = onSchedule(
 /**
  * Billeder sendt fra send-kunst.html venter på godkendelse (olsenpost, type "kunst_indsendt").
  * Carsten får besked med det samme (fra siden). Venter billedet stadig:
- *   efter 3 dage → Kurt, efter 6 dage → Sanne, efter 9 dage → Tommy og Karin.
+ *   efter 24 timer → Kurt, efter 48 timer → Sanne, efter 72 timer → Tommy og Karin.
+ * (Regel: alle billeder skal være godkendt og lagt op inden for 24 timer – ellers tager den næste ansvaret.)
  * (Carstens beslutning 28-11-2026: Carsten godkender, Kurt er backup, derefter Sanne osv.)
  */
-const GODKEND_TRAPPE = [[3, ["22-B"]], [6, ["48-B"]], [9, ["19-A", "23-B"]]];
+const GODKEND_TRAPPE = [[1, ["22-B"]], [2, ["48-B"]], [3, ["19-A", "23-B"]]];   // [dage, hvem]
 async function rykGodkendelse() {
   const db = getFirestore();
   const snap = await db.collection("olsenpost").where("type", "==", "kunst_indsendt").get();
@@ -413,9 +414,9 @@ async function rykGodkendelse() {
     await db.collection("olsenpost").add({
       fra_nr: "8-B", fra_navn: "OlsenKlanen (Godkendelse af kort)", til: nye, til_navne: nye,
       type: "besked", sendt: FieldValue.serverTimestamp(), sendt_lokal: Date.now(), set_af: [], svar: [],
-      tekst: `🎨 Et billede venter stadig på godkendelse (sendt for ${Math.floor(alder / dag)} dage siden).\n\n` +
+      tekst: `🎨 Et billede venter stadig på godkendelse (sendt for ${Math.floor(alder / 3600000)} timer siden).\n\n` +
         `Titel: ${k.titel || ""}\nLavet af: ${k.kunstner || ""}\nSendt af: ${k.navn || k.afsender || ""}\n\n` +
-        `Carsten har ikke nået at godkende det. Vil du kigge på det?\n👉 olsenklanen.dk/send-kunst.html`
+        `Reglen er, at billeder godkendes inden for 24 timer. Det er ikke sket, så nu er det dit ansvar at få det gjort.\n👉 olsenklanen.dk/send-kunst.html`
     });
     await d.ref.update({ varslet: FieldValue.arrayUnion(...nye) });
   }
