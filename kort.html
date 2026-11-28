@@ -163,6 +163,13 @@ try {
       <p style="font-size:13px; color:#2d5016; margin-top:4px;">🧪 Vælg <b>"Mig selv"</b> for at sende et prøvekort til dig selv. Derefter må du gerne sende kortet videre til hvem du vil — også uden for klanen. Maleriets ophav (© Elisabeth Gram) og olsenklanen.dk står altid på kortet.</p>
       <label for="en-modtager">Til hvem?</label>
       <select id="en-modtager"><option value="">Henter …</option></select>
+      <div id="en-cc-del">
+        <label for="en-cc">Kopi til flere (valgfrit)</label>
+        <div style="display:flex; gap:6px;"><select id="en-cc" style="flex:1;"></select>
+          <button type="button" id="en-cc-tilfoej" style="background:#2d7a2d; color:#fff; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-family:inherit;">➕ Tilføj</button></div>
+        <div id="en-cc-liste" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;"></div>
+        <p style="font-size:12px; color:#777; margin-top:4px;">Alle modtagere kan se, hvem der ellers har fået kortet. Højst 5 ekstra.</p>
+      </div>
       <div id="en-mail-felter">
         <label for="en-emne">Emne i mailen</label>
         <input type="text" id="en-emne" maxlength="100">
@@ -555,6 +562,26 @@ if (MIT_NR && !ER_GAEST) {
     husketModtager = o && o.value ? o.textContent : "";
     enStatus("");
   });
+  // Kopi til flere (CC): højst 5 ekstra modtagere. Huskes på navn, så valget bliver, når man skifter mellem intern post og mail.
+  let ccValgt = [];   // [{ value, navn }]
+  const MAKS_CC = 5;
+  function visCC(){
+    const hoved = $("en-modtager").value;
+    $("en-cc-del").style.display = (!hoved || hoved === "selv" || hoved === MIT_NR) ? "none" : "block";
+    const brugt = new Set([hoved, ...ccValgt.map(c => c.value)]);
+    $("en-cc").innerHTML = '<option value="">— Vælg en mere —</option>' +
+      [...$("en-modtager").options].filter(o => o.value && o.value !== "selv" && o.value !== MIT_NR && !brugt.has(o.value))
+        .map(o => `<option value="${o.value}">${o.textContent.replace(/</g, "&lt;")}</option>`).join("");
+    $("en-cc-liste").innerHTML = ccValgt.map((c, i) => `<span style="background:#eef5e8; border:1px solid #2d7a2d; border-radius:14px; padding:2px 6px 2px 10px; font-size:14px;">${c.navn.replace(/</g, "&lt;")} <button type="button" data-ccfjern="${i}" title="Fjern" style="background:none; border:none; cursor:pointer; color:#c0392b; font-size:14px;">✕</button></span>`).join("");
+    $("en-cc-liste").querySelectorAll("[data-ccfjern]").forEach(b => b.onclick = () => { ccValgt.splice(+b.dataset.ccfjern, 1); visCC(); });
+  }
+  $("en-cc-tilfoej").onclick = () => {
+    const o = $("en-cc").selectedOptions[0];
+    if (!o || !o.value) return;
+    if (ccValgt.length >= MAKS_CC) { enStatus("Du kan højst sende kopi til " + MAKS_CC + " ekstra.", "fejl"); return; }
+    ccValgt.push({ value: o.value, navn: o.textContent }); visCC();
+  };
+  $("en-modtager").addEventListener("change", () => { ccValgt = ccValgt.filter(c => c.value !== $("en-modtager").value); visCC(); });
   function visModtagere(){
     // Husk hvem der var valgt, så valget bliver stående, når man skifter mellem intern post og mail
     const foerNavn = husketModtager;
@@ -576,6 +603,11 @@ if (MIT_NR && !ER_GAEST) {
       if (igen) { igen.selected = true; enStatus(""); }
       else if (erMail) enStatus(foerNavn + " kan ikke få kortet som mail endnu. Det kræver, at husstanden har godkendt sine oplysninger og har egen mail. Send kortet som intern post i stedet.", "fejl");
     }
+    // CC: find de samme personer i den nye liste (intern post og mail har forskellige værdier)
+    const mangler = [];
+    ccValgt = ccValgt.map(c => { const o = [...$("en-modtager").options].find(x => x.value && x.textContent === c.navn); if (!o) mangler.push(c.navn); return o ? { value: o.value, navn: c.navn } : null; }).filter(Boolean);
+    if (mangler.length && erMail) enStatus(mangler.join(", ") + " kan ikke få kortet som mail endnu og er taget af kopi-listen.", "fejl");
+    visCC();
   }
   document.querySelectorAll('input[name="en-maade"]').forEach(r => r.addEventListener("change", visModtagere));
   try {
@@ -685,7 +717,7 @@ if (MIT_NR && !ER_GAEST) {
         const mitNavnK = window.hent("ok_navn").trim() || ("Medlem " + MIT_NR);
         await addDoc(collection(db, "olsenpost"), {
           fra_nr: MIT_NR, fra_navn: window.hent("ok_navn").trim() || ("Medlem " + MIT_NR),
-          til: [valg], til_navne: [navn],
+          til: [valg, ...ccValgt.map(c => c.value)], til_navne: [navn, ...ccValgt.map(c => c.navn)],
           type: "kort",
           tekst: [$("til").value.trim(), besked, "", $("slut").value.trim(), $("fra").value.trim()].join("\n").trim(),
           kort_fil: eget ? egetUrl : k.fil, eget_billede: !!eget,
@@ -696,7 +728,7 @@ if (MIT_NR && !ER_GAEST) {
           sendt: serverTimestamp(), sendt_lokal: Date.now(),
           set_af: [], svar: [], gemt_af: []
         });
-        enStatus("✅ Kortet er sendt til " + navn + " som intern post.", "ok"); taelBrug();
+        enStatus("✅ Kortet er sendt til " + [navn, ...ccValgt.map(c => c.navn)].join(", ") + " som intern post.", "ok"); taelBrug();
       } catch(e) {
         console.log("Intern post fejlede:", e);
         enStatus("Det lykkedes ikke. Prøv igen.", "fejl");
@@ -716,6 +748,7 @@ if (MIT_NR && !ER_GAEST) {
         nr: MIT_NR, pin,
         kort: {
           til_hus, til_idx, til_selv: tilSelv, emne: $("en-emne").value.trim(),
+          cc: tilSelv ? [] : ccValgt.map(c => { const [h, i] = c.value.split("|"); return { til_hus: h, til_idx: i }; }),
           fra_fornavn: window.hent("ok_navn").trim().split(/\s+/)[0], fra_navn: window.hent("ok_navn").trim(),
           kort_fil: k.fil, kort_maler: k.maler, kort_art: k.art || "Maleri", kort_nr: k.nr, kort_titel: k.titel, kort_titel_vis: visTitel(k) ? k.titel : "",
           kort_til: $("til").value.trim(), kort_besked: besked, kort_slut: $("slut").value.trim(), kort_fra: $("fra").value.trim(),
@@ -723,7 +756,7 @@ if (MIT_NR && !ER_GAEST) {
         }
       });
       $("en-pin").value = "";
-      const navn = $("en-modtager").selectedOptions[0].textContent;
+      const navn = [$("en-modtager").selectedOptions[0].textContent, ...(tilSelv ? [] : ccValgt.map(c => c.navn))].join(", ");
       enStatus("✅ Kortet til " + navn + " er sat i kø. Det bliver sendt inden for 5 minutter …", "ok"); taelBrug();
       if (res.data && res.data.kortId) onSnapshot(doc(db, "olsenpost_mail", res.data.kortId), s => {
         const d = s.data() || {};
