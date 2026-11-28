@@ -54,3 +54,4 @@
 - Hver kommentar viser fulde navn og dato, så modtageren kan se, hvem den er fra.
 - Kan fjernes af den, der skrev den, af den, der lagde kortet op, og af 5-Banden.
 - Gemmes på hilsenen: `kommentarer.<id> = { nr, navn, tekst, tid }`. Halvskrevne kommentarer bevares, når siden opdateres.
+- **DEMO-mærke (28. nov. 2026):** hilsner, hvor »Til«-teksten starter med »TEST« (fx »🧪 TEST – …«), får en grøn bjælke øverst: »🧪 DEMO – kun en prøve«.
