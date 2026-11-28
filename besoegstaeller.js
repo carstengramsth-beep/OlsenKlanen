@@ -134,6 +134,31 @@ async function visForskellige30() {
       m.forEach(x => { forskellige.add(x.key); });
     });
     saetTal("besoeg-30", forskellige.size);
+
+    // ── Besøg i år og sidste år (til sammenligning) ──
+    // Et besøg = én markør på én dag (samme som "Besøg i dag").
+    const iAar = new Date().getFullYear();
+    const iDagMD = iDagKey().slice(5);                       // "MM-DD" – til "samme periode sidste år"
+    const aar = {};                                          // år → { besoeg, forskellige:Set, tilSammeDag }
+    snap.forEach(dagSnap => {
+      const y = +String(dagSnap.key).slice(0, 4);
+      if (!y) return;
+      const a = aar[y] || (aar[y] = { besoeg: 0, forskellige: new Set(), tilSammeDag: 0 });
+      let n = 0;
+      dagSnap.child("medlemmer").forEach(x => { n++; a.forskellige.add(x.key); });
+      a.besoeg += n;
+      if (String(dagSnap.key).slice(5) <= iDagMD) a.tilSammeDag += n;
+    });
+    const nu = aar[iAar] || { besoeg: 0, forskellige: new Set() };
+    const t1 = document.getElementById("besoeg-aar-tekst"); if (t1) t1.textContent = "📆 Besøg i " + iAar + " (" + nu.forskellige.size + " forskellige)";
+    saetTal("besoeg-aar", nu.besoeg);
+    const sidst = aar[iAar - 1];
+    if (sidst && sidst.besoeg) {
+      const rk = document.getElementById("besoeg-sidste-aar-rk"); if (rk) rk.style.display = "";
+      const t2 = document.getElementById("besoeg-sidste-aar-tekst");
+      if (t2) t2.textContent = "📆 " + (iAar - 1) + " til samme dag: " + sidst.tilSammeDag + " · hele året (" + sidst.forskellige.size + " forskellige)";
+      saetTal("besoeg-sidste-aar", sidst.besoeg);
+    }
   } catch (e) { el.textContent = "–"; }
 }
 visForskellige30();
