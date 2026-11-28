@@ -194,7 +194,10 @@ window.opdaterBesoegsTabel = function () {
   tabel.querySelector("thead tr").innerHTML = "<th></th>" + aarListe.map(y => "<th>" + y + "</th>").join("");
   const rk = tabel.querySelectorAll("tbody tr");
   rk[0].innerHTML = "<td>Besøg i alt i året</td>" + aarListe.map(y => "<td" + (y < iAar ? " title=\"Til samme dag: " + ca(y) + v(y).tilSammeDag + "\"" : "") + ">" + ca(y) + v(y).besoeg + "</td>").join("");
-  rk[1].innerHTML = "<td>Forskellige medlemmer i året</td>" + aarListe.map(y => "<td>" + forskellige(y) + "</td>").join("");
+  // "Forskellige medlemmer i året" vises først fra 2027 – for 2026 kan det ikke opgøres (samme person kunne tælle flere gange)
+  const visForskellige = aarListe.some(y => y > 2026);
+  rk[1].style.display = visForskellige ? "" : "none";
+  rk[1].innerHTML = "<td>Forskellige medlemmer i året</td>" + aarListe.map(y => "<td>" + (y > 2026 ? String(v(y).nr.size || v(y).forskellige.size) : "–") + "</td>").join("");
   const note = document.getElementById("besoeg-note");
   if (note) note.style.display = aarListe.some(y => y <= 2026) ? "" : "none";
 };

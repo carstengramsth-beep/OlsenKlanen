@@ -21,3 +21,7 @@ Formål: følge udviklingen i den samlede aktivitet – målet er, at medlemmern
   X = flest forskellige login-mails (`m_`) eller medlemsnumre (`n_`) – hver er mindst én rigtig person;
   Y = antal forskellige markører, dog højst antallet af aktive medlemmer i kartoteket (`window.OLSEN_ANTAL_MEDLEMMER`).
 - Fra 2027 vises ét præcist tal (antal medlemsnumre).
+
+## Ændret 28-11-2026 (Carstens ønske)
+- Intervallet gav ingen mening (fx »mellem 1 og 127«). Rækken »Forskellige medlemmer i året« er **skjult for 2026** og vises først, når der er tal for 2027 (ét præcist tal pr. år ud fra medlemsnumre).
+- »Forskellige medlemmer de sidste 30 dage« vises stadig.
