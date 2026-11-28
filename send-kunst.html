@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>Send din tegning eller dit maleri – OlsenKlanen</title>
+<title>Send dit billede til et kort – OlsenKlanen</title>
 <script>
 // Kun for medlemmer. Efter login kommer man tilbage hertil.
 try {
@@ -57,6 +57,10 @@ textarea{min-height:80px}
 .indsendt img{width:120px;height:90px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex:none}
 .indsendt .info{font-size:15px}
 .indsendt .info b{color:var(--gron)}
+.indsendt .kortprove{width:150px;flex:none;background:#fff;border:1px solid var(--border);border-radius:6px;padding:6px;box-shadow:0 2px 6px rgba(0,0,0,.1);text-align:center;font-size:11px;color:#8a7a3f;font-style:italic}
+.indsendt .kortprove img{width:100%;height:110px;object-fit:contain;border:none;background:#f5f1e8}
+.maerke.afvist{background:#e5e5e5}
+.btn-roed{background:#a4161a}
 .maerke{display:inline-block;font-size:13px;padding:1px 8px;border-radius:10px;background:var(--guld-lys)}
 .maerke.lagt{background:var(--gron-pale)}
 .maerke.ny{background:#f7d9d9}
@@ -65,16 +69,16 @@ textarea{min-height:80px}
 <body>
 
 <header>
-  <h1>🎨 Send din tegning eller dit maleri</h1>
-  <p>Måske bliver den til et postkort, som hele klanen kan sende!</p>
-  <p style="margin-top:.6rem"><a href="kort.html">Se postkortene</a> · <a href="forside.html">Til forsiden</a></p>
+  <h1>🎨 Send din tegning, dit maleri eller dit foto</h1>
+  <p>Måske bliver det til et kort, som hele klanen kan sende – fx til nytår, fødselsdag eller god bedring!</p>
+  <p style="margin-top:.6rem"><a href="forside.html">🏠 Forsiden</a> · <a href="kort.html">Se postkortene</a></p>
 </header>
 
 <main>
   <div class="kort">
     <h2>Sådan gør du</h2>
     <p>Tag et billede af tegningen eller maleriet. Læg det lige på et bord i dagslys, og tag billedet lige ovenfra.</p>
-    <p style="margin-top:.4rem">Udfyld felterne herunder, og tryk <b>Send</b>. Carsten får besked og lægger det på plads.</p>
+    <p style="margin-top:.4rem">Udfyld felterne herunder, og tryk <b>Send</b>. Billedet bliver først kontrolleret og godkendt af administratoren (Carsten – ellers Kurt eller Sanne). Først derefter bliver det til et kort, som alle kan se.</p>
     <p style="margin-top:.4rem" class="hjaelp">Er det svært? Så send bare billedet på mail til
       <a href="mailto:post@olsenklanen.dk?subject=Tegning%20eller%20maleri%20til%20postkortene">post@olsenklanen.dk</a>
       og skriv, hvad det hedder, og hvem der har lavet det.</p>
@@ -107,10 +111,11 @@ textarea{min-height:80px}
       <input type="number" id="alder" min="1" max="17" style="max-width:120px">
     </div>
 
-    <label class="felt">Er det en tegning eller et maleri?</label>
+    <label class="felt">Hvad slags billede er det?</label>
     <div class="valg">
       <label><input type="radio" name="art" value="Tegning" checked> Tegning</label>
       <label><input type="radio" name="art" value="Maleri"> Maleri</label>
+      <label><input type="radio" name="art" value="Foto"> Foto</label>
       <label><input type="radio" name="art" value="Andet"> Noget andet</label>
     </div>
 
@@ -122,15 +127,25 @@ textarea{min-height:80px}
     <label class="felt" for="kommentar">Vil du fortælle noget mere? <small>(valgfrit)</small></label>
     <textarea id="kommentar" maxlength="600"></textarea>
 
-    <button class="btn btn-gron" id="send" disabled>💌 Send</button>
+    <h2 style="margin-top:1.4rem">4. Lovligt og ordentligt</h2>
+    <p class="hjaelp">Billedet bliver delt med alle medlemmer. Derfor skal du sætte kryds ved alle tre:</p>
+    <div class="valg" style="flex-direction:column; align-items:flex-start; gap:.5rem; margin-top:.5rem">
+      <label><input type="checkbox" id="ok-ret"> Jeg har lov til at dele billedet. Jeg har selv lavet eller taget det – eller jeg har fået lov af den, der har.</label>
+      <label><input type="checkbox" id="ok-personer"> Alle, der kan genkendes på billedet, har sagt ja til, at det deles med familien. For børn har forældrene sagt ja. (Eller: der er ingen personer på billedet.)</label>
+      <label><input type="checkbox" id="ok-ordentligt"> Billedet er ordentligt og passer til hele familien.</label>
+    </div>
+
+    <button class="btn btn-gron" id="send" disabled>💌 Send til godkendelse</button>
     <div class="mangler" id="mangler"></div>
     <div class="bar" id="bar"><div id="bar-fyld"></div></div>
     <div class="status" id="status"></div>
   </div>
 
   <div class="kort" id="admin-del">
-    <h2>📥 Indsendte værker (kun for administratorer)</h2>
-    <p class="hjaelp">Nyeste øverst. Når et værk er lagt ind som postkort, så tryk "Lagt op som postkort". Så får afsenderen en besked.</p>
+    <h2>📥 Indsendte billeder – til godkendelse</h2>
+    <p class="hjaelp">Kun for godkenderne: Carsten (administrator), ved forfald Kurt, derefter Sanne, Tommy og Karin.
+      Tjek at billedet er lovligt og ordentligt, og at ingen privatliv krænkes. Tryk <b>✅ Godkend</b> eller <b>❌ Afvis</b> – afsenderen får besked.
+      Når et godkendt billede er lagt ind som kort, så tryk »Lagt op som kort«.</p>
     <div id="admin-liste" style="margin-top:.6rem">Henter …</div>
   </div>
 </main>
@@ -158,6 +173,11 @@ const mitNr = hent("ok_nr") || "ukendt";
 const mitNavn = hent("ok_navn") || "";
 const erAdmin = hent("ok_niveau") === "admin";
 const CARSTEN = ["8-B"];                 // får besked i OlsenPost
+// Godkendere i rækkefølge (Carstens beslutning 28-11-2026): Carsten, ved forfald Kurt, derefter Sanne, Tommy, Karin.
+// Carsten får besked med det samme. Venter et billede længe, får de næste besked (serveren: rykGodkendelse).
+const GODKENDERE = [["8", "carsten", "8-B"], ["22", "kurt", "22-B"], ["48", "sanne", "48-B"], ["19", "tommy", "19-A"], ["23", "karin", "23-B"]];
+const erGodkender = hent("ok_niveau").toLowerCase() === "admin" &&
+  GODKENDERE.some(([hus, fn]) => mitNr.split("-")[0].trim() === hus && (mitNavn.split(/\s+/)[0] || "").toLowerCase() === fn);
 const ROD = "gamle_billeder/kunst/";     // samme lager som "Send materiale"
 const NYT = "__nyt__", VED_IKKE = "__ved_ikke__";
 
@@ -204,6 +224,7 @@ function mangler() {
   const t = valgtTema();
   if (!t) m.push("vælg et tema");
   if (t === NYT && $("nyt-tema").value.trim().length < 2) m.push("skriv dit tema");
+  if (!$("ok-ret").checked || !$("ok-personer").checked || !$("ok-ordentligt").checked) m.push("sæt kryds ved alle tre under »Lovligt og ordentligt«");
   return m;
 }
 function tjek() {
@@ -260,29 +281,31 @@ $("send").onclick = async () => {
       titel, kunstner, barn: erBarn, alder, art,
       tema, tema_nyt: tv === NYT, tema_ved_ikke: tv === VED_IKKE,
       kommentar, sti, url, filnavn: fil.name, bytes: fil.size,
-      status: "modtaget", tid: new Date().toISOString(), sendt_lokal: Date.now()
+      samtykke: { ret: true, personer: true, ordentligt: true, tid: new Date().toISOString() },
+      status: "afventer", varslet: CARSTEN.slice(), tid: new Date().toISOString(), sendt_lokal: Date.now()
     });
     const hvem = kunstner + (alder ? `, ${alder} år` : "");
     await besked(CARSTEN,
-      `🎨 Ny ${art.toLowerCase()} til postkortene fra ${mitNavn || mitNr} (nr. ${mitNr}).\n\n` +
+      `🎨 Nyt billede (${art.toLowerCase()}) venter på godkendelse – fra ${mitNavn || mitNr} (nr. ${mitNr}).\n\n` +
       `Titel: ${titel}\nLavet af: ${hvem}\nTema: ${temaTekst}` + (kommentar ? `\n\nBesked:\n${kommentar}` : "") +
       (tv === VED_IKKE ? `\n\n👉 Kunstneren vil gerne have hjælp til at finde et tema.` : "") +
-      `\n\nSe det på olsenklanen.dk/send-kunst.html`,
+      `\n\nAfsenderen har sat kryds ved: lov til at dele, alle på billedet har sagt ja, ordentligt.` +
+      `\n\n👉 Godkend eller afvis på olsenklanen.dk/send-kunst.html`,
       mitNr, (mitNavn || mitNr) + " (Send tegning/maleri)");
     await besked([mitNr],
       `🎨 Tak, ${(mitNavn || "").split(/\s+/)[0] || "kære medlem"}!\n\n` +
       `Vi har modtaget "${titel}" af ${hvem}.\nTema: ${temaTekst}\n\n` +
-      `Carsten kigger på det og lægger det ind blandt postkortene. Du får en besked, når det er sket.\n\nVenlig hilsen\nOlsenKlanen`,
+      `Billedet bliver nu kontrolleret og godkendt af administratoren. Du får en besked, når det er sket.\n\nVenlig hilsen\nOlsenKlanen`,
       "8-B", "OlsenKlanen (Postkort)");
     window.onbeforeunload = null;
-    $("status").innerHTML = `🎉 Tak! "${esc(titel)}" er sendt. Carsten har fået besked.<br><span class="hjaelp">Vil du sende én til? Vælg bare et nyt billede.</span>`;
+    $("status").innerHTML = `🎉 Tak! "${esc(titel)}" er sendt til godkendelse. Du får besked, når det er kontrolleret.<br><span class="hjaelp">Vil du sende én til? Vælg bare et nyt billede.</span>`;
     // Klar til næste
     fil = null; $("fil").value = ""; $("forhaand").style.display = "none";
     $("titel").value = ""; $("alder").value = ""; $("kommentar").value = ""; $("nyt-tema").value = "";
-    document.querySelectorAll('input[name=tema], input[name=barn]').forEach(r => r.checked = false);
+    document.querySelectorAll('input[name=tema], input[name=barn], #ok-ret, #ok-personer, #ok-ordentligt').forEach(r => r.checked = false);
     $("bar").style.display = "none"; $("bar-fyld").style.width = "0";
     tjek();
-    if (erAdmin) hentAdmin();
+    if (erGodkender) hentAdmin();
   } catch(e) {
     window.onbeforeunload = null;
     console.error(e);
@@ -299,33 +322,63 @@ async function hentAdmin() {
     if (!alle.length) { $("admin-liste").innerHTML = '<p class="hjaelp">Der er ikke sendt noget ind endnu.</p>'; return; }
     $("admin-liste").innerHTML = alle.map(k => {
       const temaTxt = k.tema_ved_ikke ? '<span class="maerke ny">Ved ikke — tag en snak</span>' : esc(k.tema) + (k.tema_nyt ? ' <span class="maerke">nyt tema</span>' : "");
-      const st = k.status === "lagt op" ? '<span class="maerke lagt">✅ Lagt op</span>' : '<span class="maerke">Modtaget</span>';
+      const st = k.status === "lagt op" ? '<span class="maerke lagt">🖼️ Lagt op som kort</span>'
+        : k.status === "godkendt" ? `<span class="maerke lagt">✅ Godkendt af ${esc(k.godkendt_af_navn || k.godkendt_af || "")}</span>`
+        : k.status === "afvist" ? `<span class="maerke afvist">❌ Afvist af ${esc(k.afvist_af_navn || k.afvist_af || "")}${k.afvist_grund ? ": " + esc(k.afvist_grund) : ""}</span>`
+        : '<span class="maerke ny">⏳ Venter på godkendelse</span>';
+      const venter = !k.status || k.status === "afventer" || k.status === "modtaget";
+      const knapper = venter
+        ? `<br><button class="btn-lille" data-godkend="${esc(k.id)}" style="margin-top:.4rem">✅ Godkend</button> <button class="btn-lille btn-roed" data-afvis="${esc(k.id)}" style="margin-top:.4rem">❌ Afvis</button>`
+        : k.status === "godkendt" ? `<br><button class="btn-lille" data-lagt="${esc(k.id)}" style="margin-top:.4rem">🖼️ Lagt op som kort</button>` : "";
+      const samtykke = k.samtykke ? "✔ Kryds ved lov til at dele, personer har sagt ja, ordentligt" : "⚠️ Sendt før krydserne fandtes – tjek selv";
       return `<div class="indsendt">
-        <a href="${esc(k.url)}" target="_blank" title="Åbn i fuld størrelse"><img src="${esc(k.url)}" alt=""></a>
+        <a class="kortprove" href="${esc(k.url)}" target="_blank" title="Sådan kan kortet se ud – tryk for fuld størrelse"><img src="${esc(k.url)}" alt=""><div>${esc(k.art || "Billede")} · “${esc(k.titel)}” · © ${esc(k.kunstner)}</div></a>
         <div class="info">
           <b>"${esc(k.titel)}"</b> · ${esc(k.art)}<br>
           Lavet af: ${esc(k.kunstner)}${k.alder ? ", " + esc(k.alder) + " år" : ""}<br>
           Tema: ${temaTxt}<br>
           Sendt af ${esc(k.navn || k.afsender)} (nr. ${esc(k.afsender)}) · ${esc((k.tid || "").slice(0, 10))} · ${st}
           ${k.kommentar ? `<br><i>${esc(k.kommentar)}</i>` : ""}
-          ${k.status !== "lagt op" ? `<br><button class="btn-lille" data-lagt="${esc(k.id)}" style="margin-top:.4rem">✅ Lagt op som postkort</button>` : ""}
+          <br><small>${samtykke}</small>
+          ${knapper}
         </div></div>`;
     }).join("");
   } catch(e) { $("admin-liste").innerHTML = '<p class="fejl">Kunne ikke hente listen.</p>'; console.error(e); }
 }
-if (erAdmin) {
+if (erGodkender) {
   $("admin-del").style.display = "block";
   hentAdmin();
+  const fornavn = (mitNavn.split(/\s+/)[0] || mitNr);
   $("admin-liste").addEventListener("click", async e => {
-    const b = e.target.closest("[data-lagt]"); if (!b) return;
-    b.disabled = true;
-    const id = b.dataset.lagt;
+    const b = e.target.closest("[data-lagt], [data-godkend], [data-afvis]"); if (!b) return;
+    const id = b.dataset.lagt || b.dataset.godkend || b.dataset.afvis;
     const s = await getDoc(doc(db, "olsenpost", id)); if (!s.exists()) return;
     const k = s.data();
-    await updateDoc(doc(db, "olsenpost", id), { status: "lagt op", lagt_op: new Date().toISOString(), lagt_op_af: mitNr });
-    await besked([k.afsender],
-      `🖼️ Nu er "${k.titel}" af ${k.kunstner} et postkort på olsenklanen.dk!\n\nSe det under "Skriv et kort": olsenklanen.dk/kort.html\n\nTusind tak for bidraget.\n\nVenlig hilsen\nOlsenKlanen`,
-      "8-B", "OlsenKlanen (Postkort)");
+    try {
+      if (b.dataset.godkend) {
+        if (!confirm(`Godkend "${k.titel}"?\n\nTjek: lovligt, ordentligt, og ingen privatliv krænkes.`)) return;
+        b.disabled = true;
+        await updateDoc(doc(db, "olsenpost", id), { status: "godkendt", godkendt_af: mitNr, godkendt_af_navn: fornavn, godkendt_tid: new Date().toISOString() });
+        await besked([k.afsender],
+          `✅ "${k.titel}" af ${k.kunstner} er godkendt!\n\nNu bliver det lavet til et kort. Du får besked, når det kan vælges under "Skriv et kort".\n\nTusind tak for bidraget.\n\nVenlig hilsen\nOlsenKlanen`,
+          "8-B", "OlsenKlanen (Postkort)");
+        if (!CARSTEN.includes(mitNr)) await besked(CARSTEN, `✅ ${fornavn} har godkendt "${k.titel}" af ${k.kunstner}. Det kan nu laves til et kort.`, mitNr, fornavn + " (Godkendelse af kort)");
+      } else if (b.dataset.afvis) {
+        const grund = (prompt(`Afvis "${k.titel}"?\n\nSkriv en kort grund til afsenderen (fx "der er personer på billedet, som ikke har sagt ja"):`) || "").trim();
+        if (!grund) return;
+        b.disabled = true;
+        await updateDoc(doc(db, "olsenpost", id), { status: "afvist", afvist_af: mitNr, afvist_af_navn: fornavn, afvist_grund: grund.slice(0, 300), afvist_tid: new Date().toISOString() });
+        await besked([k.afsender],
+          `Tak for "${k.titel}".\n\nDesværre kan billedet ikke blive til et kort.\nGrund: ${grund}\n\nDu er velkommen til at sende et andet billede.\n\nVenlig hilsen\nOlsenKlanen`,
+          "8-B", "OlsenKlanen (Postkort)");
+      } else {
+        b.disabled = true;
+        await updateDoc(doc(db, "olsenpost", id), { status: "lagt op", lagt_op: new Date().toISOString(), lagt_op_af: mitNr });
+        await besked([k.afsender],
+          `🖼️ Nu er "${k.titel}" af ${k.kunstner} et kort på olsenklanen.dk!\n\nSe det under "Skriv et kort": olsenklanen.dk/kort.html\n\nTusind tak for bidraget.\n\nVenlig hilsen\nOlsenKlanen`,
+          "8-B", "OlsenKlanen (Postkort)");
+      }
+    } catch (err) { console.error(err); alert("Det lykkedes ikke. Prøv igen."); }
     hentAdmin();
   });
 }
