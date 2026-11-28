@@ -150,6 +150,26 @@ async function visForskellige30() {
     window.BESOEG_NR30 = nr30.size;
     window.BESOEG_ALLE30 = forskellige.size;
 
+    // ── Til besøgsprocenten: forskellige medlemsnumre (n_) i dag, denne uge, denne og sidste måned ──
+    const dk = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    const nu = new Date();
+    const mandag = new Date(nu); mandag.setDate(nu.getDate() - ((nu.getDay() + 6) % 7));   // ugen starter mandag
+    const mdStart = dk(new Date(nu.getFullYear(), nu.getMonth(), 1));
+    const sidsteMdStart = dk(new Date(nu.getFullYear(), nu.getMonth() - 1, 1));
+    const p = { dag: new Set(), uge: new Set(), md: new Set(), sidsteMd: new Set(),
+                ugeStart: dk(mandag), mdStart, sidsteMdStart };
+    snap.forEach(dagSnap => {
+      const k = dagSnap.key;
+      dagSnap.child("medlemmer").forEach(x => {
+        if (!x.key.startsWith("n_")) return;
+        if (k === dag) p.dag.add(x.key);
+        if (k >= p.ugeStart) p.uge.add(x.key);
+        if (k >= mdStart) p.md.add(x.key);
+        else if (k >= sidsteMdStart) p.sidsteMd.add(x.key);
+      });
+    });
+    window.BESOEG_PCT = p;
+
     // ── Besøg i år og sidste år (til sammenligning) ──
     // Et besøg = én markør på én dag (samme som "Besøg i dag").
     const iAar = new Date().getFullYear();
@@ -206,24 +226,34 @@ window.opdaterBesoegsTabel = function () {
   if (note) note.style.display = aarListe.some(y => y <= 2026) ? "" : "none";
 };
 
-// ── Besøgsprocent: forskellige medlemmer (medlemsnummer) de sidste 30 dage ÷ alle aktive medlemmer ──
-// Tælles præcist fra 28-11-2026 (før det fandtes medlemsnummer-markøren ikke).
+// ── Besøgsprocent: forskellige medlemmer (medlemsnummer, n_) ÷ alle aktive medlemmer ──
+// Medlemsnummeret gemmes ved besøg fra 28-11-2026. Derfor vises hver linje først, når den er præcis:
+//   I dag        fra 29-11-2026 (første hele dag)
+//   Denne uge    fra 30-11-2026 (første hele uge, mandag)
+//   Måned        fra 1-1-2027 (december 2026 er første hele måned) – viser denne og sidste måned
+const MAANED = ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"];
 function visBesoegsProcent() {
   const el = document.getElementById("besoeg-procent");
-  if (!el) return;
+  const p = window.BESOEG_PCT;
   const alle = window.OLSEN_ANTAL_MEDLEMMER;
-  if (!alle || typeof window.BESOEG_NR30 !== "number") return;
-  // Vises først fra 28-12-2026: så er alle 30 dage talt med medlemsnummer (præcist).
-  // Før det kan tallet ikke opgøres rigtigt – derfor skjult (Carstens ønske: ingen vildledning).
-  if (iDagKey() < "2026-12-28") return;
-  const inde = Math.min(window.BESOEG_NR30, alle);
-  const pct = Math.round(inde * 100 / alle);
-  el.innerHTML = "<b>" + inde + "</b> forskellige medlemmer ud af <b>" + alle + "</b> medlemmer<br>" +
-    inde + " ÷ " + alle + " = <b>" + pct + " %</b>";
-  const bar = document.getElementById("besoeg-procent-bar");
-  if (bar) bar.style.width = pct + "%";
+  if (!el || !p || !alle) return;
+  const linje = (tekst, n) => {
+    const inde = Math.min(n, alle), pct = Math.round(inde * 100 / alle);
+    return '<div style="margin-top:6px;">' + tekst + ': <b>' + inde + '</b> af ' + alle + ' = <b>' + pct + ' %</b>' +
+      '<div style="height:8px; background:#e0d8bd; border-radius:4px; margin-top:3px; overflow:hidden;">' +
+      '<div style="height:100%; width:' + pct + '%; background:#2d5016; border-radius:4px;"></div></div></div>';
+  };
+  let html = "";
+  if (dag >= "2026-11-29") html += linje("📅 I dag", p.dag.size);
+  if (p.ugeStart >= "2026-11-30") html += linje("🗓️ Denne uge", p.uge.size);
+  if (dag >= "2027-01-01") {
+    const m = +p.mdStart.slice(5, 7) - 1, sm = +p.sidsteMdStart.slice(5, 7) - 1;
+    html += linje("📆 " + MAANED[m][0].toUpperCase() + MAANED[m].slice(1) + " (indtil nu)", p.md.size);
+    html += linje("📆 " + MAANED[sm][0].toUpperCase() + MAANED[sm].slice(1), p.sidsteMd.size);
+  }
+  el.innerHTML = html;
   const boks = document.getElementById("besoeg-procent-boks");
-  if (boks) boks.hidden = false;
+  if (boks) boks.hidden = !html;
 }
 
 // ── Hjaelp: skriv tal i boksen hvis elementet findes ──
