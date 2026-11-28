@@ -5,6 +5,7 @@
 //    • Besoeg i dag     (unikke medlemmer i dag, 1 pr. dag)
 //    • Besoeg i alt     (alle dage lagt sammen)
 //  INGEN navne gemmes. Kun anonyme markoerer og tal.
+//  Fra 28-11-2026 er markoeren en kode ud fra medlemsnummeret (1 pr. medlem).
 //
 //  VIGTIGT: bruger NAVNGIVEN Firebase-app ("okBesoeg") saa den
 //  ikke kolliderer med sidens egen default-app (samme laering
@@ -42,7 +43,18 @@ function iDagKey() {
 // ── Hvem er jeg? (kun til at undgaa dobbelttaelling — aldrig vist) ──
 // Bruger e-mail fra login hvis den findes, ellers en tilfaeldig markoer
 // gemt i denne browser. Ingen navne gemmes i databasen.
+// Fra 28-11-2026: er man logget ind med medlemsnummer, bruges en kode lavet ud fra nummeret
+// ("n_" + tal). Så tæller et medlem kun én gang, uanset mobil eller computer. Ingen navne.
+function nrKode(nr) {
+  let h = 2166136261;                                   // FNV-1a – laver nummeret om til en kode
+  const t = "olsenklanen|" + String(nr).trim().toUpperCase();
+  for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return "n_" + (h >>> 0).toString(36);
+}
 function minMarkoer() {
+  const nr = sessionStorage.getItem("ok_nr") || localStorage.getItem("ok_nr") || "";
+  const niveau = (sessionStorage.getItem("ok_niveau") || localStorage.getItem("ok_niveau") || "").toLowerCase();
+  if (nr.trim() && niveau !== "gaest") return nrKode(nr);
   let m = sessionStorage.getItem("ok_email");
   if (m && m.trim()) return "m_" + btoa(unescape(encodeURIComponent(m.trim()))).replace(/[^a-zA-Z0-9]/g, "");
   let g = localStorage.getItem("ok_besoeg_id");
