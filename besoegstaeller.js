@@ -213,18 +213,17 @@ function visBesoegsProcent() {
   if (!el) return;
   const alle = window.OLSEN_ANTAL_MEDLEMMER;
   if (!alle || typeof window.BESOEG_NR30 !== "number") return;
-  // Indtil 28-12-2026: samme tal som "Forskellige medlemmer de sidste 30 dage" (ca.).
-  // Derefter: kun medlemsnumre – præcist (30 hele dage med den nye tælling).
-  const praecis = iDagKey() >= "2026-12-28";
-  const inde = Math.min(praecis ? window.BESOEG_NR30 : window.BESOEG_ALLE30, alle);
-  const ca = praecis ? "" : "ca. ";
+  // Vises først fra 28-12-2026: så er alle 30 dage talt med medlemsnummer (præcist).
+  // Før det kan tallet ikke opgøres rigtigt – derfor skjult (Carstens ønske: ingen vildledning).
+  if (iDagKey() < "2026-12-28") return;
+  const inde = Math.min(window.BESOEG_NR30, alle);
   const pct = Math.round(inde * 100 / alle);
-  el.innerHTML = "<b>" + ca + inde + "</b> forskellige medlemmer ud af <b>" + alle + "</b> medlemmer<br>" +
-    inde + " ÷ " + alle + " = <b>" + ca + pct + " %</b>";
+  el.innerHTML = "<b>" + inde + "</b> forskellige medlemmer ud af <b>" + alle + "</b> medlemmer<br>" +
+    inde + " ÷ " + alle + " = <b>" + pct + " %</b>";
   const bar = document.getElementById("besoeg-procent-bar");
   if (bar) bar.style.width = pct + "%";
-  const note = document.getElementById("besoeg-procent-note");
-  if (note) note.style.display = praecis ? "none" : "";
+  const boks = document.getElementById("besoeg-procent-boks");
+  if (boks) boks.hidden = false;
 }
 
 // ── Hjaelp: skriv tal i boksen hvis elementet findes ──

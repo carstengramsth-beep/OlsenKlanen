@@ -33,3 +33,4 @@ Formål: følge udviklingen i den samlede aktivitet – målet er, at medlemmern
 - Præcis fra 28-11-2026; fra 28-12-2026 dækker den hele 30 dage.
 - Formål: vise alle, hvor mange der bruger siden – en grund til at holde hjemmesiden i luften.
 - Ændret samme dag: indtil 28-12-2026 bruger procenten samme tal som »Forskellige medlemmer de sidste 30 dage« (med »ca.«), og beregningen vises (fx »30 ÷ 127 = ca. 24 %«). Fra 28-12-2026 skifter den selv til medlemsnumre (præcist).
+- Ændret igen samme dag (Carstens beslutning): procenten er **skjult indtil 28-12-2026** – »ca.«-tallet kunne vildlede. Fra 28-12-2026 vises den automatisk, præcist ud fra medlemsnumre (`n_`). Uger/perioder før 28-11-2026 kan ikke opgøres (medlemsnummeret blev ikke gemt).
