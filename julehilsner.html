@@ -42,6 +42,14 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .reak button b { font-size: 15px; color: #2c3e1f; }
 .reak button.valgt { border-color: #a4161a; background: #fdecea; }
 .reak .hvem { font-size: 12px; color: #8a7a3f; width: 100%; }
+.komm { font-family: Georgia, serif; padding: 6px 18px 10px; border-top: 1px solid #f0ead8; font-size: 14px; color: #2c3e1f; }
+.komm .k { background: #f7f3e6; border-radius: 8px; padding: 6px 10px; margin-top: 6px; }
+.komm .k .hvor { font-size: 12px; color: #8a7a3f; display: flex; justify-content: space-between; gap: 6px; align-items: center; }
+.komm .k .tekst { white-space: pre-wrap; margin-top: 2px; }
+.komm form { display: flex; gap: 6px; margin-top: 8px; }
+.komm textarea { flex: 1; font-family: Georgia, serif; font-size: 14px; padding: 6px 8px; border: 1px solid #e0d8bd; border-radius: 8px; resize: vertical; min-height: 36px; }
+.komm form button { background: #a4161a; color: #fff; border: none; border-radius: 8px; padding: 0 14px; font-size: 14px; cursor: pointer; font-family: inherit; }
+.komm .kfjern { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 12px; padding: 0; font-family: inherit; }
 .fjern { background: none; border: 1px solid #c0392b; color: #c0392b; border-radius: 12px; font-size: 12px; padding: 2px 10px; cursor: pointer; font-family: inherit; }
 .tom { text-align: center; color: #8a7a3f; font-style: italic; padding: 30px; background: #fff; border-radius: 10px; }
 </style>
@@ -94,6 +102,17 @@ let foersteGang = true;
 // Reaktioner: 👍 tommel op og 🎅 glad julemand. Gemmes på hilsenen som reaktioner.<slags>.<medlemsnr> = navn.
 // Ét tryk giver en reaktion, et tryk mere fjerner den igen. Hvert medlem kan give én af hver slags.
 const REAKTIONER = [["tommel", "👍", "Tommel op"], ["julemand", "🎅", "Glad julemand"]];
+// Kommentarer: kun tekst (ingen billeder). Gemmes på hilsenen som kommentarer.<id> = { nr, navn, tekst, tid }.
+// Fjernes af den, der skrev den, af den, der lagde kortet op, og af 5-Banden.
+function kommentarerHtml(h) {
+  const liste = Object.entries(h.kommentarer || {}).map(([id, k]) => ({ id, ...k })).sort((a, b) => (a.tid || 0) - (b.tid || 0));
+  const kanFjerneAlle = erFemBanden || (MIT_NR && h.fra_nr === MIT_NR);
+  const vis = liste.map(k => `<div class="k"><div class="hvor"><span>💬 <b>${esc(k.navn || "")}</b> · ${esc(dato(k.tid || Date.now()))}</span>
+      ${kanFjerneAlle || (MIT_NR && k.nr === MIT_NR) ? `<button class="kfjern" data-kfjern="${esc(k.id)}" data-id="${esc(h.id)}">🗑 Fjern</button>` : ""}</div>
+      <div class="tekst">${esc(k.tekst || "")}</div></div>`).join("");
+  const felt = MIT_NR ? `<form data-komm="${esc(h.id)}"><textarea maxlength="500" placeholder="Skriv en kommentar …" aria-label="Skriv en kommentar"></textarea><button type="submit">Send</button></form>` : "";
+  return `<div class="komm">${vis}${felt}</div>`;
+}
 function reaktionerHtml(h) {
   const r = h.reaktioner || {};
   const knapper = REAKTIONER.map(([slags, ikon, tekst]) => {
@@ -117,6 +136,9 @@ onSnapshot(query(collection(db, "olsenpost"), where("type", "==", "julehilsen"))
   // "Julehilsner fra: …" – som navnene på et fødselsdagskort
   const navne = [...new Set(liste.map(h => (h.kort_fra || h.fra_navn || "").trim()).filter(Boolean))];
   document.getElementById("fra-alle").innerHTML = "Julehilsner fra: <span class='navne'>" + navne.map(esc).join(" · ") + "</span>";
+  // Gem halvskrevne kommentarer, så de ikke forsvinder, når siden opdateres (fx når en anden trykker 👍)
+  const kladder = {}; let fokus = null;
+  el.querySelectorAll("form[data-komm] textarea").forEach(t => { if (t.value) kladder[t.form.dataset.komm] = t.value; if (t === document.activeElement) fokus = t.form.dataset.komm; });
   el.innerHTML = liste.map(h => {
     const billede = sikkerBillede(h.kort_fil || "");
     const kanFjerne = erFemBanden || (MIT_NR && h.fra_nr === MIT_NR);
@@ -131,6 +153,7 @@ onSnapshot(query(collection(db, "olsenpost"), where("type", "==", "julehilsen"))
         ${h.kort_fra ? `<div class="fra">${esc(h.kort_fra)}</div>` : ""}
       </div>
       ${reaktionerHtml(h)}
+      ${kommentarerHtml(h)}
       <div class="bund"><span>🎄 Lagt op af ${esc(h.fra_navn || "")} · ${esc(dato(h.sendt_lokal || Date.now()))}</span>
         ${kanFjerne ? `<button class="fjern" data-fjern="${esc(h.id)}">🗑 Fjern</button>` : ""}</div>
     </div>`;
@@ -142,6 +165,21 @@ onSnapshot(query(collection(db, "olsenpost"), where("type", "==", "julehilsen"))
     const navn = (MIT_NAVN || "").trim().split(/\s+/)[0] || MIT_NR;
     try { await updateDoc(doc(db, "olsenpost", h.id), new FieldPath("reaktioner", b.dataset.reak, MIT_NR), harGivet ? deleteField() : navn); }
     catch(e) { alert("Det lykkedes ikke. Prøv igen."); }
+  });
+  el.querySelectorAll("form[data-komm]").forEach(f => { const t = f.querySelector("textarea"); if (kladder[f.dataset.komm]) t.value = kladder[f.dataset.komm]; if (fokus === f.dataset.komm) t.focus(); });
+  el.querySelectorAll("form[data-komm]").forEach(f => f.onsubmit = async ev => {
+    ev.preventDefault();
+    const felt = f.querySelector("textarea"), tekst = felt.value.trim().slice(0, 500);
+    if (!tekst) { felt.focus(); return; }
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    felt.value = "";                                       // tøm feltet først (siden tegnes straks igen)
+    try { await updateDoc(doc(db, "olsenpost", f.dataset.komm), new FieldPath("kommentarer", id), { nr: MIT_NR, navn: (MIT_NAVN || "").trim() || MIT_NR, tekst, tid: Date.now() }); }
+    catch(e) { const t = document.querySelector(`form[data-komm="${f.dataset.komm}"] textarea`); if (t) t.value = tekst; alert("Kommentaren kunne ikke gemmes. Prøv igen."); }
+  });
+  el.querySelectorAll("[data-kfjern]").forEach(b => b.onclick = async () => {
+    if (!confirm("Vil du fjerne denne kommentar?")) return;
+    try { await updateDoc(doc(db, "olsenpost", b.dataset.id), new FieldPath("kommentarer", b.dataset.kfjern), deleteField()); }
+    catch(e) { alert("Kunne ikke fjerne kommentaren. Prøv igen."); }
   });
   el.querySelectorAll("[data-fjern]").forEach(b => b.onclick = async () => {
     if (!confirm("Vil du fjerne denne julehilsen? Den forsvinder for alle.")) return;
