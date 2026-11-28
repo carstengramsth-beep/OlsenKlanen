@@ -52,6 +52,8 @@ body { font-family: Georgia, 'Times New Roman', serif; background: #f5f1e8; colo
 .komm .kfjern { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 12px; padding: 0; font-family: inherit; }
 .hilsen.demo { position: relative; }
 .demo-maerke { background: #5a7a3a; color: #fff; font-family: Georgia, serif; font-size: 14px; font-weight: bold; text-align: center; padding: 6px 10px; letter-spacing: .5px; }
+.komm .kfold { display: block; width: 100%; text-align: left; background: #f7f3e6; border: 1px dashed #c89e3c; border-radius: 8px; padding: 7px 10px; margin-top: 4px; font-family: Georgia, serif; font-size: 14px; color: #2c3e1f; cursor: pointer; }
+.komm.lukket .kliste { display: none; }
 .fjern { background: none; border: 1px solid #c0392b; color: #c0392b; border-radius: 12px; font-size: 12px; padding: 2px 10px; cursor: pointer; font-family: inherit; }
 .tom { text-align: center; color: #8a7a3f; font-style: italic; padding: 30px; background: #fff; border-radius: 10px; }
 </style>
@@ -106,14 +108,21 @@ let foersteGang = true;
 const REAKTIONER = [["tommel", "👍", "Tommel op"], ["julemand", "🎅", "Glad julemand"]];
 // Kommentarer: kun tekst (ingen billeder). Gemmes på hilsenen som kommentarer.<id> = { nr, navn, tekst, tid }.
 // Fjernes af den, der skrev den, af den, der lagde kortet op, og af 5-Banden.
+const aabneKomm = new Set();                             // hilsner, hvor kommentarerne er foldet ud (huskes, når siden opdateres)
 function kommentarerHtml(h) {
   const liste = Object.entries(h.kommentarer || {}).map(([id, k]) => ({ id, ...k })).sort((a, b) => (a.tid || 0) - (b.tid || 0));
   const kanFjerneAlle = erFemBanden || (MIT_NR && h.fra_nr === MIT_NR);
   const vis = liste.map(k => `<div class="k"><div class="hvor"><span>💬 <b>${esc(k.navn || "")}</b> · ${esc(dato(k.tid || Date.now()))}</span>
       ${kanFjerneAlle || (MIT_NR && k.nr === MIT_NR) ? `<button class="kfjern" data-kfjern="${esc(k.id)}" data-id="${esc(h.id)}">🗑 Fjern</button>` : ""}</div>
       <div class="tekst">${esc(k.tekst || "")}</div></div>`).join("");
+  // Flere end 2 kommentarer: klem dem sammen til én linje, som kan foldes ud
+  const n = liste.length, r = h.reaktioner || {};
+  const antal = slags => Object.keys(r[slags] || {}).length;
+  const aaben = aabneKomm.has(h.id);
+  const lukTekst = `💬 ${n} kommentarer · 👍 ${antal("tommel")} · 🎅 ${antal("julemand")} — tryk for at læse`;
+  const fold = n > 2 ? `<button type="button" class="kfold" data-kfold="${esc(h.id)}" data-lukket="${esc(lukTekst)}">${aaben ? "▲ Skjul kommentarerne" : lukTekst}</button>` : "";
   const felt = MIT_NR ? `<form data-komm="${esc(h.id)}"><textarea maxlength="500" placeholder="Skriv en kommentar …" aria-label="Skriv en kommentar"></textarea><button type="submit">Send</button></form>` : "";
-  return `<div class="komm">${vis}${felt}</div>`;
+  return `<div class="komm${n > 2 && !aaben ? " lukket" : ""}">${fold}<div class="kliste">${vis}</div>${felt}</div>`;
 }
 function reaktionerHtml(h) {
   const r = h.reaktioner || {};
@@ -180,6 +189,12 @@ onSnapshot(query(collection(db, "olsenpost"), where("type", "==", "julehilsen"))
     felt.value = "";                                       // tøm feltet først (siden tegnes straks igen)
     try { await updateDoc(doc(db, "olsenpost", f.dataset.komm), new FieldPath("kommentarer", id), { nr: MIT_NR, navn: (MIT_NAVN || "").trim() || MIT_NR, tekst, tid: Date.now() }); }
     catch(e) { const t = document.querySelector(`form[data-komm="${f.dataset.komm}"] textarea`); if (t) t.value = tekst; alert("Kommentaren kunne ikke gemmes. Prøv igen."); }
+  });
+  el.querySelectorAll("[data-kfold]").forEach(b => b.onclick = () => {
+    const id = b.dataset.kfold, aaben = !aabneKomm.has(id);
+    if (aaben) aabneKomm.add(id); else aabneKomm.delete(id);
+    b.closest(".komm").classList.toggle("lukket", !aaben);
+    b.textContent = aaben ? "▲ Skjul kommentarerne" : b.dataset.lukket;
   });
   el.querySelectorAll("[data-kfjern]").forEach(b => b.onclick = async () => {
     if (!confirm("Vil du fjerne denne kommentar?")) return;
