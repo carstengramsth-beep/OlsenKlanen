@@ -302,7 +302,7 @@ $("kort-valg").innerHTML = GRUPPER.map(g => {
     const del = kort.filter(x => temaAf(x.k) === tm);
     return del.length ? `<h4 class="tema">${escK(tm)}</h4>` + visKort(del) : "";
   }).join("");
-  return `<div class="kort-gruppe"><h3>${escK(g.titel)}</h3>` + indhold + `</div>`;
+  return `<div class="kort-gruppe" id="gruppe-${g.id}"><h3>${escK(g.titel)}</h3>` + indhold + `</div>`;
 }).join("");
 // Lille tal under hvert billede: hvor mange gange det er brugt til et kort (fyldes ud, når tallene er hentet)
 window.visBrug = tael => document.querySelectorAll("#kort-valg .brugt").forEach(el => {
@@ -399,7 +399,7 @@ $("start-forfra").onclick = () => {
   if (!confirm("Vil du slette dit udkast og starte forfra?\n\nBilledet og teksten bliver fjernet.")) return;
   window.egetBillede = null; $("eget-fil").value = ""; $("eget-fjern").style.display = "none";
   const jul = new URLSearchParams(location.search).has("jul");
-  const start = jul ? KORT.findIndex(k => k.nr === 13) : 0;
+  const start = jul ? KORT.findIndex(k => k.nr === 18) : 0;   // julekort starter med Oldermandens julekort
   valgt = start >= 0 ? start : 0;
   $("til").value = jul ? "Kære alle i OlsenKlanen" : "";
   $("besked").value = "";
@@ -411,9 +411,9 @@ $("start-forfra").onclick = () => {
   opdater();
   document.getElementById("trin-1").scrollIntoView({ behavior: "smooth", block: "start" });
 };
-// kort.html?jul=1 (fra julehilsensiden): start med Esthers "Jul" og vis julehilsen-trinnet tydeligt
+// kort.html?jul=1 (fra julehilsensiden): start med Oldermandens julekort (nr. 18) og vis julehilsen-trinnet tydeligt
 if (new URLSearchParams(location.search).has("jul")) {
-  const i = KORT.findIndex(k => k.nr === 13); if (i >= 0) valgt = i;
+  const i = KORT.findIndex(k => k.nr === 18); if (i >= 0) valgt = i;
   if (!$("til").value) $("til").value = "Kære alle i OlsenKlanen";
   if (!$("slut").value || $("slut").value === "Kærlig hilsen") $("slut").value = "Glædelig jul og godt nytår";
   if (!new URLSearchParams(location.search).has("guide")) setTimeout(() => { const j = $("send-jul"); if (j && j.style.display !== "none") j.scrollIntoView({ behavior: "smooth", block: "center" }); }, 900);
@@ -864,7 +864,8 @@ if (vis) {
 (function () {
   if (!new URLSearchParams(location.search).has("guide")) return;
   const TRIN = [
-    { el: "eget-boks", titel: "Vælg dit billede", tekst: "Tryk på »Vælg fil« og find et billede på din computer eller mobil. Du kan også bare trykke på et af de faste kort ovenfor. Kortet bygges op, mens du arbejder: til højre (eller nederst på mobilen) ser du hele kortet." },
+    { el: "gruppe-oldermand", titel: "Vælg et julekort", tekst: "Øverst står Oldermandens julekort – Kurts flotte maleri. Det er valgt fra start. Du kan også trykke på et af de andre kort længere nede, fx Esthers »Jul«. Kortet bygges op, mens du arbejder: til højre (eller nederst på mobilen) ser du hele kortet." },
+    { el: "eget-boks", titel: "… eller brug dit eget billede", tekst: "Vil du hellere bruge dit eget billede? Tryk på »Vælg fil« og find et billede på din computer eller mobil." },
     { el: "trin-2", titel: "Skriv din hilsen", tekst: "Skriv hvem hilsenen er til, din julehilsen, en slutning og hvem den er fra. Vælg den skrifttype, du bedst kan lide." },
     { el: "send-jul", titel: "Læg den op til hele familien", tekst: "I den røde boks ser du præcis, hvordan din hilsen kommer til at se ud. Er du tilfreds, så tryk på den røde knap »🎄 Læg op på julehilsensiden«. Så kommer din hilsen på julehilsensiden, på forsiden og i det gule bånd. 🎉" },
     { el: "send-en", titel: "… eller send den til én person", tekst: "Vil du hellere sende kortet til et bestemt familiemedlem, så vælg »Intern post« her og find personen på listen." }
