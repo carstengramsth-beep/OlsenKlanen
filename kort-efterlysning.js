@@ -27,7 +27,7 @@
     if (!document.getElementById("kef-css")) { const s = document.createElement("style"); s.id = "kef-css"; s.textContent = css; document.head.appendChild(s); }
     const paaKortSiden = /kort\.html$/.test(location.pathname);
     el.innerHTML = `<div class="kef">
-      <h3>🎨 Vi mangler kort til alle lejligheder!</h3>
+      <h3>🎨 Vi mangler illustrationer til lejlighedskort!</h3>
       <p>Har du en tegning, et maleri eller et godt foto? Send det til os – så bliver det måske til et postkort, som hele familien kan bruge.</p>
       <div class="kef-lej">${LEJLIGHEDER.map(([i, t]) => `<span>${i} ${t}</span>`).join("")}</div>
       ${paaKortSiden ? "" : `<div class="kef-vej">Her finder du kortene: <b>🏠 Forsiden</b> → <b>🖼️ Skriv et kort</b> → <b>Vælg et kort</b></div>`}
