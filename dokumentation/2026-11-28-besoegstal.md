@@ -34,3 +34,11 @@ Formål: følge udviklingen i den samlede aktivitet – målet er, at medlemmern
 - Formål: vise alle, hvor mange der bruger siden – en grund til at holde hjemmesiden i luften.
 - Ændret samme dag: indtil 28-12-2026 bruger procenten samme tal som »Forskellige medlemmer de sidste 30 dage« (med »ca.«), og beregningen vises (fx »30 ÷ 127 = ca. 24 %«). Fra 28-12-2026 skifter den selv til medlemsnumre (præcist).
 - Ændret igen samme dag (Carstens beslutning): procenten er **skjult indtil 28-12-2026** – »ca.«-tallet kunne vildlede. Fra 28-12-2026 vises den automatisk, præcist ud fra medlemsnumre (`n_`). Uger/perioder før 28-11-2026 kan ikke opgøres (medlemsnummeret blev ikke gemt).
+
+## Besøgsprocent pr. dag, uge og måned (besluttet 28-11-2026 af Carsten)
+- Erstatter 30-dages-procenten. Boksen »📊 Besøgsprocent« viser forskellige medlemsnumre (`n_`) ÷ aktive medlemmer, med bjælke:
+  - **I dag** – fra 29-11-2026 (første hele dag).
+  - **Denne uge** (mandag–søndag) – fra 30-11-2026 (første hele uge).
+  - **Denne måned (indtil nu)** og **sidste måned** – fra 1-1-2027 (december 2026 er første hele måned).
+- Hver linje vises først, når den er præcis. Boksen er skjult, indtil der er mindst én linje.
+- Kode: `visBesoegsProcent()` og `window.BESOEG_PCT` i `besoegstaeller.js`.
