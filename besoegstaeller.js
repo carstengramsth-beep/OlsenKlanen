@@ -151,34 +151,53 @@ async function visForskellige30() {
     // Et besøg = én markør på én dag (samme som "Besøg i dag").
     const iAar = new Date().getFullYear();
     const iDagMD = iDagKey().slice(5);                       // "MM-DD" – til "samme periode sidste år"
-    const aar = {};                                          // år → { besoeg, forskellige:Set, tilSammeDag }
+    const aar = {};                                          // år → { besoeg, forskellige:Set, mail:Set, nr:Set, tilSammeDag }
     snap.forEach(dagSnap => {
       const y = +String(dagSnap.key).slice(0, 4);
       if (!y) return;
-      const a = aar[y] || (aar[y] = { besoeg: 0, forskellige: new Set(), tilSammeDag: 0 });
+      const a = aar[y] || (aar[y] = { besoeg: 0, forskellige: new Set(), mail: new Set(), nr: new Set(), tilSammeDag: 0 });
       let n = 0;
-      dagSnap.child("medlemmer").forEach(x => { n++; a.forskellige.add(x.key); });
+      dagSnap.child("medlemmer").forEach(x => {
+        n++; a.forskellige.add(x.key);
+        if (x.key.startsWith("m_")) a.mail.add(x.key);       // login-mail: hver er mindst én rigtig person
+        if (x.key.startsWith("n_")) a.nr.add(x.key);         // medlemsnummer: præcis én person
+      });
       a.besoeg += n;
       if (String(dagSnap.key).slice(5) <= iDagMD) a.tilSammeDag += n;
     });
-    // Tabel: én kolonne pr. år, nyeste til venstre (højst 3 år)
-    const tabel = document.getElementById("besoeg-tabel");
-    if (tabel) {
-      const aarListe = Object.keys(aar).map(Number).filter(y => y <= iAar).sort((x, y) => y - x).slice(0, 3);
-      if (!aarListe.includes(iAar)) aarListe.unshift(iAar);
-      const v = y => aar[y] || { besoeg: 0, forskellige: new Set() };
-      tabel.querySelector("thead tr").innerHTML = "<th></th>" + aarListe.map(y => "<th>" + y + "</th>").join("");
-      const rk = tabel.querySelectorAll("tbody tr");
-      // Til og med 2026 kunne samme person tælle flere gange (mobil + computer) → "ca." Fra 2027 tælles pr. medlemsnummer.
-      const ca = y => y <= 2026 ? "ca. " : "";
-      rk[0].innerHTML = "<td>Besøg i alt i året</td>" + aarListe.map(y => "<td" + (y < iAar ? " title=\"Til samme dag: " + ca(y) + v(y).tilSammeDag + "\"" : "") + ">" + ca(y) + v(y).besoeg + "</td>").join("");
-      rk[1].innerHTML = "<td>Forskellige medlemmer i året</td>" + aarListe.map(y => "<td>" + ca(y) + v(y).forskellige.size + "</td>").join("");
-      const note = document.getElementById("besoeg-note");
-      if (note) note.style.display = aarListe.some(y => y <= 2026) ? "" : "none";
-    }
+    window.BESOEG_AAR = { aar, iAar };
+    window.opdaterBesoegsTabel();
   } catch (e) { el.textContent = "–"; }
 }
 visForskellige30();
+
+// Tabel: én kolonne pr. år, nyeste til venstre (højst 3 år).
+// Til og med 2026 kunne samme person tælle flere gange → "ca." og for "forskellige" et interval:
+//   mindst = flest forskellige login-mails eller medlemsnumre (hver er mindst én person)
+//   højst  = antal forskellige markører, dog aldrig flere end der er aktive medlemmer i kartoteket
+window.opdaterBesoegsTabel = function () {
+  const tabel = document.getElementById("besoeg-tabel");
+  if (!tabel || !window.BESOEG_AAR) return;
+  const { aar, iAar } = window.BESOEG_AAR;
+  const aarListe = Object.keys(aar).map(Number).filter(y => y <= iAar).sort((x, y) => y - x).slice(0, 3);
+  if (!aarListe.includes(iAar)) aarListe.unshift(iAar);
+  const v = y => aar[y] || { besoeg: 0, forskellige: new Set(), mail: new Set(), nr: new Set(), tilSammeDag: 0 };
+  const ca = y => y <= 2026 ? "ca. " : "";
+  const forskellige = y => {
+    const a = v(y);
+    if (y > 2026) return String(a.nr.size || a.forskellige.size);
+    const mindst = Math.max(a.mail.size, a.nr.size);
+    let hoejst = a.forskellige.size;
+    if (window.OLSEN_ANTAL_MEDLEMMER) hoejst = Math.min(hoejst, window.OLSEN_ANTAL_MEDLEMMER);
+    return mindst && mindst < hoejst ? "mellem " + mindst + " og " + hoejst : "ca. " + hoejst;
+  };
+  tabel.querySelector("thead tr").innerHTML = "<th></th>" + aarListe.map(y => "<th>" + y + "</th>").join("");
+  const rk = tabel.querySelectorAll("tbody tr");
+  rk[0].innerHTML = "<td>Besøg i alt i året</td>" + aarListe.map(y => "<td" + (y < iAar ? " title=\"Til samme dag: " + ca(y) + v(y).tilSammeDag + "\"" : "") + ">" + ca(y) + v(y).besoeg + "</td>").join("");
+  rk[1].innerHTML = "<td>Forskellige medlemmer i året</td>" + aarListe.map(y => "<td>" + forskellige(y) + "</td>").join("");
+  const note = document.getElementById("besoeg-note");
+  if (note) note.style.display = aarListe.some(y => y <= 2026) ? "" : "none";
+};
 
 // ── Hjaelp: skriv tal i boksen hvis elementet findes ──
 function saetTal(id, vaerdi) {

@@ -560,7 +560,7 @@ try {
         </tbody>
       </table>
       <div id="besoeg-note" style="font-size:11px; color:#888; margin-top:6px; padding-left:4px; font-style:italic;">
-        ca. = i 2026 kunne samme person tælle flere gange (fx mobil og computer). Fra 2027 tæller hvert medlem kun én gang.
+        I 2026 kunne samme person tælle flere gange (fx mobil og computer). Derfor står der ca. og et interval: det rigtige tal ligger et sted mellem de to tal. Fra 2027 tæller hvert medlem kun én gang.
       </div>
       <div style="font-size:11px; color:#888; margin-top:8px; padding-left:4px; font-style:italic;">
         Dit besøg tæller 1 pr. dag — så kan du selv holde øje.
@@ -797,6 +797,13 @@ async function hentAllePersoner() {
   const personer = [];
   const snap = await getDocs(collection(db, "membres"));
   try { alleBryllupper = byggBryllupper(snap); } catch(e) { alleBryllupper = []; }
+  // Antal aktive medlemmer (til loftet i besøgstallene for 2026)
+  try {
+    let n = 0;
+    snap.forEach(d => (d.data().familiemedlemmer || []).forEach(p => { if (p.status !== "afdød" && p.status !== "udmeldt") n++; }));
+    window.OLSEN_ANTAL_MEDLEMMER = n;
+    if (typeof window.opdaterBesoegsTabel === "function") window.opdaterBesoegsTabel();
+  } catch(e) {}
   snap.forEach(docu => {
     const fam = docu.data();
     const hus = docu.id;
@@ -1843,7 +1850,7 @@ window.byggKalender = function bygKalender(){
 };
 window.byggKalender();
 </script>
-<script type="module" src="besoegstaeller.js?v=20261128b"></script>
+<script type="module" src="besoegstaeller.js?v=20261128c"></script>
 <script src="soeg.js" defer></script>
 <script type="module" src="familieopkald.js"></script>
 <script src="stort-billede.js" defer></script>
