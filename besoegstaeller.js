@@ -169,8 +169,12 @@ async function visForskellige30() {
       const v = y => aar[y] || { besoeg: 0, forskellige: new Set() };
       tabel.querySelector("thead tr").innerHTML = "<th></th>" + aarListe.map(y => "<th>" + y + "</th>").join("");
       const rk = tabel.querySelectorAll("tbody tr");
-      rk[0].innerHTML = "<td>Besøg i alt i året</td>" + aarListe.map(y => "<td" + (y < iAar ? " title=\"Til samme dag: " + v(y).tilSammeDag + "\"" : "") + ">" + v(y).besoeg + "</td>").join("");
-      rk[1].innerHTML = '<td title="Cirka – en person på både mobil og computer kan tælle 2 gange">Forskellige medlemmer i året (ca.)</td>' + aarListe.map(y => "<td>" + v(y).forskellige.size + "</td>").join("");
+      // Til og med 2026 kunne samme person tælle flere gange (mobil + computer) → "ca." Fra 2027 tælles pr. medlemsnummer.
+      const ca = y => y <= 2026 ? "ca. " : "";
+      rk[0].innerHTML = "<td>Besøg i alt i året</td>" + aarListe.map(y => "<td" + (y < iAar ? " title=\"Til samme dag: " + ca(y) + v(y).tilSammeDag + "\"" : "") + ">" + ca(y) + v(y).besoeg + "</td>").join("");
+      rk[1].innerHTML = "<td>Forskellige medlemmer i året</td>" + aarListe.map(y => "<td>" + ca(y) + v(y).forskellige.size + "</td>").join("");
+      const note = document.getElementById("besoeg-note");
+      if (note) note.style.display = aarListe.some(y => y <= 2026) ? "" : "none";
     }
   } catch (e) { el.textContent = "–"; }
 }
