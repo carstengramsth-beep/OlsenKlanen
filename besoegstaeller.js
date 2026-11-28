@@ -148,6 +148,7 @@ async function visForskellige30() {
     });
     saetTal("besoeg-30", forskellige.size);
     window.BESOEG_NR30 = nr30.size;
+    window.BESOEG_ALLE30 = forskellige.size;
 
     // ── Besøg i år og sidste år (til sammenligning) ──
     // Et besøg = én markør på én dag (samme som "Besøg i dag").
@@ -211,12 +212,19 @@ function visBesoegsProcent() {
   const el = document.getElementById("besoeg-procent");
   if (!el) return;
   const alle = window.OLSEN_ANTAL_MEDLEMMER;
-  const inde = window.BESOEG_NR30;
-  if (!alle || typeof inde !== "number") return;
-  const pct = Math.round(Math.min(inde, alle) * 100 / alle);
-  el.innerHTML = "<b>" + inde + "</b> af " + alle + " medlemmer = <b>" + pct + " %</b>";
+  if (!alle || typeof window.BESOEG_NR30 !== "number") return;
+  // Indtil 28-12-2026: samme tal som "Forskellige medlemmer de sidste 30 dage" (ca.).
+  // Derefter: kun medlemsnumre – præcist (30 hele dage med den nye tælling).
+  const praecis = iDagKey() >= "2026-12-28";
+  const inde = Math.min(praecis ? window.BESOEG_NR30 : window.BESOEG_ALLE30, alle);
+  const ca = praecis ? "" : "ca. ";
+  const pct = Math.round(inde * 100 / alle);
+  el.innerHTML = "<b>" + ca + inde + "</b> forskellige medlemmer ud af <b>" + alle + "</b> medlemmer<br>" +
+    inde + " ÷ " + alle + " = <b>" + ca + pct + " %</b>";
   const bar = document.getElementById("besoeg-procent-bar");
   if (bar) bar.style.width = pct + "%";
+  const note = document.getElementById("besoeg-procent-note");
+  if (note) note.style.display = praecis ? "none" : "";
 }
 
 // ── Hjaelp: skriv tal i boksen hvis elementet findes ──
