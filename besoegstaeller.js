@@ -140,12 +140,14 @@ async function visForskellige30() {
     const graense = new Date(); graense.setDate(graense.getDate() - 29);
     const fraDag = graense.getFullYear() + "-" + String(graense.getMonth() + 1).padStart(2, "0") + "-" + String(graense.getDate()).padStart(2, "0");
     const forskellige = new Set();
+    const nr30 = new Set();                                  // kun medlemsnumre (n_) – præcis én person hver
     snap.forEach(dagSnap => {
       if (dagSnap.key < fraDag) return;
       const m = dagSnap.child("medlemmer");
-      m.forEach(x => { forskellige.add(x.key); });
+      m.forEach(x => { forskellige.add(x.key); if (x.key.startsWith("n_")) nr30.add(x.key); });
     });
     saetTal("besoeg-30", forskellige.size);
+    window.BESOEG_NR30 = nr30.size;
 
     // ── Besøg i år og sidste år (til sammenligning) ──
     // Et besøg = én markør på én dag (samme som "Besøg i dag").
@@ -176,6 +178,7 @@ visForskellige30();
 //   mindst = flest forskellige login-mails eller medlemsnumre (hver er mindst én person)
 //   højst  = antal forskellige markører, dog aldrig flere end der er aktive medlemmer i kartoteket
 window.opdaterBesoegsTabel = function () {
+  visBesoegsProcent();
   const tabel = document.getElementById("besoeg-tabel");
   if (!tabel || !window.BESOEG_AAR) return;
   const { aar, iAar } = window.BESOEG_AAR;
@@ -201,6 +204,20 @@ window.opdaterBesoegsTabel = function () {
   const note = document.getElementById("besoeg-note");
   if (note) note.style.display = aarListe.some(y => y <= 2026) ? "" : "none";
 };
+
+// ── Besøgsprocent: forskellige medlemmer (medlemsnummer) de sidste 30 dage ÷ alle aktive medlemmer ──
+// Tælles præcist fra 28-11-2026 (før det fandtes medlemsnummer-markøren ikke).
+function visBesoegsProcent() {
+  const el = document.getElementById("besoeg-procent");
+  if (!el) return;
+  const alle = window.OLSEN_ANTAL_MEDLEMMER;
+  const inde = window.BESOEG_NR30;
+  if (!alle || typeof inde !== "number") return;
+  const pct = Math.round(Math.min(inde, alle) * 100 / alle);
+  el.innerHTML = "<b>" + inde + "</b> af " + alle + " medlemmer = <b>" + pct + " %</b>";
+  const bar = document.getElementById("besoeg-procent-bar");
+  if (bar) bar.style.width = pct + "%";
+}
 
 // ── Hjaelp: skriv tal i boksen hvis elementet findes ──
 function saetTal(id, vaerdi) {

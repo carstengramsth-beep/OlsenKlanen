@@ -25,3 +25,10 @@ Formål: følge udviklingen i den samlede aktivitet – målet er, at medlemmern
 ## Ændret 28-11-2026 (Carstens ønske)
 - Intervallet gav ingen mening (fx »mellem 1 og 127«). Rækken »Forskellige medlemmer i året« er **skjult for 2026** og vises først, når der er tal for 2027 (ét præcist tal pr. år ud fra medlemsnumre).
 - »Forskellige medlemmer de sidste 30 dage« vises stadig.
+
+## Besøgsprocent (tilføjet 28-11-2026, Carstens ønske)
+- Ny linje i besøgsboksen: **📊 Besøgsprocent (sidste 30 dage): X af N medlemmer = Y %** + en grøn bjælke.
+- X = forskellige medlemsnumre (`n_`) de sidste 30 dage. Gæster og gamle markører (`m_`, `g_`) tæller ikke.
+- N = aktive medlemmer i kartoteket (`window.OLSEN_ANTAL_MEDLEMMER`, ca. 127).
+- Præcis fra 28-11-2026; fra 28-12-2026 dækker den hele 30 dage.
+- Formål: vise alle, hvor mange der bruger siden – en grund til at holde hjemmesiden i luften.
