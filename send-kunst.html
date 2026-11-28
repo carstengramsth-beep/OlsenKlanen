@@ -79,6 +79,7 @@ textarea{min-height:80px}
     <h2>Sådan gør du</h2>
     <p>Tag et billede af tegningen eller maleriet. Læg det lige på et bord i dagslys, og tag billedet lige ovenfra.</p>
     <p style="margin-top:.4rem">Udfyld felterne herunder, og tryk <b>Send</b>. Billedet bliver først kontrolleret og godkendt af administratoren (Carsten – ellers Kurt eller Sanne). Først derefter bliver det til et kort, som alle kan se.</p>
+    <p style="margin-top:.4rem">⏱️ <b>Du får svar inden for 24 timer.</b> Haster det, eller hører du ikke noget, så ring til Carsten og lav en aftale. Nummeret står i medlemskartoteket.</p>
     <p style="margin-top:.4rem" class="hjaelp">Er det svært? Så send bare billedet på mail til
       <a href="mailto:post@olsenklanen.dk?subject=Tegning%20eller%20maleri%20til%20postkortene">post@olsenklanen.dk</a>
       og skriv, hvad det hedder, og hvem der har lavet det.</p>
@@ -144,6 +145,7 @@ textarea{min-height:80px}
   <div class="kort" id="admin-del">
     <h2>📥 Indsendte billeder – til godkendelse</h2>
     <p class="hjaelp">Kun for godkenderne: Carsten (administrator), ved forfald Kurt, derefter Sanne, Tommy og Karin.
+      <b>Regel: alle billeder godkendes og lægges op inden for 24 timer.</b> Er det ikke sket, får den næste besked og tager ansvaret (Kurt efter 24 timer, Sanne efter 48, Tommy og Karin efter 72).
       Tjek at billedet er lovligt og ordentligt, og at ingen privatliv krænkes. Tryk <b>✅ Godkend</b> eller <b>❌ Afvis</b> – afsenderen får besked.
       Når et godkendt billede er lagt ind som kort, så tryk »Lagt op som kort«.</p>
     <div id="admin-liste" style="margin-top:.6rem">Henter …</div>
@@ -295,10 +297,10 @@ $("send").onclick = async () => {
     await besked([mitNr],
       `🎨 Tak, ${(mitNavn || "").split(/\s+/)[0] || "kære medlem"}!\n\n` +
       `Vi har modtaget "${titel}" af ${hvem}.\nTema: ${temaTekst}\n\n` +
-      `Billedet bliver nu kontrolleret og godkendt af administratoren. Du får en besked, når det er sket.\n\nVenlig hilsen\nOlsenKlanen`,
+      `Billedet bliver nu kontrolleret og godkendt af administratoren. Du får svar inden for 24 timer.\n\nHaster det, eller hører du ikke noget, så ring til Carsten og lav en aftale. Nummeret står i medlemskartoteket.\n\nVenlig hilsen\nOlsenKlanen`,
       "8-B", "OlsenKlanen (Postkort)");
     window.onbeforeunload = null;
-    $("status").innerHTML = `🎉 Tak! "${esc(titel)}" er sendt til godkendelse. Du får besked, når det er kontrolleret.<br><span class="hjaelp">Vil du sende én til? Vælg bare et nyt billede.</span>`;
+    $("status").innerHTML = `🎉 Tak! "${esc(titel)}" er sendt til godkendelse. Du får svar inden for 24 timer.<br><span class="hjaelp">Vil du sende én til? Vælg bare et nyt billede.</span>`;
     // Klar til næste
     fil = null; $("fil").value = ""; $("forhaand").style.display = "none";
     $("titel").value = ""; $("alder").value = ""; $("kommentar").value = ""; $("nyt-tema").value = "";
