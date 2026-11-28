@@ -113,6 +113,31 @@ onValue(ref(bdb, "besoeg/total"), (snap) => {
   saetTal("besoeg-ialt", snap.val() || 0);
 });
 
+// ════════════════════════════════════════════════════════════════
+//  4) FORSKELLIGE BESOEGENDE DE SIDSTE 30 DAGE
+//     Taeller hvor mange FORSKELLIGE markoerer der har vaeret paa siden
+//     i de sidste 30 dage. Stadig uden navne – kun et antal.
+//     (En person paa baade mobil og computer uden login-mail kan taelle 2 gange,
+//      og en husstand med faelles mail kan taelle som 1.)
+// ════════════════════════════════════════════════════════════════
+async function visForskellige30() {
+  const el = document.getElementById("besoeg-30");
+  if (!el) return;
+  try {
+    const snap = await get(ref(bdb, "besoeg/dage"));
+    const graense = new Date(); graense.setDate(graense.getDate() - 29);
+    const fraDag = graense.getFullYear() + "-" + String(graense.getMonth() + 1).padStart(2, "0") + "-" + String(graense.getDate()).padStart(2, "0");
+    const forskellige = new Set();
+    snap.forEach(dagSnap => {
+      if (dagSnap.key < fraDag) return;
+      const m = dagSnap.child("medlemmer");
+      m.forEach(x => { forskellige.add(x.key); });
+    });
+    saetTal("besoeg-30", forskellige.size);
+  } catch (e) { el.textContent = "–"; }
+}
+visForskellige30();
+
 // ── Hjaelp: skriv tal i boksen hvis elementet findes ──
 function saetTal(id, vaerdi) {
   const el = document.getElementById(id);
