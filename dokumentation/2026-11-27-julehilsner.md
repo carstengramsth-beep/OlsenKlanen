@@ -55,3 +55,5 @@
 - Kan fjernes af den, der skrev den, af den, der lagde kortet op, og af 5-Banden.
 - Gemmes på hilsenen: `kommentarer.<id> = { nr, navn, tekst, tid }`. Halvskrevne kommentarer bevares, når siden opdateres.
 - **DEMO-mærke (28. nov. 2026):** hilsner, hvor »Til«-teksten starter med »TEST« (fx »🧪 TEST – …«), får en grøn bjælke øverst: »🧪 DEMO – kun en prøve«.
+- **Kommentarer klemt sammen (28. nov. 2026):** har en hilsen flere end 2 kommentarer, vises kun én linje »💬 5 kommentarer · 👍 3 · 🎅 2 — tryk for at læse«. Tryk folder dem ud (»▲ Skjul kommentarerne«). Feltet til en ny kommentar står der altid.
+- **Senere idé (Carsten):** ved 15–20 kort kan selve kortet (billedet) også klemmes sammen til »Julehilsen fra …« + tallene. Ikke lavet endnu.
