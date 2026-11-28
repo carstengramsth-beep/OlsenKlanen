@@ -252,6 +252,8 @@ exports.tjekIndkommendeMail = onSchedule(
     try { await sendPlanlagteHilsner(); } catch (e) { console.log("Planlagte hilsner fejlede:", e && e.message); }
     // Brevkort til alle medlemmer (sat i kø fra kort.html af en postansvarlig)
     try { await sendBrevkort(); } catch (e) { console.log("Brevkort fejlede:", e && e.message); }
+    // Billeder til kort, der venter på godkendelse: ryk de næste godkendere, hvis det trækker ud
+    try { await rykGodkendelse(); } catch (e) { console.log("Ryk godkendelse fejlede:", e && e.message); }
     // Medlemmer, der selv har bedt om at få en information tilsendt (automatisk)
     try { await behandlInfoAnmodninger(); } catch (e) { console.log("Info-anmodninger fejlede:", e && e.message); }
     const db = getFirestore();
@@ -388,6 +390,37 @@ exports.tjekIndkommendeMail = onSchedule(
  * så en fejl prøves igen. (Ikke en selvstændig funktion: en ny planlagt
  * funktion kræver en IAM-rolle, som deploy-kontoen ikke har.)
  */
+/**
+ * Billeder sendt fra send-kunst.html venter på godkendelse (olsenpost, type "kunst_indsendt").
+ * Carsten får besked med det samme (fra siden). Venter billedet stadig:
+ *   efter 3 dage → Kurt, efter 6 dage → Sanne, efter 9 dage → Tommy og Karin.
+ * (Carstens beslutning 28-11-2026: Carsten godkender, Kurt er backup, derefter Sanne osv.)
+ */
+const GODKEND_TRAPPE = [[3, ["22-B"]], [6, ["48-B"]], [9, ["19-A", "23-B"]]];
+async function rykGodkendelse() {
+  const db = getFirestore();
+  const snap = await db.collection("olsenpost").where("type", "==", "kunst_indsendt").get();
+  const dag = 24 * 3600 * 1000;
+  for (const d of snap.docs) {
+    const k = d.data();
+    if (k.status && k.status !== "afventer" && k.status !== "modtaget") continue;
+    if (!k.samtykke) continue;                       // kun billeder sendt efter godkendelses-ordningen
+    const alder = Date.now() - (k.sendt_lokal || Date.now());
+    const varslet = Array.isArray(k.varslet) ? k.varslet : [];
+    const nye = [];
+    for (const [dage, hvem] of GODKEND_TRAPPE) if (alder >= dage * dag) hvem.forEach(h => { if (!varslet.includes(h)) nye.push(h); });
+    if (!nye.length) continue;
+    await db.collection("olsenpost").add({
+      fra_nr: "8-B", fra_navn: "OlsenKlanen (Godkendelse af kort)", til: nye, til_navne: nye,
+      type: "besked", sendt: FieldValue.serverTimestamp(), sendt_lokal: Date.now(), set_af: [], svar: [],
+      tekst: `🎨 Et billede venter stadig på godkendelse (sendt for ${Math.floor(alder / dag)} dage siden).\n\n` +
+        `Titel: ${k.titel || ""}\nLavet af: ${k.kunstner || ""}\nSendt af: ${k.navn || k.afsender || ""}\n\n` +
+        `Carsten har ikke nået at godkende det. Vil du kigge på det?\n👉 olsenklanen.dk/send-kunst.html`
+    });
+    await d.ref.update({ varslet: FieldValue.arrayUnion(...nye) });
+  }
+}
+
 async function sendPlanlagteHilsner() {
     const db = getFirestore();
     const nu = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Copenhagen" }));
