@@ -236,8 +236,9 @@ const KORT = [
     forslag: { besked: "Buh.. Bøh! 👻\n\nGræskarret griner, edderkoppen hænger klar, og flagermusen er på vej – og se lige de to uhyggelige sygeplejersker!\n\nVi ønsker jer en rigtig sjov og uhyggelig Halloween.\n\nTak til Esther for den flotte tegning – og til Luna og Esther for det flotte billede.", slut: "Pas nu på derude – og med uhyggelig hilsen", skrift: 7 } },
   { nr: 17, gruppe: "saerlige", fil: "billeder/kort/halloween-esther-luna.jpg", titel: "Halloween – fra Elisabeth & Carsten", maler: "Esther, Luna og familien", art: "Tegning og foto",
     forslag: { til: "Kære Olsenklanen", besked: "Bøh! 👻\n\nNu lyser græskarrene 🎃, og flagermusene flyver 🦇. Vi sender en uhyggelig, men kærlig hilsen til jer alle.\n\nEn særlig tak til Esther, som har tegnet årets flotte Halloween-græskar. Og tak til Esther og Luna for det flotte, bloddryppende billede.* 🩸\n\nPas godt på hinanden, og pas på edderkopperne! 🕷️🕸️\n\n*Undskyld, hvis det giver kuldegysninger.", slut: "Med uhyggelig hilsen", fra: "Elisabeth & Carsten", skrift: 0 } },
+  { nr: 18, gruppe: "oldermand", fil: "billeder/kort/kurt-juletrae.jpg", titel: "Oldermandens julekort", maler: "Kurt", art: "Maleri" },
   // forslag: { til?, besked, slut, fra?, skrift } = færdig hilsen (og skrifttype nr.), der sættes ind, når kortet vælges (kan rettes)
-  // Næste motiv får nr. 18 — børnetegninger: gruppe "boern", art "Tegning"; medlemmernes egne værker: gruppe "voksne".
+  // Næste motiv får nr. 19 — børnetegninger: gruppe "boern", art "Tegning"; medlemmernes egne værker: gruppe "voksne".
 ];
 // Temaer — rækkefølgen er rækkefølgen på siden. Flere temaer: skriv dem i kort-temaer.js.
 // Et motiv uden tema (eller med et tema, der ikke står her) kommer under "Uden tema".
@@ -248,6 +249,7 @@ const UDEN_TEMA = "Uden tema";
 
 // Overskrifterne i "Vælg et kort". vis_tom: gruppen vises, også før der er billeder i den.
 const GRUPPER = [
+  { id: "oldermand", titel: "🎄 Oldermandens julekort" },   // Kurts maleri – står allerførst (Carstens ønske 28-11-2026)
   { id: "malerier", titel: "Malerier af Elisabeth Gram" },
   { id: "boern",    titel: "Børnetegninger", vis_tom: true,
     tom: "Her kommer børnenes tegninger — kunstnerens navn står under hver tegning. Den første er på vej!" },
